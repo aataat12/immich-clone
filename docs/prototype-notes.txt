@@ -1,14 +1,15 @@
-IMMICH CLONE 0.1.7 - EARLY TEST BUILD
+IMMICH CLONE 0.1.9 - EARLY TEST BUILD
 
 This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
 
 It provides loopback-only access-code login, upload of preserved originals,
-JPEG/PNG/BMP/GIF previews, TIFF first-page previews, MP4 browser playback, persistent preview
+JPEG/PNG/BMP/GIF previews, TIFF first-page previews, optional HEIC/video previews,
+MP4 browser playback, persistent preview
 jobs, browsing, exact original download,
 JSON catalog export, and consistent backup/verified restore. Image previews
 are limited to 40 megapixels. Uploads are limited to 4 GiB per file. Other formats
-are preserved/downloadable but preview failure is shown explicitly. JPEG EXIF orientation, capture date and camera make/model are supported. No advanced camera metadata, generated video thumbnails, server-side folder scanning, AI,
+are preserved/downloadable but preview failure is shown explicitly. JPEG EXIF orientation, capture date and camera make/model are supported. No advanced camera metadata, server-side folder scanning, AI,
 mobile clients, remote sharing or LAN access in this build.
 
 The installer needs administrator permission and uses Windows LocalService.
@@ -68,6 +69,26 @@ BMP, GIF first-frame and TIFF first-page PNG thumbnails are supported with a
 a full-resolution browser viewer. Some TIFF compression/photometric variants
 remain unsupported. TIFF orientation/metadata, multipage navigation, HDR and
 color-managed rendering are not implemented. GIF full-image viewing uses the
-browser; its thumbnail is static. HEIC/HEIF, camera RAW and video thumbnails
-remain unsupported. Originals remain downloadable even when decoding fails.
+browser; its thumbnail is static. Camera RAW and broader HEIF variants remain unsupported. Originals remain downloadable even when decoding fails.
 Previously unsupported assets are reconsidered once; no original is rewritten.
+
+OPTIONAL MEDIA PROVIDER BUILD
+Bundled CPU-only FFmpeg 8.1.3 generates thumbnails for tested H.264/HEVC MP4,
+rotated MOV and single/grid 8-bit HEIC. Preview decoding is limited to 40MP, a
+512 MiB Windows job commitment cap, one process and a 30-second provider deadline.
+Preview processing receives a 45-second cancellation budget including checksum
+verification; native file reads still depend on storage responsiveness.
+High-bit-depth/HDR, RAW, HEIC bursts/advanced metadata and broad camera coverage
+remain unverified/unsupported. HEIC/MOV viewers display a derived preview only.
+No transcodes or server-side audio playback are generated. MP4 original playback
+still depends on the browser's codecs. A missing/failed provider cannot stop
+login, upload, native image previews, exact downloads or backups. Use Retry preview
+after resolving a failure; cancelled jobs remain queued across service restart.
+
+FFmpeg is used as a separate replaceable executable under LGPL 2.1 or later.
+The installed media provider directory includes exact corresponding FFmpeg source,
+LGPL and MinGW/compiler notices, configure command, compiler versions, hashes
+and build script. It has no network protocols beyond local file/pipe and needs
+no separate runtime or GPU package. Provider directories are versioned by binary
+hash so executable rollback can retain its previous provider. No user originals
+are stored in those program directories. Uninstall preserves the separate library.

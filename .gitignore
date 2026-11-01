@@ -11,3 +11,5 @@ access-code.txt
 *.log
 *.jsonl
 *.jsonl.previous
+
+/media-candidate/

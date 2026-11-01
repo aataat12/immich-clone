@@ -1,5 +1,5 @@
 #ifndef AppVersion
-#define AppVersion "0.1.7"
+#define AppVersion "0.1.9"
 #endif
 [Setup]
 AppId={{5DF7680B-6F42-4BAF-AD97-5A3095728DFA}
@@ -28,6 +28,8 @@ Source: "Manage-Service.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\dist\THIRD-PARTY-LICENSES.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\docs\prototype-notes.txt"; DestDir: "{app}"; Flags: ignoreversion
 
+Source: "..\dist\media\*"; DestDir: "{app}\media"; Flags: ignoreversion recursesubdirs createallsubdirs
+
 [Registry]
 Root: HKLM; Subkey: "Software\ImmichClone"; ValueType: string; ValueName: "State"; ValueData: "{code:GetState}"; Flags: uninsdeletekey
 
@@ -42,6 +44,7 @@ Name: "{group}\Export diagnostic log"; Filename: "{sys}\WindowsPowerShell\v1.0\p
 Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File ""{app}\Manage-Service.ps1"" -Action Uninstall -AppDir ""{app}"" -DataDir ""{code:GetState}"""; RunOnceId: "RemoveImmichService"; Flags: runhidden waituntilterminated
 
 [UninstallDelete]
+Type: filesandordirs; Name: "{app}\media"
 Type: files; Name: "{app}\rollback\immichclone.exe"
 Type: files; Name: "{app}\rollback\catalog.db"
 Type: files; Name: "{app}\rollback\access-code.txt"

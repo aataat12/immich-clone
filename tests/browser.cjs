@@ -16,7 +16,7 @@ const path = require('path');
   await page.waitForSelector('#viewMedia img');
   await page.waitForFunction(()=>document.querySelector('#viewMedia img').naturalWidth===64);
   await page.click('#closeViewer');
-  await page.getByRole('button',{name:'Play video',exact:true}).click();
+  await page.locator('.card').filter({hasText:'synthetic-video.mp4'}).getByRole('button',{name:'Play video',exact:true}).click();
   await page.waitForFunction(()=>{const v=document.querySelector('#viewMedia video');return v&&v.readyState>=2&&v.videoWidth===160});
   await page.evaluate(async()=>{const v=document.querySelector('#viewMedia video');v.muted=true;await v.play()});
   await page.waitForFunction(()=>document.querySelector('#viewMedia video').currentTime>0.1);
@@ -33,20 +33,28 @@ const path = require('path');
     await page.waitForFunction(()=>document.querySelector('#viewMedia img')?.naturalWidth===32);
     await page.click('#closeViewer');
   }
+  for (const [name,w,h] of [['synthetic.heic',320,240],['grid-large.heic',320,240],['hevc.mp4',320,240],['rotated.mov',240,320]]) {
+    await page.waitForFunction(({name,w,h})=>{const c=Array.from(document.querySelectorAll('.card')).find(c=>c.querySelector('.name')?.textContent===name);const img=c?.querySelector('img');return img&&img.naturalWidth===w&&img.naturalHeight===h},{name,w,h});
+    if (!name.endsWith('.mp4')) {
+      await page.locator('.card').filter({hasText:name}).getByRole('button',{name:'View preview',exact:true}).click();
+      await page.waitForFunction(w=>document.querySelector('#viewMedia img')?.naturalWidth===w,w);
+      await page.click('#closeViewer');
+    }
+  }
   await page.selectOption('#sort','name');
   await page.waitForFunction(()=>document.querySelector('.dateGroup')?.textContent==='All files');
   await page.selectOption('#sort','capture');
   await page.waitForFunction(()=>Array.from(document.querySelectorAll('.dateGroup')).some(h=>h.textContent==='2024-03'));
   await page.setInputFiles('#files' ,{name:'synthetic-browser.txt',mimeType:'text/plain',buffer:Buffer.from('synthetic browser test original')});
-  await page.waitForFunction(()=>document.querySelectorAll('.card').length===7);
+  await page.waitForFunction(()=>document.querySelectorAll('.card').length===11);
   const source=path.join(process.env.IMMICH_BROWSER_OUTPUT,'synthetic-source');
   fs.mkdirSync(source,{recursive:true});
   fs.writeFileSync(path.join(source,'folder-test.txt'),'synthetic source that must remain untouched');
   await page.setInputFiles('#folder',source);
   await page.waitForSelector('#confirmFolder:not(.hidden)');
-  if(await page.locator('.card').count()!==7)throw Error('Folder uploaded before confirmation');
+  if(await page.locator('.card').count()!==11)throw Error('Folder uploaded before confirmation');
   await page.click('#confirmFolder');
-  await page.waitForFunction(()=>document.querySelectorAll('.card').length===8);
+  await page.waitForFunction(()=>document.querySelectorAll('.card').length===12);
   if(fs.readFileSync(path.join(source,'folder-test.txt'),'utf8')!=='synthetic source that must remain untouched')throw Error('Folder source was changed');
   const metadata=await page.evaluate(async()=>await(await fetch('/api/assets')).json());
   if(!metadata.some(a=>a.sources?.some(p=>p.endsWith('/folder-test.txt'))))throw Error('Relative folder path lost');
@@ -59,6 +67,6 @@ const path = require('path');
   const download=await downloadPromise;
   if(await download.failure())throw Error('Browser backup download failed');
   if(errors.length)throw Error(errors.join(';'));
-  console.log('PASS: Edge sign-in, upload, confirmed folder copy with unchanged source, BMP/TIFF/GIF thumbnails and viewers, EXIF-oriented thumbnail, camera/date details, timeline sorting, relative source path, full-image view, actual H264/AAC playback, streamed backup download and narrow layout; no JavaScript errors.');
+  console.log('PASS: Edge sign-in, upload, confirmed folder copy with unchanged source, BMP/TIFF/GIF and single/grid HEIC thumbnails/viewers, HEVC and rotated MOV thumbnails, EXIF-oriented thumbnail, camera/date details, timeline sorting, relative source path, full-image view, actual H264/AAC playback, streamed backup download and narrow layout; no JavaScript errors.');
   await browser.close();
 })().catch(error=>{console.error(error.message);process.exit(1)});

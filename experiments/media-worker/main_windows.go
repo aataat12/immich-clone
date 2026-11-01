@@ -14,12 +14,30 @@ import (
 	"golang.org/x/sys/windows/svc"
 	"image"
 	"image/png"
+	"immichclone/internal/media"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
+var peakCommit atomic.Uint64
+
+func command(exe string, args ...string) ([]byte, error) {
+	return commandBounded(30*time.Second, exe, args...)
+}
+func commandBounded(budget time.Duration, exe string, args ...string) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), budget)
+	defer cancel()
+	r, e := media.Run(ctx, exe, args, nil)
+	for old := peakCommit.Load(); uint64(r.Peak) > old; old = peakCommit.Load() {
+		if peakCommit.CompareAndSwap(old, uint64(r.Peak)) {
+			break
+		}
+	}
+	return r.Output, e
+}
 func run(root string, requireGrid bool) error {
 	var manifest map[string]string
 	b, e := os.ReadFile(filepath.Join(root, "fixtures.json"))
@@ -225,7 +243,7 @@ func (p service) Execute(_ []string, requests <-chan svc.ChangeRequest, status c
 				_ = os.WriteFile(filepath.Join(p.root, "failed.txt"), []byte(e.Error()), 0600)
 				return false, 1
 			}
-			if os.WriteFile(filepath.Join(p.root, "passed.txt"), []byte(fmt.Sprintf("actual media decode and hashes passed; job limit %d; observed peak committed bytes %d", jobMemoryLimit, peakCommit.Load())), 0600) != nil {
+			if os.WriteFile(filepath.Join(p.root, "passed.txt"), []byte(fmt.Sprintf("actual media decode and hashes passed; job limit %d; observed peak committed bytes %d", media.MemoryLimit, peakCommit.Load())), 0600) != nil {
 				return false, 2
 			}
 			status <- svc.Status{State: svc.Running, Accepts: svc.AcceptStop | svc.AcceptShutdown}

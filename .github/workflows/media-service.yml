@@ -6,6 +6,8 @@ on:
   push:
     paths:
       - 'experiments/media-worker/*_windows.go'
+      - 'experiments/media-worker/go.mod'
+      - 'internal/media/**'
       - 'experiments/media-worker/fixtures/**'
       - '.github/workflows/media-service.yml'
   workflow_dispatch:

@@ -12,6 +12,7 @@ function Login {
     $null = Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$code}|ConvertTo-Json) -WebSession $script:session
 }
 try {
+    ./scripts/Prepare-MediaProvider.ps1 -Destination (Join-Path $root 'media/ffmpeg-8.1.3-7eb77d88e2e9')
     Checked go @('build','-trimpath','-ldflags','-X main.version=0.1.0-prototype','-o',$binary,'./cmd/immichclone')
     Checked $binary @('-mode','init','-data',$state)
     Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)RX')
@@ -66,9 +67,46 @@ try {
         }
         $graphics.Dispose()
         $bitmap.Dispose()
+        $mediaAssets = @{}
+        foreach ($fixtureName in @('synthetic.heic','grid-large.heic','hevc.mp4','rotated.mov')) {
+            $file = Join-Path $root $fixtureName
+            [IO.File]::WriteAllBytes($file,[Convert]::FromBase64String((Get-Content (Join-Path 'experiments/media-worker/fixtures' ($fixtureName+'.b64')) -Raw)))
+            $uploaded = Invoke-RestMethod ('http://127.0.0.1:2283/api/upload?name='+$fixtureName) -Method Post -Headers $headers -InFile $file -WebSession $session
+            $mediaAssets[$fixtureName] = $uploaded.asset.id
+            $codecOriginals[$uploaded.asset.id] = (Get-FileHash $file).Hash
+        }
         $env:IMMICH_TEST_STATE = $state
         Checked node @('tests/browser.cjs')
         Remove-Item Env:IMMICH_TEST_STATE
+    }
+    if ($env:IMMICH_BROWSER_MODULE) {
+        Stop-Service $name
+        $providerExe = Join-Path $root 'media/ffmpeg-8.1.3-7eb77d88e2e9/ffmpeg.exe'
+        Move-Item $providerExe ($providerExe+'.held')
+        Start-Service $name
+        Login
+        $gridId = $mediaAssets['grid-large.heic']
+        $null = Invoke-RestMethod "http://127.0.0.1:2283/api/assets/$gridId/retry" -Method Post -Headers $headers -WebSession $session
+        $null = Invoke-RestMethod "http://127.0.0.1:2283/api/assets/$id/retry" -Method Post -Headers $headers -WebSession $session
+        for ($i=0;$i -lt 15;$i++) {
+            $items = @(Invoke-RestMethod http://127.0.0.1:2283/api/assets -WebSession $session)
+            $grid = $items | Where-Object id -eq $gridId
+            $native = $items | Where-Object id -eq $id
+            if ($grid.preview -eq 'failed' -and $native.preview -eq 'ready') { break }
+            Start-Sleep -Seconds 1
+        }
+        Assert ($grid.preview -eq 'failed' -and $native.preview -eq 'ready' -and (Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'missing optional provider leaves native previews storage and HTTP operational'
+        Stop-Service $name
+        Move-Item ($providerExe+'.held') $providerExe
+        Start-Service $name
+        Login
+        $null = Invoke-RestMethod "http://127.0.0.1:2283/api/assets/$gridId/retry" -Method Post -Headers $headers -WebSession $session
+        for ($i=0;$i -lt 15;$i++) {
+            $grid = @(Invoke-RestMethod http://127.0.0.1:2283/api/assets -WebSession $session) | Where-Object id -eq $gridId
+            if ($grid.preview -eq 'ready') { break }
+            Start-Sleep -Seconds 1
+        }
+        Assert ($grid.preview -eq 'ready' -and $grid.width -eq 4032 -and $grid.height -eq 3024) 'optional provider recovery retries HEIC and preserves source dimensions'
     }
     $onlineLog = Join-Path $root 'online-diagnostics.log'
     Invoke-WebRequest http://127.0.0.1:2283/api/diagnostics -WebSession $session -OutFile $onlineLog
@@ -87,7 +125,7 @@ try {
     Assert ((Get-FileHash "$restored/originals/$id").Hash -eq (Get-FileHash $fixture).Hash) 'independent backup restoration verifies original bytes'
     if ($env:IMMICH_BROWSER_MODULE) {
         foreach ($entry in $codecOriginals.GetEnumerator()) {
-            Assert ((Get-FileHash (Join-Path "$restored/originals" $entry.Key)).Hash -eq $entry.Value) 'BMP TIFF GIF original checksum preserved through independent restore'
+            Assert ((Get-FileHash (Join-Path "$restored/originals" $entry.Key)).Hash -eq $entry.Value) 'image and video original checksum preserved through independent restore'
         }
     }
     # Prove inability to write rather than relying on administrator test execution.

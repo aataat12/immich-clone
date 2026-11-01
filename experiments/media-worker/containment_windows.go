@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"golang.org/x/sys/windows"
+	"immichclone/internal/media"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -44,7 +45,7 @@ func helperMode(mode, root string) {
 		// os.Exit bypasses Go defers: Windows closing the parent's job handle must kill the child.
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		_, e := jobCommand(ctx, self, []string{"-probe-stall"}, func(pid uint32) {
+		_, e := media.Run(ctx, self, []string{"-probe-stall"}, func(pid uint32) {
 			if os.WriteFile(filepath.Join(root, "orphan-pid.txt"), []byte(strconv.FormatUint(uint64(pid), 10)), 0600) != nil {
 				os.Exit(32)
 			}
@@ -72,9 +73,9 @@ func containmentChecks(root string) error {
 			return errors.New("unrestricted containment control failed")
 		}
 		ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)
-		result, e := jobCommand(ctx, self, []string{"-probe-helper", c.mode}, nil)
+		result, e := media.Run(ctx, self, []string{"-probe-helper", c.mode}, nil)
 		cancel()
-		if e != nil || string(result.output) != c.bounded || result.peak == 0 || result.peak > jobMemoryLimit {
+		if e != nil || string(result.Output) != c.bounded || result.Peak == 0 || result.Peak > media.MemoryLimit {
 			return errors.New("job memory/process enforcement failed")
 		}
 	}

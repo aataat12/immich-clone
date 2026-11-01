@@ -1,6 +1,7 @@
 package library
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -42,9 +43,10 @@ type Asset struct {
 	Error           string        `json:"error,omitempty"`
 }
 type Store struct {
-	root string
-	db   *bolt.DB
-	gate sync.Mutex
+	root         string
+	db           *bolt.DB
+	gate         sync.Mutex
+	mediaPreview func(context.Context, string) (image.Image, int, int, error)
 }
 
 func Open(root string) (*Store, error) {
@@ -115,7 +117,7 @@ func Open(root string) (*Store, error) {
 			if e := json.Unmarshal(v, &a); e != nil {
 				return e
 			}
-			if ((a.MIME == "image/jpeg" || a.MIME == "image/png") && a.PreviewRevision < 1) || ((a.MIME == "image/bmp" || a.MIME == "image/gif" || a.MIME == "application/octet-stream" || a.MIME == "image/tiff") && a.PreviewRevision < 2) {
+			if ((a.MIME == "image/jpeg" || a.MIME == "image/png") && a.PreviewRevision < 1) || ((a.MIME == "image/bmp" || a.MIME == "image/gif" || a.MIME == "application/octet-stream" || a.MIME == "image/tiff") && a.PreviewRevision < 2) || ((supportsMediaPreview(a.MIME) || a.MIME == "application/octet-stream") && a.PreviewRevision < 3) {
 				a.Preview = "queued"
 				a.Error = ""
 				updated, e := json.Marshal(a)
@@ -303,7 +305,11 @@ func (s *Store) PutWithPath(name, relative string, r io.Reader) (result Asset, d
 
 // ProcessOne persists the result; queued jobs survive process termination.
 // Processing is serialized with ingest/backup to keep this initial slice simple.
-func (s *Store) ProcessOne() (bool, error) {
+func (s *Store) ProcessOne() (bool, error) { return s.ProcessOneContext(context.Background()) }
+func (s *Store) ProcessOneContext(ctx context.Context) (bool, error) {
+	if e := ctx.Err(); e != nil {
+		return false, e
+	}
 	s.gate.Lock()
 	defer s.gate.Unlock()
 	assets, e := s.List()
@@ -314,8 +320,13 @@ func (s *Store) ProcessOne() (bool, error) {
 		if a.Preview != "queued" {
 			continue
 		}
-		a.PreviewRevision = 2
-		e = s.makePreview(&a)
+		a.PreviewRevision = 3
+		opCtx, cancel := context.WithTimeout(ctx, 45*time.Second)
+		e = s.makePreviewContext(opCtx, &a)
+		cancel()
+		if ctx.Err() != nil {
+			return true, ctx.Err()
+		}
 		diagnostics.Record("preview", "preview_generate", e, 0, 0, 0)
 		if e != nil {
 			a.Preview = "failed"
@@ -331,7 +342,13 @@ func (s *Store) ProcessOne() (bool, error) {
 	}
 	return false, nil
 }
-func (s *Store) makePreview(a *Asset) error {
+func (s *Store) SetMediaPreview(fn func(context.Context, string) (image.Image, int, int, error)) {
+	s.gate.Lock()
+	defer s.gate.Unlock()
+	s.mediaPreview = fn
+}
+func (s *Store) makePreview(a *Asset) error { return s.makePreviewContext(context.Background(), a) }
+func (s *Store) makePreviewContext(ctx context.Context, a *Asset) error {
 	// Older catalog entries may predate TIFF signature recognition.
 	if a.MIME == "application/octet-stream" {
 		f, err := os.Open(s.Original(a.ID))
@@ -342,7 +359,7 @@ func (s *Store) makePreview(a *Asset) error {
 			a.MIME = detectMediaType(header[:n])
 		}
 	}
-	if !supportsImagePreview(a.MIME) {
+	if !supportsImagePreview(a.MIME) && !supportsMediaPreview(a.MIME) {
 		return errors.New("preview unsupported in this build; original remains available")
 	}
 	if (a.MIME == "image/tiff" || a.MIME == "image/bmp" || a.MIME == "image/gif") && a.Size > 64<<20 {
@@ -353,15 +370,29 @@ func (s *Store) makePreview(a *Asset) error {
 		return errors.New("original unavailable")
 	}
 	defer f.Close()
-	h, e := fileHash(s.Original(a.ID))
+	h, e := fileHashContext(ctx, s.Original(a.ID))
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
 	if e != nil || h != a.ID {
 		return errors.New("original checksum mismatch")
 	}
-	a.Photo = ReadPhotoMetadata(f)
+	if supportsMediaPreview(a.MIME) {
+		if s.mediaPreview == nil {
+			return errors.New("optional media provider unavailable; original remains available")
+		}
+		img, w, h, e := s.mediaPreview(ctx, s.Original(a.ID))
+		if e != nil {
+			return e
+		}
+		a.Width, a.Height = w, h
+		return s.publishPreview(a.ID, img)
+	}
+	a.Photo = ReadPhotoMetadata(contextReader{ctx, f})
 	if _, e = f.Seek(0, 0); e != nil {
 		return e
 	}
-	config, _, e := image.DecodeConfig(f)
+	config, _, e := image.DecodeConfig(contextReader{ctx, f})
 	if e != nil {
 		return errors.New("malformed image")
 	}
@@ -372,13 +403,16 @@ func (s *Store) makePreview(a *Asset) error {
 	if _, e = f.Seek(0, 0); e != nil {
 		return e
 	}
-	img, _, e := image.Decode(f)
+	img, _, e := image.Decode(contextReader{ctx, f})
 	if e != nil {
 		return errors.New("image decode failed")
 	}
 	img = oriented(img, a.Photo.Orientation)
 	a.Width, a.Height = img.Bounds().Dx(), img.Bounds().Dy()
-	w, hgt := a.Width, a.Height
+	return s.publishPreview(a.ID, img)
+}
+func (s *Store) publishPreview(id string, img image.Image) error {
+	w, hgt := img.Bounds().Dx(), img.Bounds().Dy()
 	if w > 320 || hgt > 320 {
 		if w >= hgt {
 			hgt = hgt * 320 / w
@@ -398,7 +432,7 @@ func (s *Store) makePreview(a *Asset) error {
 	bounds := img.Bounds()
 	for y := 0; y < hgt; y++ {
 		for x := 0; x < w; x++ {
-			thumb.Set(x, y, img.At(bounds.Min.X+x*a.Width/w, bounds.Min.Y+y*a.Height/hgt))
+			thumb.Set(x, y, img.At(bounds.Min.X+x*bounds.Dx()/w, bounds.Min.Y+y*bounds.Dy()/hgt))
 		}
 	}
 	out, e := os.CreateTemp(filepath.Join(s.root, "staging"), "preview-*.part")
@@ -418,10 +452,10 @@ func (s *Store) makePreview(a *Asset) error {
 		return e
 	}
 	// Preview is disposable; remove a leftover from an interrupted queued job.
-	if e = os.Remove(s.PreviewPath(a.ID)); e != nil && !errors.Is(e, os.ErrNotExist) {
+	if e = os.Remove(s.PreviewPath(id)); e != nil && !errors.Is(e, os.ErrNotExist) {
 		return e
 	}
-	return os.Rename(out.Name(), s.PreviewPath(a.ID))
+	return os.Rename(out.Name(), s.PreviewPath(id))
 }
 func (s *Store) Retry(id string) error {
 	s.gate.Lock()
@@ -471,6 +505,34 @@ func cleanRelative(p string) (string, error) {
 }
 
 func detectMediaType(header []byte) string {
+	if len(header) >= 16 && string(header[4:8]) == "ftyp" {
+		end := int(header[0])<<24 | int(header[1])<<16 | int(header[2])<<8 | int(header[3])
+		if end > len(header) {
+			end = len(header)
+		}
+		heif, heic, avif := false, false, false
+		for i := 8; i+4 <= end; i += 4 {
+			switch string(header[i : i+4]) {
+			case "heic", "heix", "hevc", "hevx":
+				heic = true
+			case "mif1", "msf1":
+				heif = true
+			case "avif", "avis":
+				avif = true
+			case "qt  ":
+				return "video/quicktime"
+			}
+		}
+		if !avif {
+			if heic {
+				return "image/heic"
+			}
+			if heif {
+				return "image/heif"
+			}
+		}
+	}
+
 	if len(header) >= 4 && (string(header[:4]) == "II*\x00" || string(header[:4]) == "MM\x00*") {
 		return "image/tiff"
 	}
@@ -482,4 +544,36 @@ func supportsImagePreview(mime string) bool {
 		return true
 	}
 	return false
+}
+
+func supportsMediaPreview(mime string) bool {
+	switch mime {
+	case "video/mp4", "video/quicktime", "image/heic", "image/heif":
+		return true
+	}
+	return false
+}
+
+type contextReader struct {
+	ctx context.Context
+	r   io.Reader
+}
+
+func (r contextReader) Read(p []byte) (int, error) {
+	if e := r.ctx.Err(); e != nil {
+		return 0, e
+	}
+	return r.r.Read(p)
+}
+func fileHashContext(ctx context.Context, path string) (string, error) {
+	f, e := os.Open(path)
+	if e != nil {
+		return "", e
+	}
+	defer f.Close()
+	h := sha256.New()
+	if _, e = io.CopyBuffer(h, contextReader{ctx, f}, make([]byte, 64<<10)); e != nil {
+		return "", e
+	}
+	return hex.EncodeToString(h.Sum(nil)), nil
 }

@@ -109,3 +109,18 @@
   network, external codec libraries or GPU. Keep exact corresponding source and
   compiler/configuration evidence together. No app dependency or new installer
   until actual service operations and remaining distribution/containment gates pass.
+
+- Native worker gate passed: Windows Job List assigns a 512 MiB commitment/one-
+  process/kill-on-close job before execution. Real control allocation/spawn tests,
+  crash, timeout, output flood and parent-death cleanup passed under LocalService.
+  This bounds resources; it does not claim a filesystem/token security sandbox.
+- HEIC grid reconstruction uses FFmpeg's grouped output and built-in xstack/crop,
+  verified with 6-tile edge cropping and a 12MP/48-tile four-color fixture. Keep
+  HDR/high bit depth, RAW, bursts and broad camera metadata unsupported.
+- Integrate an optional checksum-pinned subprocess provider. Move the tested job
+  launcher into internal/media; cloud probe imports this exact implementation.
+  One provider failure is a visible retryable preview failure, never a storage or
+  startup failure. Service cancellation preserves the durable queued job.
+- Package corresponding source/license/compiler/MinGW notices with the provider.
+  Immutable binary-hash provider directories survive executable rollback without
+  replacing an older provider's files. Deliver 0.1.9 next (0.1.8 was failure fixture).
