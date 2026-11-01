@@ -3,6 +3,7 @@
 package diagnostics
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -26,7 +27,7 @@ var global struct {
 }
 var sequence atomic.Uint64
 var events = map[string]bool{"startup": true, "shutdown": true, "service": true, "http": true, "upload": true, "preview": true, "backup": true, "restore": true, "verify": true, "logging": true}
-var stages = map[string]bool{"begin": true, "complete": true, "catalog_open": true, "access_code": true, "listen": true, "ready": true, "stop": true, "failed": true, "original_write": true, "preview_generate": true, "archive_write": true, "archive_restore": true, "integrity": true, "running": true, "requested": true, "assets": true, "login": true, "export": true, "original": true, "view": true, "retry": true, "diagnostics": true, "health": true, "ui": true, "unknown": true}
+var stages = map[string]bool{"begin": true, "complete": true, "catalog_open": true, "access_code": true, "listen": true, "ready": true, "stop": true, "failed": true, "original_write": true, "preview_generate": true, "media_provider_verify": true, "media_probe": true, "media_decode": true, "archive_write": true, "archive_restore": true, "integrity": true, "running": true, "requested": true, "assets": true, "login": true, "export": true, "original": true, "view": true, "retry": true, "diagnostics": true, "health": true, "ui": true, "unknown": true}
 var safeVersion = regexp.MustCompile(`^\d+\.\d+\.\d+(?:-[a-z]+)?$`)
 
 func DefaultDir() string {
@@ -63,6 +64,10 @@ func classify(e error) (string, int64) {
 	var native syscall.Errno
 	errors.As(e, &native)
 	switch {
+	case errors.Is(e, context.Canceled):
+		return "cancelled", int64(native)
+	case errors.Is(e, context.DeadlineExceeded):
+		return "media_timeout", int64(native)
 	case errors.Is(e, os.ErrPermission):
 		return "permission_denied", int64(native)
 	case errors.Is(e, os.ErrNotExist):
@@ -76,6 +81,16 @@ func classify(e error) (string, int64) {
 	}
 	// Match only exact, fixed messages owned by this program. Never emit raw text.
 	switch e.Error() {
+	case "optional media provider unavailable; original remains available":
+		return "media_provider_unavailable", int64(native)
+	case "child output exceeds limit":
+		return "media_output_limit", int64(native)
+	case "media preview time limit exceeded; original remains available":
+		return "media_timeout", int64(native)
+	case "HDR/high-bit-depth preview unsupported; original remains available", "video/image codec unsupported; original remains available":
+		return "unsupported_preview", int64(native)
+	case "media preview failed; original remains available":
+		return "media_failed", int64(native)
 	case "timeout":
 		return "database_locked", int64(native)
 	case "unknown state format", "unsupported schema; refusing migration":

@@ -111,6 +111,7 @@ try {
     $onlineLog = Join-Path $root 'online-diagnostics.log'
     Invoke-WebRequest http://127.0.0.1:2283/api/diagnostics -WebSession $session -OutFile $onlineLog
     Assert ((Get-Content $onlineLog -Raw).Contains('original_write')) 'authenticated browser diagnostic export includes upload events'
+    Assert ((Get-Content $onlineLog -Raw).Contains('media_provider_unavailable') -and (Get-Content $onlineLog -Raw).Contains('media_probe') -and (Get-Content $onlineLog -Raw).Contains('media_decode')) 'private diagnostics distinguish provider absence and media stages'
     Restart-Service $name
     Login
     $download = Join-Path $root 'download.png'

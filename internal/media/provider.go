@@ -10,6 +10,7 @@ import (
 	"fmt"
 	_ "golang.org/x/image/bmp"
 	"image"
+	"immichclone/internal/diagnostics"
 	"io"
 	"os"
 	"path/filepath"
@@ -29,6 +30,14 @@ type Provider struct {
 
 func New(dir string) *Provider {
 	p := &Provider{dir: dir}
+	started := time.Now()
+	defer func() {
+		var e error
+		if !p.available {
+			e = ErrUnavailable
+		}
+		diagnostics.Record("preview", "media_provider_verify", e, 0, 0, time.Since(started))
+	}()
 	for name, expected := range executableHashes {
 		f, e := os.Open(filepath.Join(dir, name))
 		if e != nil {
@@ -120,7 +129,13 @@ func (p *Provider) Thumbnail(parent context.Context, path string) (image.Image, 
 	ctx, cancel := context.WithTimeout(parent, 30*time.Second)
 	defer cancel()
 	run := func(name string, args ...string) ([]byte, error) {
+		started := time.Now()
 		r, e := Run(ctx, filepath.Join(p.dir, name), args, nil)
+		stage := "media_decode"
+		if name == "ffprobe.exe" {
+			stage = "media_probe"
+		}
+		diagnostics.Record("preview", stage, e, 0, 0, time.Since(started))
 		if e != nil {
 			if parent.Err() != nil {
 				return nil, parent.Err()

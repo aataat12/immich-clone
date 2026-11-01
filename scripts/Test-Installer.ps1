@@ -54,7 +54,7 @@ try {
     Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.9-prototype') 'failed upgrade restores previous executable'
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'rollback restores healthy service'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'failed upgrade preserves original bytes'
-    Assert ((Get-FileHash "$state/originals/$($heicAsset.id)").Hash -eq $heicHash) 'failed upgrade preserves HEIC original' 
+    Assert ((Get-FileHash "$state/originals/$($heicAsset.id)").Hash -eq $heicHash) 'failed upgrade preserves HEIC original'
     $recoveryTool = Join-Path $root 'recovery-tool.exe'
     Copy-Item "$app/immichclone.exe" $recoveryTool
     $session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
