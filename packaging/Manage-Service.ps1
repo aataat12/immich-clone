@@ -51,6 +51,7 @@ try {
     New-Item -ItemType Directory -Force $DataDir | Out-Null
     $stage = 'configure state ACL'
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+    Checked icacls @($AppDir,'/grant','*S-1-5-19:(OI)(CI)RX')
     Checked icacls @($DataDir,'/inheritance:r','/grant:r','*S-1-5-18:(OI)(CI)F','*S-1-5-32-544:(OI)(CI)F','*S-1-5-19:(OI)(CI)M',('*'+$identity+':(OI)(CI)RX'))
     $stage = 'initialize state'
     Checked $binary @('-mode','init','-data',$DataDir)
@@ -58,7 +59,8 @@ try {
         $stage = 'register LocalService'
         $created = Invoke-CimMethod -ClassName Win32_Service -MethodName Create -Arguments @{
             Name=$name; DisplayName='Immich Clone (prototype)'; PathName=('"'+$binary+'" -mode service -data "'+$DataDir+'"')
-            ServiceType=[uint32]16; StartMode='Automatic'; StartName='NT AUTHORITY\LocalService'
+            ServiceType=[byte]16; ErrorControl=[byte]1; DesktopInteract=$false
+            StartMode='Automatic'; StartName='NT AUTHORITY\LocalService'; StartPassword=''
         }
         if ($created.ReturnValue -ne 0) { throw 'Native service registration failed' }
     }

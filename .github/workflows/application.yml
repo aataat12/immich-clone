@@ -59,6 +59,7 @@ jobs:
         shell: pwsh
         run: ./scripts/Test-FullDisk.ps1
       - name: Retain synthetic browser evidence and prototype installer
+        if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: prototype-server-tested
