@@ -25,6 +25,13 @@ cross-photo accuracy. Next: held-out multi-photo quality, then shipping-runtime
 and small People/object organization slice. No AI installer or local action yet.
 No additional import/app regression workflow was run; app remains unchanged.
 
+Cross-photo Linux screen completed on 400 distinct public research photographs:
+all detected; 180 known-person queries correct; 100 unknown queries rejected.
+However, 15 unrelated pairs crossed the threshold. Automatic pair-based merging
+is not accepted. Frozen protocol/rights/limitations and approved review UI are in
+`ai-feasibility.md` and `experiments/face-quality/PROTOCOL.md`. Windows comparison
+pending; no new installer or local action. Quality and packaging gates remain open.
+
 ## Confirmed workflow: managed copies and bulk import
 
 The user explicitly chose application-owned copies after discussing the storage

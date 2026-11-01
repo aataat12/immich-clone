@@ -1,0 +1,67 @@
+name: Bounded cross-photo face quality screen
+on:
+  push:
+    paths:
+      - 'experiments/face-quality/**'
+      - '.github/workflows/face-quality.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: face-quality-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12.10'
+          architecture: x64
+      - name: Evaluate fixed cross-photo protocol under LocalService
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          function Checked([string]$exe,[string[]]$a) { & $exe @a; if ($LASTEXITCODE -ne 0) { throw 'Face evaluation operation failed' } }
+          $root = Join-Path $env:RUNNER_TEMP 'public-face-quality'
+          $python = (Get-Command python).Source
+          Checked $python @('-B','experiments/face-quality/prepare_quality.py',$root)
+          Checked $python @('-m','pip','install','--only-binary=:all:','--require-hashes','--no-deps','--target',"$root/deps",'-r','experiments/ai-probe/requirements.txt','--disable-pip-version-check')
+          $env:PYTHONPATH = "$root/deps"
+          Checked $python @('-B','-m','unittest','discover','-s','experiments/face-quality','-p','test_*.py')
+          Copy-Item experiments/face-quality/quality.py "$root/probe.py"
+          Copy-Item experiments/face-quality/prepare_quality.py,experiments/face-quality/metrics.py,experiments/ai-probe/prepare.py $root
+          Checked go @('mod','download')
+          Checked go @('mod','verify')
+          # Reuse the already executed bounded service launcher unchanged.
+          Checked go @('build','-mod=readonly','-trimpath','-o',"$root/probe.exe",'./experiments/ai-probe')
+          Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)M')
+          $name = 'ImmichCloneAIProbe'
+          try {
+            $credential = [PSCredential]::new('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))
+            New-Service -Name $name -BinaryPathName ('"'+"$root/probe.exe"+'" -root "'+$root+'" -python "'+$python+'"') -Credential $credential | Out-Null
+            Start-Service $name
+            if (!(Test-Path "$root/passed.json")) { throw 'Evaluation evidence absent' }
+            $text = Get-Content "$root/passed.json" -Raw
+            $result = $text | ConvertFrom-Json
+            if ($result.images_total -ne 400 -or !$result.originals_unchanged) { throw 'Invalid evaluation result' }
+            Write-Output $text
+            if ($result.narrow_quality_screen_passed) {
+              Write-Output 'Narrow enrollment/unknown screen passed; broad grouping/value acceptance remains open.'
+            } else { Write-Output '::warning::Narrow quality screen did not pass. Hold downstream integration; inspect aggregate results.' }
+            if ($result.metrics.different_pair_accepts -gt 0) { Write-Output '::warning::Different-person pairs crossed the threshold. Pair similarity alone is not safe automatic grouping.' }
+            Write-Output 'Evaluation executed under LocalService; green workflow is execution evidence, not full AI acceptance.'
+          } finally {
+            if (Get-Service $name -ErrorAction SilentlyContinue) { Stop-Service $name -ErrorAction Continue; Checked sc.exe @('delete',$name) }
+            if (Test-Path "$root/failed.txt") { Get-Content "$root/failed.txt" }
+          }

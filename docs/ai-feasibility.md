@@ -96,3 +96,29 @@ Directory licenses establish published terms, not an independent audit of all
 training-data rights. Resolve specific distribution restrictions and retain exact
 notices before shipping. No fixed model/runtime support SLA assumed: review
 upstream security updates, pin replacements and rerun inference/quality/compatibility.
+
+
+## Cross-photo screen and review controls
+
+Frozen protocol and research-data attribution: `../experiments/face-quality/PROTOCOL.md`.
+Initial Linux evaluation on 400 distinct ORL/AT&T grayscale photographs completed:
+400 faces detected, 180/180 known-person queries correct, 100/100 unenrolled-person
+queries rejected. Calibration identities 1–10 are disjoint from evaluation 11–40;
+threshold 0.363 was selected on calibration only. Four metric accounting tests
+passed, including unresolved-image denominators and wrong unknown acceptance.
+
+Important: 15 of 43500 scored different-person pairs exceeded this threshold;
+1350 same-person pairs passed. Nearest-enrollment assignment with a 0.05 runner-up
+margin succeeded on this narrow set, but blind pair-threshold clustering is unsafe.
+Do not present the enrollment result as safe unsupervised identity grouping. No
+threshold was retuned using the evaluation results. Windows comparison pending.
+This old, small, frontal/grayscale corpus does not establish family/age/profile
+or real-library quality; it is not bundled or redistributed.
+
+User-approved review workflow: unnamed face-group queue, name once for confirmed
+matches, uncertain-match confirmation/choose another/leave unknown, manually mark
+missed faces, move/split/merge corrections; batch searchable object/custom tags
+and dismissible AI suggestions. Proposed groups stay suggestions until reviewed;
+AI may never silently replace a manual identity or tag. Persist corrections
+separately from model results with undo and independent export/restore checks.
+These controls are acceptance requirements, not implemented UI claims.

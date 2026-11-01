@@ -174,3 +174,11 @@
   tags/search. AI remains replaceable and unable to damage originals. No user photos
   sent to cloud inference; private media and personal machine information never
   enter public CI. Public licensed fixtures may be used in cloud CPU experiments.
+
+- Review controls confirmed: unnamed/uncertain queue, name confirmed groups,
+  manual missed-face assignment, split/merge/move, batch custom tags and dismissal.
+  Keep original bytes immutable and corrections independent of model versions.
+- The initial cross-photo screen supports candidate named-person assignment but
+  also finds different-person pairs above the basic threshold. Do not automatically
+  merge people using single-link/pair similarity or propagate names from unreviewed
+  suggestions. Continue conservative reviewed grouping and broader quality gates.
