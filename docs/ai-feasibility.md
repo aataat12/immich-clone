@@ -111,7 +111,17 @@ Important: 15 of 43500 scored different-person pairs exceeded this threshold;
 1350 same-person pairs passed. Nearest-enrollment assignment with a 0.05 runner-up
 margin succeeded on this narrow set, but blind pair-threshold clustering is unsafe.
 Do not present the enrollment result as safe unsupervised identity grouping. No
-threshold was retuned using the evaluation results. Windows comparison pending.
+threshold was retuned using the evaluation results. Windows comparison completed in
+[41361882205](https://github.com/aataat12/immich-clone/actions/runs/41361882205),
+commit `c347e99566fc564ef052523dd4dac2139a35fdb0`, job `125013785155`.
+LocalService reproduced all 400 detections, 180 correct known queries, 100 unknown
+rejections, zero query misidentifications, and the same 15 pair false accepts.
+All 1350 scored same-person pairs passed; 43500 different-person pairs were scored.
+The frozen threshold remained 0.363 (Windows calibration max-negative 0.323816;
+Linux 0.323869). No retuning or change of enrollment images. Windows elapsed
+18.36 seconds; peak job commitment 266977280 bytes under 536870912 cap. All input
+hashes unchanged; four accounting tests passed. Green run clears only execution
+and the narrow enrollment screen, not safe blind clustering or broad accuracy.
 This old, small, frontal/grayscale corpus does not establish family/age/profile
 or real-library quality; it is not bundled or redistributed.
 
@@ -122,3 +132,12 @@ and dismissible AI suggestions. Proposed groups stay suggestions until reviewed;
 AI may never silently replace a manual identity or tag. Persist corrections
 separately from model results with undo and independent export/restore checks.
 These controls are acceptance requirements, not implemented UI claims.
+
+
+Next bounded milestone: select and execute a self-contained Windows AI worker
+using the same proven weights and preprocessing. Audit native dependency closure,
+CPU baseline, pinned source/build and notices before app integration. Prefer task-
+specific model loading; the prior combined face/object Python probe approached its
+512MiB cap. No local SDK/Python installation request. Then build the review-first
+People/tagging slice and privately assess broader library quality; import remains
+deferred. No new installer was generated for the cross-photo screen.

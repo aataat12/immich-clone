@@ -510,3 +510,26 @@ YOLOX outputs passed. Peak committed bytes 479862784 within 536870912 cap.
 No broad accuracy, target-PC performance, Windows 10 or standalone prerequisite
 claim. Exact preprocessing, limits, terms and unresolved quality/distribution gates
 are in `ai-feasibility.md`. No runtime/model added to application dependencies.
+
+
+## Distinct-photo face screen
+
+[41361882205](https://github.com/aataat12/immich-clone/actions/runs/41361882205),
+commit `c347e99566fc564ef052523dd4dac2139a35fdb0`, job `125013785155`:
+inspected logs confirm Windows Server 2022 LocalService actually evaluated 400
+ORL/AT&T distinct photographs with pinned YuNet/SFace/OpenCV/NumPy. Corpus source,
+research attribution/limits, SHA256, identity-disjoint split, preprocessing and
+criteria were recorded before inference in `experiments/face-quality/PROTOCOL.md`.
+The corpus is downloaded from its official research archive, never redistributed
+or shipped. No user media, personal details or raw embeddings enter outputs.
+
+100 calibration and 300 held-out faces detected; 180/180 enrolled-person queries
+correct, 100/100 unenrolled queries rejected. Frozen cosine 0.363; 0.05 ranking
+margin. All 1350 same-person pairs passed, but 15/43500 different-person pairs also
+crossed the threshold: pair similarity alone cannot authorize automatic merging.
+Same counts observed on cloud Linux. Windows 18.36s, peak commitment 266977280 bytes
+under 512MiB, inputs unchanged. Four accounting regressions passed (missing faces,
+unknown false accepts, ambiguous ranking and collapsed calibration embeddings).
+This is a narrow mostly-frontal grayscale screen, not broad-library accuracy,
+safe blind clustering, Windows 10 or standalone native packaging acceptance.
+Application/installer unchanged; no import regression run or local action needed.

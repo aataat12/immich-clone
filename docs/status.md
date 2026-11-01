@@ -29,8 +29,13 @@ Cross-photo Linux screen completed on 400 distinct public research photographs:
 all detected; 180 known-person queries correct; 100 unknown queries rejected.
 However, 15 unrelated pairs crossed the threshold. Automatic pair-based merging
 is not accepted. Frozen protocol/rights/limitations and approved review UI are in
-`ai-feasibility.md` and `experiments/face-quality/PROTOCOL.md`. Windows comparison
-pending; no new installer or local action. Quality and packaging gates remain open.
+`ai-feasibility.md` and `experiments/face-quality/PROTOCOL.md`. Windows LocalService
+comparison [41361882205](https://github.com/aataat12/immich-clone/actions/runs/41361882205)
+passed execution and reproduced the same query/pair counts. Peak commitment
+266977280 bytes, 18.36 seconds, input hashes unchanged; four metric tests passed.
+No broad clustering/quality acceptance. Next: self-contained native worker proof,
+then reviewed People/tagging slice and private broader quality evaluation. No new
+installer, import tests or local action. Packaging and broader quality remain open.
 
 ## Confirmed workflow: managed copies and bulk import
 
