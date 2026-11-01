@@ -154,3 +154,23 @@ with range support and does not transcode or ship FFmpeg. This establishes that
 fixture/browser combination, not all MP4 codecs, HEVC/HDR, target desktop/browser
 behavior or generated video thumbnails. Other browser codec failures remain
 possible; original download is independent.
+
+
+## Metadata/timeline slice 0.1.5
+
+[Run 41340063567](https://github.com/aataat12/immich-clone/actions/runs/41340063567),
+commit `9748c1f0ca64d98c54fbb886f7daea6d6022cce6`, passed real synthetic JPEG
+metadata decoding, eight orientation transforms, malformed/big-endian/cyclic
+metadata bounds, immutable-original and metadata/source-alias backup restoration
+tests. Edge executed oriented-thumbnail, details, sorting and folder-path checks;
+installer fresh/upgrade/failed-upgrade rollback, independent recovery and actual
+NTFS disk-full recovery passed on Windows Server 2022. Linux race/vet also passed.
+No new dependency; broader camera formats and optional AI remain unverified.
+
+Installer artifact `13096838238` ZIP SHA256:
+`b32c8905a3f5a4d702b815ce2129b500ca235210714134390a328e0ea57e88b5`.
+Extracted `ImmichClone-0.1.5-prototype-x64-setup.exe` SHA256:
+`482b940661d69108f393ba2b195a9554b70470197e6e9b6fec0b43c28cbece8e`,
+matched the packaged checksum list. Desktop/narrow synthetic screenshots inspected.
+This build has not been tested locally on Windows 10. Previous user-reported
+local acceptance belongs to 0.1.3; reboot remains deferred to final acceptance.

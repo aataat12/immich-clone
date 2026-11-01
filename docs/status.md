@@ -1,7 +1,9 @@
 # Active milestone — metadata / timeline 0.1.5
 
-Implementation and focused cloud Linux race/vet checks passed. Windows Server
-acceptance and installer build pending. Adds bounded JPEG capture-date/camera
+Completed: focused Linux race/vet checks and Windows Server 2022 acceptance passed.
+[Run 41340063567](https://github.com/aataat12/immich-clone/actions/runs/41340063567)
+tested commit `9748c1f0ca64d98c54fbb886f7daea6d6022cce6`; artifact
+`13096838238` contains the verified 0.1.5 installer. Adds bounded JPEG capture-date/camera
 metadata, all eight EXIF orientation transforms for previews, date grouping/sort,
 a details panel, relative folder paths and duplicate source aliases. Existing
 JPEG/PNG previews are queued for a derived-data rebuild; originals unchanged.
