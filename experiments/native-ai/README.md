@@ -45,3 +45,21 @@ This is not a clean Windows 10 or full security/filesystem sandbox claim.
 References: https://docs.opencv.org/4.13.0/db/d05/tutorial_config_reference.html
 and https://github.com/opencv/opencv/wiki/CPU-optimizations-build-options .
 Native build and actual operations are pending until linked evidence is recorded.
+Build checkpoint artifacts are explicitly not accepted; only a passed separate
+service job can establish operation evidence. Retain builds to avoid recompiling
+unchanged dependencies for a service-harness-only correction.
+
+
+Security-review notes (not shipping clearance): upstream 4.14.0 is available,
+so this 4.12.0 parity baseline is not an update policy. The documented 2025
+OpenCV JPEG2000 bug was fixed in 4.12 and imgcodecs is excluded here. Bundled
+protobuf identifies as 3.19.1; the three parser files receive official backport
+0299c03005fbfe086d8394fb7a873a8a21fe327f (CVE-2022-1941), checksum-pinned and
+recorded in SOURCE-PATCHES.txt. Clean applicability was tested in the Linux cloud
+workspace. Further current patch/advisory review remains a shipping gate. This experiment uses only previously SHA256-pinned
+trusted ONNX inputs under the existing job limits, never user-supplied models.
+Do not extend the candidate to arbitrary model loading or app distribution until
+these review gates are resolved. References:
+https://github.com/opencv/opencv/wiki/OpenCV-Change-Logs
+https://securitylab.github.com/advisories/GHSL-2025-057_OpenCV/
+https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-8gq9-2x98-w8hf

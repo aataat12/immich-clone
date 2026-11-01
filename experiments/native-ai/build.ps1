@@ -8,12 +8,30 @@ Invoke-WebRequest 'https://github.com/opencv/opencv/archive/49486f61fb25722cbcf5
 if ((Get-FileHash $archive).Hash.ToLowerInvariant() -ne 'a7382f4e2fd33b987f09f89866c50416a7b3647a95bab207e0dc271bab607999') { throw 'OpenCV source checksum mismatch' }
 Expand-Archive $archive "$root/source"
 $source = Join-Path $root 'source/opencv-49486f61fb25722cbcf586b7f4320921d46fb38e'
+# Official 3.19.x backport for CVE-2022-1941; only the three parser files.
+$patch = Join-Path $out 'protobuf-upstream-0299c030.patch'
+Invoke-WebRequest 'https://github.com/protocolbuffers/protobuf/commit/0299c03005fbfe086d8394fb7a873a8a21fe327f.patch' -OutFile $patch
+if ((Get-FileHash $patch).Hash.ToLowerInvariant() -ne '5747ab6cf1dcdefc649fbfc6b8db1fdce546683c2ebad84519d3887944fd582e') { throw 'Backport checksum mismatch' }
+$patchArgs = @('-C',"$source/3rdparty/protobuf",'apply','--include=src/google/protobuf/extension_set_inl.h','--include=src/google/protobuf/wire_format.cc','--include=src/google/protobuf/wire_format_lite.h')
+Checked git ($patchArgs + @('--check',$patch))
+Checked git ($patchArgs + @($patch))
+'Bundled protobuf source modified by the checksum-pinned upstream CVE-2022-1941 backport in protobuf-upstream-0299c030.patch; three parser files only. Not a general security clearance.' | Set-Content "$out/SOURCE-PATCHES.txt"
 $build = Join-Path $root 'build'
 $argsConfigure = @('-S','experiments/native-ai/worker','-B',$build,'-G','Visual Studio 17 2022','-A','x64',"-DOPENCV_SOURCE=$source",'-DCMAKE_CONFIGURATION_TYPES=Release',"-DOPENCV_DOWNLOAD_PATH=$root/downloads")
 & cmake @argsConfigure *> "$out/configure.log"
 if ($LASTEXITCODE -ne 0) { Get-Content "$out/configure.log" -Tail 100; throw 'Native configure failed' }
-& cmake --build $build --config Release --target ai-worker --parallel 2 *> "$out/build.log"
-if ($LASTEXITCODE -ne 0) { Get-Content "$out/build.log" -Tail 100; throw 'Native compile failed' }
+$job = Start-Job -ArgumentList $build,"$out/build.log" -ScriptBlock {
+  param($directory,$log)
+  & cmake --build $directory --config Release --target ai-worker --parallel 2 *> $log
+  $LASTEXITCODE
+}
+while ($job.State -eq 'Running' -or $job.State -eq 'NotStarted') {
+  Start-Sleep -Seconds 30
+  if (Test-Path "$out/build.log") { Get-Content "$out/build.log" -Tail 1 }
+}
+$compileResult = @(Receive-Job $job -Wait)
+if ($job.State -ne 'Completed' -or $compileResult.Count -ne 1 -or $compileResult[0] -ne 0) { Get-Content "$out/build.log" -Tail 100; throw 'Native compile failed' }
+Remove-Job $job
 Copy-Item "$build/Release/ai-worker.exe" $out
 Copy-Item "$build/CMakeCache.txt" "$out/CMakeCache.txt"
 Copy-Item "$source/LICENSE" "$out/OpenCV-LICENSE.txt"
