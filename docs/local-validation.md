@@ -20,7 +20,7 @@ the native executable and built-in Windows service facilities are packaged.
    nor transmits specifications, reports, paths, credentials or personal media.
 4. Open the Start menu entries **View access code** and **Open library**. Sign in,
    confirm the PNG preview/full-image viewer works, and keep the access code private.
-5. When convenient, perform one normal PC reboot and check that the library starts
+5. At final acceptance (deferred by user), perform one normal PC reboot and check that the library starts
    again and both synthetic originals remain downloadable. No automatic reboot or
    OS update is requested or scheduled by the application.
 
@@ -33,3 +33,7 @@ and ZIP backup are available in the UI. This build lacks AI, generated video
 thumbnails, EXIF orientation processing, HEIC/RAW/HDR preview validation, physical
 disconnect testing and extended endurance. Browser folder copies flatten source
 directory structure. Do not bulk-import the real library yet.
+
+Local functional checkpoint was reported passed on 2026-11-01, including full-image
+view. Do not ask the user to repeat it without a relevant change or failure.
+Post-reboot validation is explicitly deferred until the end of development.

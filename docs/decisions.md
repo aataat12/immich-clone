@@ -75,3 +75,9 @@
   so an application-data permission failure can still be diagnosed. No inventory
   collection or automatic upload. Browser and offline Start menu exports combine
   bounded files; originals/catalog/backup semantics remain unchanged.
+
+- 2026-11-01 user-reported local functional acceptance passed, including PNG
+  preview/full-image view, service restart, original hashes and independent restore.
+  Accept this limited Windows 10 evidence without publishing the transcript or
+  machine information. User deferred reboot validation to final acceptance; it
+  does not block further development. Current setup requires no OS reboot.

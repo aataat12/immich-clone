@@ -1,3 +1,21 @@
+# Current checkpoint update — 2026-11-01
+
+User-reported local Windows 10 acceptance passed: restricted service account,
+application response/authentication, original upload SHA256, native PNG decoding
+and persistent preview job, original retrieval across service restart, independent
+backup restoration and checksum verification. User also confirmed full-image view.
+These are user-reported results, not directly observed cloud execution. No raw
+transcript, machine specifications, personal paths or logs are committed.
+
+The user explicitly deferred post-reboot validation until final acceptance.
+The current installer does not require a setup reboot; service restart completed.
+Reboot is no longer a gate on continued development. Nothing further is needed
+from the user for this checkpoint. Broader formats/metadata, optional AI, extended
+reliability, and final OS reboot acceptance remain separate unfinished work.
+This supersedes earlier stopped/awaiting-local-validation notes below.
+
+---
+
 # Status — 2026-11-01
 
 Authoritative requirements: `../Immich_Clone_Project_Requirements.md`, including
