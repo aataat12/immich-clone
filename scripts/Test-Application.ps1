@@ -36,7 +36,7 @@ try {
     Assert $duplicate.duplicate 'duplicate upload resolves without overwriting original'
     $items = @()
     for ($attempt=0;$attempt -lt 15;$attempt++) {
-        $items = @(Invoke-RestMethod http://127.0.0.1:2283/api/assets -WebSession $session)
+        $items = Invoke-RestMethod http://127.0.0.1:2283/api/assets -WebSession $session
         if ($items.Count -eq 1 -and $items[0].preview -ne 'queued') { break }
         Start-Sleep -Seconds 1
     }
@@ -89,13 +89,13 @@ try {
         $null = Invoke-RestMethod "http://127.0.0.1:2283/api/assets/$gridId/retry" -Method Post -Headers $headers -WebSession $session
         $null = Invoke-RestMethod "http://127.0.0.1:2283/api/assets/$id/retry" -Method Post -Headers $headers -WebSession $session
         for ($i=0;$i -lt 15;$i++) {
-            $items = @(Invoke-RestMethod http://127.0.0.1:2283/api/assets -WebSession $session)
+            $items = Invoke-RestMethod http://127.0.0.1:2283/api/assets -WebSession $session
             $grid = $items | Where-Object id -eq $gridId
             $native = $items | Where-Object id -eq $id
             if ($grid.preview -eq 'failed' -and $native.preview -eq 'ready') { break }
             Start-Sleep -Seconds 1
         }
-        Write-Output ('Synthetic optional-provider states: '+(@{grid=$grid.preview;native=$native.preview;gridError=$grid.error;nativeError=$native.error;count=$items.Count}|ConvertTo-Json -Compress))
+        Write-Output ('Synthetic optional-provider states: '+(@{grid=$grid.preview;native=$native.preview;count=$items.Count}|ConvertTo-Json -Compress))
         Assert ($grid.preview -eq 'failed' -and $native.preview -eq 'ready' -and (Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'missing optional provider leaves native previews storage and HTTP operational'
         Stop-Service $name
         Move-Item ($providerExe+'.held') $providerExe
@@ -103,7 +103,7 @@ try {
         Login
         $null = Invoke-RestMethod "http://127.0.0.1:2283/api/assets/$gridId/retry" -Method Post -Headers $headers -WebSession $session
         for ($i=0;$i -lt 15;$i++) {
-            $grid = @(Invoke-RestMethod http://127.0.0.1:2283/api/assets -WebSession $session) | Where-Object id -eq $gridId
+            $grid = (Invoke-RestMethod http://127.0.0.1:2283/api/assets -WebSession $session) | Where-Object id -eq $gridId
             if ($grid.preview -eq 'ready') { break }
             Start-Sleep -Seconds 1
         }

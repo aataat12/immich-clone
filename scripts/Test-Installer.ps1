@@ -40,7 +40,7 @@ try {
     $heicAsset = (Invoke-RestMethod 'http://127.0.0.1:2283/api/upload?name=synthetic.heic' -Method Post -Headers @{'X-Immich-Request'='1'} -InFile $heic -WebSession $session).asset
     $heicHash = (Get-FileHash $heic).Hash
     for ($i=0;$i -lt 20;$i++) {
-        $photo = @(Invoke-RestMethod http://127.0.0.1:2283/api/assets -WebSession $session) | Where-Object id -eq $heicAsset.id
+        $photo = (Invoke-RestMethod http://127.0.0.1:2283/api/assets -WebSession $session) | Where-Object id -eq $heicAsset.id
         if ($photo.preview -ne 'queued') { break }
         Start-Sleep -Seconds 1
     }
@@ -79,7 +79,7 @@ try {
     Invoke-WebRequest "http://127.0.0.1:2283/api/assets/$($asset.id)/original" -WebSession $session -OutFile $retrieved
     Assert ((Get-FileHash $retrieved).Hash -eq $hash) 'reinstalled service authenticates with restored secret and returns original bytes'
     for ($i=0;$i -lt 20;$i++) {
-        $photo = @(Invoke-RestMethod http://127.0.0.1:2283/api/assets -WebSession $session) | Where-Object id -eq $heicAsset.id
+        $photo = (Invoke-RestMethod http://127.0.0.1:2283/api/assets -WebSession $session) | Where-Object id -eq $heicAsset.id
         if ($photo.preview -eq 'ready') { break }
         Start-Sleep -Seconds 1
     }
