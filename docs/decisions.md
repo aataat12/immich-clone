@@ -182,3 +182,10 @@
   also finds different-person pairs above the basic threshold. Do not automatically
   merge people using single-link/pair similarity or propagate names from unreviewed
   suggestions. Continue conservative reviewed grouping and broader quality gates.
+
+- User authorized a Hidden Media UI with leave-hidden, restore and explicit
+  permanent-delete controls. This is an intentional exception to retaining a
+  managed original after the user confirms deletion, never permission to delete
+  external sources. Show actual local managed locations and recorded relative
+  aliases; do not invent unavailable absolute source paths or log them. Durable
+  deletion/recovery and synthetic preservation tests gate delivery. See hidden-media.md.

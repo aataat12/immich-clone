@@ -37,6 +37,13 @@ No broad clustering/quality acceptance. Next: self-contained native worker proof
 then reviewed People/tagging slice and private broader quality evaluation. No new
 installer, import tests or local action. Packaging and broader quality remain open.
 
+## Queued feature: Hidden Media and deliberate deletion
+
+Accepted `hidden-media.md`: leave hidden, restore, confirm permanent removal of
+managed copies; show local managed directory/filename and available source aliases.
+Source files stay untouched. Auth/privacy/concurrency/recovery tests gate delivery.
+Not implemented yet; AI remains the current priority. No user media was deleted.
+
 ## Confirmed workflow: managed copies and bulk import
 
 The user explicitly chose application-owned copies after discussing the storage
