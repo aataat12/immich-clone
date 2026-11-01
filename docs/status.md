@@ -69,3 +69,13 @@ The local Windows PowerShell validation helper is being exercised under the
 installed package before the Windows 10 handoff. It uses an empty test library,
 two synthetic originals, service restart, PNG decode and independent restoration;
 no hardware inventory, personal-source reads or remote report upload.
+
+## Local helper acceptance
+
+[Run 41328990649](https://github.com/aataat12/immich-clone/actions/runs/41328990649),
+commit `683fd8d`, job `124914893938`: every step passed, including the local
+acceptance helper executed in built-in Windows PowerShell 5.1 against the actual
+installed service. Native PNG decode, restart, original retrieval, independent
+restore and checksum verification passed; no machine inventory is emitted.
+Final service-level recovery test now adds reinstalling against restored state
+while the original directory is unavailable, before the local Windows 10 gate.

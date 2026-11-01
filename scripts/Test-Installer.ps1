@@ -38,11 +38,31 @@ try {
     Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.1-prototype') 'failed upgrade restores previous executable'
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'rollback restores healthy service'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'failed upgrade preserves original bytes'
+    $recoveryTool = Join-Path $root 'recovery-tool.exe'
+    Copy-Item "$app/immichclone.exe" $recoveryTool
+    $session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
+    $null = Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$code}|ConvertTo-Json) -WebSession $session
+    $archive = Join-Path $root 'recovery.zip'
+    Invoke-WebRequest http://127.0.0.1:2283/api/backup -WebSession $session -OutFile $archive
     $uninstall = Start-Process "$app/unins000.exe" -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru
     Assert ($uninstall.ExitCode -eq 0) 'silent uninstall succeeds'
     Assert (!(Get-Service ImmichClone -ErrorAction SilentlyContinue)) 'uninstall removes service'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'uninstall retains original bytes'
     Assert ((Test-Path "$state/catalog.db") -and (Test-Path "$state/access-code.txt")) 'uninstall retains catalog and access code'
+    # Make the old installation unavailable without destroying its files.
+    Move-Item -LiteralPath $state -Destination ($state+'.offline')
+    $state = Join-Path $root 'restored state'
+    & $recoveryTool -mode restore -data $state -archive $archive
+    Assert ($LASTEXITCODE -eq 0) 'offline restoration succeeds at a different location'
+    Assert ((Install '0.1.1') -eq 0) 'installer starts a restored library without the original data folder'
+    $session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
+    $restoredCode = (Get-Content "$state/access-code.txt" -Raw).Trim()
+    $null = Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$restoredCode}|ConvertTo-Json) -WebSession $session
+    $retrieved = Join-Path $root 'restored-download.txt'
+    Invoke-WebRequest "http://127.0.0.1:2283/api/assets/$($asset.id)/original" -WebSession $session -OutFile $retrieved
+    Assert ((Get-FileHash $retrieved).Hash -eq $hash) 'reinstalled service authenticates with restored secret and returns original bytes'
+    $uninstall = Start-Process "$app/unins000.exe" -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru
+    Assert ($uninstall.ExitCode -eq 0) 'restored installation uninstalls cleanly'
 } finally {
     Remove-Item Env:IMMICH_INSTALL_TEST_FAILURE -ErrorAction SilentlyContinue
     if (Get-Service ImmichClone -ErrorAction SilentlyContinue) { Stop-Service ImmichClone -Force -ErrorAction Continue; & sc.exe delete ImmichClone }
