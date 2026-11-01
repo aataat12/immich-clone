@@ -5,19 +5,18 @@ Server-first execution amendment. No new charges or parallel agents. No personal
 machine specifications, paths, media or returned logs belong in this repository.
 Historical checkpoints remain in Git history; this file supersedes their gates.
 
-## Active issue: local MOV disappears from browser
+## Current work: catalog/worker scale
 
-User reports 0.1.9 MP4 thumbnail and opening passed; HEIC was not exercised.
-A MOV reportedly appeared then vanished from the grid, with subsequent uploads
-not creating a visible card. Cause is unverified; do not mark MOV local acceptance
-passed or infer original preservation for that specific file from prior tests.
-Focused Linux synthetic lifecycle probe passed: simulated decoder rejection keeps
-the MOV listed and byte-identical across duplicate re-upload/catalog reopen.
-This is not reproduction of the private MOV or actual codec execution.
-Next evidence: private allowlisted diagnostics plus a local-only check whether
-Export catalog contains the MOV and its preview/error values. Do not request the
-private media or full catalog for public reporting. MOV diagnosis is paused for
-that evidence; no dependency install, reinstall or reboot is needed.
+User now reports MOV files are showing. Close the request for private diagnostics
+unless the symptom recurs; root cause was not independently established. This is
+user-reported visibility evidence only, not a checksum/codec/corpus validation.
+MP4 preview/opening previously passed locally; HEIC remains unexercised.
+
+Next: measure catalog listing, full-list JSON payload construction and idle job
+polling at 1k/10k/50k synthetic metadata rows. This is catalog-only data, not a
+50k-media import. Execute a separate actual PNG job among those rows. Use results
+to choose a small justified improvement; do not infer Windows 10 speed from cloud.
+No user input, local setup or reboot is needed now.
 
 ## Latest installer: version display and reversible visibility 0.1.11
 
@@ -34,8 +33,8 @@ protection; Windows storage tests verified hidden-state persistence through jobs
 restart/duplicate upload/backup restoration, and protected visibility endpoints.
 Installer lifecycle, provider recovery and actual NTFS disk-full regression passed.
 Desktop/narrow screenshots inspected. No reboot or prerequisite installation.
-Local Windows 10 acceptance of these controls is pending. MOV diagnosis above
-remains unresolved; the refresh hardening is not a confirmed private-MOV fix.
+Local hide/restore acceptance has not been explicitly reported. User says MOVs
+are now visible; refresh hardening is not an independently confirmed root cause.
 
 ## Prior milestone: optional media provider 0.1.9
 
@@ -107,7 +106,7 @@ Server execution does not establish clean Windows 10 compatibility.
 
 0.1.11 cloud acceptance and checksum verification are complete. Reload the page
 after upgrade, confirm the version and test reversible hide/restore on a test
-item. Private diagnostics/catalog-presence observation still needed for MOV.
+item. MOV visibility now works according to the user; request diagnostics only if it recurs.
 No bulk ingestion or reboot requested. Next main work: measure large-library browsing/job behavior and
 address demonstrated bottlenecks. A recommended independent partner task is a
 backup/restore failure-path review; see partner-handoff.md. No partner access,

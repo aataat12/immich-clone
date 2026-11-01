@@ -1,0 +1,32 @@
+name: Bounded catalog and worker scale probe
+on:
+  push:
+    paths:
+      - 'experiments/catalog-scale/**'
+      - '.github/workflows/catalog-scale.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  scale:
+    runs-on: windows-2022
+    timeout-minutes: 8
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Measure metadata-only catalog operations and execute a real PNG job
+        shell: pwsh
+        run: |
+          go mod download
+          if ($LASTEXITCODE -ne 0) { throw 'Dependency download failed' }
+          go mod verify
+          if ($LASTEXITCODE -ne 0) { throw 'Dependency verification failed' }
+          go run -mod=readonly ./experiments/catalog-scale
+          if ($LASTEXITCODE -ne 0) { throw 'Catalog scale probe failed' }

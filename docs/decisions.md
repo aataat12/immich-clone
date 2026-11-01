@@ -133,3 +133,9 @@
 - Render a complete detached grid and ignore superseded refresh responses. This
   prevents an older snapshot from replacing a newer grid; it does not establish
   the cause of the separately reported local MOV disappearance.
+
+- User reports MOVs now show; close the diagnostic-input gate unless it recurs.
+  Treat this as user-reported visibility, not established root-cause/codec proof.
+- Measure catalog/worker operations with bounded metadata-only synthetic rows,
+  plus an actual PNG job. Do not present row-count benchmarks as bulk import or
+  camera-corpus acceptance. Use observed bottlenecks to scope queue/paging changes.
