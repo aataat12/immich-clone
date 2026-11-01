@@ -1,0 +1,117 @@
+name: Windows cloud diagnostic
+on:
+  push:
+    paths:
+      - '.github/workflows/windows-diagnostic.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnostic:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build and test native Windows services
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $report = Join-Path $env:GITHUB_WORKSPACE 'diagnostic-report'
+          New-Item -ItemType Directory -Force $report | Out-Null
+          Start-Transcript -Path "$report/transcript.txt"
+          $appService = 'ImmichCloneDiagnosticApp'
+          $dbService = 'ImmichCloneDiagnosticDb'
+          function Checked([string]$exe, [string[]]$arguments) {
+            & $exe @arguments
+            if ($LASTEXITCODE -ne 0) { throw "$exe failed: $LASTEXITCODE" }
+          }
+          try {
+            $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+            $admin = ([Security.Principal.WindowsPrincipal]$identity).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+            if (!$admin) { throw 'Administrator access required' }
+            $os = Get-CimInstance Win32_OperatingSystem
+            $src = Join-Path $env:RUNNER_TEMP 'diagnostic-app'
+            New-Item -ItemType Directory -Force $src | Out-Null
+            @'
+          <Project Sdk="Microsoft.NET.Sdk.Web">
+            <PropertyGroup>
+              <TargetFramework>net8.0</TargetFramework>
+              <ImplicitUsings>enable</ImplicitUsings>
+              <Nullable>enable</Nullable>
+            </PropertyGroup>
+            <ItemGroup>
+              <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.1" />
+            </ItemGroup>
+          </Project>
+          '@ | Set-Content "$src/Diagnostic.csproj"
+            @'
+          var builder = WebApplication.CreateBuilder(args);
+          builder.Host.UseWindowsService();
+          builder.WebHost.UseUrls("http://127.0.0.1:18765");
+          var app = builder.Build();
+          app.MapGet("/health", () => new { status = "ok", os = System.Runtime.InteropServices.RuntimeInformation.OSDescription });
+          app.Run();
+          '@ | Set-Content "$src/Program.cs"
+            $published = Join-Path $src 'published'
+            Checked 'dotnet' @('publish', "$src/Diagnostic.csproj", '-c', 'Release', '-r', 'win-x64', '--self-contained', 'true', '-o', $published)
+            New-Service -Name $appService -BinaryPathName ('"' + "$published/Diagnostic.exe" + '"') -StartupType Manual | Out-Null
+            Start-Service $appService
+            $health = $null
+            for ($attempt=0; $attempt -lt 30; $attempt++) {
+              try { $health = Invoke-RestMethod 'http://127.0.0.1:18765/health'; break } catch { Start-Sleep -Seconds 1 }
+            }
+            if ($health.status -ne 'ok') { throw 'Application health check failed' }
+            Restart-Service $appService
+            Start-Sleep -Seconds 3
+            if ((Invoke-RestMethod 'http://127.0.0.1:18765/health').status -ne 'ok') { throw 'Application restart failed' }
+
+            $pg = Get-ChildItem 'C:/Program Files/PostgreSQL/*/bin/initdb.exe' -ErrorAction SilentlyContinue | Sort-Object FullName -Descending | Select-Object -First 1
+            if (!$pg) {
+              Checked 'choco' @('install', 'postgresql16', '--yes', '--no-progress', '--limit-output')
+              $pg = Get-ChildItem 'C:/Program Files/PostgreSQL/*/bin/initdb.exe' | Sort-Object FullName -Descending | Select-Object -First 1
+            }
+            if (!$pg) { throw 'PostgreSQL binaries not available' }
+            $bin = $pg.DirectoryName
+            $data = Join-Path $env:RUNNER_TEMP 'diagnostic-pgdata'
+            Checked "$bin/initdb.exe" @('-D', $data, '-U', 'postgres', '--auth=trust', '--encoding=UTF8', '--no-locale')
+            Add-Content "$data/postgresql.conf" "listen_addresses = '127.0.0.1'"
+            Add-Content "$data/postgresql.conf" "port = 18766"
+            Checked "$bin/pg_ctl.exe" @('register', '-N', $dbService, '-D', $data, '-S', 'demand')
+            Start-Service $dbService
+            $sqlArgs = @('-h', '127.0.0.1', '-p', '18766', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1')
+            Checked "$bin/psql.exe" ($sqlArgs + @('-c', 'CREATE TABLE diagnostic (id integer PRIMARY KEY, value text NOT NULL); INSERT INTO diagnostic VALUES (1, ''persisted'');'))
+            Restart-Service $dbService
+            $value = & "$bin/psql.exe" @sqlArgs -t -A -c 'SELECT value FROM diagnostic WHERE id=1;'
+            if ($LASTEXITCODE -ne 0 -or "$value".Trim() -ne 'persisted') { throw 'Database persistence check failed' }
+            @{
+              result = 'passed'
+              os = $os.Caption
+              osVersion = $os.Version
+              administrator = $admin
+              selfContainedDotnetWindowsService = 'passed'
+              httpHealth = 'passed'
+              applicationServiceRestart = 'passed'
+              postgresVersion = (& "$bin/postgres.exe" --version)
+              postgresServiceRestartAndPersistence = 'passed'
+              scope = 'Infrastructure diagnostic only; not the photo application, full installer, OS reboot, or endurance validation'
+            } | ConvertTo-Json | Set-Content "$report/result.json"
+          } finally {
+            foreach ($name in @($appService, $dbService)) {
+              if (Get-Service $name -ErrorAction SilentlyContinue) {
+                Stop-Service $name -Force -ErrorAction Continue
+                & sc.exe delete $name
+                if ($LASTEXITCODE -ne 0) { throw "Service removal failed: $name" }
+              }
+            }
+            Stop-Transcript
+          }
+      - name: Upload diagnostic report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-diagnostic-report
+          path: diagnostic-report/
+          if-no-files-found: error
+          retention-days: 14
