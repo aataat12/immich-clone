@@ -4,6 +4,11 @@ param(
     [Parameter(Mandatory=$true)][string]$DataDir
 )
 $ErrorActionPreference = 'Stop'
+# Use the OS-provided Windows PowerShell modules even when setup is launched
+# from PowerShell 7 with a different inherited module search path.
+$env:PSModulePath = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\Modules'
+Import-Module Microsoft.PowerShell.Management -Force
+Import-Module Microsoft.PowerShell.Security -Force
 $name = 'ImmichClone'
 $binary = Join-Path $AppDir 'immichclone.exe'
 $rollback = Join-Path $AppDir 'rollback'
@@ -51,8 +56,11 @@ try {
     Checked $binary @('-mode','init','-data',$DataDir)
     if (!$owned) {
         $stage = 'register LocalService'
-        $credential = [PSCredential]::new('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))
-        New-Service -Name $name -DisplayName 'Immich Clone (prototype)' -BinaryPathName ('"'+$binary+'" -mode service -data "'+$DataDir+'"') -StartupType Automatic -Credential $credential | Out-Null
+        $created = Invoke-CimMethod -ClassName Win32_Service -MethodName Create -Arguments @{
+            Name=$name; DisplayName='Immich Clone (prototype)'; PathName=('"'+$binary+'" -mode service -data "'+$DataDir+'"')
+            ServiceType=[uint32]16; StartMode='Automatic'; StartName='NT AUTHORITY\LocalService'
+        }
+        if ($created.ReturnValue -ne 0) { throw 'Native service registration failed' }
     }
     $stage = 'configure automatic startup'
     Checked sc.exe @('config',$name,'start=','delayed-auto')
