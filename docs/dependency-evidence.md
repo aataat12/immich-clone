@@ -238,3 +238,61 @@ User-reported 0.1.5 local check: two JPEGs displayed expected date/time and
 orientation. No media, paths, machine specifications or raw reports published.
 This supersedes the earlier note that 0.1.5 had no local evidence; reboot remains
 deferred to final acceptance.
+
+
+## Minimal source-built video/HEIC candidate — 2026-11-01
+
+Pinned FFmpeg 8.1.3, upstream mirror tag n8.1.3, source commit
+`1041abdc962f4cc4f394aa8de9dc5236c0c3b9e7`. Official sources:
+https://ffmpeg.org/download.html (upstream mirror and release verification),
+https://ffmpeg.org/legal.html and https://ffmpeg.org/security.html .
+Prior BtbN synthetic operations were reused as context, not mistaken for a
+redistribution/native-closure audit. This source-built candidate excludes GPL/
+nonfree flags, external codec libraries, networking, GPU and x86 assembly; CPU
+baseline x86-64/SSE2 and target Windows macro 0x0A00. This sets a build target,
+not a claim of official vendor support or actual Windows 10 execution.
+
+[Source build 41344707161](https://github.com/aataat12/immich-clone/actions/runs/41344707161),
+commit `a7c7b052bca855a5b9b1951a17b2ba36101d2a0c`, build job `124961940082`
+passed on Ubuntu 24.04 cross-compiling Windows x64. Exact configure command and
+compiler versions retained: GCC MinGW win32 13.2.0-6ubuntu1+26.1; binutils
+2.41.90.20240122-1ubuntu1+11.4. This was cloud build tooling only. Configure
+reported LGPL 2.1 or later. Corresponding unmodified source, source commit, LGPL
+text, build command, compiler copyright/runtime exception and binary hashes are
+in artifact `13098439723`. Build instructions are retained in
+scripts; no bit-identical rebuild comparison has been performed. MinGW notices
+and full distribution packaging remain to be completed before app delivery.
+No fixed LTS/SLA claimed: track upstream security fixes, pin/retest updates, retain
+a replaceable subprocess provider; originals/catalog/derived PNGs stay independent.
+
+Initial Windows service job `124962409763` failed the rotation dimension check
+after H264/HEVC passed. The synthetic MOV lacked its intended display matrix: the
+fixture producer ignored the old rotate metadata option. Regenerated with explicit
+`-display_rotation:v:0 90`; independently verified matrix and 120x160 output.
+Parent run failed overall; only its successful source-build artifact was reused.
+
+[Service retest 41345139004](https://github.com/aataat12/immich-clone/actions/runs/41345139004),
+commit `0cb29a1aa25546a4125aea25dbc7a42646e8010e`, job `124963245598` passed
+on Windows Server 2022 LocalService. Actual CPU H264/HEVC decode, rotated MOV
+dimensions, single-image 8-bit HEIC decode, expected pixel values, bounded BMP pipe
+output and PNG generation, unchanged original SHA256, malformed rejection, actual
+child timeout termination/output flooding rejection, and service restart passed.
+Protocol enumeration allowed only file/pipe. No credentials or personal media used.
+PE imports observed: KERNEL32.dll, SHELL32.dll, bcrypt.dll and msvcrt.dll only; no
+VC redistributable, external codec DLL, GPU SDK or local toolchain assumed. This
+is static-import plus actual service evidence, not an exhaustive dynamic API or
+clean-client prerequisite proof. Total memory limit/Windows job containment,
+crash/queue integration, HEIC grids/bursts/metadata/HDR, broader camera corpus and
+local Windows 10 remain unverified. Keep provider out of app until relevant gates
+pass. The per-allocation FFmpeg bound is not a total process memory limit.
+
+Artifact ZIP retrieved and SHA256 verified:
+`66b802519318717859bd03786832496a5ef06b0e765617a2c5037bc7ca2c012f`.
+Extracted hashes matched manifest:
+- ffmpeg.exe: `3b596d5d7bffee11827869480029a01fb24ab4e845117ee56a4beb52c47d85fa`
+- ffprobe.exe: `bb27a0417dac832d8b1d7dcc2d7b35ea07ae150ed6f45b83c31fd05f93faa09a`
+- exact source archive: `57421c6be6861f26d1dc9edf384a9d1ab6410cc0b247b2502f415df83443fe4b`
+
+No new installer or application dependency was delivered for this experiment.
+Current 0.1.7 user-reported BMP/GIF/TIFF checks passed; previous JPEGs remain good.
+No raw transcript, private paths, media or machine inventory committed.

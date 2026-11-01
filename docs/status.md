@@ -5,7 +5,20 @@ Server-first execution amendment. No new charges or parallel agents. No personal
 machine specifications, paths, media or returned logs belong in this repository.
 Historical checkpoints remain in Git history; this file supersedes their gates.
 
-## Current milestone: additional image formats 0.1.7
+## Current milestone: video/HEIC provider feasibility
+
+Source-built minimal FFmpeg candidate completed actual LocalService decoding of
+synthetic H264, HEVC, rotated MOV and single-image HEIC with expected pixels,
+unchanged originals, malformed rejection, protocol allowlist, actual child timeout/
+output bounds and restart on Server 2022:
+[41345139004](https://github.com/aataat12/immich-clone/actions/runs/41345139004).
+Source/binaries were retrieved and hashes verified. Source build/initial fixture
+failure/correction evidence is in dependency-evidence.md. No app integration yet.
+Next: verify Windows job-object total memory/process containment and HEIC grids,
+then integrate the optional provider and package its source/licenses.
+No input or installation is needed from the user for this work.
+
+## Current installer: additional image formats 0.1.7
 
 Candidate proof passed on Windows Server 2022 under LocalService:
 [41342166588](https://github.com/aataat12/immich-clone/actions/runs/41342166588),

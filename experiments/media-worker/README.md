@@ -51,3 +51,13 @@ producer silently ignored the old rotate metadata command. Regenerated using
 120x160 thumbnail using the fixture producer. This is a fixture correction, not
 evidence that the candidate failed actual rotation. Retest Windows operations
 using the unchanged checksum-verified binary artifact from that run.
+
+Source build is manually dispatchable (`minimal-media.yml`); service retests use
+`media-service.yml` with a pinned `run-id`. Reuse compiled artifacts only while
+unexpired; rebuild pinned source if needed, then update that explicit run ID. No
+floating third-party binary or mandatory paid/local build environment is used.
+Completed service retest: run 41345139004, commit
+`0cb29a1aa25546a4125aea25dbc7a42646e8010e`. Actual timeout termination and
+output-cap tests passed, as did an enumeration permitting only file/pipe protocols.
+Total process memory containment and broad/grid HEIC remain separate gates; the
+FFmpeg per-allocation flag does not establish a total memory cap.
