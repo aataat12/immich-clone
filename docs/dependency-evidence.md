@@ -143,3 +143,14 @@ from 0.1.0 to 0.1.1, injected failed 0.1.2 upgrade with restoration to healthy
 account and automatic startup configuration checked; full OS boot not exercised.
 Code signing is absent; Windows SmartScreen/antivirus acceptance is unverified.
 Win10 clean install and reboot remain local acceptance, not inferred from Server.
+
+## Actual browser video execution
+
+[Run 41328317537](https://github.com/aataat12/immich-clone/actions/runs/41328317537)
+used the pinned FFmpeg candidate solely in CI to generate synthetic H264/AAC MP4.
+Edge on Server decoded and played that stored original: readyState, 160px video
+width and advancing currentTime asserted. The application serves original bytes
+with range support and does not transcode or ship FFmpeg. This establishes that
+fixture/browser combination, not all MP4 codecs, HEVC/HDR, target desktop/browser
+behavior or generated video thumbnails. Other browser codec failures remain
+possible; original download is independent.

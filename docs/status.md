@@ -14,8 +14,8 @@ consistent backup/verified independent restoration. No original deletion API.
 External folders are never server-scanned or changed. App state is outside sync
 folders. Browser-folder copying does not retain relative directory structure yet.
 
-Full-image viewing and browser MP4 playback are implemented locally with a new
-actual H264/AAC Edge playback experiment pending. No AI features are implemented.
+Full-image viewing and actual H264/AAC MP4 playback have passed in Edge on Server.
+No AI features are implemented.
 Format limits are explicit in `prototype-notes.txt` and the UI.
 
 ## Milestones
@@ -50,8 +50,22 @@ after end-to-end lifecycle passed. No failed build is a validated release.
 
 ## Next concrete work
 
-Run actual full-image/MP4 browser tests with a generated H264/AAC fixture and repeat
-installer acceptance for the changed executable. Then review the packaged build
-and prepare the final local Windows 10 compatibility/reboot checkpoint. No bulk
+Verify the local validation helper under Windows PowerShell, then hand off the
+packaged prototype for local Windows 10 installation and reboot validation. No bulk
 real-library ingestion, production release, Windows 10 reliability, AI inference
 or clean-machine compatibility claim yet.
+
+## Media-enabled acceptance
+
+[Run 41328317537](https://github.com/aataat12/immich-clone/actions/runs/41328317537),
+commit `19be51c`, job `124912848751`: all checks passed, logs inspected. Pinned
+FFmpeg actually generated an H264/AAC MP4; application upload recognized it and
+Edge decoded/played it (video dimensions and playback time checked). Full-image
+view and HTTP byte-range retrieval also passed. Installer lifecycle and actual
+full-disk recovery passed again for the changed build. Generated video thumbnails
+remain unsupported; no FFmpeg binary is bundled.
+
+The local Windows PowerShell validation helper is being exercised under the
+installed package before the Windows 10 handoff. It uses an empty test library,
+two synthetic originals, service restart, PNG decode and independent restoration;
+no hardware inventory, personal-source reads or remote report upload.

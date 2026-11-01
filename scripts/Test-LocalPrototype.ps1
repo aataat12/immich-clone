@@ -3,6 +3,9 @@ cls
 # folders, enumerates hardware, prints secrets, or changes Windows settings.
 # Run after installing the tested prototype with a NEW EMPTY application library.
 $ErrorActionPreference = 'Stop'
+$env:PSModulePath = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\Modules'
+Import-Module Microsoft.PowerShell.Management -Force
+Import-Module Microsoft.PowerShell.Security -Force
 $principal = [Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
 if (!$principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw 'Run this service-restart test in an administrator PowerShell window.' }
 function Assert([bool]$condition,[string]$message) { if (!$condition) { throw $message }; Write-Host "PASS: $message" }
@@ -28,6 +31,17 @@ try {
     $result = Invoke-RestMethod 'http://127.0.0.1:2283/api/upload?name=synthetic-test.txt' -Method Post -Headers @{'X-Immich-Request'='1'} -InFile $fixture -WebSession $session
     $id = $result.asset.id
     Assert ($id -eq (Get-FileHash $fixture).Hash.ToLowerInvariant()) 'upload SHA256 matches source'
+    $image = Join-Path $root 'synthetic-test.png'
+    [IO.File]::WriteAllBytes($image,[Convert]::FromBase64String('iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAU0lEQVR4nO3PQQ3AIADAQEAbjhCLnYngcVnSU9DOfe74s6UDXjWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaB9L9IB7tRAThgAAAAASUVORK5CYII='))
+    $photo = (Invoke-RestMethod 'http://127.0.0.1:2283/api/upload?name=synthetic-test.png' -Method Post -Headers @{'X-Immich-Request'='1'} -InFile $image -WebSession $session).asset
+    $ready = $false
+    for ($attempt=0;$attempt -lt 20;$attempt++) {
+        $items = @(Invoke-RestMethod http://127.0.0.1:2283/api/assets -WebSession $session)
+        $stored = $items | Where-Object { $_.id -eq $photo.id }
+        if ($stored.preview -eq 'ready') { $ready=$true; break }
+        Start-Sleep -Seconds 1
+    }
+    Assert $ready 'native image decoding and persistent preview job'
     Restart-Service ImmichClone
     Login
     $download = Join-Path $root 'download.txt'
@@ -41,7 +55,7 @@ try {
     & $binary -mode verify -data $restored
     if ($LASTEXITCODE -ne 0) { throw 'Local original verification failed' }
     Assert ((Get-FileHash "$restored/originals/$id").Hash -eq (Get-FileHash $fixture).Hash) 'independent restore preserves original bytes'
-    Write-Host 'Local acceptance check passed. One synthetic original remains in the test library.'
+    Write-Host 'Local acceptance check passed. Two synthetic originals remain in the test library.'
     Write-Host 'No machine specifications, paths, access code or media were transmitted outside this PC.'
 } finally {
     Remove-Item $root -Recurse -Force -ErrorAction Continue
