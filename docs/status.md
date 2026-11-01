@@ -115,3 +115,18 @@ install/reboot behavior, clean-desktop prerequisite confirmation, extended
 endurance, physical disconnect, camera metadata/EXIF orientation, broader media
 previews and optional AI. No bulk personal-library ingestion authorized by a
 claim of completed validation.
+
+## Diagnostic build 0.1.3 in progress
+
+User authorized a new diagnostic release. Adds bounded, private structured logs
+for native service startup/shutdown, operation stages, HTTP outcomes, uploads,
+preview jobs, backup/restore/verify and installer/rollback events. Error categories
+and native error numbers are retained; raw exception text, URLs, queries, headers,
+credentials, filenames, content hashes, filesystem paths and machine inventory
+are excluded. Each of three channels retains two 4MiB files (24MiB total).
+
+Authenticated browser download or standalone Start menu Export diagnostic log
+produces one .log file for private return to this conversation; no automatic
+upload. Export remains available with the service stopped. No log files or user
+diagnostic reports belong in GitHub. New cloud installer/privacy tests pending;
+local race tests and vet passed.

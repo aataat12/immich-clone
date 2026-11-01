@@ -18,6 +18,8 @@ try {
     Checked icacls @($state,'/grant','*S-1-5-19:(OI)(CI)M')
     $credential = [PSCredential]::new('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))
     New-Service -Name $name -BinaryPathName ('"'+$binary+'" -mode service -data "'+$state+'"') -Credential $credential | Out-Null
+    $diagnosticRoot = Join-Path $env:ProgramData 'ImmichCloneDiagnostics'
+    Checked icacls @($diagnosticRoot,'/grant','*S-1-5-19:(OI)(CI)M')
     Start-Service $name
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'actual application starts as LocalService'
     Login
@@ -50,6 +52,9 @@ try {
         Checked node @('tests/browser.cjs')
         Remove-Item Env:IMMICH_TEST_STATE
     }
+    $onlineLog = Join-Path $root 'online-diagnostics.log'
+    Invoke-WebRequest http://127.0.0.1:2283/api/diagnostics -WebSession $session -OutFile $onlineLog
+    Assert ((Get-Content $onlineLog -Raw).Contains('original_write')) 'authenticated browser diagnostic export includes upload events'
     Restart-Service $name
     Login
     $download = Join-Path $root 'download.png'
@@ -68,6 +73,12 @@ try {
     try { Start-Service $name -ErrorAction Stop } catch { $failed = $true }
     Assert $failed 'service startup surfaces denied storage permissions'
     Checked icacls @($state,'/remove:d','*S-1-5-19')
+    $support = Join-Path $root 'support.log'
+    & "$env:SystemRoot/System32/WindowsPowerShell/v1.0/powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File packaging/Export-Diagnostics.ps1 -OutputPath $support
+    Assert ($LASTEXITCODE -eq 0 -and (Test-Path $support)) 'offline diagnostic export works while service is stopped'
+    $diagnostic = Get-Content $support -Raw
+    Assert ($diagnostic.Contains('permission_denied') -and $diagnostic.Contains('catalog_open')) 'startup permission failure is logged with useful category'
+    Assert (!$diagnostic.Contains($root) -and !$diagnostic.Contains('synthetic.png') -and !$diagnostic.Contains((Get-Content "$state/access-code.txt" -Raw).Trim())) 'support log omits state paths media names and access code'
     Write-Output 'Application slice complete on Server 2022; Windows 10 remains untested.'
 } finally {
     if (Get-Service $name -ErrorAction SilentlyContinue) { Stop-Service $name -Force -ErrorAction Continue; Checked sc.exe @('delete',$name) }

@@ -1,4 +1,4 @@
-IMMICH CLONE 0.1.1 - EARLY TEST BUILD
+IMMICH CLONE 0.1.3 - EARLY TEST BUILD
 
 This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
@@ -39,3 +39,18 @@ rollback covers schema 1, not future schema migrations.
 
 Installer built with Inno Setup (Jordan Russell and Martijn Laan).
 Go/x/sys/bbolt license notices accompany the installed executable.
+
+DIAGNOSTIC BUILD
+The app writes private rotating JSON-line diagnostic files under the standard
+ProgramData ImmichCloneDiagnostics folder. Each channel retains up to two 4MiB
+files (application, offline commands, installer; up to 24MiB total). Events include
+UTC time, build version, operation/stage, duration, result/status, transfer byte
+counts and error category/native error number. No hardware inventory, OS build,
+account/machine names, paths, media names, content hashes, credentials, request
+headers/bodies or personal media are logged. No automatic upload occurs.
+
+Use Download diagnostics after signing in, or the Start menu's Export diagnostic
+log if the service is unavailable. The exporter lets you save one .log file.
+Review and attach it in the private project conversation, not a public issue.
+Setup and application data are preserved by uninstall; diagnostic files are also
+retained for troubleshooting. Raw Windows/Inno transcripts are not collected.

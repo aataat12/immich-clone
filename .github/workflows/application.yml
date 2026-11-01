@@ -5,6 +5,7 @@ on:
       - 'cmd/immichclone/**'
       - 'internal/library/**'
       - 'internal/web/**'
+      - 'internal/diagnostics/**'
       - 'scripts/Test-Application.ps1'
       - '.github/workflows/application.yml'
       - 'packaging/**'
@@ -72,6 +73,6 @@ jobs:
         with:
           name: prototype-server-tested
           path: |
-            dist/ImmichClone-0.1.1-prototype-x64-setup.exe
+            dist/ImmichClone-0.1.3-prototype-x64-setup.exe
             dist/SHA256SUMS.txt
           retention-days: 7

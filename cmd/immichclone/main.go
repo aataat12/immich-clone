@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"immichclone/internal/diagnostics"
 	"immichclone/internal/library"
 	"immichclone/internal/web"
 	"log"
@@ -22,24 +23,29 @@ var version = "prototype"
 type options struct{ Data, Address string }
 
 func start(ctx context.Context, o options) (func() error, error) {
+	diagnostics.Record("startup", "begin", nil, 0, 0, 0)
 	host, _, e := net.SplitHostPort(o.Address)
 	if e != nil || net.ParseIP(host) == nil || !net.ParseIP(host).IsLoopback() {
 		return nil, errors.New("loopback address required")
 	}
 	s, e := library.Open(o.Data)
+	diagnostics.Record("startup", "catalog_open", e, 0, 0, 0)
 	if e != nil {
 		return nil, e
 	}
 	code, e := web.AccessCode(o.Data)
+	diagnostics.Record("startup", "access_code", e, 0, 0, 0)
 	if e != nil {
 		s.Close()
 		return nil, e
 	}
 	listener, e := net.Listen("tcp", o.Address)
+	diagnostics.Record("startup", "listen", e, 0, 0, 0)
 	if e != nil {
 		s.Close()
 		return nil, e
 	}
+	diagnostics.Record("startup", "ready", nil, 0, 0, 0)
 	server := &http.Server{Handler: web.New(s, o.Data, code), ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	child, cancel := context.WithCancel(ctx)
 	workerDone := make(chan struct{})
@@ -53,14 +59,24 @@ func start(ctx context.Context, o options) (func() error, error) {
 				return
 			case <-ticker.C:
 				if _, e := s.ProcessOne(); e != nil {
+					diagnostics.Record("preview", "failed", e, 0, 0, 0)
 					log.Print("Preview worker encountered a storage error; job remains persistent")
 				}
 			}
 		}
 	}()
 	serveDone := make(chan error, 1)
-	go func() { serveDone <- server.Serve(listener) }()
+	go func() {
+		err := server.Serve(listener)
+		logged := err
+		if errors.Is(logged, http.ErrServerClosed) {
+			logged = nil
+		}
+		diagnostics.Record("shutdown", "listen", logged, 0, 0, 0)
+		serveDone <- err
+	}()
 	return func() error {
+		diagnostics.Record("shutdown", "begin", nil, 0, 0, 0)
 		cancel()
 		shutdown, c := context.WithTimeout(context.Background(), 15*time.Second)
 		defer c()
@@ -71,6 +87,7 @@ func start(ctx context.Context, o options) (func() error, error) {
 		<-serveDone
 		<-workerDone
 		closeErr := s.Close()
+		diagnostics.Record("shutdown", "complete", closeErr, 0, 0, 0)
 		if e != nil {
 			return e
 		}
@@ -81,12 +98,21 @@ func main() {
 	data := flag.String("data", "", "application data directory outside cloud sync folders")
 	address := flag.String("listen", "127.0.0.1:2283", "loopback listen address")
 	mode := flag.String("mode", "serve", "serve, service, init, verify, backup, restore, show-code or version")
+	logs := flag.String("logs", diagnostics.DefaultDir(), "private diagnostic directory")
 	archive := flag.String("archive", "", "backup archive file")
 	flag.Parse()
 	if *mode == "version" {
 		fmt.Println(version)
 		return
 	}
+	channel := "commands"
+	if *mode == "service" || *mode == "serve" {
+		channel = "application"
+	}
+	if e := diagnostics.Init(*logs, version, channel); e != nil {
+		fmt.Fprintln(os.Stderr, "Diagnostic file unavailable; check logging directory permissions")
+	}
+	diagnostics.Record("startup", "requested", nil, 0, 0, 0)
 	if !filepath.IsAbs(*data) {
 		log.Fatal("An absolute application data directory is required")
 	}
@@ -104,8 +130,10 @@ func main() {
 	}
 	if *mode == "restore" {
 		if e := library.Restore(*archive, *data); e != nil {
+			diagnostics.Record("restore", "failed", e, 0, 0, 0)
 			log.Fatal("Restore refused or failed validation; existing data was not replaced")
 		}
+		diagnostics.Record("restore", "complete", nil, 0, 0, 0)
 		fmt.Println("Restore verified and published; previews queued for regeneration")
 		return
 	}
@@ -124,6 +152,7 @@ func main() {
 		return
 	}
 	s, e := library.Open(*data)
+	diagnostics.Record("startup", "catalog_open", e, 0, 0, 0)
 	if e != nil {
 		log.Fatal("Cannot open application state; stop the service before using offline commands")
 	}
@@ -142,8 +171,10 @@ func main() {
 		fmt.Println(code)
 	case "verify":
 		if e = s.Verify(); e != nil {
+			diagnostics.Record("verify", "failed", e, 0, 0, 0)
 			log.Fatal("Original integrity verification failed")
 		}
+		diagnostics.Record("verify", "complete", nil, 0, 0, 0)
 		fmt.Println("All catalogued originals passed SHA256 verification")
 	case "backup":
 		f, e := os.OpenFile(*archive, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)

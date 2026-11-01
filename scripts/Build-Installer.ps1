@@ -13,7 +13,7 @@ $boltDir = & go list -m -f '{{.Dir}}' go.etcd.io/bbolt
 $sysDir = & go list -m -f '{{.Dir}}' golang.org/x/sys
 $licenses = @('Go 1.27.3', (Get-Content (Join-Path $goRoot 'LICENSE') -Raw), 'bbolt 1.4.3', (Get-Content (Join-Path $boltDir 'LICENSE') -Raw), 'golang.org/x/sys 0.49.0', (Get-Content (Join-Path $sysDir 'LICENSE') -Raw))
 $licenses -join "`r`n`r`n" | Set-Content dist/THIRD-PARTY-LICENSES.txt
-foreach ($version in @('0.1.0','0.1.1','0.1.2')) {
+foreach ($version in @('0.1.0','0.1.3','0.1.4')) {
     Checked go @('build','-trimpath','-ldflags',('-s -w -X main.version='+$version+'-prototype'),'-o','dist/immichclone.exe','./cmd/immichclone')
     Checked "$compilerDir/ISCC.exe" @(('/DAppVersion='+$version),'packaging/immichclone.iss')
 }

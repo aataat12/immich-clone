@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"immichclone/internal/diagnostics"
 	"immichclone/internal/library"
 	"io"
 	"mime"
@@ -77,7 +78,70 @@ func jsonResponse(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(v)
 }
+
+type observedResponse struct {
+	http.ResponseWriter
+	status int
+	bytes  int64
+}
+
+func (w *observedResponse) WriteHeader(status int) {
+	if w.status == 0 {
+		w.status = status
+		w.ResponseWriter.WriteHeader(status)
+	}
+}
+func (w *observedResponse) Write(b []byte) (int, error) {
+	if w.status == 0 {
+		w.WriteHeader(200)
+	}
+	n, e := w.ResponseWriter.Write(b)
+	w.bytes += int64(n)
+	return n, e
+}
+func (w *observedResponse) Unwrap() http.ResponseWriter { return w.ResponseWriter }
+func requestStage(path string) string {
+	switch path {
+	case "/":
+		return "ui"
+	case "/health":
+		return "health"
+	case "/api/assets":
+		return "assets"
+	case "/api/login":
+		return "login"
+	case "/api/upload":
+		return "original_write"
+	case "/api/backup":
+		return "archive_write"
+	case "/api/export":
+		return "export"
+	case "/api/diagnostics":
+		return "diagnostics"
+	}
+	if strings.HasPrefix(path, "/api/assets/") {
+		switch last := path[strings.LastIndex(path, "/")+1:]; last {
+		case "original", "preview", "view", "retry":
+			if last == "preview" {
+				return "preview_generate"
+			}
+			return last
+		}
+	}
+	return "unknown"
+}
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	observed := &observedResponse{ResponseWriter: w}
+	w = observed
+	started := time.Now()
+	defer func() {
+		status := observed.status
+		if status == 0 {
+			status = 200
+		}
+		diagnostics.Record("http", requestStage(r.URL.Path), nil, status, observed.bytes, time.Since(started))
+	}()
+
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("X-Frame-Options", "DENY")
 	w.Header().Set("Cache-Control", "no-store")
@@ -127,6 +191,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		jsonResponse(w, assets)
+	case r.URL.Path == "/api/diagnostics" && r.Method == "GET":
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Header().Set("Content-Disposition", `attachment; filename="ImmichClone-diagnostics.log"`)
+		if e := diagnostics.Export(w); e != nil {
+			diagnostics.Record("logging", "failed", e, 0, 0, 0)
+		}
 	case r.URL.Path == "/api/export" && r.Method == "GET":
 		assets, e := s.Store.List()
 		if e != nil {

@@ -1,5 +1,5 @@
 #ifndef AppVersion
-#define AppVersion "0.1.1"
+#define AppVersion "0.1.3"
 #endif
 [Setup]
 AppId={{5DF7680B-6F42-4BAF-AD97-5A3095728DFA}
@@ -23,6 +23,7 @@ InfoBeforeFile=..\docs\prototype-notes.txt
 
 [Files]
 Source: "..\dist\immichclone.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Export-Diagnostics.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Manage-Service.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\dist\THIRD-PARTY-LICENSES.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\docs\prototype-notes.txt"; DestDir: "{app}"; Flags: ignoreversion
@@ -34,6 +35,8 @@ Root: HKLM; Subkey: "Software\ImmichClone"; ValueType: string; ValueName: "State
 Name: "{group}\Open library"; Filename: "http://127.0.0.1:2283"
 Name: "{group}\View access code"; Filename: "{sys}\notepad.exe"; Parameters: """{code:GetState}\access-code.txt"""
 Name: "{group}\Prototype limitations"; Filename: "{app}\prototype-notes.txt"
+
+Name: "{group}\Export diagnostic log"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\Export-Diagnostics.ps1"""
 
 [UninstallRun]
 Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File ""{app}\Manage-Service.ps1"" -Action Uninstall -AppDir ""{app}"" -DataDir ""{code:GetState}"""; RunOnceId: "RemoveImmichService"; Flags: runhidden waituntilterminated

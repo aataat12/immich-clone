@@ -68,3 +68,10 @@
   compatibility or clearing real-library release acceptance. No paid cloud OS
   provisioning is needed. The application is still an early prototype; broader
   formats, AI and endurance remain unaccepted.
+
+- 2026-11-01: User requested extensive support logging and a new release. Use
+  structured allowlisted events and classified errors/native codes, not raw
+  transcripts or exception messages. Logs have a separate ACL-protected directory
+  so an application-data permission failure can still be diagnosed. No inventory
+  collection or automatic upload. Browser and offline Start menu exports combine
+  bounded files; originals/catalog/backup semantics remain unchanged.

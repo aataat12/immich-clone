@@ -163,3 +163,14 @@ func TestHTTPUploadDownloadExportBackupRestore(t *testing.T) {
 		t.Fatal("backup original mismatch")
 	}
 }
+
+func TestDiagnosticDownloadIsAuthenticated(t *testing.T) {
+	s, c := setup(t)
+	if w := request(s, "GET", "/api/diagnostics", "", nil); w.Code != 401 {
+		t.Fatal("diagnostic log exposed without login")
+	}
+	w := request(s, "GET", "/api/diagnostics?private_query=DO_NOT_LOG_THIS", "", c)
+	if w.Code != 200 || !bytes.Contains(w.Body.Bytes(), []byte("Immich Clone diagnostic log")) || bytes.Contains(w.Body.Bytes(), []byte("DO_NOT_LOG_THIS")) {
+		t.Fatal("diagnostic export failed or leaked query")
+	}
+}

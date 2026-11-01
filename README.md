@@ -24,3 +24,8 @@ reports, media or paths in public issues or artifacts.
 [Validated Server prototype run](https://github.com/aataat12/immich-clone/actions/runs/41329698834)
 and [local Windows 10 checkpoint instructions](docs/local-validation.md).
 The user-facing local check prints pass/fail only and sends no machine report.
+
+Diagnostic build 0.1.3 adds **Download diagnostics** in the browser and
+**Export diagnostic log** in the Start menu, including when the service is stopped.
+It writes bounded structured events, never machine inventory or personal paths.
+Logs are returned privately by the user; nothing is uploaded automatically.
