@@ -5,6 +5,23 @@ Server-first execution amendment. No new charges or parallel agents. No personal
 machine specifications, paths, media or returned logs belong in this repository.
 Historical checkpoints remain in Git history; this file supersedes their gates.
 
+## Clarified intended workflow: external library
+
+The user expects the application to index a large mostly-static existing library
+in place. Current Upload/Choose folder performs managed copy-import; it does not
+merely reference source files. Do not invite bulk copy-import for this use case.
+Next priority is a read-only external-library prototype: references plus generated
+metadata/previews, incremental rescans, source-change/disconnect handling and
+explicit backup semantics. No automatic moves/deletions, folder-permission grants
+or hydration of online-only files. Actual source paths and library inventory stay
+private, not in repository records or CI. Existing managed copies are retained;
+no cleanup/deletion was authorized. Catalog-only backups must be distinguished
+from complete original-file backup/restore. Reuse verified media/service work.
+
+Queue-index code below is a useful independent checkpoint, not a new delivered
+installer. Local Linux checks pass; optimized Windows/full acceptance remains
+pending. Keep 0.1.11 as the current delivered build while validating external mode.
+
 ## Current work: catalog/worker scale
 
 User now reports MOV files are showing. Close the request for private diagnostics
@@ -12,10 +29,13 @@ unless the symptom recurs; root cause was not independently established. This is
 user-reported visibility evidence only, not a checksum/codec/corpus validation.
 MP4 preview/opening previously passed locally; HEIC remains unexercised.
 
-Next: measure catalog listing, full-list JSON payload construction and idle job
-polling at 1k/10k/50k synthetic metadata rows. This is catalog-only data, not a
-50k-media import. Execute a separate actual PNG job among those rows. Use results
-to choose a small justified improvement; do not infer Windows 10 speed from cloud.
+Bounded 1k/10k/50k metadata-only measurement found linear idle polling overhead:
+[Windows baseline 41355763079](https://github.com/aataat12/immich-clone/actions/runs/41355763079),
+about 88 MB Go allocations and 131 ms per 50k-row idle poll. Linux baseline was
+similar. Implemented a derived transactional pending-job index; focused Linux
+race/vet and real PNG job checks pass. Windows comparison and full 0.1.13 installer
+acceptance pending. This measures catalog/worker behavior, not bulk ingestion.
+API/JSON/browser paging remains a separate limitation.
 No user input, local setup or reboot is needed now.
 
 ## Latest installer: version display and reversible visibility 0.1.11

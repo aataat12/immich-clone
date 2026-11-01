@@ -84,6 +84,6 @@ jobs:
         with:
           name: prototype-server-tested
           path: |
-            dist/ImmichClone-0.1.11-prototype-x64-setup.exe
+            dist/ImmichClone-0.1.13-prototype-x64-setup.exe
             dist/SHA256SUMS.txt
           retention-days: 7

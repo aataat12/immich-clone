@@ -1,4 +1,4 @@
-IMMICH CLONE 0.1.11 - EARLY TEST BUILD
+IMMICH CLONE 0.1.13 - EARLY TEST BUILD
 
 This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
@@ -100,3 +100,11 @@ original, metadata, preview or queued job. Choose Show > Hidden items and Restor
 to library to bring it back. Backup, catalog export and original retrieval retain
 hidden items. Duplicate uploads do not silently unhide them. This is reversible
 visibility metadata, not permanent deletion or source-file removal.
+
+PERSISTENT QUEUE INDEX BUILD
+Background work uses a small derived pending-job index rather than scanning all
+assets on every timer tick. Catalog asset states remain authoritative. Queue
+updates and asset updates commit together; startup rebuilds the index for older
+catalogs, restoration and recovery. Originals/export format are unchanged. This
+is a worker-efficiency improvement, not proof of bulk-ingestion endurance or a
+large-library browsing claim. Full catalog/browser paging is still pending.

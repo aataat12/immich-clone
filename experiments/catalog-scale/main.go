@@ -24,7 +24,7 @@ type metric struct {
 	Name         string `json:"operation"`
 	Rows         int    `json:"rows"`
 	Microseconds int64  `json:"median_us"`
-	Allocated    uint64 `json:"allocated_bytes_at_median"`
+	Allocated    uint64 `json:"allocated_bytes_at_median,omitempty"`
 	Samples      int    `json:"samples"`
 }
 
