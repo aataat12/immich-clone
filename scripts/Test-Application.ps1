@@ -13,7 +13,7 @@ function Login {
 }
 try {
     ./scripts/Prepare-MediaProvider.ps1 -Destination (Join-Path $root 'media/ffmpeg-8.1.3-7eb77d88e2e9')
-    Checked go @('build','-trimpath','-ldflags','-X main.version=0.1.0-prototype','-o',$binary,'./cmd/immichclone')
+    Checked go @('build','-trimpath','-ldflags','-X main.version=0.1.11-prototype','-o',$binary,'./cmd/immichclone')
     Checked $binary @('-mode','init','-data',$state)
     Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)RX')
     Checked icacls @($state,'/grant','*S-1-5-19:(OI)(CI)M')

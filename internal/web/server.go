@@ -25,6 +25,7 @@ var content embed.FS
 
 type Server struct {
 	Store    *library.Store
+	Version  string
 	Code     string
 	Root     string
 	mu       sync.Mutex
@@ -71,8 +72,12 @@ func random() string {
 	}
 	return hex.EncodeToString(b[:])
 }
-func New(store *library.Store, root, code string) *Server {
-	return &Server{Store: store, Root: root, Code: code, sessions: map[string]time.Time{}}
+func New(store *library.Store, root, code string, builds ...string) *Server {
+	build := "prototype"
+	if len(builds) > 0 {
+		build = builds[0]
+	}
+	return &Server{Store: store, Root: root, Code: code, Version: build, sessions: map[string]time.Time{}}
 }
 func jsonResponse(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
@@ -121,7 +126,7 @@ func requestStage(path string) string {
 	}
 	if strings.HasPrefix(path, "/api/assets/") {
 		switch last := path[strings.LastIndex(path, "/")+1:]; last {
-		case "original", "preview", "view", "retry":
+		case "original", "preview", "view", "retry", "hide", "unhide":
 			if last == "preview" {
 				return "preview_generate"
 			}
@@ -172,7 +177,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.URL.Path == "/health" && r.Method == "GET" {
-		jsonResponse(w, map[string]string{"status": "ok", "build": "prototype"})
+		jsonResponse(w, map[string]string{"status": "ok", "build": s.Version})
 		return
 	}
 	if r.URL.Path == "/api/login" && r.Method == "POST" {
@@ -244,6 +249,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case parts[1] == "preview" && r.Method == "GET" && a.Preview == "ready":
 			w.Header().Set("Content-Type", "image/png")
 			http.ServeFile(w, r, s.Store.PreviewPath(a.ID))
+		case (parts[1] == "hide" || parts[1] == "unhide") && r.Method == "POST":
+			hidden := parts[1] == "hide"
+			if e = s.Store.SetHidden(a.ID, hidden); e != nil {
+				http.Error(w, "visibility update failed", 500)
+				return
+			}
+			jsonResponse(w, map[string]bool{"hidden": hidden})
 		case parts[1] == "retry" && r.Method == "POST":
 			if e = s.Store.Retry(a.ID); e != nil {
 				http.Error(w, "retry failed", 500)

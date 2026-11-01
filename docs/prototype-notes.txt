@@ -1,4 +1,4 @@
-IMMICH CLONE 0.1.9 - EARLY TEST BUILD
+IMMICH CLONE 0.1.11 - EARLY TEST BUILD
 
 This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
@@ -92,3 +92,11 @@ and build script. It has no network protocols beyond local file/pipe and needs
 no separate runtime or GPU package. Provider directories are versioned by binary
 hash so executable rollback can retain its previous provider. No user originals
 are stored in those program directories. Uninstall preserves the separate library.
+
+VERSION AND VISIBILITY BUILD
+The top-right version comes from the running executable, not a hardcoded page
+label. Hide from library removes a card from the main grid without deleting the
+original, metadata, preview or queued job. Choose Show > Hidden items and Restore
+to library to bring it back. Backup, catalog export and original retrieval retain
+hidden items. Duplicate uploads do not silently unhide them. This is reversible
+visibility metadata, not permanent deletion or source-file removal.

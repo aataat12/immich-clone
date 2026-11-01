@@ -29,6 +29,7 @@ const MaxUpload int64 = 4 << 30
 var ErrTooLarge = errors.New("file exceeds 4 GiB upload limit")
 
 type Asset struct {
+	Hidden          bool          `json:"hidden,omitempty"`
 	Photo           PhotoMetadata `json:"photo"`
 	Sources         []string      `json:"sources,omitempty"`
 	PreviewRevision int           `json:"preview_revision,omitempty"`
@@ -576,4 +577,16 @@ func fileHashContext(ctx context.Context, path string) (string, error) {
 		return "", e
 	}
 	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+// Visibility is reversible catalog metadata; it never deletes an original or job.
+func (s *Store) SetHidden(id string, hidden bool) error {
+	s.gate.Lock()
+	defer s.gate.Unlock()
+	a, e := s.Get(id)
+	if e != nil {
+		return e
+	}
+	a.Hidden = hidden
+	return s.save(a)
 }

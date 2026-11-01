@@ -19,6 +19,15 @@ Export catalog contains the MOV and its preview/error values. Do not request the
 private media or full catalog for public reporting. MOV diagnosis is paused for
 that evidence; no dependency install, reinstall or reboot is needed.
 
+## In progress: version display and reversible visibility 0.1.11
+
+User requested running-version identification and removal from the main grid.
+Implemented actual executable version at top-right, reversible hide/unhide with
+Hidden items view, retained originals/jobs/export/backup, and complete-grid
+refresh replacement with stale-response rejection. Focused acceptance running;
+0.1.9 remains the delivered build until the next installer passes. MOV diagnosis
+above remains unresolved; visibility controls are not a claimed MOV fix.
+
 ## Current milestone: optional media provider 0.1.9
 
 Completed integration at `f2ecfd8be6683db923fc5e3115c9a0844c8c9d04`:

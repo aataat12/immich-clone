@@ -124,3 +124,12 @@
 - Package corresponding source/license/compiler/MinGW notices with the provider.
   Immutable binary-hash provider directories survive executable rollback without
   replacing an older provider's files. Deliver 0.1.9 next (0.1.8 was failure fixture).
+
+- User requested an in-page running version and removing cards from the carousel.
+  Show the executable's actual build in the top-right (including narrow layout).
+  Implement removal as reversible hide/unhide metadata in schema 1; originals,
+  jobs and backup/export retain hidden records. Permanent deletion was not
+  requested and is not implied. Preserve hidden state on duplicate uploads.
+- Render a complete detached grid and ignore superseded refresh responses. This
+  prevents an older snapshot from replacing a newer grid; it does not establish
+  the cause of the separately reported local MOV disappearance.
