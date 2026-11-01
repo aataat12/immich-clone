@@ -151,10 +151,17 @@
   import from catalog-only fixtures. VM timer-zero readings are below measurement
   resolution, not proof of zero execution time.
 
-- User clarified that the primary workflow is indexing an existing mostly-static
+- [Historical; superseded by the managed-copy decision below] User clarified that the primary workflow is indexing an existing mostly-static
   library without duplicating originals. Existing Upload/Choose folder copies
   bytes into managed storage, so this is a material distinction in user behavior.
   Prioritize read-only external-library feasibility, preserve existing managed
   copies, keep source inventory private, and make copy-import explicit. Avoid
   automatic permission changes/hydration or claims that a catalog backs up source
   originals. Queue indexing remains useful but is not released before acceptance.
+
+- User explicitly retained managed-copy import after considering duplicate storage.
+  External-primary planning is superseded; no external implementation to migrate.
+  Preserve source files and immutable managed blobs. Build bulk import separately
+  from the gallery, with durable per-file acceptance, byte/file progress and
+  import-first scheduling, then drain persistent previews. Do not imply browser
+  file selection survives closing the page. No personal library inventory in CI.

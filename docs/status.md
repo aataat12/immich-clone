@@ -5,22 +5,21 @@ Server-first execution amendment. No new charges or parallel agents. No personal
 machine specifications, paths, media or returned logs belong in this repository.
 Historical checkpoints remain in Git history; this file supersedes their gates.
 
-## Clarified intended workflow: external library
+## Confirmed workflow: managed copies and bulk import
 
-The user expects the application to index a large mostly-static existing library
-in place. Current Upload/Choose folder performs managed copy-import; it does not
-merely reference source files. Do not invite bulk copy-import for this use case.
-Next priority is a read-only external-library prototype: references plus generated
-metadata/previews, incremental rescans, source-change/disconnect handling and
-explicit backup semantics. No automatic moves/deletions, folder-permission grants
-or hydration of online-only files. Actual source paths and library inventory stay
-private, not in repository records or CI. Existing managed copies are retained;
-no cleanup/deletion was authorized. Catalog-only backups must be distinguished
-from complete original-file backup/restore. Reuse verified media/service work.
+The user explicitly chose application-owned copies after discussing the storage
+tradeoff. Upload/Choose folder copies bytes into immutable managed storage and
+leaves sources untouched. This supersedes the interim external-library priority;
+no external-library implementation was introduced and no originals are removed.
+Keep personal source paths and inventory out of public records and CI.
 
-Queue-index code below is a useful independent checkpoint, not a new delivered
-installer. Local Linux checks pass; optimized Windows/full acceptance remains
-pending. Keep 0.1.11 as the current delivered build while validating external mode.
+Next: dedicated bulk-import page with copy progress, interruption recovery and
+import-first scheduling. Commit original bytes/catalog jobs before reporting a
+file successful; defer derived processing while an active bulk transfer runs.
+Browser selection cannot promise unattended source access after the page closes;
+recovery must state when reselecting sources is required. See `bulk-import.md`.
+First finish the independently useful queue index and Windows acceptance below.
+Current delivered build remains 0.1.11 until acceptance of a replacement.
 
 ## Current work: catalog/worker scale
 
