@@ -7,6 +7,11 @@ on:
       - 'internal/web/**'
       - 'scripts/Test-Application.ps1'
       - '.github/workflows/application.yml'
+      - 'packaging/**'
+      - 'scripts/Build-Installer.ps1'
+      - 'scripts/Test-Installer.ps1'
+      - 'scripts/Test-FullDisk.ps1'
+      - 'tests/browser.cjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -50,6 +55,9 @@ jobs:
         run: |
           ./scripts/Build-Installer.ps1
           ./scripts/Test-Installer.ps1
+      - name: Execute real ENOSPC recovery on a disposable 96MiB NTFS volume
+        shell: pwsh
+        run: ./scripts/Test-FullDisk.ps1
       - name: Retain synthetic browser evidence and prototype installer
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:

@@ -36,7 +36,7 @@ Name: "{group}\View access code"; Filename: "{sys}\notepad.exe"; Parameters: """
 Name: "{group}\Prototype limitations"; Filename: "{app}\prototype-notes.txt"
 
 [UninstallRun]
-Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File ""{app}\Manage-Service.ps1"" -Action Uninstall -AppDir ""{app}"" -DataDir ""{code:GetState}"""; Flags: runhidden waituntilterminated
+Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File ""{app}\Manage-Service.ps1"" -Action Uninstall -AppDir ""{app}"" -DataDir ""{code:GetState}"""; RunOnceId: "RemoveImmichService"; Flags: runhidden waituntilterminated
 
 [UninstallDelete]
 Type: files; Name: "{app}\rollback\immichclone.exe"
@@ -45,7 +45,7 @@ Type: files; Name: "{app}\rollback\access-code.txt"
 Type: dirifempty; Name: "{app}\rollback"
 
 [Code]
-var StatePage: TInputDirWizardPage;
+var StatePage: TInputDirWizardPage; ManagementFailed: Boolean;
 
 function GetState(Param: String): String;
 begin
@@ -105,6 +105,13 @@ procedure CurStepChanged(CurStep: TSetupStep);
 var ResultCode: Integer;
 begin
   if CurStep = ssPostInstall then
-    if not RunManagement('Install', ResultCode) or (ResultCode <> 0) then
+    if not RunManagement('Install', ResultCode) or (ResultCode <> 0) then begin
+      ManagementFailed := True;
       RaiseException('Service installation failed. Previous state was retained; review the service before retrying.');
+    end;
+end;
+
+function GetCustomSetupExitCode: Integer;
+begin
+  if ManagementFailed then Result := 1 else Result := 0;
 end;

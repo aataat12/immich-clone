@@ -6,12 +6,15 @@ New-Item -ItemType Directory $root | Out-Null
 function Assert([bool]$condition,[string]$message) { if (!$condition) { throw $message }; Write-Output "PASS: $message" }
 function Install([string]$version) {
     $setup = (Resolve-Path "dist/ImmichClone-$version-prototype-x64-setup.exe").Path
-    $process = Start-Process $setup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$app+'"'),('/STATE="'+$state+'"')) -Wait -PassThru
+    $process = Start-Process $setup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$app+'"'),('/STATE="'+$state+'"'),('/LOG="'+$root+'/setup-'+$version+'.log"')) -Wait -PassThru
+    if ($process.ExitCode -ne 0) { Get-Content "$root/setup-$version.log" -Tail 25 }
     return $process.ExitCode
 }
 try {
     Assert ((Install '0.1.0') -eq 0) 'installer fresh install succeeds in path containing spaces'
     $service = Get-CimInstance Win32_Service -Filter "Name='ImmichClone'"
+    Write-Output ('Disposable CI service evidence: '+($service | Select-Object Name,StartName,StartMode,State | ConvertTo-Json -Compress))
+    if (!$service -or $service.StartName -ne 'NT AUTHORITY\LocalService' -or $service.StartMode -ne 'Auto') { Get-Content "$root/setup-0.1.0.log" -Tail 35 }
     Assert ($service.StartName -eq 'NT AUTHORITY\LocalService' -and $service.StartMode -eq 'Auto') 'installer configures restricted automatic service'
     $session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
     $code = (Get-Content "$state/access-code.txt" -Raw).Trim()
