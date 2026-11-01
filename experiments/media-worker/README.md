@@ -26,7 +26,7 @@ cloud Linux FFmpeg 7.1.5 (fixture producer only):
 ```sh
 ffmpeg -f lavfi -i color=red:size=160x120:rate=5 -t 1 -c:v libx264 -threads 1 -pix_fmt yuv420p h264.mp4
 ffmpeg -f lavfi -i color=red:size=160x120:rate=5 -t 1 -c:v libx265 -threads 1 -x265-params pools=none:frame-threads=1 -pix_fmt yuv420p hevc.mp4
-ffmpeg -i h264.mp4 -c copy -metadata:s:v:0 rotate=90 rotated.mov
+ffmpeg -display_rotation:v:0 90 -i h264.mp4 -c copy rotated.mov
 ```
 
 HEIC producer used Pillow 12.0.0 and pillow-heif 1.8.1, CI/development only:
@@ -43,3 +43,11 @@ restriction. Encoder libraries are not shipped with the application or candidate
 The custom build removes the prior large third-party binary's transitive source
 acquisition ambiguity; successful execution alone does not clear redistribution.
 No source-to-binary reproducibility claim until independent rebuild comparison.
+
+Initial run 41344707161 built the candidate and passed H264/HEVC service decode,
+but failed the rotated-MOV dimension assertion. Investigation found the fixture
+producer silently ignored the old rotate metadata command. Regenerated using
+`-display_rotation:v:0 90` and independently confirmed its display matrix and
+120x160 thumbnail using the fixture producer. This is a fixture correction, not
+evidence that the candidate failed actual rotation. Retest Windows operations
+using the unchanged checksum-verified binary artifact from that run.

@@ -22,18 +22,21 @@ import (
 )
 
 type limitedBuffer struct {
-	bytes.Buffer
-	limit int
+	buffer bytes.Buffer
+	limit  int
 }
 
 func (b *limitedBuffer) Write(p []byte) (int, error) {
-	if len(p) > b.limit-b.Len() {
+	if len(p) > b.limit-b.buffer.Len() {
 		return 0, errors.New("output limit")
 	}
-	return b.Buffer.Write(p)
+	return b.buffer.Write(p)
 }
 func command(exe string, args ...string) ([]byte, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	return commandBounded(30*time.Second, exe, args...)
+}
+func commandBounded(budget time.Duration, exe string, args ...string) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), budget)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, exe, args...)
 	cmd.Env = []string{"SystemRoot=" + os.Getenv("SystemRoot"), "PATH=" + filepath.Dir(exe)}
@@ -42,10 +45,13 @@ func command(exe string, args ...string) ([]byte, error) {
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	err := cmd.Run()
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
 	if err != nil {
 		return nil, err
 	}
-	return stdout.Bytes(), nil
+	return stdout.buffer.Bytes(), nil
 }
 func run(root string) error {
 	var manifest map[string]string
@@ -81,6 +87,27 @@ func run(root string) error {
 			return fmt.Errorf("unexpected native import: %s", name)
 		}
 	}
+	protocols, e := command(exe, "-protocols")
+	if e != nil {
+		return e
+	}
+	for _, line := range strings.Split(string(protocols), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) == 1 && !strings.HasSuffix(fields[0], ":") && fields[0] != "file" && fields[0] != "pipe" {
+			return errors.New("unexpected enabled protocol")
+		}
+	}
+	self, e := os.Executable()
+	if e != nil {
+		return e
+	}
+	started := time.Now()
+	if _, e = commandBounded(250*time.Millisecond, self, "-probe-stall"); !errors.Is(e, context.DeadlineExceeded) || time.Since(started) > 5*time.Second {
+		return errors.New("actual child timeout termination failed")
+	}
+	if _, e = commandBounded(5*time.Second, self, "-probe-flood"); e == nil {
+		return errors.New("actual child output limit not enforced")
+	}
 	for _, name := range []string{"h264.mp4", "hevc.mp4", "rotated.mov", "synthetic.heic"} {
 		path := filepath.Join(root, name)
 		original, e := os.ReadFile(path)
@@ -91,7 +118,7 @@ func run(root string) error {
 		if hex.EncodeToString(hash[:]) != manifest[name] {
 			return errors.New("fixture checksum mismatch")
 		}
-		metadata, e := command(probe, "-v", "error", "-protocol_whitelist", "file,pipe", "-select_streams", "v:0", "-show_entries", "stream=codec_name,width,height", "-of", "json", path)
+		metadata, e := command(probe, "-v", "error", "-protocol_whitelist", "file,pipe", "-select_streams", "v:0", "-show_entries", "stream=codec_name,width,height:stream_side_data=rotation", "-of", "json", path)
 		if e != nil {
 			return fmt.Errorf("%s metadata failed", name)
 		}
@@ -99,10 +126,16 @@ func run(root string) error {
 			Streams []struct {
 				Codec         string `json:"codec_name"`
 				Width, Height int
+				SideData      []struct {
+					Rotation int `json:"rotation"`
+				} `json:"side_data_list"`
 			}
 		}
 		if e = json.Unmarshal(metadata, &info); e != nil || len(info.Streams) != 1 {
 			return errors.New("stream inspection failed")
+		}
+		if name == "rotated.mov" && (len(info.Streams[0].SideData) == 0 || info.Streams[0].SideData[0].Rotation != 90) {
+			return errors.New("rotation fixture display matrix missing")
 		}
 		expectedCodec := "hevc"
 		if name == "h264.mp4" || name == "rotated.mov" {
@@ -128,7 +161,7 @@ func run(root string) error {
 			w, h = 120, 160
 		}
 		if img.Bounds().Dx() != w || img.Bounds().Dy() != h {
-			return fmt.Errorf("%s rotation/dimensions incorrect", name)
+			return fmt.Errorf("%s rotation/dimensions incorrect: got %dx%d", name, img.Bounds().Dx(), img.Bounds().Dy())
 		}
 		r, g, bl, _ := img.At(w/2, h/2).RGBA()
 		if r < 55000 || g > 8000 || bl > 8000 {
@@ -198,7 +231,22 @@ func (p service) Execute(_ []string, requests <-chan svc.ChangeRequest, status c
 }
 func main() {
 	root := flag.String("root", "", "disposable fixture directory")
+	stall := flag.Bool("probe-stall", false, "synthetic child timeout fixture")
+	flood := flag.Bool("probe-flood", false, "synthetic output bound fixture")
 	flag.Parse()
+	if *stall {
+		time.Sleep(10 * time.Minute)
+		os.Exit(0)
+	}
+	if *flood {
+		b := make([]byte, 4096)
+		for i := 0; i < 512; i++ {
+			if _, e := os.Stdout.Write(b); e != nil {
+				os.Exit(1)
+			}
+		}
+		os.Exit(0)
+	}
 	if *root == "" {
 		os.Exit(2)
 	}
