@@ -208,7 +208,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case r.URL.Path == "/api/upload" && r.Method == "POST":
 		r.Body = http.MaxBytesReader(w, r.Body, library.MaxUpload)
 		name := r.URL.Query().Get("name")
-		a, duplicate, e := s.Store.Put(name, r.Body)
+		a, duplicate, e := s.Store.PutWithPath(name, r.URL.Query().Get("relative"), r.Body)
 		if e != nil {
 			status := 500
 			var max *http.MaxBytesError

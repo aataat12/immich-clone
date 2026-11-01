@@ -25,15 +25,18 @@ const MaxUpload int64 = 4 << 30
 var ErrTooLarge = errors.New("file exceeds 4 GiB upload limit")
 
 type Asset struct {
-	ID      string    `json:"id"`
-	Name    string    `json:"name"`
-	Size    int64     `json:"size"`
-	MIME    string    `json:"mime"`
-	Added   time.Time `json:"added"`
-	Width   int       `json:"width,omitempty"`
-	Height  int       `json:"height,omitempty"`
-	Preview string    `json:"preview"`
-	Error   string    `json:"error,omitempty"`
+	Photo           PhotoMetadata `json:"photo"`
+	Sources         []string      `json:"sources,omitempty"`
+	PreviewRevision int           `json:"preview_revision,omitempty"`
+	ID              string        `json:"id"`
+	Name            string        `json:"name"`
+	Size            int64         `json:"size"`
+	MIME            string        `json:"mime"`
+	Added           time.Time     `json:"added"`
+	Width           int           `json:"width,omitempty"`
+	Height          int           `json:"height,omitempty"`
+	Preview         string        `json:"preview"`
+	Error           string        `json:"error,omitempty"`
 }
 type Store struct {
 	root string
@@ -100,7 +103,26 @@ func Open(root string) (*Store, error) {
 		if v != nil && string(v) != "1" {
 			return errors.New("unsupported schema; refusing migration")
 		}
-		return b.Put([]byte("schema"), []byte("1"))
+		if e := b.Put([]byte("schema"), []byte("1")); e != nil {
+			return e
+		}
+		assets := tx.Bucket([]byte("assets"))
+		return assets.ForEach(func(k, v []byte) error {
+			var a Asset
+			if e := json.Unmarshal(v, &a); e != nil {
+				return e
+			}
+			if (a.MIME == "image/jpeg" || a.MIME == "image/png") && a.PreviewRevision < 1 {
+				a.Preview = "queued"
+				a.Error = ""
+				updated, e := json.Marshal(a)
+				if e != nil {
+					return e
+				}
+				return assets.Put(k, updated)
+			}
+			return nil
+		})
 	})
 	if e != nil {
 		db.Close()
@@ -178,7 +200,15 @@ func fileHash(path string) (string, error) {
 	}
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
-func (s *Store) Put(name string, r io.Reader) (result Asset, duplicate bool, returnErr error) {
+func (s *Store) Put(name string, r io.Reader) (Asset, bool, error) { return s.PutWithPath(name, "", r) }
+func (s *Store) PutWithPath(name, relative string, r io.Reader) (result Asset, duplicate bool, returnErr error) {
+	if relative != "" {
+		clean, e := cleanRelative(relative)
+		if e != nil {
+			return result, false, e
+		}
+		relative = clean
+	}
 	started := time.Now()
 	defer func() { diagnostics.Record("upload", "original_write", returnErr, 0, result.Size, time.Since(started)) }()
 	s.gate.Lock()
@@ -214,6 +244,24 @@ func (s *Store) Put(name string, r io.Reader) (result Asset, duplicate bool, ret
 		if e != nil || actual != id {
 			return a, false, errors.New("existing original is missing or corrupted")
 		}
+		if relative != "" {
+			found := false
+			for _, p := range existing.Sources {
+				if p == relative {
+					found = true
+					break
+				}
+			}
+			if !found {
+				if len(existing.Sources) >= 4096 {
+					return a, false, errors.New("too many source aliases")
+				}
+				existing.Sources = append(existing.Sources, relative)
+				if e = s.save(existing); e != nil {
+					return a, false, e
+				}
+			}
+		}
 		return existing, true, nil
 	} else if !errors.Is(e, os.ErrNotExist) {
 		return a, false, e
@@ -241,6 +289,9 @@ func (s *Store) Put(name string, r io.Reader) (result Asset, duplicate bool, ret
 		name = "original"
 	}
 	a = Asset{ID: id, Name: name, Size: n, MIME: http.DetectContentType(header[:read]), Added: time.Now().UTC(), Preview: "queued"}
+	if relative != "" {
+		a.Sources = []string{relative}
+	}
 	if e = s.save(a); e != nil {
 		return a, false, e
 	}
@@ -260,6 +311,7 @@ func (s *Store) ProcessOne() (bool, error) {
 		if a.Preview != "queued" {
 			continue
 		}
+		a.PreviewRevision = 1
 		e = s.makePreview(&a)
 		diagnostics.Record("preview", "preview_generate", e, 0, 0, 0)
 		if e != nil {
@@ -289,6 +341,10 @@ func (s *Store) makePreview(a *Asset) error {
 	if e != nil || h != a.ID {
 		return errors.New("original checksum mismatch")
 	}
+	a.Photo = ReadPhotoMetadata(f)
+	if _, e = f.Seek(0, 0); e != nil {
+		return e
+	}
 	config, _, e := image.DecodeConfig(f)
 	if e != nil {
 		return errors.New("malformed image")
@@ -304,7 +360,9 @@ func (s *Store) makePreview(a *Asset) error {
 	if e != nil {
 		return errors.New("image decode failed")
 	}
-	w, hgt := config.Width, config.Height
+	img = oriented(img, a.Photo.Orientation)
+	a.Width, a.Height = img.Bounds().Dx(), img.Bounds().Dy()
+	w, hgt := a.Width, a.Height
 	if w > 320 || hgt > 320 {
 		if w >= hgt {
 			hgt = hgt * 320 / w
@@ -324,7 +382,7 @@ func (s *Store) makePreview(a *Asset) error {
 	bounds := img.Bounds()
 	for y := 0; y < hgt; y++ {
 		for x := 0; x < w; x++ {
-			thumb.Set(x, y, img.At(bounds.Min.X+x*config.Width/w, bounds.Min.Y+y*config.Height/hgt))
+			thumb.Set(x, y, img.At(bounds.Min.X+x*a.Width/w, bounds.Min.Y+y*a.Height/hgt))
 		}
 	}
 	out, e := os.CreateTemp(filepath.Join(s.root, "staging"), "preview-*.part")
@@ -376,4 +434,22 @@ func (s *Store) Verify() (result error) {
 		}
 	}
 	return nil
+}
+
+func cleanRelative(p string) (string, error) {
+	p = strings.ReplaceAll(p, "\\", "/")
+	if len(p) > 1024 || strings.HasPrefix(p, "/") || strings.Contains(p, ":") {
+		return "", errors.New("invalid relative import path")
+	}
+	for _, r := range p {
+		if r < 32 || r == 127 {
+			return "", errors.New("invalid relative import path")
+		}
+	}
+	for _, c := range strings.Split(p, "/") {
+		if c == "" || c == "." || c == ".." {
+			return "", errors.New("invalid relative import path")
+		}
+	}
+	return p, nil
 }

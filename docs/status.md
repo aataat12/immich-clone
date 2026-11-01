@@ -1,3 +1,17 @@
+# Active milestone — metadata / timeline 0.1.5
+
+Implementation and focused cloud Linux race/vet checks passed. Windows Server
+acceptance and installer build pending. Adds bounded JPEG capture-date/camera
+metadata, all eight EXIF orientation transforms for previews, date grouping/sort,
+a details panel, relative folder paths and duplicate source aliases. Existing
+JPEG/PNG previews are queued for a derived-data rebuild; originals unchanged.
+Malformed metadata, big/little endian input, recursive IFDs, path traversal,
+legacy rebuild and original checksums tested with synthetic JPEGs. No new native
+or third-party dependency. Windows 10 prior user-reported evidence remains valid
+only for the previous build. Reboot remains deferred to final acceptance.
+
+---
+
 # Current checkpoint update — 2026-11-01
 
 User-reported local Windows 10 acceptance passed: restricted service account,

@@ -1,4 +1,4 @@
-IMMICH CLONE 0.1.3 - EARLY TEST BUILD
+IMMICH CLONE 0.1.5 - EARLY TEST BUILD
 
 This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
@@ -8,8 +8,7 @@ JPEG/PNG previews and full-image viewing, MP4 browser playback, persistent previ
 jobs, browsing, exact original download,
 JSON catalog export, and consistent backup/verified restore. JPEG/PNG previews
 are limited to 40 megapixels. Uploads are limited to 4 GiB per file. Other formats
-are preserved/downloadable but preview failure is shown explicitly. No EXIF
-orientation, advanced camera metadata, generated video thumbnails, server-side folder scanning, AI,
+are preserved/downloadable but preview failure is shown explicitly. JPEG EXIF orientation, capture date and camera make/model are supported. No advanced camera metadata, generated video thumbnails, server-side folder scanning, AI,
 mobile clients, remote sharing or LAN access in this build.
 
 The installer needs administrator permission and uses Windows LocalService.
@@ -17,8 +16,8 @@ No .NET, PostgreSQL, SDK, Python, Docker, WSL or separate media codec is require
 Select application data outside cloud-sync folders. Uploaded originals are copied
 into this managed data directory. The external source library is not scanned,
 changed, moved or deleted. Browser-selected folder import copies files only after
-a confirmation showing file count and byte total. Relative folder structure is
-not retained in this prototype. Online-only selections may download when read;
+a confirmation showing file count and byte total. Relative folder paths and duplicate source aliases are retained in the catalog
+and JSON export. Online-only selections may download when read;
 choose only a small available-offline test folder. Uninstall preserves application data and originals.
 
 Start menu: Open library; View access code. Keep the code and backup ZIP private.
@@ -54,3 +53,11 @@ log if the service is unavailable. The exporter lets you save one .log file.
 Review and attach it in the private project conversation, not a public issue.
 Setup and application data are preserved by uninstall; diagnostic files are also
 retained for troubleshooting. Raw Windows/Inno transcripts are not collected.
+
+METADATA/TIMELINE BUILD
+JPEG APP1 EXIF orientation (all eight transforms), capture date, camera make/model
+are read with bounded parsing. PNG EXIF, GPS, RAW/HEIC/HDR metadata, maker notes and
+video capture dates are not supported yet. Original embedded metadata remains
+unchanged. Camera date/time is preserved without assuming a timezone; missing
+dates fall back to upload date. Existing JPEG/PNG previews are queued once for
+rebuilding. Optional fields are additive to schema 1; no original is rewritten.

@@ -81,3 +81,15 @@
   Accept this limited Windows 10 evidence without publishing the transcript or
   machine information. User deferred reboot validation to final acceptance; it
   does not block further development. Current setup requires no OS reboot.
+
+- 2026-11-01 metadata slice: retain schema 1 with additive photo metadata,
+  relative source aliases and a preview revision. Requeue older JPEG/PNG derived
+  previews once; never rewrite original blobs. Failed upgrade rollback still
+  restores the pre-upgrade catalog. JSON export/backup preserve new fields.
+- Bounded standard-library JPEG APP1/TIFF parsing supports orientation 1–8,
+  capture date (original date preferred), camera make/model only. No native
+  runtime or new third-party dependency. Camera wall-clock times have no invented
+  timezone. Unsupported/malformed metadata warns without sacrificing originals.
+- Relative folder paths are catalog metadata, never executable filesystem paths.
+  Reject absolute, drive-qualified, traversal and control-character input before
+  writing. One blob may retain multiple relative aliases; diagnostic logs omit all.

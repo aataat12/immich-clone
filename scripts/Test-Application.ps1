@@ -48,6 +48,10 @@ try {
         ./scripts/New-MediaFixture.ps1 -Destination $clip
         $video = Invoke-RestMethod 'http://127.0.0.1:2283/api/upload?name=synthetic-video.mp4' -Method Post -Headers $headers -InFile $clip -WebSession $session
         Assert ($video.asset.mime -eq 'video/mp4') 'actual H264/AAC MP4 upload recognized'
+        $env:IMMICH_METADATA_FIXTURE = Join-Path $root 'oriented.jpg'
+        Checked go @('test','./internal/library','-run','^TestMetadataFixtureEmitter$')
+        $photo = Invoke-RestMethod 'http://127.0.0.1:2283/api/upload?name=oriented.jpg&relative=SyntheticTrip%2Foriented.jpg' -Method Post -Headers $headers -InFile $env:IMMICH_METADATA_FIXTURE -WebSession $session
+        Remove-Item Env:IMMICH_METADATA_FIXTURE
         $env:IMMICH_TEST_STATE = $state
         Checked node @('tests/browser.cjs')
         Remove-Item Env:IMMICH_TEST_STATE
