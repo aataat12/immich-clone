@@ -26,6 +26,10 @@ Get-ChildItem "$source/3rdparty" -Recurse -File | Where-Object { $_.Name -match 
   $relative
 } | Set-Content "$out/third-party-license-index.txt"
 'https://github.com/opencv/opencv/archive/49486f61fb25722cbcf586b7f4320921d46fb38e.zip SHA256 a7382f4e2fd33b987f09f89866c50416a7b3647a95bab207e0dc271bab607999' | Set-Content "$out/UPSTREAM-SOURCE.txt"
+# Some compiled modules embed BSD/SoftFloat/FDLIBM/FLANN notices in source
+# headers instead of standalone LICENSE files. Retain those complete modules.
+$moduleSources = @('core','imgproc','dnn','objdetect','calib3d','features2d','flann') | ForEach-Object { Join-Path "$source/modules" $_ }
+Compress-Archive -Path $moduleSources -DestinationPath "$out/opencv-module-sources.zip"
 Copy-Item experiments/native-ai/build.ps1,experiments/native-ai/worker/CMakeLists.txt,experiments/native-ai/worker/worker.cpp $out
 $vs = & "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -property installationPath
 $dumpbin = Get-ChildItem "$vs/VC/Tools/MSVC/*/bin/Hostx64/x64/dumpbin.exe" | Sort-Object FullName | Select-Object -Last 1 -ExpandProperty FullName

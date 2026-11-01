@@ -26,7 +26,8 @@ those are private data in future use and must not enter diagnostic logs.
 
 Build script verifies the exact upstream archive. The compact artifact retains
 its immutable source URL/SHA256, all third-party license texts, top-level OpenCV
-Apache-2.0 notice, CMake cache, logs, worker source,
+Apache-2.0 notice, complete compiled module sources preserving embedded BSD/
+SoftFloat/FDLIBM/FLANN notices, CMake cache, logs, worker source,
 compiler/build provenance, PE imports and checksums. Bundled protobuf/zlib/etc.
 notices and shipping redistribution/security audit remain to be completed; no
 model weights, fixture media, raw embeddings or personal data enter the artifact.

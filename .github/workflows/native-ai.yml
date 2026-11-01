@@ -73,6 +73,7 @@ jobs:
           name: experimental-native-ai-source-and-binary
           path: |
             native-ai-candidate/ai-worker.exe
+            native-ai-candidate/opencv-module-sources.zip
             native-ai-candidate/*.txt
             native-ai-candidate/*.cpp
             native-ai-candidate/*.ps1
