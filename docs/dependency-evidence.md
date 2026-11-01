@@ -296,3 +296,102 @@ Extracted hashes matched manifest:
 No new installer or application dependency was delivered for this experiment.
 Current 0.1.7 user-reported BMP/GIF/TIFF checks passed; previous JPEGs remain good.
 No raw transcript, private paths, media or machine inventory committed.
+
+## Windows resource containment and tiled HEIC gate
+
+[Containment 41346172423](https://github.com/aataat12/immich-clone/actions/runs/41346172423)
+passed on Server 2022 LocalService before integration. Child assigned at creation
+with PROC_THREAD_ATTRIBUTE_JOB_LIST (Microsoft documents Windows 10/Server 2016+),
+512 MiB committed-memory limits per job/process, one active process, kill on last
+job handle close, inherited-handle allowlist, fixed private environment, bounded
+stdout and deadline. This is resource containment, not a filesystem/token sandbox.
+https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-updateprocthreadattribute
+https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_extended_limit_information
+
+Actual controls allocated 600 MiB and spawned a child outside the job, then proved
+refusal inside the job; 64 MiB allocation still succeeded. Tests also forced child
+crash, timeout, output flooding, and parent death while a child was active; no
+orphan survived, and subsequent decoding/service restart succeeded. Windows peak
+job commitment was queried, not inferred from configured limits.
+
+[Grid source build 41346172469](https://github.com/aataat12/immich-clone/actions/runs/41346172469)
+adds only built-in xstack/crop filters to the same upstream FFmpeg commit. No new
+codec library/network/GPU dependency. [41346363023](https://github.com/aataat12/immich-clone/actions/runs/41346363023)
+proved six-tile edge-cropped HEIC; [41346549214](https://github.com/aataat12/immich-clone/actions/runs/41346549214)
+proved 4032x3024 / 48-tile HEIC within the same job limits. Four distinct quadrant
+colors and full output dimensions were checked, so accepting one tile cannot pass.
+Synthetic fixtures were independently read back by the pinned producer; originals
+were hash-verified unchanged. HDR/high bit depth, bursts, advanced metadata and
+broad real-camera coverage remain unsupported/unverified.
+
+The experiment now imports the exact shared launcher from internal/media.
+[41347993775](https://github.com/aataat12/immich-clone/actions/runs/41347993775)
+passed that implementation under LocalService. Earlier shared-probe attempts
+41347639755/41347840175 failed only because `go mod verify` treated the locally
+replaced module as a downloaded archive. Root external archives are now downloaded
+and verified before building against the pinned Git checkout; actual operations
+passed after the harness correction. No dependency/runtime version was changed.
+
+Source/binary artifact `13099572196` retrieved and ZIP SHA256 verified:
+`9f4d5944fa6a8b6fa1014dea881e8392b09c96b86d4b00aaccda02de7f7e6851`.
+Extracted hashes matched the artifact manifest:
+- ffmpeg.exe: `7eb77d88e2e97afff0844d8df1408ec10f9ca66fac58f6971112cefd25fb6a0f`
+- ffprobe.exe: `0ba24b17e5b42e02de441fb053dacca08aa52ac4f7f38e0845bda7df6b73a6e6`
+- source archive: `57421c6be6861f26d1dc9edf384a9d1ab6410cc0b247b2502f415df83443fe4b`
+
+PE imports remain KERNEL32, SHELL32, bcrypt and msvcrt only. Compiler/binutils
+versions unchanged; MinGW headers/runtime 11.0.1-3build1. Exact MinGW copyright
+and notices (ZPL-2.1/public-domain/permissive components), compiler runtime exception,
+FFmpeg LGPL text, complete unmodified corresponding source and build instructions
+are retained together and included in the provider's installer directory. No
+third-party codec library is linked and no separate redistributable installer is
+required by this tested candidate. This is prototype packaging evidence, not an
+independent legal/security audit or a clean Windows 10 execution claim.
+
+## Optional provider integration checks
+
+Focused Linux race/vet tests passed; Windows x64 CGO=0/GOAMD64=v1 cross-build
+passed. Reachable govulncheck 1.9.0 reported no known Go vulnerabilities for the
+Windows command after adding the provider. New library tests verify missing
+provider failure without original loss, cancellation retaining durable queued work,
+restart/retry, source-dimension preservation, thumbnail pixel correctness and
+independent restore/regeneration. Metadata routing tests cover audio-first video,
+grid bounds, unsupported codec and HDR/high-bit-depth rejection. These do not
+substitute for actual Windows decoder execution above.
+
+First app run 41347639780 was superseded by diagnostic-stage instrumentation.
+Runs 41347840160/41348278175 passed Edge media rendering, including single/grid
+HEIC, HEVC/rotated-MOV thumbnails and preview viewers. They failed the new recovery
+harness because a PowerShell REST array was wrapped in a second array, so ID
+lookups returned null. Corrected enumeration; final recovery/installer acceptance passed below.
+No failed run is described as a validated installer.
+
+
+## 0.1.9 accepted Server prototype
+
+[41348548366](https://github.com/aataat12/immich-clone/actions/runs/41348548366),
+commit `f2ecfd8be6683db923fc5e3115c9a0844c8c9d04`, job `124973523947`: all
+checks passed and logs inspected. Edge executed single/grid HEIC preview viewers,
+HEVC and rotated-MOV thumbnails, H264/AAC playback, actual preview retry, prior
+JPEG orientation/date/sort/folder features, backup download and narrow layout.
+Actual provider removal/restart left login/storage/native PNG previews operational;
+restoration/retry regenerated the 12MP HEIC with correct source dimensions.
+Private diagnostic export distinguished provider absence/probe/decode stages
+without path/name/code leakage. All synthetic original hashes survived independent
+restore. Installed LocalService decoded HEIC from a path containing spaces;
+upgrade/injected failure rollback/uninstall preserved originals, and restored
+reinstallation regenerated HEIC previews with the old state folder unavailable.
+Actual NTFS disk-full recovery passed. Service-stop cancellation retains queued
+jobs in the focused test; resource controls were also rerun using the shared
+launcher in service run 41347993775 (observed peak job commitment 61,505,536 bytes).
+
+Installer artifact `13100442001` ZIP SHA256:
+`2f978424fce33e1b58e2ccb0bdb3c7bf997bb21eba212b213f922a5621a2566d`.
+Retrieved installer SHA256 matched manifest:
+`594b29a07a67848f332d35438af7c025ab6c0a2c14c3e068f2dde31f692b11d0`
+(`ImmichClone-0.1.9-prototype-x64-setup.exe`, 22,750,262 bytes). Synthetic desktop
+and narrow screenshots inspected; artifact digests checked. Exact corresponding
+FFmpeg source and build/license/runtime notices are bundled. No local SDK, external
+redistributable setup, GPU or reboot needed. Windows 10 execution of this provider,
+clean-machine acceptance and broader corpora remain unverified. This is unsigned
+prototype evidence, not a reliability/security/support certification.
