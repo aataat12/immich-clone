@@ -395,3 +395,23 @@ FFmpeg source and build/license/runtime notices are bundled. No local SDK, exter
 redistributable setup, GPU or reboot needed. Windows 10 execution of this provider,
 clean-machine acceptance and broader corpora remain unverified. This is unsigned
 prototype evidence, not a reliability/security/support certification.
+
+
+## 0.1.9 local MOV report and focused lifecycle check
+
+User reports MP4 preview/opening succeeded; HEIC local validation skipped. MOV
+apparently appears then vanishes from the browser; duplicate re-upload does not
+show another card. No private file, filename, path, inventory or raw transcript
+was published. Exact cause and original/catalog state for that MOV are unknown.
+
+`go run ./experiments/mov-lifecycle` passed in the cloud Linux workspace using
+Go 1.27.3 and current production storage code. Existing synthetic rotated-MOV
+fixture uploaded, decoder rejection deliberately simulated, list/get/original
+bytes checked, duplicate re-upload returned the same record, catalog reopened
+and SHA256 verified. This proves only the generic failed-preview lifecycle. It
+is neither a codec compatibility result nor reproduction of the private failure.
+Existing Server synthetic H264 MOV rendering remains separate evidence.
+
+Need private diagnostics and local catalog presence/preview/error observation
+before attributing the user-visible disappearance to the renderer, queue, codec
+or catalog. No speculative product patch or new installer has been issued.

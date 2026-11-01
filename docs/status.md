@@ -5,6 +5,20 @@ Server-first execution amendment. No new charges or parallel agents. No personal
 machine specifications, paths, media or returned logs belong in this repository.
 Historical checkpoints remain in Git history; this file supersedes their gates.
 
+## Active issue: local MOV disappears from browser
+
+User reports 0.1.9 MP4 thumbnail and opening passed; HEIC was not exercised.
+A MOV reportedly appeared then vanished from the grid, with subsequent uploads
+not creating a visible card. Cause is unverified; do not mark MOV local acceptance
+passed or infer original preservation for that specific file from prior tests.
+Focused Linux synthetic lifecycle probe passed: simulated decoder rejection keeps
+the MOV listed and byte-identical across duplicate re-upload/catalog reopen.
+This is not reproduction of the private MOV or actual codec execution.
+Next evidence: private allowlisted diagnostics plus a local-only check whether
+Export catalog contains the MOV and its preview/error values. Do not request the
+private media or full catalog for public reporting. MOV diagnosis is paused for
+that evidence; no dependency install, reinstall or reboot is needed.
+
 ## Current milestone: optional media provider 0.1.9
 
 Completed integration at `f2ecfd8be6683db923fc5e3115c9a0844c8c9d04`:
