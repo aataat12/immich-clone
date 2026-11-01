@@ -1,0 +1,27 @@
+const {chromium} = require(process.env.IMMICH_BROWSER_MODULE);
+const fs = require('fs');
+const path = require('path');
+(async () => {
+  const browser = await chromium.launch({channel:'msedge',headless:true});
+  const page = await browser.newPage({viewport:{width:1360,height:900}});
+  const errors = [];
+  page.on('pageerror',error=>errors.push(error.message));
+  await page.goto('http://127.0.0.1:2283');
+  await page.fill('#code',fs.readFileSync(path.join(process.env.IMMICH_TEST_STATE,'access-code.txt'),'utf8').trim());
+  await page.click('#loginForm button');
+  await page.waitForSelector('#library:not(.hidden)');
+  await page.waitForSelector('.card img');
+  await page.setInputFiles('#files',{name:'synthetic-browser.txt',mimeType:'text/plain',buffer:Buffer.from('synthetic browser test original')});
+  await page.waitForFunction(()=>document.querySelectorAll('.card').length===2);
+  await page.screenshot({path:path.join(process.env.IMMICH_BROWSER_OUTPUT,'desktop.png'),fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  await page.screenshot({path:path.join(process.env.IMMICH_BROWSER_OUTPUT,'narrow.png'),fullPage:true});
+  if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Horizontal overflow');
+  const downloadPromise=page.waitForEvent('download');
+  await page.click('#backup');
+  const download=await downloadPromise;
+  if(await download.failure())throw Error('Browser backup download failed');
+  if(errors.length)throw Error(errors.join(';'));
+  console.log('PASS: Edge browser sign-in, upload, preview render, streamed backup download and narrow layout; no JavaScript errors.');
+  await browser.close();
+})().catch(error=>{console.error(error.message);process.exit(1)});

@@ -1,0 +1,37 @@
+IMMICH CLONE 0.1.0 - EARLY TEST BUILD
+
+This unsigned prototype is not a validated release. Windows Server 2022 testing
+does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
+
+It provides loopback-only access-code login, upload of preserved originals,
+JPEG/PNG previews, persistent preview jobs, browsing, exact original download,
+JSON catalog export, and consistent backup/verified restore. JPEG/PNG previews
+are limited to 40 megapixels. Uploads are limited to 4 GiB per file. Other formats
+are preserved/downloadable but preview failure is shown explicitly. No EXIF
+orientation, advanced camera metadata, video previews, folder scanning, AI,
+mobile clients, remote sharing or LAN access in this build.
+
+The installer needs administrator permission and uses Windows LocalService.
+No .NET, PostgreSQL, SDK, Python, Docker, WSL or separate media codec is required.
+Select application data outside cloud-sync folders. Uploaded originals are copied
+into this managed data directory. The external source library is not scanned,
+changed, moved or deleted. Uninstall preserves application data and originals.
+
+Start menu: Open library; View access code. Keep the code and backup ZIP private.
+Sessions expire after 12 hours and service restart requires signing in again.
+The application emits no telemetry and never uploads a machine report.
+
+Backup download stages a ZIP in the data folder before transferring it, so free
+space is needed for the full archive. Large downloads should use a browser, not
+load into JavaScript memory. Restore only into a new directory, with the service
+stopped: immichclone.exe -mode restore -data NEW_ABSOLUTE_PATH -archive BACKUP_ZIP.
+Restored previews regenerate. Catalog schema 1 is checked; unknown versions are
+refused. JSON catalog export plus independent originals provides a migration path.
+
+Not yet validated: clean Windows 10 install, full OS reboot, long-running
+reliability, actual full disk, disconnected drive, antivirus/SmartScreen behavior,
+production security review and large-library performance. Current startup-failure
+rollback covers schema 1, not future schema migrations.
+
+Installer built with Inno Setup (Jordan Russell and Martijn Laan).
+Go/x/sys/bbolt license notices accompany the installed executable.

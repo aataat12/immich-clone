@@ -49,3 +49,16 @@
 - Authentication is local single-user access-code login with ephemeral sessions,
   loopback binding/Host restriction, same-origin writes and CSRF request header.
   LAN/multi-user/public exposure remain disabled pending security design.
+
+- Inno Setup 6.7.4 is pinned for prototype packaging (official source license
+  permits use without a purchase). No external redistributable runtime for the
+  CGO-disabled Go build; license notices are packaged from exact dependencies.
+- Installer data is outside Program Files and outside sync folders, protected by
+  ACLs for system, administrators, LocalService and the installing account.
+  Nonempty unrelated data folders are refused. Upgrades preserve the data path.
+- Schema-1 upgrades stop the service and retain protected copies of the previous
+  executable, catalog and access code. On startup failure restore those copies;
+  no original is modified or deleted. Future migrations require separate rollback
+  tests. Uninstall removes service/program files and retains all application data.
+- Prototype artifacts are unsigned and expire after seven days. They are test
+  builds, not approved for bulk ingestion or a claim of Windows 10 compatibility.

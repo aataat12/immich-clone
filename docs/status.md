@@ -73,3 +73,19 @@ content-addressed originals, duplicate detection, explicit preview job status,
 JPEG/PNG thumbnails, browser listing/download, JSON export, consistent ZIP backup
 and checksum-verified independent restore. No external folder import or AI yet.
 Linux cloud unit/integration tests with race detection and vet passed.
+
+## Originals application evidence
+
+[Run 41326182923](https://github.com/aataat12/immich-clone/actions/runs/41326182923),
+commit `1ee7fa2`, passed on Server 2022. Job 124906489658 logs inspected.
+Application ran as LocalService: authenticated upload, SHA256 verification,
+duplicates, persisted PNG preview, original download across service restart,
+independent backup restoration and denied-storage startup failure all passed.
+Cloud Windows tests for abrupt process exit, duplicate concurrency, tampered
+backup rejection, authentication/CSRF/Host restrictions passed, as did go vet.
+
+Next bounded run adds state-folder ownership markers, Edge browser automation,
+and an Inno 6.7.4 installer with fresh install, version upgrade, injected startup
+failure rollback and data-preserving uninstall. Those new checks are pending.
+The local container could not launch Chromium due to socket restrictions; no
+local visual/browser success is claimed. Windows Edge tests will supply evidence.

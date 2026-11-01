@@ -44,6 +44,40 @@ func Open(root string) (*Store, error) {
 	if root == "" {
 		return nil, errors.New("data directory required")
 	}
+	if e := os.MkdirAll(root, 0700); e != nil {
+		return nil, e
+	}
+	marker := filepath.Join(root, "state-format.txt")
+	if b, e := os.ReadFile(marker); e == nil {
+		if string(b) != "immichclone-schema-1\n" {
+			return nil, errors.New("unknown state format")
+		}
+	} else if errors.Is(e, os.ErrNotExist) {
+		entries, e := os.ReadDir(root)
+		if e != nil {
+			return nil, e
+		}
+		if len(entries) != 0 {
+			return nil, errors.New("refusing an unrelated nonempty data directory")
+		}
+		f, e := os.OpenFile(marker, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+		if e != nil {
+			return nil, e
+		}
+		_, e = f.WriteString("immichclone-schema-1\n")
+		if e == nil {
+			e = f.Sync()
+		}
+		ce := f.Close()
+		if e == nil {
+			e = ce
+		}
+		if e != nil {
+			return nil, e
+		}
+	} else {
+		return nil, e
+	}
 	for _, d := range []string{"", "originals", "staging", "previews"} {
 		if e := os.MkdirAll(filepath.Join(root, d), 0700); e != nil {
 			return nil, e

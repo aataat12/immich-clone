@@ -1,0 +1,7 @@
+/dist/
+/state/
+*.exe
+*.zip
+*.db
+*.part
+access-code.txt

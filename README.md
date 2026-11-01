@@ -1,6 +1,7 @@
 # Immich Clone
 
-Windows-native photo/video manager in feasibility validation; no installable app yet.
+Windows-native photo/video manager under development. A working originals prototype
+is Server-tested; installer and browser lifecycle tests are in progress.
 
 - [Authoritative requirements](Immich_Clone_Project_Requirements.md)
 - [Status and milestone acceptance](docs/status.md)
@@ -13,3 +14,9 @@ Windows-native photo/video manager in feasibility validation; no installable app
 `storage-probe.yml` runs bounded synthetic file checks on Server 2022 and validates
 inventory execution in Windows PowerShell 5.1. It does not certify Windows 10,
 media codecs, AI inference, application backups or an installer.
+
+The current slice supports local access-code login, preserved original upload,
+duplicates, JPEG/PNG previews, persistent jobs, download/export and verified backup
+restoration. See [prototype limitations](docs/prototype-notes.txt). External folder
+import, video previews and AI remain unfinished. Never put personal machine
+reports, media or paths in public issues or artifacts.

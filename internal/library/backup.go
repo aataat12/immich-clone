@@ -66,6 +66,9 @@ func (s *Store) Backup(w io.Writer) error {
 	if e = add("catalog.db", name, ""); e != nil {
 		return e
 	}
+	if e = add("state-format.txt", filepath.Join(s.root, "state-format.txt"), ""); e != nil {
+		return e
+	}
 	if _, e = os.Stat(filepath.Join(s.root, "access-code.txt")); e == nil {
 		if e = add("access-code.txt", filepath.Join(s.root, "access-code.txt"), ""); e != nil {
 			return e
@@ -123,7 +126,7 @@ func Restore(archive, target string) (result error) {
 	if e != nil || m.Schema != 1 {
 		return errors.New("invalid manifest schema")
 	}
-	if len(m.Files) != len(entries)-1 || m.Files["catalog.db"] == "" {
+	if len(m.Files) != len(entries)-1 || m.Files["catalog.db"] == "" || m.Files["state-format.txt"] == "" {
 		return errors.New("manifest entry mismatch")
 	}
 	stage, e := os.MkdirTemp(filepath.Dir(target), "immich-restore-*")
@@ -136,7 +139,7 @@ func Restore(archive, target string) (result error) {
 		}
 	}()
 	for entry, expected := range m.Files {
-		allowed := entry == "catalog.db" || entry == "access-code.txt" || (strings.HasPrefix(entry, "originals/") && validID(strings.TrimPrefix(entry, "originals/")))
+		allowed := entry == "catalog.db" || entry == "access-code.txt" || entry == "state-format.txt" || (strings.HasPrefix(entry, "originals/") && validID(strings.TrimPrefix(entry, "originals/")))
 		if !allowed || !validID(expected) {
 			return errors.New("unsafe backup entry")
 		}

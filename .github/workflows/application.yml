@@ -16,7 +16,7 @@ concurrency:
 jobs:
   application:
     runs-on: windows-2022
-    timeout-minutes: 12
+    timeout-minutes: 18
     env:
       CGO_ENABLED: '0'
       GOAMD64: v1
@@ -38,4 +38,24 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Vet failed' }
       - name: Execute full application service and backup restoration
         shell: pwsh
-        run: ./scripts/Test-Application.ps1
+        run: |
+          npm install --prefix "$env:RUNNER_TEMP/browser-deps" --no-audit --no-fund playwright@1.62.1
+          if ($LASTEXITCODE -ne 0) { throw 'Browser test dependency acquisition failed' }
+          $env:IMMICH_BROWSER_MODULE = "$env:RUNNER_TEMP/browser-deps/node_modules/playwright"
+          $env:IMMICH_BROWSER_OUTPUT = "$env:GITHUB_WORKSPACE/browser-evidence"
+          New-Item -ItemType Directory $env:IMMICH_BROWSER_OUTPUT | Out-Null
+          ./scripts/Test-Application.ps1
+      - name: Build pinned installer and test install upgrade rollback and uninstall
+        shell: pwsh
+        run: |
+          ./scripts/Build-Installer.ps1
+          ./scripts/Test-Installer.ps1
+      - name: Retain synthetic browser evidence and prototype installer
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: prototype-server-tested
+          path: |
+            dist/ImmichClone-0.1.1-prototype-x64-setup.exe
+            dist/SHA256SUMS.txt
+            browser-evidence/*.png
+          retention-days: 7
