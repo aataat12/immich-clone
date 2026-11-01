@@ -39,6 +39,8 @@ the primary session to review the PR before taking an overlapping implementation
 task. This handoff does not establish automatic cross-account communication or
 background coordination; bring the PR link back to the project conversation.
 
-Current delivered build: 0.1.9; Server acceptance run 41348548366. Local evidence
+Current delivered build: 0.1.11; Server acceptance run 41352572001.
+Local MOV disappearance remains unconfirmed; current status records the evidence
+needed. Do not conflate the new visibility controls with a fix for that report. Local evidence
 for 0.1.3/0.1.5/0.1.7 is user-reported; new media provider local checks and final
 reboot remain separate. Never infer Windows 10 compatibility from Server results.

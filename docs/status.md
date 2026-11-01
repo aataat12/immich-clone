@@ -19,16 +19,25 @@ Export catalog contains the MOV and its preview/error values. Do not request the
 private media or full catalog for public reporting. MOV diagnosis is paused for
 that evidence; no dependency install, reinstall or reboot is needed.
 
-## In progress: version display and reversible visibility 0.1.11
+## Latest installer: version display and reversible visibility 0.1.11
 
 User requested running-version identification and removal from the main grid.
 Implemented actual executable version at top-right, reversible hide/unhide with
 Hidden items view, retained originals/jobs/export/backup, and complete-grid
-refresh replacement with stale-response rejection. Focused acceptance running;
-0.1.9 remains the delivered build until the next installer passes. MOV diagnosis
-above remains unresolved; visibility controls are not a claimed MOV fix.
+refresh replacement with stale-response rejection. Acceptance passed:
+[41352572001](https://github.com/aataat12/immich-clone/actions/runs/41352572001),
+commit `944ee3197cd56d27d52d780f0ecd612c1c2dfca2`.
+Installer artifact `13102570178` retrieved and checksum verified:
+`1884a464c414ac8b788deab6fe9d5dac8997e89aa3ed6c6e10b1363dea5d6b85`.
+Server 2022/Edge tested actual header, hide/restore and out-of-order response
+protection; Windows storage tests verified hidden-state persistence through jobs,
+restart/duplicate upload/backup restoration, and protected visibility endpoints.
+Installer lifecycle, provider recovery and actual NTFS disk-full regression passed.
+Desktop/narrow screenshots inspected. No reboot or prerequisite installation.
+Local Windows 10 acceptance of these controls is pending. MOV diagnosis above
+remains unresolved; the refresh hardening is not a confirmed private-MOV fix.
 
-## Current milestone: optional media provider 0.1.9
+## Prior milestone: optional media provider 0.1.9
 
 Completed integration at `f2ecfd8be6683db923fc5e3115c9a0844c8c9d04`:
 [application run 41348548366](https://github.com/aataat12/immich-clone/actions/runs/41348548366)
@@ -39,15 +48,16 @@ worker commitment to 512 MiB and one process, with deadline/output bounds and
 parent-death cleanup. The exact shared launcher passed service controls too.
 Source, notices, compiler versions and build recipe accompany the installed worker.
 
-Latest installer: `ImmichClone-0.1.9-prototype-x64-setup.exe`, artifact `13100442001`.
+Prior installer: `ImmichClone-0.1.9-prototype-x64-setup.exe`, artifact `13100442001`.
 Retrieved installer SHA256 verified:
 `594b29a07a67848f332d35438af7c025ab6c0a2c14c3e068f2dde31f692b11d0`.
 Synthetic desktop/narrow screenshots inspected. Missing-provider recovery, installed
 provider execution from paths with spaces, independent HEIC restore/regeneration,
 failed-upgrade rollback, preserved originals and actual NTFS full-disk recovery all
 passed. Focused Linux race/vet and reachable Windows Go vulnerability checks passed.
-New provider remains unverified locally on Windows 10; earlier local checks apply
-to their respective versions. No dependencies or setup reboot required.
+User reports local MP4 thumbnail/opening succeeded in 0.1.9; HEIC was not
+exercised and MOV has the unresolved issue above. Earlier checks apply to their
+respective versions. No dependencies or setup reboot required.
 
 ## Prior accepted image formats 0.1.7
 
@@ -74,6 +84,8 @@ metadata; timeline grouping/sorting and details; image viewing; browser H264/AAC
 MP4 playback; optional HEIC/H264/HEVC/MOV previews; retryable bounded worker; exact original downloads; JSON export; consistent backup and verified
 independent restore. Installer upgrades/rollback and uninstall preserve data.
 Private bounded diagnostics have browser/offline export and no automatic upload.
+Running-version header and reversible hidden-items view retain originals/jobs
+and backup/export records.
 No original deletion API or server-side source scan. State stays outside sync.
 
 ## Accepted evidence and limits
@@ -93,9 +105,10 @@ Server execution does not establish clean Windows 10 compatibility.
 
 ## Remaining gates and next work
 
-0.1.9 cloud acceptance and checksum verification are complete. A small copied
-HEIC and short MP4/MOV local check is useful if available; no bulk ingestion or
-reboot requested. Next main work: measure large-library browsing/job behavior and
+0.1.11 cloud acceptance and checksum verification are complete. Reload the page
+after upgrade, confirm the version and test reversible hide/restore on a test
+item. Private diagnostics/catalog-presence observation still needed for MOV.
+No bulk ingestion or reboot requested. Next main work: measure large-library browsing/job behavior and
 address demonstrated bottlenecks. A recommended independent partner task is a
 backup/restore failure-path review; see partner-handoff.md. No partner access,
 invitation or external task dispatch has been performed.

@@ -415,3 +415,32 @@ Existing Server synthetic H264 MOV rendering remains separate evidence.
 Need private diagnostics and local catalog presence/preview/error observation
 before attributing the user-visible disappearance to the renderer, queue, codec
 or catalog. No speculative product patch or new installer has been issued.
+
+
+## 0.1.11 version/visibility acceptance
+
+[41352572001](https://github.com/aataat12/immich-clone/actions/runs/41352572001),
+commit `944ee3197cd56d27d52d780f0ecd612c1c2dfca2`, job `124985743778`: all
+steps passed on Server 2022. Logs inspected. Edge asserted the actual running
+0.1.11 build label, narrow visibility, hide/hidden-view/restore and unchanged
+original count; injected an older response omitting the synthetic MOV and verified
+it could not replace the newer grid. This reproduces a stale-response hazard,
+not the cause of the private MOV report. Existing image/video/HEIC, folder/import,
+backup download, provider-failure recovery and logging checks passed.
+
+Storage tests executed hidden state through preview jobs, duplicate re-upload,
+catalog reopen and independent backup restoration with original integrity. HTTP
+tests rejected unauthenticated/cross-origin visibility writes and preserved
+authenticated original download while hidden. Actual installed health reported
+the executable build. Full installer upgrade/failed-upgrade rollback, restoration,
+uninstall retention and NTFS disk-full recovery passed. Focused Linux race/vet
+and JavaScript syntax checks passed. No dependency versions changed.
+
+Installer artifact `13102570178` ZIP SHA256 verified:
+`870959f0f635595e46ef3072f114390e097132a95dde05d3457072f3ddc15bd9`.
+Extracted `ImmichClone-0.1.11-prototype-x64-setup.exe` SHA256 matched manifest:
+`1884a464c414ac8b788deab6fe9d5dac8997e89aa3ed6c6e10b1363dea5d6b85`
+(22,751,597 bytes). Desktop/narrow synthetic screenshots inspected. Local Windows
+10 acceptance of this build remains pending; no new machine/media data published.
+Hide is reversible catalog metadata, not deletion. The MOV issue remains awaiting
+private diagnostic/catalog-presence evidence; do not claim it is fixed.
