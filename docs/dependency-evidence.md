@@ -38,9 +38,8 @@ zero-cost Windows 10 cloud environment has been established. No OS switch assume
 
 ## New target information and support issue — 2026-11-01
 
-Inventory received privately; no raw machine report or user path retained here.
-No qualifying cloud entitlement is known. Merely installing Visual Studio is not
-proof of an active subscription: [Microsoft licensing guidance](https://www.microsoft.com/licensing/guidance/Visual-Studio).
+Personal machine details and license/enrollment information must not be stored in
+public records. Generic compatibility research follows.
 
 [Current .NET 10 supported OS list](https://github.com/dotnet/core/blob/main/release-notes/10.0/supported-os.md),
 last updated 2026-09-28, lists Windows 10 Enterprise/LTSC versions but omits Windows
@@ -105,3 +104,24 @@ or later, `--enable-version3`, shared libraries, no GPL/nonfree config flags.
 Bundled DLLs observed: avcodec-62, avdevice-62, avfilter-11, avformat-62,
 avutil-60, swresample-6 and swscale-9. DLL inventory is not a dependency-closure
 proof; target-machine prerequisites and corresponding-source audit remain open.
+
+## Accepted for the Server prototype — Go / bbolt / Windows service
+
+Executed [runtime run 41325465670](https://github.com/aataat12/immich-clone/actions/runs/41325465670)
+proves actual HTTP/database operations across native LocalService restart, database
+rollback/reopen, and JPEG/PNG encode/decode. No production database installed.
+Go 1.27.3, bbolt 1.4.3 and x/sys 0.49.0 pinned with go.sum checksums; CGO=0 and
+GOAMD64=v1 avoid a C runtime installer and AVX baseline requirement. Go's supported
+Windows baseline is Windows 10; actual execution evidence here is Server 2022 only.
+
+Go and x/sys use BSD-3-Clause licensing; bbolt is MIT. Include exact license texts
+in packaged builds. Go supports a major until two newer majors exist; regularly
+update patch releases and rerun acceptance checks. No fixed commercial SLA for
+bbolt/x/sys; monitor upstream and vulnerability reports. Catalog migration path:
+versioned JSON export plus independent SHA256-named originals. SQLite remains an
+option if catalog query/scale requirements outgrow the embedded key/value store.
+
+Local cloud toolchain used for focused Linux checks: actions/go-versions asset
+`1.27.3-39437817176/go-1.27.3-linux-x64.tar.gz`, SHA256
+`d0fbe16a6a03fe5fbf5577ab36f95f0725af587820dca8a78e6edd4eb4e19fd6`
+verified before execution. This is a development tool, not a user prerequisite.

@@ -12,7 +12,7 @@
 - AI remains optional; no model selected and no inference success claimed.
 - PC report stays in conversation, never public commits or CI logs. Inventory
   script prints selected technical fields only and makes no configuration changes.
-- 2026-11-01: Target inventory received privately. Treat cloud-synced media as a
+- 2026-11-01: Treat cloud-synced media as a
   read-only external source initially: no writes/deletes, no deletion propagation,
   no database/jobs/cache inside the sync root. Missing/offline sources are an
   availability failure, not authorization to delete catalog entries. Detect
@@ -35,3 +35,17 @@
   Embedded catalog avoids PostgreSQL installation and preserves a standard file
   layout plus JSON export migration path. DB is single-writer local state, never
   inside Dropbox; originals remain independent. Candidate until execution passes.
+
+- Basic runtime/embedded database/LocalService probe passed. Proceed with the
+  originals slice using these components. No production reliability claim.
+- Prototype metadata schema 1 lives in bbolt; originals are independent immutable
+  SHA256-named files. A blob is published exclusively before catalog/job commit.
+  Interrupted ingestion can leave an unreferenced blob, never a successful record
+  referencing an uncommitted upload. Such blobs are retained; no automatic deletion.
+- Native Go JPEG/PNG preview path only for this slice, 40MP preview limit and 4GiB
+  streaming upload limit. Other files remain downloadable with explicit unsupported
+  preview errors. EXIF orientation and camera metadata are pending. No FFmpeg
+  redistribution is required for this initial build.
+- Authentication is local single-user access-code login with ephemeral sessions,
+  loopback binding/Host restriction, same-origin writes and CSRF request header.
+  LAN/multi-user/public exposure remain disabled pending security design.

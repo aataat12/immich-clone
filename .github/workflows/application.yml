@@ -1,0 +1,41 @@
+name: Application originals slice
+on:
+  push:
+    paths:
+      - 'cmd/immichclone/**'
+      - 'internal/library/**'
+      - 'internal/web/**'
+      - 'scripts/Test-Application.ps1'
+      - '.github/workflows/application.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: application-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  application:
+    runs-on: windows-2022
+    timeout-minutes: 12
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Verify dependency checksums and execute storage, recovery and HTTP tests
+        shell: pwsh
+        run: |
+          go mod verify
+          if ($LASTEXITCODE -ne 0) { throw 'Module verification failed' }
+          go test -mod=readonly -v ./internal/... ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'Tests failed' }
+          go vet ./internal/... ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'Vet failed' }
+      - name: Execute full application service and backup restoration
+        shell: pwsh
+        run: ./scripts/Test-Application.ps1
