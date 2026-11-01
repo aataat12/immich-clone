@@ -63,8 +63,11 @@ jobs:
           Copy-Item media-candidate/* "$root/tools"
           foreach ($file in Get-ChildItem experiments/media-worker/fixtures/*.b64) { [IO.File]::WriteAllBytes((Join-Path $root $file.BaseName),[Convert]::FromBase64String((Get-Content $file.FullName -Raw))) }
           Copy-Item experiments/media-worker/fixtures/fixtures.json $root
-          Push-Location experiments/media-worker
+          # Verify downloaded dependencies at the root; the probe replaces its
+          # local immichclone module with this checksum-verified Git checkout.
+          Checked go @('mod','download')
           Checked go @('mod','verify')
+          Push-Location experiments/media-worker
           Checked go @('build','-mod=readonly','-trimpath','-o',"$root/probe.exe",'.')
           Pop-Location
           Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)M')
