@@ -12,8 +12,18 @@ AI feasibility. Successful people/object identification and organization is now
 the project value gate. Retain the accepted managed-copy/service/storage work;
 do not spend runs on new bulk-import features while this gate is unresolved.
 AI remains local, optional and replaceable at runtime. Failure cannot corrupt
-originals or disable existing access. No cloud photo inference or personal media
+originals or disable existing access. No external inference API or personal media
 in public test fixtures. See `ai-feasibility.md` for acceptance and current limits.
+
+Initial isolated CPU inference passed in cloud Linux and Windows Server 2022
+LocalService/restart: YuNet/SFace faces/embeddings and YOLOX person/cat/cup.
+[41360159900](https://github.com/aataat12/immich-clone/actions/runs/41360159900),
+commit `8475b90e88bd4a85f4c9eed2b568f1d8509d39dd`. Models, wheels and public
+fixtures are hash-pinned; originals unchanged. Peak job commitment about 480MB
+under 512MiB cap. Tiny fixture separation includes transformed copies, not broad
+cross-photo accuracy. Next: held-out multi-photo quality, then shipping-runtime
+and small People/object organization slice. No AI installer or local action yet.
+No additional import/app regression workflow was run; app remains unchanged.
 
 ## Confirmed workflow: managed copies and bulk import
 
@@ -31,7 +41,7 @@ recovery must state when reselecting sources is required. See `bulk-import.md`.
 Queue foundation is accepted below. Current Server-tested build: 0.1.13; bulk
 transfer/recovery UI is deferred by the latest user priority. No local action needed.
 
-## Current work: catalog/worker scale
+## Accepted foundation: catalog/worker scale
 
 User now reports MOV files are showing. Close the request for private diagnostics
 unless the symptom recurs; root cause was not independently established. This is

@@ -66,7 +66,21 @@ versus different-people 0.151917; coffee/cat produced no human-face detection.
 Expected person/cat/cup objects were found (coffee also had dining-table class).
 About 254ms for face operations and 435–675ms per object fixture on the disposable
 host; not PC/throughput predictions. This does not clear broad recognition quality,
-packaging or app integration. Windows service evidence pending.
+packaging or app integration.
+
+Windows Server 2022 LocalService inference/restart passed in
+[41360159900](https://github.com/aataat12/immich-clone/actions/runs/41360159900),
+commit `8475b90e88bd4a85f4c9eed2b568f1d8509d39dd`, job `125008637332`.
+Inspected logs: same/different cosine values matched Linux; expected classes and
+non-face negatives passed; all seven input hashes unchanged. Observed peak job
+commitment 479862784 bytes initially and 479408128 after restart, below 536870912
+limit. This is close enough to the cap that larger input processing cannot be
+assumed safe; future worker input must remain bounded and resource failures visible.
+One-thread face pipeline 344–360ms and object passes 625–719ms on this runner;
+these are small-fixture observations, not library throughput or PC predictions.
+The experiment uses hosted Python tooling; standalone native closure, clean
+prerequisites, shipping package and Windows 10 execution remain unaccepted.
+No app code/dependency/installer changed and no import test was rerun.
 
 ## Sources and update policy
 

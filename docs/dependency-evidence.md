@@ -497,3 +497,16 @@ User deferred additional import features/tests to prove recognition/organization
 See `ai-feasibility.md` for exact candidates, terms, accepted Linux operations and
 remaining Windows/quality/packaging gates. No AI runtime/model is integrated into
 the application and no new installer is delivered for this experiment.
+
+
+AI probe [41360159900](https://github.com/aataat12/immich-clone/actions/runs/41360159900)
+at `8475b90e88bd4a85f4c9eed2b568f1d8509d39dd`, job `125008637332`, passed
+Windows Server 2022 actual foreground and restricted LocalService CPU inference
+plus restart. Inspected logs confirm Python 3.12.10, OpenCV 4.12.0 wheel revision
+88 and NumPy 2.2.6; wheel hashes enforced, seven model/public-input hashes checked
+before/after execution. Face detections, 112x112 alignment, 128-dimensional finite
+embeddings, tiny-fixture grouping/separation/negatives and expected person/cat/cup
+YOLOX outputs passed. Peak committed bytes 479862784 within 536870912 cap.
+No broad accuracy, target-PC performance, Windows 10 or standalone prerequisite
+claim. Exact preprocessing, limits, terms and unresolved quality/distribution gates
+are in `ai-feasibility.md`. No runtime/model added to application dependencies.

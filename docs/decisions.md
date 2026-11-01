@@ -171,5 +171,6 @@
   verified managed-copy work and defer bulk-import milestones. First prove real
   candidate model inference, quality/limitations and Windows service/packaging,
   then build reviewable people groups, manual naming/merge/split and object
-  tags/search. AI remains replaceable and unable to damage originals. No cloud
-  inference, private media or personal machine information enters public CI.
+  tags/search. AI remains replaceable and unable to damage originals. No user photos
+  sent to cloud inference; private media and personal machine information never
+  enter public CI. Public licensed fixtures may be used in cloud CPU experiments.

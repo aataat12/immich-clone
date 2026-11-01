@@ -21,7 +21,8 @@ HEIC/video previews, browsing, reversible hide/restore, exact original downloads
 JSON export and verified independent backup restoration. It includes private
 bounded diagnostic export with no automatic upload. See
 [prototype limitations](docs/prototype-notes.txt) and [bulk-import milestones](docs/bulk-import.md).
-Server-side source scanning, bulk-import recovery/paging, AI and mobile features
+Current priority is [people/object AI feasibility](docs/ai-feasibility.md); further
+import work is deferred. Server-side source scanning, bulk-import recovery/paging, AI and mobile features
 are not implemented. Never put personal machine reports, media or paths in
 public issues or artifacts.
 
