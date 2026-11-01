@@ -204,3 +204,37 @@ at commit `46a8113a3d516e4782f6fa79d95a8516dea07ac3` passed all stated
 independent fixture/LocalService checks. Job `124954301974` logs inspected. Linux
 race test and Windows x64 CGO-disabled cross-build also passed. This clears only
 the prototype integration gate, not broad TIFF or Windows 10 compatibility.
+
+Focused integration checks on `16d82bd7d0ac85c69e7b0220e8a7933950596e64`:
+Linux `go test -race` and `go vet` passed; Windows x64 CGO=0/GOAMD64=v1 cross-build
+passed. govulncheck 1.9.0, targeting Windows amd64 for `./cmd/immichclone`, reported
+"No vulnerabilities found" after adding x/image. This is a reachable known-Go-
+vulnerability check, not a security audit or a promise about malformed corpora.
+
+
+## Additional image formats 0.1.7 acceptance
+
+[Application run 41342541106](https://github.com/aataat12/immich-clone/actions/runs/41342541106),
+commit `16d82bd7d0ac85c69e7b0220e8a7933950596e64`, job `124955411866`: all
+steps passed on Windows Server 2022. Logs inspected: actual LocalService uploads,
+BMP/TIFF/GIF previews and viewers in Edge, unchanged source copies and restored
+original checksums, legacy failed-preview retry, bounded malformed rejection,
+static first GIF frame, compressed TIFF, previous JPEG metadata/video playback,
+diagnostic privacy, installer fresh/upgrade/injected-failure rollback/uninstall,
+independent reinstall recovery and actual NTFS disk-full recovery. Synthetic
+desktop/narrow screenshots inspected; browser asserted no overflow or JS errors.
+Runtime regression run `41342541155` also passed following module changes.
+
+Installer artifact `13098391274` ZIP SHA256:
+`96fc1a2d9e9b4412c6e18911c7bf6fe39612a9e76a41003b211bf5128302e2df`.
+Retrieved installer `ImmichClone-0.1.7-prototype-x64-setup.exe` SHA256:
+`9840080516e759745f2ce086a74d519ec2d820aba3eb1828e85c6e7703e366be`,
+matched the artifact checksum list. Exact x/image BSD license bundled. No new
+local prerequisite, purchase or OS reboot required. Unsigned prototype; new codecs
+have not been validated locally on Windows 10 or against broad real-camera
+corpora. TIFF orientation/metadata, HDR, HEIC/RAW and video thumbnails stay deferred.
+
+User-reported 0.1.5 local check: two JPEGs displayed expected date/time and
+orientation. No media, paths, machine specifications or raw reports published.
+This supersedes the earlier note that 0.1.5 had no local evidence; reboot remains
+deferred to final acceptance.
