@@ -7,7 +7,10 @@ function Assert([bool]$condition,[string]$message) { if (!$condition) { throw $m
 function Install([string]$version) {
     $setup = (Resolve-Path "dist/ImmichClone-$version-prototype-x64-setup.exe").Path
     $process = Start-Process $setup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$app+'"'),('/STATE="'+$state+'"'),('/LOG="'+$root+'/setup-'+$version+'.log"')) -Wait -PassThru
-    if ($process.ExitCode -ne 0) { Get-Content "$root/setup-$version.log" -Tail 25 }
+    if ($process.ExitCode -ne 0) {
+        Get-Content "$root/setup-$version.log" -Tail 25 | ForEach-Object { Write-Host $_ }
+        if (Test-Path "$app/install-diagnostic.txt") { Get-Content "$app/install-diagnostic.txt" | ForEach-Object { Write-Host $_ } }
+    }
     return $process.ExitCode
 }
 try {

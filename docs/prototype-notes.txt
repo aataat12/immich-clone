@@ -1,4 +1,4 @@
-IMMICH CLONE 0.1.0 - EARLY TEST BUILD
+IMMICH CLONE 0.1.1 - EARLY TEST BUILD
 
 This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
@@ -8,14 +8,17 @@ JPEG/PNG previews, persistent preview jobs, browsing, exact original download,
 JSON catalog export, and consistent backup/verified restore. JPEG/PNG previews
 are limited to 40 megapixels. Uploads are limited to 4 GiB per file. Other formats
 are preserved/downloadable but preview failure is shown explicitly. No EXIF
-orientation, advanced camera metadata, video previews, folder scanning, AI,
+orientation, advanced camera metadata, video previews, server-side folder scanning, AI,
 mobile clients, remote sharing or LAN access in this build.
 
 The installer needs administrator permission and uses Windows LocalService.
 No .NET, PostgreSQL, SDK, Python, Docker, WSL or separate media codec is required.
 Select application data outside cloud-sync folders. Uploaded originals are copied
 into this managed data directory. The external source library is not scanned,
-changed, moved or deleted. Uninstall preserves application data and originals.
+changed, moved or deleted. Browser-selected folder import copies files only after
+a confirmation showing file count and byte total. Relative folder structure is
+not retained in this prototype. Online-only selections may download when read;
+choose only a small available-offline test folder. Uninstall preserves application data and originals.
 
 Start menu: Open library; View access code. Keep the code and backup ZIP private.
 Sessions expire after 12 hours and service restart requires signing in again.

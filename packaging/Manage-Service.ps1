@@ -7,6 +7,7 @@ $ErrorActionPreference = 'Stop'
 $name = 'ImmichClone'
 $binary = Join-Path $AppDir 'immichclone.exe'
 $rollback = Join-Path $AppDir 'rollback'
+$stage = 'inspect service'
 function Checked([string]$exe,[string[]]$arguments) { & $exe @arguments | Out-Null; if ($LASTEXITCODE -ne 0) { throw 'A required installation operation failed' } }
 function Own-Service {
     $service = Get-CimInstance Win32_Service -Filter "Name='$name'"
@@ -38,24 +39,32 @@ try {
         # Application state and originals deliberately remain untouched.
         exit 0
     }
+    $stage = 'validate state location'
     if ([IO.Path]::GetFullPath($AppDir).TrimEnd('\') -eq [IO.Path]::GetFullPath($DataDir).TrimEnd('\')) { throw 'State and installation directories must differ' }
     foreach ($component in ($DataDir -split '[\\/]')) { if ($component -ieq 'Dropbox') { throw 'Application state cannot be inside a sync folder' } }
     if ((Test-Path $DataDir) -and !(Test-Path "$DataDir/state-format.txt") -and @(Get-ChildItem -LiteralPath $DataDir -Force).Count -gt 0) { throw 'Refusing an unrelated nonempty data directory' }
     New-Item -ItemType Directory -Force $DataDir | Out-Null
+    $stage = 'configure state ACL'
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
     Checked icacls @($DataDir,'/inheritance:r','/grant:r','*S-1-5-18:(OI)(CI)F','*S-1-5-32-544:(OI)(CI)F','*S-1-5-19:(OI)(CI)M',('*'+$identity+':(OI)(CI)RX'))
+    $stage = 'initialize state'
     Checked $binary @('-mode','init','-data',$DataDir)
     if (!$owned) {
+        $stage = 'register LocalService'
         $credential = [PSCredential]::new('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))
         New-Service -Name $name -DisplayName 'Immich Clone (prototype)' -BinaryPathName ('"'+$binary+'" -mode service -data "'+$DataDir+'"') -StartupType Automatic -Credential $credential | Out-Null
     }
+    $stage = 'configure automatic startup'
     Checked sc.exe @('config',$name,'start=','delayed-auto')
     Checked sc.exe @('failure',$name,'reset=','86400','actions=','restart/5000/restart/15000/none/0')
     if ($env:IMMICH_INSTALL_TEST_FAILURE -eq '1') { throw 'Injected upgrade failure' }
+    $stage = 'start service'
     Start-Service $name
     Health
     exit 0
 } catch {
+    # No paths, credentials, machine inventory or exception text in diagnostics.
+    ($stage+'; '+$_.Exception.GetType().Name+'; HResult='+$_.Exception.HResult) | Set-Content (Join-Path $AppDir 'install-diagnostic.txt')
     # Schema 1 installer never mutates originals. Restore prior catalog and binary
     # after startup/configuration failure; retained orphan blobs are never deleted.
     if ($Action -eq 'Install' -and (Test-Path "$rollback/immichclone.exe")) {
