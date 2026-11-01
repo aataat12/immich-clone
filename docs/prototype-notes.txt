@@ -1,12 +1,12 @@
-IMMICH CLONE 0.1.5 - EARLY TEST BUILD
+IMMICH CLONE 0.1.7 - EARLY TEST BUILD
 
 This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
 
 It provides loopback-only access-code login, upload of preserved originals,
-JPEG/PNG previews and full-image viewing, MP4 browser playback, persistent preview
+JPEG/PNG/BMP/GIF previews, TIFF first-page previews, MP4 browser playback, persistent preview
 jobs, browsing, exact original download,
-JSON catalog export, and consistent backup/verified restore. JPEG/PNG previews
+JSON catalog export, and consistent backup/verified restore. Image previews
 are limited to 40 megapixels. Uploads are limited to 4 GiB per file. Other formats
 are preserved/downloadable but preview failure is shown explicitly. JPEG EXIF orientation, capture date and camera make/model are supported. No advanced camera metadata, generated video thumbnails, server-side folder scanning, AI,
 mobile clients, remote sharing or LAN access in this build.
@@ -37,7 +37,7 @@ production security review and large-library performance. A real full-disk recov
 rollback covers schema 1, not future schema migrations.
 
 Installer built with Inno Setup (Jordan Russell and Martijn Laan).
-Go/x/sys/bbolt license notices accompany the installed executable.
+Go/x/sys/x/image/bbolt license notices accompany the installed executable.
 
 DIAGNOSTIC BUILD
 The app writes private rotating JSON-line diagnostic files under the standard
@@ -61,3 +61,13 @@ video capture dates are not supported yet. Original embedded metadata remains
 unchanged. Camera date/time is preserved without assuming a timezone; missing
 dates fall back to upload date. Existing JPEG/PNG previews are queued once for
 rebuilding. Optional fields are additive to schema 1; no original is rewritten.
+
+BMP/GIF/TIFF BUILD
+BMP, GIF first-frame and TIFF first-page PNG thumbnails are supported with a
+64 MiB encoded-file and 40 megapixel limit. TIFF has a preview viewer only, not
+a full-resolution browser viewer. Some TIFF compression/photometric variants
+remain unsupported. TIFF orientation/metadata, multipage navigation, HDR and
+color-managed rendering are not implemented. GIF full-image viewing uses the
+browser; its thumbnail is static. HEIC/HEIF, camera RAW and video thumbnails
+remain unsupported. Originals remain downloadable even when decoding fails.
+Previously unsupported assets are reconsidered once; no original is rewritten.

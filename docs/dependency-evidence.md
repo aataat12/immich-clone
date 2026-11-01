@@ -174,3 +174,33 @@ Extracted `ImmichClone-0.1.5-prototype-x64-setup.exe` SHA256:
 matched the packaged checksum list. Desktop/narrow synthetic screenshots inspected.
 This build has not been tested locally on Windows 10. Previous user-reported
 local acceptance belongs to 0.1.3; reboot remains deferred to final acceptance.
+
+## BMP/TIFF/GIF candidate — bounded experiment
+
+Candidate: `golang.org/x/image v0.47.0`, source tag
+`c437a9130dcb43e6df402a034160826e29fd29b8`, requires Go >=1.26.0.
+BMP/TIFF packages are pure Go; GIF uses the pinned standard library. Probe uses
+CGO=0, GOAMD64=v1, CPU only, no GPU or new redistributable DLL/runtime. Windows
+baseline follows the pinned Go toolchain (Windows 10); actual OS execution must
+still be recorded separately. Module ZIP sum:
+`h1:za/8gVz++PPZqmZJBNSISICN5Rrj5zixP/8K++fgmqo=`.
+Official sources: https://pkg.go.dev/golang.org/x/image@v0.47.0 and
+https://go.googlesource.com/image/+/refs/tags/v0.47.0/LICENSE . BSD-3-Clause;
+exact license must accompany any integrated release. Source obtained via Go module
+proxy and checksum verification. No fixed LTS commitment; monitor upstream Go
+security fixes and re-pin/retest updates. Replacement remains a decoder provider;
+originals, catalog and PNG-derived previews stay independent of this library.
+
+Acceptance: independent System.Drawing synthetic BMP/TIFF/GIF pixel decoding,
+PNG roundtrip, truncated/malformed rejection, original SHA256 preservation, actual
+LocalService execution and restart on Server, plus focused Linux race checks.
+Only first GIF frame / TIFF page will be considered; not animation, all TIFF
+compressions, camera RAW, HEIC, HDR, color-managed rendering or advanced metadata.
+Application integration remains gated on the service experiment. DecodeConfig
+must guard dimensions before decoding; additional encoded-size bounds are needed.
+
+[Service experiment 41342166588](https://github.com/aataat12/immich-clone/actions/runs/41342166588)
+at commit `46a8113a3d516e4782f6fa79d95a8516dea07ac3` passed all stated
+independent fixture/LocalService checks. Job `124954301974` logs inspected. Linux
+race test and Windows x64 CGO-disabled cross-build also passed. This clears only
+the prototype integration gate, not broad TIFF or Windows 10 compatibility.

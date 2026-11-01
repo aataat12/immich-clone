@@ -3,6 +3,8 @@ on:
   push:
     paths:
       - 'cmd/immichclone/**'
+      - 'go.mod'
+      - 'go.sum'
       - 'internal/library/**'
       - 'internal/web/**'
       - 'internal/diagnostics/**'
@@ -73,6 +75,6 @@ jobs:
         with:
           name: prototype-server-tested
           path: |
-            dist/ImmichClone-0.1.5-prototype-x64-setup.exe
+            dist/ImmichClone-0.1.7-prototype-x64-setup.exe
             dist/SHA256SUMS.txt
           retention-days: 7

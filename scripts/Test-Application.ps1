@@ -52,6 +52,20 @@ try {
         Checked go @('test','./internal/library','-run','^TestMetadataFixtureEmitter$')
         $photo = Invoke-RestMethod 'http://127.0.0.1:2283/api/upload?name=oriented.jpg&relative=SyntheticTrip%2Foriented.jpg' -Method Post -Headers $headers -InFile $env:IMMICH_METADATA_FIXTURE -WebSession $session
         Remove-Item Env:IMMICH_METADATA_FIXTURE
+        Add-Type -AssemblyName System.Drawing
+        $bitmap = [Drawing.Bitmap]::new(32,24)
+        $graphics = [Drawing.Graphics]::FromImage($bitmap)
+        $graphics.Clear([Drawing.Color]::Red)
+        $codecOriginals = @{}
+        foreach ($ext in @('Bmp','Tiff','Gif')) {
+            $nameOnly = 'synthetic.'+$ext.ToLowerInvariant()
+            $file = Join-Path $root $nameOnly
+            $bitmap.Save($file,[Drawing.Imaging.ImageFormat]::$ext)
+            $uploaded = Invoke-RestMethod ('http://127.0.0.1:2283/api/upload?name='+$nameOnly) -Method Post -Headers $headers -InFile $file -WebSession $session
+            $codecOriginals[$uploaded.asset.id] = (Get-FileHash $file).Hash
+        }
+        $graphics.Dispose()
+        $bitmap.Dispose()
         $env:IMMICH_TEST_STATE = $state
         Checked node @('tests/browser.cjs')
         Remove-Item Env:IMMICH_TEST_STATE
@@ -71,6 +85,11 @@ try {
     Checked $binary @('-mode','restore','-data',$restored,'-archive',$backup)
     Checked $binary @('-mode','verify','-data',$restored)
     Assert ((Get-FileHash "$restored/originals/$id").Hash -eq (Get-FileHash $fixture).Hash) 'independent backup restoration verifies original bytes'
+    if ($env:IMMICH_BROWSER_MODULE) {
+        foreach ($entry in $codecOriginals.GetEnumerator()) {
+            Assert ((Get-FileHash (Join-Path "$restored/originals" $entry.Key)).Hash -eq $entry.Value) 'BMP TIFF GIF original checksum preserved through independent restore'
+        }
+    }
     # Prove inability to write rather than relying on administrator test execution.
     Checked icacls @($state,'/deny','*S-1-5-19:(OI)(CI)W')
     $failed = $false

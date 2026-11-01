@@ -93,3 +93,10 @@
 - Relative folder paths are catalog metadata, never executable filesystem paths.
   Reject absolute, drive-qualified, traversal and control-character input before
   writing. One blob may retain multiple relative aliases; diagnostic logs omit all.
+
+- BMP/TIFF/GIF prototype gate passed before integration. Pin x/image 0.47.0
+  for pure-Go BMP/TIFF decode; GIF uses standard library. Keep first frame/page
+  only with 64 MiB encoded/40MP guards. TIFF viewer shows the derived preview,
+  not a falsely promised full-resolution image. Explicitly defer TIFF metadata,
+  HDR/color management, HEIC and RAW. Old unsupported assets reconsider once.
+  Version 0.1.6 was a deliberate failed-upgrade fixture; deliver 0.1.7 next.

@@ -7,7 +7,10 @@ import (
 	"errors"
 	"fmt"
 	bolt "go.etcd.io/bbolt"
+	_ "golang.org/x/image/bmp"
+	_ "golang.org/x/image/tiff"
 	"image"
+	_ "image/gif"
 	_ "image/jpeg"
 	"image/png"
 	"immichclone/internal/diagnostics"
@@ -112,7 +115,7 @@ func Open(root string) (*Store, error) {
 			if e := json.Unmarshal(v, &a); e != nil {
 				return e
 			}
-			if (a.MIME == "image/jpeg" || a.MIME == "image/png") && a.PreviewRevision < 1 {
+			if ((a.MIME == "image/jpeg" || a.MIME == "image/png") && a.PreviewRevision < 1) || ((a.MIME == "image/bmp" || a.MIME == "image/gif" || a.MIME == "application/octet-stream" || a.MIME == "image/tiff") && a.PreviewRevision < 2) {
 				a.Preview = "queued"
 				a.Error = ""
 				updated, e := json.Marshal(a)
@@ -288,7 +291,7 @@ func (s *Store) PutWithPath(name, relative string, r io.Reader) (result Asset, d
 	if name == "." || name == "/" || name == "" {
 		name = "original"
 	}
-	a = Asset{ID: id, Name: name, Size: n, MIME: http.DetectContentType(header[:read]), Added: time.Now().UTC(), Preview: "queued"}
+	a = Asset{ID: id, Name: name, Size: n, MIME: detectMediaType(header[:read]), Added: time.Now().UTC(), Preview: "queued"}
 	if relative != "" {
 		a.Sources = []string{relative}
 	}
@@ -311,7 +314,7 @@ func (s *Store) ProcessOne() (bool, error) {
 		if a.Preview != "queued" {
 			continue
 		}
-		a.PreviewRevision = 1
+		a.PreviewRevision = 2
 		e = s.makePreview(&a)
 		diagnostics.Record("preview", "preview_generate", e, 0, 0, 0)
 		if e != nil {
@@ -329,8 +332,21 @@ func (s *Store) ProcessOne() (bool, error) {
 	return false, nil
 }
 func (s *Store) makePreview(a *Asset) error {
-	if a.MIME != "image/png" && a.MIME != "image/jpeg" {
+	// Older catalog entries may predate TIFF signature recognition.
+	if a.MIME == "application/octet-stream" {
+		f, err := os.Open(s.Original(a.ID))
+		if err == nil {
+			var header [512]byte
+			n, _ := f.Read(header[:])
+			f.Close()
+			a.MIME = detectMediaType(header[:n])
+		}
+	}
+	if !supportsImagePreview(a.MIME) {
 		return errors.New("preview unsupported in this build; original remains available")
+	}
+	if (a.MIME == "image/tiff" || a.MIME == "image/bmp" || a.MIME == "image/gif") && a.Size > 64<<20 {
+		return errors.New("image exceeds 64 MiB encoded preview limit; original remains available")
 	}
 	f, e := os.Open(s.Original(a.ID))
 	if e != nil {
@@ -452,4 +468,18 @@ func cleanRelative(p string) (string, error) {
 		}
 	}
 	return p, nil
+}
+
+func detectMediaType(header []byte) string {
+	if len(header) >= 4 && (string(header[:4]) == "II*\x00" || string(header[:4]) == "MM\x00*") {
+		return "image/tiff"
+	}
+	return http.DetectContentType(header)
+}
+func supportsImagePreview(mime string) bool {
+	switch mime {
+	case "image/jpeg", "image/png", "image/bmp", "image/gif", "image/tiff":
+		return true
+	}
+	return false
 }

@@ -1,3 +1,16 @@
+# Active milestone — additional image formats 0.1.7
+
+Bounded BMP/TIFF/GIF candidate passed independent System.Drawing fixture decode,
+pixel checks, PNG roundtrip, malformed/truncation rejection, original hashes and
+LocalService restart on Windows Server 2022:
+[run 41342166588](https://github.com/aataat12/immich-clone/actions/runs/41342166588).
+Integrating first GIF frame / TIFF page and BMP previews with 64 MiB encoded and
+40MP pixel limits. End-to-end installer/browser acceptance pending. TIFF has a
+preview-only viewer; TIFF orientation/metadata, broad TIFF variants, HEIC/RAW/HDR,
+video thumbnails and optional AI remain unimplemented. No user action needed.
+
+---
+
 # Active milestone — metadata / timeline 0.1.5
 
 Completed: focused Linux race/vet checks and Windows Server 2022 acceptance passed.
@@ -9,8 +22,9 @@ a details panel, relative folder paths and duplicate source aliases. Existing
 JPEG/PNG previews are queued for a derived-data rebuild; originals unchanged.
 Malformed metadata, big/little endian input, recursive IFDs, path traversal,
 legacy rebuild and original checksums tested with synthetic JPEGs. No new native
-or third-party dependency. Windows 10 prior user-reported evidence remains valid
-only for the previous build. Reboot remains deferred to final acceptance.
+or third-party dependency. The user additionally reports two JPEG uploads in 0.1.5 displayed the expected
+date/time and orientation locally. This is limited user-reported evidence, not
+an independently observed camera corpus or complete OS acceptance. Reboot remains deferred to final acceptance.
 
 ---
 
@@ -46,7 +60,7 @@ upload, confirmed browser-folder copying, immutable SHA256 originals, duplicate
 detection, persisted JPEG/PNG preview jobs, browsing, download, JSON export and
 consistent backup/verified independent restoration. No original deletion API.
 External folders are never server-scanned or changed. App state is outside sync
-folders. Browser-folder copying does not retain relative directory structure yet.
+folders. Browser-folder copying retains relative paths as catalog metadata.
 
 Full-image viewing and actual H264/AAC MP4 playback have passed in Edge on Server.
 No AI features are implemented.
