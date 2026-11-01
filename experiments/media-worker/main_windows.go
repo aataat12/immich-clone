@@ -152,44 +152,46 @@ func run(root string, requireGrid bool) error {
 		}
 	}
 	// A grid must either reconstruct every tile correctly or fail explicitly.
-	gridFile := filepath.Join(root, "grid.heic")
-	original, e := os.ReadFile(gridFile)
-	if e != nil {
-		return e
-	}
-	before := sha256.Sum256(original)
-	if hex.EncodeToString(before[:]) != manifest["grid.heic"] {
-		return errors.New("grid fixture hash mismatch")
-	}
-	gridOut, gridErr := command(exe, "-hide_banner", "-loglevel", "error", "-nostdin", "-max_alloc", "67108864", "-threads", "1", "-protocol_whitelist", "file,pipe", "-i", gridFile, "-filter_complex", "[0:g:0]scale=160:160:force_original_aspect_ratio=decrease[thumb]", "-map", "[thumb]", "-an", "-sn", "-dn", "-frames:v", "1", "-threads", "1", "-c:v", "bmp", "-f", "image2pipe", "pipe:1")
-	if requireGrid {
-		if gridErr != nil {
-			return errors.New("required HEIC grid reconstruction failed")
+	for _, gridName := range []string{"grid.heic", "grid-large.heic"} {
+		gridFile := filepath.Join(root, gridName)
+		original, e := os.ReadFile(gridFile)
+		if e != nil {
+			return e
 		}
-		cfg, _, err := image.DecodeConfig(bytes.NewReader(gridOut))
-		if err != nil || cfg.Width != 160 || cfg.Height != 120 {
-			return errors.New("HEIC grid dimensions wrong")
+		before := sha256.Sum256(original)
+		if hex.EncodeToString(before[:]) != manifest[gridName] {
+			return errors.New("grid fixture hash mismatch")
 		}
-		img, _, err := image.Decode(bytes.NewReader(gridOut))
-		if err != nil {
-			return err
-		}
-		for i, p := range []image.Point{{20, 20}, {140, 20}, {20, 100}, {140, 100}} {
-			r, g, b, _ := img.At(p.X, p.Y).RGBA()
-			values := []uint32{r, g, b}
-			for c, value := range values {
-				bright := i == 3 || c == i
-				if (bright && value < 55000) || (!bright && value > 8000) {
-					return errors.New("HEIC grid quadrant pixels wrong")
+		gridOut, gridErr := command(exe, "-hide_banner", "-loglevel", "error", "-nostdin", "-max_alloc", "67108864", "-threads", "1", "-protocol_whitelist", "file,pipe", "-i", gridFile, "-filter_complex", "[0:g:0]scale=160:160:force_original_aspect_ratio=decrease[thumb]", "-map", "[thumb]", "-an", "-sn", "-dn", "-frames:v", "1", "-threads", "1", "-c:v", "bmp", "-f", "image2pipe", "pipe:1")
+		if requireGrid {
+			if gridErr != nil {
+				return errors.New("required HEIC grid reconstruction failed")
+			}
+			cfg, _, err := image.DecodeConfig(bytes.NewReader(gridOut))
+			if err != nil || cfg.Width != 160 || cfg.Height != 120 {
+				return errors.New("HEIC grid dimensions wrong")
+			}
+			img, _, err := image.Decode(bytes.NewReader(gridOut))
+			if err != nil {
+				return err
+			}
+			for i, p := range []image.Point{{20, 20}, {140, 20}, {20, 100}, {140, 100}} {
+				r, g, b, _ := img.At(p.X, p.Y).RGBA()
+				values := []uint32{r, g, b}
+				for c, value := range values {
+					bright := i == 3 || c == i
+					if (bright && value < 55000) || (!bright && value > 8000) {
+						return errors.New("HEIC grid quadrant pixels wrong")
+					}
 				}
 			}
+		} else if gridErr == nil {
+			return errors.New("older candidate unexpectedly accepted grid; verify all tiles before claiming support")
 		}
-	} else if gridErr == nil {
-		return errors.New("older candidate unexpectedly accepted grid; verify all tiles before claiming support")
-	}
-	after, e := os.ReadFile(gridFile)
-	if e != nil || sha256.Sum256(after) != before {
-		return errors.New("grid original modified")
+		after, e := os.ReadFile(gridFile)
+		if e != nil || sha256.Sum256(after) != before {
+			return errors.New("grid original modified")
+		}
 	}
 	bad := filepath.Join(root, "malformed.heic")
 	if e = os.WriteFile(bad, []byte("not a valid HEIF container"), 0600); e != nil {

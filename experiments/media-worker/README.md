@@ -61,3 +61,28 @@ Completed service retest: run 41345139004, commit
 output-cap tests passed, as did an enumeration permitting only file/pipe protocols.
 Total process memory containment and broad/grid HEIC remain separate gates; the
 FFmpeg per-allocation flag does not establish a total memory cap.
+
+## Containment/grid follow-up
+
+Every tested subprocess is created with PROC_THREAD_ATTRIBUTE_JOB_LIST (Windows
+10+) so resource limits apply before its first instruction. Job commitment limit
+512 MiB, one active process, kill-on-last-job-handle-close, inherited handle
+allowlist, private minimal environment, 1 MiB stdout cap and finite deadline. This
+is resource containment, not a filesystem/access-token sandbox. Tests compare
+actual 600 MiB allocation and child-process creation outside/inside the job,
+observe Windows peak committed memory, force crash/output flooding/timeout and
+parent exit with an active child; subsequent media operations/restart must pass.
+
+A 320x240 HEIC grid (128px tiles, six tiles with edge cropping) and a 4032x3024
+HEIC grid (512px tiles, 48 tiles) contain red/green/blue/white quadrants. Generated
+with the same pinned Pillow/pillow-heif versions, `tile_size=128` / `512`; the
+large case uses `enc_params={'preset':'ultrafast'}`. Base64/hash fixtures are
+original synthetic content with the unrestricted permission stated above.
+Independent producer readback checked size and all quadrants. Candidate must
+reconstruct the full group using `[0:g:0]` and yield all four expected colors,
+not silently serve one tile. Its recipe adds only built-in xstack/crop filters.
+
+Source-build workflow now also runs on build.sh changes. Successful trusted-main
+source builds automatically run the bounded Windows service tests on that exact
+source revision/artifact. Manual service dispatch accepts an explicit source run;
+current pinned fallback is 41346172469. No floating latest downloads.

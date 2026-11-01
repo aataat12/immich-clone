@@ -13,12 +13,12 @@ on:
       source_run:
         description: 'Pinned source-build run containing the candidate artifact'
         required: true
-        default: '41344707161'
+        default: '41346172469'
         type: string
       grid_required:
         description: 'Require full grid reconstruction from the selected candidate'
         type: boolean
-        default: false
+        default: true
 permissions:
   contents: read
 jobs:
@@ -45,7 +45,7 @@ jobs:
         with:
           name: experimental-media-source-and-binaries
           path: media-candidate
-          run-id: ${{ inputs.source_run || github.event.workflow_run.id || '41344707161' }}
+          run-id: ${{ inputs.source_run || github.event.workflow_run.id || '41346172469' }}
           github-token: ${{ github.token }}
       - name: Actual restricted-service media decoding
         shell: pwsh
@@ -69,14 +69,14 @@ jobs:
           $name = 'ImmichCloneMediaProbe'
           try {
             $credential = [PSCredential]::new('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))
-            $gridArg = if ('${{ inputs.grid_required }}' -eq 'true' -or '${{ github.event_name }}' -eq 'workflow_run') { ' -require-grid' } else { '' }
+            $gridArg = if ('${{ inputs.grid_required }}' -ne 'false') { ' -require-grid' } else { '' }
             New-Service -Name $name -BinaryPathName ('"'+"$root/probe.exe"+'" -root "'+$root+'"'+$gridArg) -Credential $credential | Out-Null
             Start-Service $name
             if (!(Test-Path "$root/passed.txt")) { throw 'Media service operations not confirmed' }
             Restart-Service $name
             Get-Content "$root/passed.txt"
             Write-Output ('Grid reconstruction argument: '+$gridArg)
-            Write-Output 'PASS: source-built CPU H264 HEVC rotated MOV and single-image 8-bit HEIC decode, pixel/dimension assertions, BMP-to-PNG thumbnails, immutable originals, malformed rejection, disabled networking, actual child timeout/output limits, preassigned 512MiB job commitment limit, one-process limit, crash recovery, parent-death cleanup and LocalService restart.'
+            Write-Output 'PASS: source-built CPU H264 HEVC rotated MOV and single-image and 6/48-tile 8-bit HEIC reconstruction, pixel/dimension assertions, BMP-to-PNG thumbnails, immutable originals, malformed rejection, disabled networking, actual child timeout/output limits, preassigned 512MiB job commitment limit, one-process limit, crash recovery, parent-death cleanup and LocalService restart.'
             Get-Content "$root/tools/pe-imports.txt"
             & "$root/tools/ffmpeg.exe" -version
             if ($LASTEXITCODE -ne 0) { throw 'Version execution failed' }
