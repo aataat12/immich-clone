@@ -32,8 +32,14 @@ Studio installation is not evidence of a qualifying subscription. No known licen
 cloud Windows 10 access. Recommend read-only external-library semantics for synced
 media and application state outside sync roots. User data has not been accessed.
 
-Pinned FFmpeg candidate probe added; execution result pending. This is independent
-of application runtime selection and uses synthetic fixtures only.
+[Pinned FFmpeg candidate run 41322933829](https://github.com/aataat12/immich-clone/actions/runs/41322933829)
+passed at commit `de7903fe25f2c4b96228671ac1cb49160badc7dd` on Server 2022.
+Job 124896798777 logs inspected: all nine assertions passed, including actual
+JPEG/PNG decode/thumbnail operations, MPEG4-Part2/AAC decoding/frame extraction,
+container title metadata, preserved source hashes and malformed input rejection.
+Initial run 41322703178 exposed an expected-nonzero-exit harness issue, corrected
+before this passing run. No Windows 10/service-account, H264/HEVC, HEIC/RAW/HDR,
+real-camera corpus or AI inference validation. Candidate remains unaccepted.
 
 Read-only PC inventory script supplied; no dependency installation requested.
 Storage experiment tests synthetic bytes only, independently of media/AI choices.
