@@ -139,3 +139,22 @@
 - Measure catalog/worker operations with bounded metadata-only synthetic rows,
   plus an actual PNG job. Do not present row-count benchmarks as bulk import or
   camera-corpus acceptance. Use observed bottlenecks to scope queue/paging changes.
+
+- Baseline Linux and Windows measurements show full-catalog idle polling grows
+  linearly (about 88 MB Go allocations per poll at 50k synthetic rows). Add a
+  derived preview_queue_v1 bucket; index and asset status commit in one bbolt TX.
+  Rebuild the derived index from authoritative asset states on every open, so old
+  catalogs, restores and older-writer rollback remain recoverable without changing
+  schema 1 or original layout. No new dependency or parallel worker is introduced.
+- Limit this milestone to worker lookup; API listing/JSON and browser rendering
+  remain unpaged and are separate measured bottlenecks. Do not claim a 50k-media
+  import from catalog-only fixtures. VM timer-zero readings are below measurement
+  resolution, not proof of zero execution time.
+
+- User clarified that the primary workflow is indexing an existing mostly-static
+  library without duplicating originals. Existing Upload/Choose folder copies
+  bytes into managed storage, so this is a material distinction in user behavior.
+  Prioritize read-only external-library feasibility, preserve existing managed
+  copies, keep source inventory private, and make copy-import explicit. Avoid
+  automatic permission changes/hydration or claims that a catalog backs up source
+  originals. Queue indexing remains useful but is not released before acceptance.
