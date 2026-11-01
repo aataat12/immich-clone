@@ -1,0 +1,34 @@
+name: Bounded original-storage probe
+on:
+  push:
+    paths:
+      - 'experiments/Test-OriginalStorage.ps1'
+      - 'scripts/Get-CompatibilityInfo.ps1'
+      - '.github/workflows/storage-probe.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: storage-probe-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  synthetic-storage:
+    runs-on: windows-2022
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Parse and exercise read-only inventory on disposable Server
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile("$PWD/scripts/Get-CompatibilityInfo.ps1", [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count) { throw ($errors | Out-String) }
+          $output = & ./scripts/Get-CompatibilityInfo.ps1 | Out-String
+          $inventory = $output | ConvertFrom-Json
+          if (!$inventory.Windows.Build -or !$inventory.CPU.Count -or !$inventory.RAMGiB) { throw 'Missing inventory fields' }
+          Write-Output 'Inventory parsed and executed under Windows PowerShell; private output suppressed.'
+      - name: Execute synthetic storage checks
+        shell: powershell
+        run: ./experiments/Test-OriginalStorage.ps1
