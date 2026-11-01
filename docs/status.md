@@ -28,7 +28,15 @@ Its historical 'next milestone' paragraph is superseded by M0/M1 above.
 
 Read-only PC inventory script supplied; no dependency installation requested.
 Storage experiment tests synthetic bytes only, independently of media/AI choices.
-Its result must be recorded after execution; it does not certify a production store.
+[Run 41322200662](https://github.com/aataat12/immich-clone/actions/runs/41322200662),
+commit `6970003766aa0f74702a645e145a83b60dba200a`, passed. Job 124894603992
+logs inspected. Server 2022 Datacenter 10.0.20348, Windows PowerShell
+5.1.20348.5756, NTFS. Inventory parsed/executed with required fields present and
+private output suppressed. Six storage assertions passed: same-volume publish,
+SHA256 preservation, partial-upload isolation, existing-target rejection,
+independent-process read, and synthetic original backup/restore after removal.
+This does not certify a production store, application-consistent backup, power-loss
+durability, Windows 10, media codecs or AI. No dependency experiment accepted yet.
 
 ## Next
 
