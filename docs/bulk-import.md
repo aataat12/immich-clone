@@ -1,5 +1,8 @@
 # Managed-copy bulk import acceptance
 
+Deferred by user: people/object identification and organization feasibility now
+takes priority. Retain this plan for later; no additional import runs scheduled.
+
 Primary storage remains application-owned immutable copies. Sources are never
 moved, rewritten or deleted. Identical SHA256 content reuses a managed original;
 relative source aliases are retained. Previews are disposable derived data.

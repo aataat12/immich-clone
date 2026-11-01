@@ -5,6 +5,16 @@ Server-first execution amendment. No new charges or parallel agents. No personal
 machine specifications, paths, media or returned logs belong in this repository.
 Historical checkpoints remain in Git history; this file supersedes their gates.
 
+## Current priority: people and object organization
+
+User explicitly deferred further import feature development/testing to prioritize
+AI feasibility. Successful people/object identification and organization is now
+the project value gate. Retain the accepted managed-copy/service/storage work;
+do not spend runs on new bulk-import features while this gate is unresolved.
+AI remains local, optional and replaceable at runtime. Failure cannot corrupt
+originals or disable existing access. No cloud photo inference or personal media
+in public test fixtures. See `ai-feasibility.md` for acceptance and current limits.
+
 ## Confirmed workflow: managed copies and bulk import
 
 The user explicitly chose application-owned copies after discussing the storage
@@ -13,13 +23,13 @@ leaves sources untouched. This supersedes the interim external-library priority;
 no external-library implementation was introduced and no originals are removed.
 Keep personal source paths and inventory out of public records and CI.
 
-Next: dedicated bulk-import page with copy progress, interruption recovery and
+Deferred until AI value acceptance: dedicated bulk-import page with copy progress, interruption recovery and
 import-first scheduling. Commit original bytes/catalog jobs before reporting a
 file successful; defer derived processing while an active bulk transfer runs.
 Browser selection cannot promise unattended source access after the page closes;
 recovery must state when reselecting sources is required. See `bulk-import.md`.
 Queue foundation is accepted below. Current Server-tested build: 0.1.13; bulk
-transfer/recovery UI is the next implementation milestone. No local action needed.
+transfer/recovery UI is deferred by the latest user priority. No local action needed.
 
 ## Current work: catalog/worker scale
 
@@ -135,7 +145,7 @@ Server execution does not establish clean Windows 10 compatibility.
 ## Remaining gates and next work
 
 0.1.13 cloud acceptance and checksum verification are complete. No new local
-checkpoint is needed for this worker-only change. Next: bounded import-first
+checkpoint is needed for this worker-only change. Deferred: bounded import-first
 transfer scheduling with expiry/restart recovery, followed by a dedicated bulk
 page, actual synthetic import/endurance and gallery paging. See `bulk-import.md`.
 No large real-library import or reboot requested. MOV visibility now works

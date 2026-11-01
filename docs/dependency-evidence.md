@@ -489,3 +489,11 @@ Retrieved `ImmichClone-0.1.13-prototype-x64-setup.exe` SHA256 matched manifest:
 or new prerequisite needed. This clears the derived-queue prototype gate only;
 Windows 10 execution of this build, large-library ingestion, paging/endurance and
 bulk transfer recovery remain separate. No user inventory/media/logs published.
+
+
+## People/object candidate priority
+
+User deferred additional import features/tests to prove recognition/organization.
+See `ai-feasibility.md` for exact candidates, terms, accepted Linux operations and
+remaining Windows/quality/packaging gates. No AI runtime/model is integrated into
+the application and no new installer is delivered for this experiment.

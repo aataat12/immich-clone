@@ -165,3 +165,11 @@
   from the gallery, with durable per-file acceptance, byte/file progress and
   import-first scheduling, then drain persistent previews. Do not imply browser
   file selection survives closing the page. No personal library inventory in CI.
+
+- User moved people/object identification and organization ahead of further import
+  development/testing because AI success determines project usefulness. Preserve
+  verified managed-copy work and defer bulk-import milestones. First prove real
+  candidate model inference, quality/limitations and Windows service/packaging,
+  then build reviewable people groups, manual naming/merge/split and object
+  tags/search. AI remains replaceable and unable to damage originals. No cloud
+  inference, private media or personal machine information enters public CI.
