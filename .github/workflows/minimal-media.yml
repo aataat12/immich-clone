@@ -1,5 +1,8 @@
 name: Bounded source-built media worker
 on:
+  push:
+    paths:
+      - 'experiments/media-worker/build.sh'
   workflow_dispatch:
 permissions:
   contents: read

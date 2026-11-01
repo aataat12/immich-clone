@@ -21,7 +21,7 @@ args=(
  --enable-decoder=h264,hevc,aac --enable-parser=h264,hevc,aac
  --enable-demuxer=mov,matroska,image2 --enable-protocol=file,pipe
  --enable-encoder=bmp --enable-muxer=image2,image2pipe,null
- --enable-filter=scale,format,transpose,hflip,vflip
+ --enable-filter=scale,format,transpose,hflip,vflip,xstack,crop
  '--extra-cflags=-O2 -march=x86-64 -mtune=generic -D_WIN32_WINNT=0x0A00'
  --extra-ldflags=-static
 )
@@ -33,7 +33,8 @@ cp ffmpeg.exe ffprobe.exe COPYING.LGPLv2.1 LICENSE.md "$GITHUB_WORKSPACE/media-c
 printf '%s\n' "$commit" > "$GITHUB_WORKSPACE/media-candidate/source-commit.txt"
 x86_64-w64-mingw32-objdump -p ffmpeg.exe ffprobe.exe | sed -n 's/.*DLL Name: /DLL: /p' | sort -u > "$GITHUB_WORKSPACE/media-candidate/pe-imports.txt"
 cat "$GITHUB_WORKSPACE/media-candidate/pe-imports.txt"
-dpkg-query --show gcc-mingw-w64-x86-64-win32 binutils-mingw-w64-x86-64 > "$GITHUB_WORKSPACE/media-candidate/build-tool-versions.txt"
+dpkg-query --show gcc-mingw-w64-x86-64-win32 binutils-mingw-w64-x86-64 mingw-w64-common mingw-w64-x86-64-dev > "$GITHUB_WORKSPACE/media-candidate/build-tool-versions.txt"
 cp /usr/share/doc/gcc-mingw-w64-x86-64-win32/copyright "$GITHUB_WORKSPACE/media-candidate/compiler-copyright.txt"
+cp /usr/share/doc/mingw-w64-common/copyright "$GITHUB_WORKSPACE/media-candidate/mingw-copyright.txt"
 cd "$GITHUB_WORKSPACE/media-candidate"
 sha256sum ffmpeg.exe ffprobe.exe ffmpeg-8.1.3-source.tar.gz > SHA256SUMS.txt

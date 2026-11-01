@@ -1,15 +1,29 @@
 name: Bounded media service operations
 on:
+  workflow_run:
+    workflows: ['Bounded source-built media worker']
+    types: [completed]
   push:
     paths:
-      - 'experiments/media-worker/main_windows.go'
+      - 'experiments/media-worker/*_windows.go'
       - 'experiments/media-worker/fixtures/**'
       - '.github/workflows/media-service.yml'
   workflow_dispatch:
+    inputs:
+      source_run:
+        description: 'Pinned source-build run containing the candidate artifact'
+        required: true
+        default: '41344707161'
+        type: string
+      grid_required:
+        description: 'Require full grid reconstruction from the selected candidate'
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
   windows:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: windows-2022
     timeout-minutes: 8
     permissions:
@@ -21,6 +35,8 @@ jobs:
       GOTOOLCHAIN: local
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
         with:
           go-version: '1.27.3'
@@ -29,7 +45,7 @@ jobs:
         with:
           name: experimental-media-source-and-binaries
           path: media-candidate
-          run-id: 41344707161
+          run-id: ${{ inputs.source_run || github.event.workflow_run.id || '41344707161' }}
           github-token: ${{ github.token }}
       - name: Actual restricted-service media decoding
         shell: pwsh
@@ -53,11 +69,14 @@ jobs:
           $name = 'ImmichCloneMediaProbe'
           try {
             $credential = [PSCredential]::new('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))
-            New-Service -Name $name -BinaryPathName ('"'+"$root/probe.exe"+'" -root "'+$root+'"') -Credential $credential | Out-Null
+            $gridArg = if ('${{ inputs.grid_required }}' -eq 'true' -or '${{ github.event_name }}' -eq 'workflow_run') { ' -require-grid' } else { '' }
+            New-Service -Name $name -BinaryPathName ('"'+"$root/probe.exe"+'" -root "'+$root+'"'+$gridArg) -Credential $credential | Out-Null
             Start-Service $name
             if (!(Test-Path "$root/passed.txt")) { throw 'Media service operations not confirmed' }
             Restart-Service $name
-            Write-Output 'PASS: source-built CPU H264 HEVC rotated MOV and single-image 8-bit HEIC decode, pixel/dimension assertions, BMP-to-PNG thumbnails, immutable originals, malformed rejection, disabled networking, actual child timeout/output limits and LocalService restart.'
+            Get-Content "$root/passed.txt"
+            Write-Output ('Grid reconstruction argument: '+$gridArg)
+            Write-Output 'PASS: source-built CPU H264 HEVC rotated MOV and single-image 8-bit HEIC decode, pixel/dimension assertions, BMP-to-PNG thumbnails, immutable originals, malformed rejection, disabled networking, actual child timeout/output limits, preassigned 512MiB job commitment limit, one-process limit, crash recovery, parent-death cleanup and LocalService restart.'
             Get-Content "$root/tools/pe-imports.txt"
             & "$root/tools/ffmpeg.exe" -version
             if ($LASTEXITCODE -ne 0) { throw 'Version execution failed' }

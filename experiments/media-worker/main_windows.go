@@ -15,45 +15,12 @@ import (
 	"image"
 	"image/png"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 )
 
-type limitedBuffer struct {
-	buffer bytes.Buffer
-	limit  int
-}
-
-func (b *limitedBuffer) Write(p []byte) (int, error) {
-	if len(p) > b.limit-b.buffer.Len() {
-		return 0, errors.New("output limit")
-	}
-	return b.buffer.Write(p)
-}
-func command(exe string, args ...string) ([]byte, error) {
-	return commandBounded(30*time.Second, exe, args...)
-}
-func commandBounded(budget time.Duration, exe string, args ...string) ([]byte, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), budget)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, exe, args...)
-	cmd.Env = []string{"SystemRoot=" + os.Getenv("SystemRoot"), "PATH=" + filepath.Dir(exe)}
-	stdout := &limitedBuffer{limit: 1 << 20}
-	stderr := &limitedBuffer{limit: 64 << 10}
-	cmd.Stdout = stdout
-	cmd.Stderr = stderr
-	err := cmd.Run()
-	if ctx.Err() != nil {
-		return nil, ctx.Err()
-	}
-	if err != nil {
-		return nil, err
-	}
-	return stdout.buffer.Bytes(), nil
-}
-func run(root string) error {
+func run(root string, requireGrid bool) error {
 	var manifest map[string]string
 	b, e := os.ReadFile(filepath.Join(root, "fixtures.json"))
 	if e != nil {
@@ -107,6 +74,9 @@ func run(root string) error {
 	}
 	if _, e = commandBounded(5*time.Second, self, "-probe-flood"); e == nil {
 		return errors.New("actual child output limit not enforced")
+	}
+	if e = containmentChecks(root); e != nil {
+		return e
 	}
 	for _, name := range []string{"h264.mp4", "hevc.mp4", "rotated.mov", "synthetic.heic"} {
 		path := filepath.Join(root, name)
@@ -181,6 +151,46 @@ func run(root string) error {
 			return errors.New("original modified")
 		}
 	}
+	// A grid must either reconstruct every tile correctly or fail explicitly.
+	gridFile := filepath.Join(root, "grid.heic")
+	original, e := os.ReadFile(gridFile)
+	if e != nil {
+		return e
+	}
+	before := sha256.Sum256(original)
+	if hex.EncodeToString(before[:]) != manifest["grid.heic"] {
+		return errors.New("grid fixture hash mismatch")
+	}
+	gridOut, gridErr := command(exe, "-hide_banner", "-loglevel", "error", "-nostdin", "-max_alloc", "67108864", "-threads", "1", "-protocol_whitelist", "file,pipe", "-i", gridFile, "-filter_complex", "[0:g:0]scale=160:160:force_original_aspect_ratio=decrease[thumb]", "-map", "[thumb]", "-an", "-sn", "-dn", "-frames:v", "1", "-threads", "1", "-c:v", "bmp", "-f", "image2pipe", "pipe:1")
+	if requireGrid {
+		if gridErr != nil {
+			return errors.New("required HEIC grid reconstruction failed")
+		}
+		cfg, _, err := image.DecodeConfig(bytes.NewReader(gridOut))
+		if err != nil || cfg.Width != 160 || cfg.Height != 120 {
+			return errors.New("HEIC grid dimensions wrong")
+		}
+		img, _, err := image.Decode(bytes.NewReader(gridOut))
+		if err != nil {
+			return err
+		}
+		for i, p := range []image.Point{{20, 20}, {140, 20}, {20, 100}, {140, 100}} {
+			r, g, b, _ := img.At(p.X, p.Y).RGBA()
+			values := []uint32{r, g, b}
+			for c, value := range values {
+				bright := i == 3 || c == i
+				if (bright && value < 55000) || (!bright && value > 8000) {
+					return errors.New("HEIC grid quadrant pixels wrong")
+				}
+			}
+		}
+	} else if gridErr == nil {
+		return errors.New("older candidate unexpectedly accepted grid; verify all tiles before claiming support")
+	}
+	after, e := os.ReadFile(gridFile)
+	if e != nil || sha256.Sum256(after) != before {
+		return errors.New("grid original modified")
+	}
 	bad := filepath.Join(root, "malformed.heic")
 	if e = os.WriteFile(bad, []byte("not a valid HEIF container"), 0600); e != nil {
 		return e
@@ -194,12 +204,15 @@ func run(root string) error {
 	return nil
 }
 
-type service struct{ root string }
+type service struct {
+	root        string
+	requireGrid bool
+}
 
 func (p service) Execute(_ []string, requests <-chan svc.ChangeRequest, status chan<- svc.Status) (bool, uint32) {
 	status <- svc.Status{State: svc.StartPending, WaitHint: 120000}
 	result := make(chan error, 1)
-	go func() { result <- run(p.root) }()
+	go func() { result <- run(p.root, p.requireGrid) }()
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
 	checkpoint := uint32(1)
@@ -210,7 +223,7 @@ func (p service) Execute(_ []string, requests <-chan svc.ChangeRequest, status c
 				_ = os.WriteFile(filepath.Join(p.root, "failed.txt"), []byte(e.Error()), 0600)
 				return false, 1
 			}
-			if os.WriteFile(filepath.Join(p.root, "passed.txt"), []byte("actual media decode and hashes passed"), 0600) != nil {
+			if os.WriteFile(filepath.Join(p.root, "passed.txt"), []byte(fmt.Sprintf("actual media decode and hashes passed; job limit %d; observed peak committed bytes %d", jobMemoryLimit, peakCommit.Load())), 0600) != nil {
 				return false, 2
 			}
 			status <- svc.Status{State: svc.Running, Accepts: svc.AcceptStop | svc.AcceptShutdown}
@@ -233,7 +246,13 @@ func main() {
 	root := flag.String("root", "", "disposable fixture directory")
 	stall := flag.Bool("probe-stall", false, "synthetic child timeout fixture")
 	flood := flag.Bool("probe-flood", false, "synthetic output bound fixture")
+	requireGrid := flag.Bool("require-grid", false, "require full grid reconstruction")
+	helper := flag.String("probe-helper", "", "synthetic containment operation")
 	flag.Parse()
+	if *helper != "" {
+		helperMode(*helper, *root)
+		return
+	}
 	if *stall {
 		time.Sleep(10 * time.Minute)
 		os.Exit(0)
@@ -250,7 +269,7 @@ func main() {
 	if *root == "" {
 		os.Exit(2)
 	}
-	if svc.Run("ImmichCloneMediaProbe", service{*root}) != nil {
+	if svc.Run("ImmichCloneMediaProbe", service{*root, *requireGrid}) != nil {
 		os.Exit(1)
 	}
 }
