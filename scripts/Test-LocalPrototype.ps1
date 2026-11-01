@@ -24,7 +24,9 @@ try {
     Assert ($service.StartName -eq 'NT AUTHORITY\LocalService') 'restricted service account'
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'native application responds'
     Login
-    $existing = @(Invoke-RestMethod http://127.0.0.1:2283/api/assets -WebSession $session)
+    # Windows PowerShell emits a JSON array as one pipeline object. Explicitly
+    # enumerate it so an empty array is not mistaken for one existing asset.
+    $existing = @(Invoke-RestMethod http://127.0.0.1:2283/api/assets -WebSession $session | ForEach-Object { $_ })
     if ($existing.Count -ne 0) { throw 'This check requires a new empty test library. Nothing was uploaded or deleted.' }
     $fixture = Join-Path $root 'synthetic-test.txt'
     [IO.File]::WriteAllText($fixture,'Synthetic local acceptance fixture. No personal media.')
@@ -36,7 +38,7 @@ try {
     $photo = (Invoke-RestMethod 'http://127.0.0.1:2283/api/upload?name=synthetic-test.png' -Method Post -Headers @{'X-Immich-Request'='1'} -InFile $image -WebSession $session).asset
     $ready = $false
     for ($attempt=0;$attempt -lt 20;$attempt++) {
-        $items = @(Invoke-RestMethod http://127.0.0.1:2283/api/assets -WebSession $session)
+        $items = @(Invoke-RestMethod http://127.0.0.1:2283/api/assets -WebSession $session | ForEach-Object { $_ })
         $stored = $items | Where-Object { $_.id -eq $photo.id }
         if ($stored.preview -eq 'ready') { $ready=$true; break }
         Start-Sleep -Seconds 1

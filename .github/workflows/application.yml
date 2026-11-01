@@ -10,6 +10,7 @@ on:
       - 'packaging/**'
       - 'scripts/Build-Installer.ps1'
       - 'scripts/Test-Installer.ps1'
+      - 'scripts/Test-LocalPrototype.ps1'
       - 'scripts/Test-FullDisk.ps1'
       - 'scripts/New-MediaFixture.ps1'
       - 'tests/browser.cjs'

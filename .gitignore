@@ -1,5 +1,6 @@
 /dist/
 /state/
+/browser-evidence/
 *.exe
 *.zip
 *.db
