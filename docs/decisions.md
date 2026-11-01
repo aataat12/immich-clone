@@ -189,3 +189,10 @@
   external sources. Show actual local managed locations and recorded relative
   aliases; do not invent unavailable absolute source paths or log them. Durable
   deletion/recovery and synthetic preservation tests gate delivery. See hidden-media.md.
+
+- Native AI candidate: source-built static OpenCV 4.12.0 preserves model parity
+  while testing a self-contained Windows worker, SSE2 baseline, no GPU/Python or
+  compressed-media parsers. Bounded BGR working frames separate inference from
+  original decoding. Per-task model loading reduces combined memory pressure.
+  Actual service operations/PE audit, exact third-party notices, current security
+  review and target packaging gate integration; no shipping dependency selected.

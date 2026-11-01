@@ -37,6 +37,11 @@ No broad clustering/quality acceptance. Next: self-contained native worker proof
 then reviewed People/tagging slice and private broader quality evaluation. No new
 installer, import tests or local action. Packaging and broader quality remain open.
 
+Native worker source/CI candidate is now prepared in `experiments/native-ai`:
+static C/C++ runtime/OpenCV, SSE2, task-specific CPU models, bounded BGR8 frames.
+Windows build/PE audit and actual LocalService parity/recovery are pending. No
+AI code/runtime has entered the application; imports and Hidden Media stay deferred.
+
 ## Queued feature: Hidden Media and deliberate deletion
 
 Accepted `hidden-media.md`: leave hidden, restore, confirm permanent removal of

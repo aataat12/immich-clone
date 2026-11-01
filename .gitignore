@@ -13,3 +13,5 @@ access-code.txt
 *.jsonl.previous
 
 /media-candidate/
+
+/native-ai-candidate/

@@ -1,0 +1,81 @@
+name: Bounded native Windows AI worker
+on:
+  push:
+    paths:
+      - 'experiments/native-ai/**'
+      - '.github/workflows/native-ai.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-ai-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native:
+    runs-on: windows-2022
+    timeout-minutes: 28
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Build pinned static native provider and audit PE imports
+        shell: pwsh
+        run: ./experiments/native-ai/build.ps1
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      # Python prepares public test fixtures only, not the native runtime.
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12.10'
+          architecture: x64
+      - name: Native LocalService inference, parity and recovery with no interpreter in child environment
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          function Checked([string]$exe,[string[]]$a) { & $exe @a; if ($LASTEXITCODE -ne 0) { throw 'Native AI operation failed' } }
+          $root = Join-Path $env:ProgramData 'Immich Native AI 試験'
+          New-Item -ItemType Directory $root | Out-Null
+          Copy-Item native-ai-candidate/ai-worker.exe $root
+          if ((Get-FileHash "$root/ai-worker.exe").Hash -ne (Get-FileHash native-ai-candidate/ai-worker.exe).Hash) { throw 'Worker copy integrity failed' }
+          $python = (Get-Command python).Source
+          Checked $python @('-B','experiments/ai-probe/prepare.py',$root)
+          $deps = Join-Path $env:RUNNER_TEMP 'native-ai-fixture-deps'
+          Checked $python @('-m','pip','install','--only-binary=:all:','--require-hashes','--no-deps','--target',$deps,'-r','experiments/ai-probe/requirements.txt','--disable-pip-version-check')
+          $env:PYTHONPATH = $deps
+          Checked $python @('-B','experiments/native-ai/prepare_native.py',$root)
+          Checked go @('mod','download')
+          Checked go @('mod','verify')
+          Checked go @('build','-mod=readonly','-trimpath','-o',"$root/service-probe.exe",'./experiments/native-ai')
+          Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)M')
+          $name = 'ImmichCloneNativeAIProbe'
+          try {
+            $credential = [PSCredential]::new('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))
+            New-Service -Name $name -BinaryPathName ('"'+"$root/service-probe.exe"+'" -root "'+$root+'"') -Credential $credential | Out-Null
+            Start-Service $name
+            if (!(Test-Path "$root/passed.json")) { throw 'Native service evidence absent' }
+            Get-Content "$root/passed.json"
+            Remove-Item "$root/passed.json"
+            Restart-Service $name
+            if (!(Test-Path "$root/passed.json")) { throw 'Native restart evidence absent' }
+            Get-Content "$root/passed.json"
+            Write-Output 'PASS: actual native CPU face/object inference, Python embedding parity, bounded malformed rejection, missing-model and cancellation recovery, Unicode path and LocalService restart; input hashes unchanged.'
+          } finally {
+            if (Get-Service $name -ErrorAction SilentlyContinue) { Stop-Service $name -ErrorAction Continue; Checked sc.exe @('delete',$name) }
+            if (Test-Path "$root/failed.txt") { Get-Content "$root/failed.txt" }
+          }
+      - name: Retain experimental source, build evidence and native executable after tests only
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: experimental-native-ai-source-and-binary
+          path: |
+            native-ai-candidate/ai-worker.exe
+            native-ai-candidate/*.txt
+            native-ai-candidate/*.cpp
+            native-ai-candidate/*.ps1
+            native-ai-candidate/*.log
+            native-ai-candidate/notices/**
+          retention-days: 7
