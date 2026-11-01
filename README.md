@@ -1,7 +1,7 @@
 # Immich Clone
 
 Windows-native photo/video manager under development. A working originals prototype
-is Server-tested; installer and browser lifecycle tests are in progress.
+is Server-tested; installer and browser lifecycle tests have passed on Server 2022.
 
 - [Authoritative requirements](Immich_Clone_Project_Requirements.md)
 - [Status and milestone acceptance](docs/status.md)
@@ -17,6 +17,6 @@ media codecs, AI inference, application backups or an installer.
 
 The current slice supports local access-code login, preserved original upload,
 duplicates, JPEG/PNG previews, persistent jobs, download/export and verified backup
-restoration. See [prototype limitations](docs/prototype-notes.txt). External folder
-import, video previews and AI remain unfinished. Never put personal machine
+restoration. See [prototype limitations](docs/prototype-notes.txt). Browser-selected folder copy is supported; server-side source scanning, generated
+video thumbnails and AI remain unfinished. Never put personal machine
 reports, media or paths in public issues or artifacts.

@@ -163,6 +163,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		switch {
+		case parts[1] == "view" && r.Method == "GET" && (a.MIME == "image/jpeg" || a.MIME == "image/png" || a.MIME == "video/mp4"):
+			w.Header().Set("Content-Type", a.MIME)
+			w.Header().Set("Content-Disposition", mime.FormatMediaType("inline", map[string]string{"filename": a.Name}))
+			http.ServeFile(w, r, s.Store.Original(a.ID))
 		case parts[1] == "original" && r.Method == "GET":
 			w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": a.Name}))
 			w.Header().Set("Content-Type", "application/octet-stream")

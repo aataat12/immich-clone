@@ -1,91 +1,57 @@
 # Status — 2026-11-01
 
-Requirements: `../Immich_Clone_Project_Requirements.md`, copied verbatim from the project source.
-A prototype originals slice is implemented; Windows service/application validation is
-in progress. No production release or installer exists yet. Latest user amendment authorizes
-Server-first development and final local Windows 10 validation; see requirements.
+Authoritative requirements: `../Immich_Clone_Project_Requirements.md`, including
+the later user-authorized Server-first amendment. No paid cloud client OS needed.
+No personal hardware, exact OS build, drive inventory, source paths or enrollment
+state belongs in this public repository, logs or artifacts.
 
-## Milestones and acceptance
+## Current product
 
-| Milestone | Acceptance | State |
-|---|---|---|
-| M0 compatibility | Exact PC edition/build/architecture/hardware; legitimate cloud Windows 10 access, licensing, cost and automation established | Server-first path authorized; local Windows 10 validation deferred |
-| M1 dependencies | Pinned versions, redistribution/support ledger; real media operations and intended model CPU inference under service identity; Server execution now; final local Windows 10 execution | In progress |
-| M2 originals slice | Safe upload/import, hash preservation, duplicates, metadata, thumbnails, browser listing and exact download; persistent jobs and restart recovery | Gated on applicable M1 evidence |
-| M3 recovery | Fault injection, concurrent uploads, interrupted jobs, consistent backup and actual restore to independent location | Not started |
-| M4 installer | Clean Windows 10 install without SDK, prerequisites, least privilege service, reboot, upgrade/rollback/uninstall preserving media | Not started |
+A working native Go prototype provides loopback access-code login, streaming
+upload, confirmed browser-folder copying, immutable SHA256 originals, duplicate
+detection, persisted JPEG/PNG preview jobs, browsing, download, JSON export and
+consistent backup/verified independent restoration. No original deletion API.
+External folders are never server-scanned or changed. App state is outside sync
+folders. Browser-folder copying does not retain relative directory structure yet.
 
-Included: browser photo/video management, upload/import, metadata, derived previews,
-download/export, durable jobs, backup/restore. Deferred: optional replaceable AI,
-advanced search, albums/sharing until basic reliability. Excluded: mobile apps,
-mobile backup and Immich mobile-client compatibility. No full parity claim.
+Full-image viewing and browser MP4 playback are implemented locally with a new
+actual H264/AAC Edge playback experiment pending. No AI features are implemented.
+Format limits are explicit in `prototype-notes.txt` and the UI.
 
-## Evidence reused
+## Milestones
 
-Server diagnostic run 41320566461 and job 124889659817 inspected through GitHub
-run metadata, step results and logs on 2026-11-01. No rerun. See dependency ledger.
-Its historical 'next milestone' paragraph is superseded by M0/M1 above.
+| Milestone | State / acceptance remaining |
+|---|---|
+| M0 target/testing path | Server-first path authorized; final local Windows 10 validation pending |
+| M1 basic dependencies | Go 1.27.3, bbolt 1.4.3, x/sys 0.49.0 executed under LocalService; core accepted for Server prototype. Optional media/AI remain separate gates |
+| M2 originals slice | Server service and Edge browser tests passed, including confirmed folder copy and independent restore |
+| M3 recovery | Abrupt exit, duplicate concurrency, corrupt backup, missing originals path, denied permission and actual NTFS full-disk recovery passed. Physical disconnect, extended endurance and OS reboot pending |
+| M4 installer | Server fresh install, actual version upgrade, injected failure rollback to prior healthy version and data-preserving uninstall passed. Clean Windows 10 and reboot validation pending |
 
-## Current work
+## Executed evidence
 
-User-specific system information is excluded from public records. Application state
-must remain outside sync roots; external media sources are read-only by policy.
-No user media has been accessed.
+- [Infrastructure diagnostic 41320566461](https://github.com/aataat12/immich-clone/actions/runs/41320566461): reused without rerun; diagnostic-only limits retained.
+- [Synthetic file primitives 41322200662](https://github.com/aataat12/immich-clone/actions/runs/41322200662): six assertions passed on Server NTFS.
+- [Pinned FFmpeg experiment 41322933829](https://github.com/aataat12/immich-clone/actions/runs/41322933829): actual synthetic media operations passed; no app redistribution.
+- [Go/database/LocalService 41325465670](https://github.com/aataat12/immich-clone/actions/runs/41325465670): rollback/reopen, JPEG/PNG encode/decode, service HTTP and database persistence across restart.
+- [Originals application 41326182923](https://github.com/aataat12/immich-clone/actions/runs/41326182923), commit `1ee7fa2`: full native service, upload/download/hash, jobs, independent restoration and denied permissions passed.
+- [Installer/browser/full disk 41327909119](https://github.com/aataat12/immich-clone/actions/runs/41327909119), commit `b0fb334`, job `124911644966`: all assertions passed. Actual Edge sign-in/upload/confirmed folder-copy/preview/backup download and narrow layout passed. Installer versions 0.1.0→0.1.1 and rejected 0.1.2 injection restored healthy 0.1.1; uninstall preserved catalog/code/originals. Actual 96MiB disposable NTFS volume filled, failed upload not catalogued, earlier original intact, and subsequent upload succeeded after space freed. Logs inspected.
 
-[Pinned FFmpeg candidate run 41322933829](https://github.com/aataat12/immich-clone/actions/runs/41322933829)
-passed at commit `de7903fe25f2c4b96228671ac1cb49160badc7dd` on Server 2022.
-Job 124896798777 logs inspected: all nine assertions passed, including actual
-JPEG/PNG decode/thumbnail operations, MPEG4-Part2/AAC decoding/frame extraction,
-container title metadata, preserved source hashes and malformed input rejection.
-Initial run 41322703178 exposed an expected-nonzero-exit harness issue, corrected
-before this passing run. No Windows 10/service-account, H264/HEVC, HEIC/RAW/HDR,
-real-camera corpus or AI inference validation. Candidate remains unaccepted.
+Passing artifact 13092226402: installer ZIP retrieved and verified SHA256
+`ffbfce3134316024f27bd53195e3139eb7ca089833ca4ae3543c7b363b4de81f`.
+Installer 0.1.1 SHA256 at that commit:
+`5310e7883040d89076893c2d5d0e874b6f23418380da5cfa26b5e5f9268c3e0e`.
+Desktop/narrow screenshots inspected; no overflow or private data. Artifact expires
+2026-11-08; this is historical evidence, not the latest media-enabled package.
 
-Read-only PC inventory script supplied; no dependency installation requested.
-Storage experiment tests synthetic bytes only, independently of media/AI choices.
-[Run 41322200662](https://github.com/aataat12/immich-clone/actions/runs/41322200662),
-commit `6970003766aa0f74702a645e145a83b60dba200a`, passed. Job 124894603992
-logs inspected. Server 2022 Datacenter 10.0.20348, Windows PowerShell
-5.1.20348.5756, NTFS. Inventory parsed/executed with required fields present and
-private output suppressed. Six storage assertions passed: same-volume publish,
-SHA256 preservation, partial-upload isolation, existing-target rejection,
-independent-process read, and synthetic original backup/restore after removal.
-This does not certify a production store, application-consistent backup, power-loss
-durability, Windows 10, media codecs or AI. No dependency experiment accepted yet.
+Earlier installer failures exposed PowerShell service command discovery, strict
+CIM parameter widths and false-success exit propagation; fixed and accepted only
+after end-to-end lifecycle passed. No failed build is a validated release.
 
-## Next
+## Next concrete work
 
-Execute the pinned Go/database/service probe on Server, then build the originals
-vertical slice around passing dependencies. AI remains separately gated; do not build
-substantial features around unproven dependencies. No costs authorized.
-
-## Runtime milestone
-
-[Run 41325465670](https://github.com/aataat12/immich-clone/actions/runs/41325465670),
-commit `45d44e5`, passed on Server 2022. Actual bbolt rollback/reopen and JPEG/PNG
-encoding/decoding tests passed. Native service startup, HTTP, database writes and
-restart persistence passed as LocalService with Go 1.27.3, CGO disabled, GOAMD64=v1.
-Job 124904357122 logs inspected. These dependencies are accepted for the basic
-Server prototype; local Windows 10, endurance and release acceptance remain open.
-
-Implemented pending application CI: loopback authentication, streaming upload,
-content-addressed originals, duplicate detection, explicit preview job status,
-JPEG/PNG thumbnails, browser listing/download, JSON export, consistent ZIP backup
-and checksum-verified independent restore. No external folder import or AI yet.
-Linux cloud unit/integration tests with race detection and vet passed.
-
-## Originals application evidence
-
-[Run 41326182923](https://github.com/aataat12/immich-clone/actions/runs/41326182923),
-commit `1ee7fa2`, passed on Server 2022. Job 124906489658 logs inspected.
-Application ran as LocalService: authenticated upload, SHA256 verification,
-duplicates, persisted PNG preview, original download across service restart,
-independent backup restoration and denied-storage startup failure all passed.
-Cloud Windows tests for abrupt process exit, duplicate concurrency, tampered
-backup rejection, authentication/CSRF/Host restrictions passed, as did go vet.
-
-Next bounded run adds state-folder ownership markers, Edge browser automation,
-and an Inno 6.7.4 installer with fresh install, version upgrade, injected startup
-failure rollback and data-preserving uninstall. Those new checks are pending.
-The local container could not launch Chromium due to socket restrictions; no
-local visual/browser success is claimed. Windows Edge tests will supply evidence.
+Run actual full-image/MP4 browser tests with a generated H264/AAC fixture and repeat
+installer acceptance for the changed executable. Then review the packaged build
+and prepare the final local Windows 10 compatibility/reboot checkpoint. No bulk
+real-library ingestion, production release, Windows 10 reliability, AI inference
+or clean-machine compatibility claim yet.

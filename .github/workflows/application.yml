@@ -11,6 +11,7 @@ on:
       - 'scripts/Build-Installer.ps1'
       - 'scripts/Test-Installer.ps1'
       - 'scripts/Test-FullDisk.ps1'
+      - 'scripts/New-MediaFixture.ps1'
       - 'tests/browser.cjs'
   workflow_dispatch:
 permissions:
@@ -58,13 +59,18 @@ jobs:
       - name: Execute real ENOSPC recovery on a disposable 96MiB NTFS volume
         shell: pwsh
         run: ./scripts/Test-FullDisk.ps1
-      - name: Retain synthetic browser evidence and prototype installer
+      - name: Retain synthetic browser evidence
         if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: synthetic-browser-evidence
+          path: browser-evidence/*.png
+          retention-days: 7
+      - name: Retain prototype installer only after all checks pass
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: prototype-server-tested
           path: |
             dist/ImmichClone-0.1.1-prototype-x64-setup.exe
             dist/SHA256SUMS.txt
-            browser-evidence/*.png
           retention-days: 7

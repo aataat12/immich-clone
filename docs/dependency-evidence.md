@@ -125,3 +125,21 @@ Local cloud toolchain used for focused Linux checks: actions/go-versions asset
 `1.27.3-39437817176/go-1.27.3-linux-x64.tar.gz`, SHA256
 `d0fbe16a6a03fe5fbf5577ab36f95f0725af587820dca8a78e6edd4eb4e19fd6`
 verified before execution. This is a development tool, not a user prerequisite.
+
+## Installer acceptance
+
+Inno Setup 6.7.4 official release asset SHA256
+`a549929319f9120716677c685535ca4671e4b937b5fdc87e2585f32d8eb30e8c`
+verified before compiler provisioning. Official source license and noncommercial
+compiler use checked for this personal project. Compiler is cloud-only, not a
+user prerequisite. No purchase, signing certificate or paid infrastructure used.
+Generated installer carries original Inno engine notices plus exact Go/x/sys/bbolt
+license texts. Target Windows baseline is 10.0, x64-compatible.
+
+[Run 41327909119](https://github.com/aataat12/immich-clone/actions/runs/41327909119)
+executes the actual installers under Windows Server 2022: fresh install, upgrade
+from 0.1.0 to 0.1.1, injected failed 0.1.2 upgrade with restoration to healthy
+0.1.1, uninstall preserving original hashes/catalog/access code. LocalService
+account and automatic startup configuration checked; full OS boot not exercised.
+Code signing is absent; Windows SmartScreen/antivirus acceptance is unverified.
+Win10 clean install and reboot remain local acceptance, not inferred from Server.

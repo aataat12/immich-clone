@@ -4,11 +4,12 @@ This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
 
 It provides loopback-only access-code login, upload of preserved originals,
-JPEG/PNG previews, persistent preview jobs, browsing, exact original download,
+JPEG/PNG previews and full-image viewing, MP4 browser playback, persistent preview
+jobs, browsing, exact original download,
 JSON catalog export, and consistent backup/verified restore. JPEG/PNG previews
 are limited to 40 megapixels. Uploads are limited to 4 GiB per file. Other formats
 are preserved/downloadable but preview failure is shown explicitly. No EXIF
-orientation, advanced camera metadata, video previews, server-side folder scanning, AI,
+orientation, advanced camera metadata, generated video thumbnails, server-side folder scanning, AI,
 mobile clients, remote sharing or LAN access in this build.
 
 The installer needs administrator permission and uses Windows LocalService.
@@ -32,8 +33,8 @@ Restored previews regenerate. Catalog schema 1 is checked; unknown versions are
 refused. JSON catalog export plus independent originals provides a migration path.
 
 Not yet validated: clean Windows 10 install, full OS reboot, long-running
-reliability, actual full disk, disconnected drive, antivirus/SmartScreen behavior,
-production security review and large-library performance. Current startup-failure
+reliability, physical drive disconnect, antivirus/SmartScreen behavior,
+production security review and large-library performance. A real full-disk recovery test passed on a disposable cloud NTFS volume. Current startup-failure
 rollback covers schema 1, not future schema migrations.
 
 Installer built with Inno Setup (Jordan Russell and Martijn Laan).

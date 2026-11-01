@@ -42,6 +42,10 @@ try {
     Invoke-WebRequest "http://127.0.0.1:2283/api/assets/$id/preview" -WebSession $session -OutFile $preview
     Assert ((Get-Item $preview).Length -gt 0) 'generated preview can be retrieved'
     if ($env:IMMICH_BROWSER_MODULE) {
+        $clip = Join-Path $root 'synthetic-video.mp4'
+        ./scripts/New-MediaFixture.ps1 -Destination $clip
+        $video = Invoke-RestMethod 'http://127.0.0.1:2283/api/upload?name=synthetic-video.mp4' -Method Post -Headers $headers -InFile $clip -WebSession $session
+        Assert ($video.asset.mime -eq 'video/mp4') 'actual H264/AAC MP4 upload recognized'
         $env:IMMICH_TEST_STATE = $state
         Checked node @('tests/browser.cjs')
         Remove-Item Env:IMMICH_TEST_STATE

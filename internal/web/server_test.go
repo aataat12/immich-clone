@@ -3,6 +3,8 @@ package web
 import (
 	"bytes"
 	"encoding/json"
+	"image"
+	"image/png"
 	"immichclone/internal/library"
 	"io"
 	"net/http"
@@ -11,6 +13,29 @@ import (
 	"path/filepath"
 	"testing"
 )
+
+func TestFullImageViewAndRange(t *testing.T) {
+	s, c := setup(t)
+	var source bytes.Buffer
+	if e := png.Encode(&source, image.NewRGBA(image.Rect(0, 0, 8, 8))); e != nil {
+		t.Fatal(e)
+	}
+	a, _, e := s.Store.Put("view.png", bytes.NewReader(source.Bytes()))
+	if e != nil {
+		t.Fatal(e)
+	}
+	r := httptest.NewRequest("GET", "http://127.0.0.1:2283/api/assets/"+a.ID+"/view", nil)
+	r.AddCookie(c)
+	r.Header.Set("Range", "bytes=0-7")
+	w := httptest.NewRecorder()
+	s.ServeHTTP(w, r)
+	if w.Code != 206 || !bytes.Equal(w.Body.Bytes(), source.Bytes()[:8]) || w.Header().Get("Content-Type") != "image/png" {
+		t.Fatal("full-size media range retrieval failed")
+	}
+	if e = s.Store.Verify(); e != nil {
+		t.Fatal(e)
+	}
+}
 
 func request(s *Server, method, path, body string, cookie *http.Cookie) *httptest.ResponseRecorder {
 	r := httptest.NewRequest(method, "http://127.0.0.1:2283"+path, bytes.NewBufferString(body))
