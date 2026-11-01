@@ -1,0 +1,56 @@
+name: Bounded image codec compatibility
+on:
+  push:
+    paths:
+      - 'experiments/image-codecs/**'
+      - '.github/workflows/image-codecs.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: windows-2022
+    timeout-minutes: 8
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Independent fixtures and native LocalService decoding
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          function Checked([string]$exe,[string[]]$a) { & $exe @a; if ($LASTEXITCODE -ne 0) { throw 'Probe operation failed' } }
+          Push-Location experiments/image-codecs
+          Checked go @('mod','verify')
+          Checked go @('test','-mod=readonly','-v','.')
+          $root = Join-Path $env:RUNNER_TEMP 'image-codec-probe'
+          New-Item -ItemType Directory $root | Out-Null
+          Checked go @('build','-trimpath','-o',"$root/probe.exe",'.')
+          Pop-Location
+          Add-Type -AssemblyName System.Drawing
+          $bitmap = [Drawing.Bitmap]::new(32,24)
+          $graphics = [Drawing.Graphics]::FromImage($bitmap)
+          $graphics.Clear([Drawing.Color]::Red)
+          foreach ($ext in @('Bmp','Tiff','Gif')) { $bitmap.Save((Join-Path $root ('synthetic.'+$ext.ToLowerInvariant())),[Drawing.Imaging.ImageFormat]::$ext) }
+          $graphics.Dispose()
+          $bitmap.Dispose()
+          Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)M')
+          $name = 'ImmichCloneImageProbe'
+          try {
+            $credential = [PSCredential]::new('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))
+            New-Service -Name $name -BinaryPathName ('"'+"$root/probe.exe"+'" -root "'+$root+'"') -Credential $credential | Out-Null
+            Start-Service $name
+            if (!(Test-Path "$root/passed.txt")) { throw 'Service image operations did not pass' }
+            Restart-Service $name
+            if ((Get-Service $name).Status -ne 'Running') { throw 'Service restart failed' }
+            Write-Output 'PASS: independently encoded BMP TIFF GIF actual pixel decode, PNG roundtrip, truncation rejection, immutable hashes and service restart under LocalService; no external DLL runtime.'
+          } finally {
+            if (Get-Service $name -ErrorAction SilentlyContinue) { Stop-Service $name -ErrorAction Continue; Checked sc.exe @('delete',$name) }
+            if (Test-Path "$root/failed.txt") { Get-Content "$root/failed.txt" }
+          }
