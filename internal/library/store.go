@@ -25,6 +25,7 @@ import (
 )
 
 const MaxUpload int64 = 4 << 30
+const queueBucket = "preview_queue_v1"
 
 var ErrTooLarge = errors.New("file exceeds 4 GiB upload limit")
 
@@ -112,11 +113,24 @@ func Open(root string) (*Store, error) {
 		if e := b.Put([]byte("schema"), []byte("1")); e != nil {
 			return e
 		}
+		// Derived index: rebuild from authoritative asset status on every open.
+		if tx.Bucket([]byte(queueBucket)) != nil {
+			if e := tx.DeleteBucket([]byte(queueBucket)); e != nil {
+				return e
+			}
+		}
+		queue, e := tx.CreateBucket([]byte(queueBucket))
+		if e != nil {
+			return e
+		}
 		assets := tx.Bucket([]byte("assets"))
 		return assets.ForEach(func(k, v []byte) error {
 			var a Asset
 			if e := json.Unmarshal(v, &a); e != nil {
 				return e
+			}
+			if !validID(a.ID) || a.ID != string(k) {
+				return errors.New("invalid catalog record")
 			}
 			if ((a.MIME == "image/jpeg" || a.MIME == "image/png") && a.PreviewRevision < 1) || ((a.MIME == "image/bmp" || a.MIME == "image/gif" || a.MIME == "application/octet-stream" || a.MIME == "image/tiff") && a.PreviewRevision < 2) || ((supportsMediaPreview(a.MIME) || a.MIME == "application/octet-stream") && a.PreviewRevision < 3) {
 				a.Preview = "queued"
@@ -125,7 +139,12 @@ func Open(root string) (*Store, error) {
 				if e != nil {
 					return e
 				}
-				return assets.Put(k, updated)
+				if e = assets.Put(k, updated); e != nil {
+					return e
+				}
+			}
+			if a.Preview == "queued" {
+				return queue.Put(k, []byte{1})
 			}
 			return nil
 		})
@@ -192,7 +211,22 @@ func (s *Store) save(a Asset) error {
 	if e != nil {
 		return e
 	}
-	return s.db.Update(func(tx *bolt.Tx) error { return tx.Bucket([]byte("assets")).Put([]byte(a.ID), b) })
+	return s.db.Update(func(tx *bolt.Tx) error {
+		if !validID(a.ID) {
+			return errors.New("invalid catalog record")
+		}
+		queue := tx.Bucket([]byte(queueBucket))
+		if queue == nil {
+			return errors.New("preview queue index unavailable")
+		}
+		if e := tx.Bucket([]byte("assets")).Put([]byte(a.ID), b); e != nil {
+			return e
+		}
+		if a.Preview == "queued" {
+			return queue.Put([]byte(a.ID), []byte{1})
+		}
+		return queue.Delete([]byte(a.ID))
+	})
 }
 func fileHash(path string) (string, error) {
 	f, e := os.Open(path)
@@ -313,36 +347,50 @@ func (s *Store) ProcessOneContext(ctx context.Context) (bool, error) {
 	}
 	s.gate.Lock()
 	defer s.gate.Unlock()
-	assets, e := s.List()
+	var id string
+	e := s.db.View(func(tx *bolt.Tx) error {
+		queue := tx.Bucket([]byte(queueBucket))
+		if queue == nil {
+			return errors.New("preview queue index unavailable")
+		}
+		k, _ := queue.Cursor().First()
+		id = string(k)
+		return nil
+	})
 	if e != nil {
 		return false, e
 	}
-	for _, a := range assets {
-		if a.Preview != "queued" {
-			continue
-		}
-		a.PreviewRevision = 3
-		opCtx, cancel := context.WithTimeout(ctx, 45*time.Second)
-		e = s.makePreviewContext(opCtx, &a)
-		cancel()
-		if ctx.Err() != nil {
-			return true, ctx.Err()
-		}
-		diagnostics.Record("preview", "preview_generate", e, 0, 0, 0)
-		if e != nil {
-			a.Preview = "failed"
-			a.Error = e.Error()
-		} else {
-			a.Preview = "ready"
-			a.Error = ""
-		}
-		if e = s.save(a); e != nil {
-			return true, e
-		}
-		return true, nil
+	if id == "" {
+		return false, nil
 	}
-	return false, nil
+	a, e := s.Get(id)
+	if e != nil {
+		return true, e
+	}
+	if a.ID != id || a.Preview != "queued" {
+		return true, errors.New("preview queue index inconsistent; reopen to rebuild")
+	}
+	a.PreviewRevision = 3
+	opCtx, cancel := context.WithTimeout(ctx, 45*time.Second)
+	e = s.makePreviewContext(opCtx, &a)
+	cancel()
+	if ctx.Err() != nil {
+		return true, ctx.Err()
+	}
+	diagnostics.Record("preview", "preview_generate", e, 0, 0, 0)
+	if e != nil {
+		a.Preview = "failed"
+		a.Error = e.Error()
+	} else {
+		a.Preview = "ready"
+		a.Error = ""
+	}
+	if e = s.save(a); e != nil {
+		return true, e
+	}
+	return true, nil
 }
+
 func (s *Store) SetMediaPreview(fn func(context.Context, string) (image.Image, int, int, error)) {
 	s.gate.Lock()
 	defer s.gate.Unlock()

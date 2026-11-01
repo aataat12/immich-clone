@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'experiments/catalog-scale/**'
+      - 'internal/library/**'
       - '.github/workflows/catalog-scale.yml'
   workflow_dispatch:
 permissions:

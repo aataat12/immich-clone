@@ -444,3 +444,48 @@ Extracted `ImmichClone-0.1.11-prototype-x64-setup.exe` SHA256 matched manifest:
 10 acceptance of this build remains pending; no new machine/media data published.
 Hide is reversible catalog metadata, not deletion. The MOV issue remains awaiting
 private diagnostic/catalog-presence evidence; do not claim it is fixed.
+
+
+## Derived preview-queue scale comparison
+
+Baseline [41355763079](https://github.com/aataat12/immich-clone/actions/runs/41355763079)
+at `37ead920458848597d77ebcfa9903a0ec1fb41d6`, Windows Server 2022,
+50k metadata-only rows: idle poll median 131379 us / 87779616 Go allocation
+bytes. The measured rows deliberately have no originals; this is not bulk-media
+or real-library acceptance.
+
+Optimized [41357496603](https://github.com/aataat12/immich-clone/actions/runs/41357496603)
+at `d76c40db4f4e3dcc555af9a5ca4f43886e721919`, job `125000596363`,
+Server 2022: idle poll 448 allocation bytes at 1k/10k/50k rows. Reported timer
+values are below VM resolution, not zero execution cost. Same 50k test still
+measured full listing 131474 us / 87774328 bytes and list+JSON 192427 us /
+183266368 bytes. Paging remains necessary; no browser throughput claim.
+Actual PNG upload, source-byte equality, dimensions and completed preview were
+verified separately among each synthetic row set (single job, not throughput).
+
+Linux focused race/vet checks passed. Queue tests rebuild stale/orphan indexes,
+retain retries/hidden jobs, inject a queue publication failure and assert atomic
+catalog rollback plus safe orphan-original reuse. Existing cancellation and
+independent-restore tests use the same production queue implementation. Full
+Windows installer acceptance is recorded separately when complete.
+
+
+## 0.1.13 queue foundation Server acceptance
+
+[41357496504](https://github.com/aataat12/immich-clone/actions/runs/41357496504),
+commit `d76c40db4f4e3dcc555af9a5ca4f43886e721919`, job `125000596465`,
+passed on Server 2022. Inspected logs confirm actual queue rollback/rebuild tests,
+prior cancellation/restart/restore tests, LocalService/Edge image/video/HEIC
+regressions, actual version display, hide/restore and stale refresh protection,
+original checksum preservation, missing-provider recovery, permission diagnostics,
+fresh install/upgrade/injected-failure rollback/uninstall, independent reinstall
+restore/regeneration and real NTFS disk-full recovery. No dependency changed.
+
+Artifact `13103768097` ZIP SHA256 matched GitHub digest:
+`fc2d7194b4ce10a81d59a4d13d431a5a927abd9c5009c99e12065a9d985fda11`.
+Retrieved `ImmichClone-0.1.13-prototype-x64-setup.exe` SHA256 matched manifest:
+`91af2f75ade51c689f901dd5af7213be016cf970603a0fca33aec04222891e0c`
+(22754319 bytes). Synthetic desktop/narrow screenshots inspected. No local reboot
+or new prerequisite needed. This clears the derived-queue prototype gate only;
+Windows 10 execution of this build, large-library ingestion, paging/endurance and
+bulk transfer recovery remain separate. No user inventory/media/logs published.

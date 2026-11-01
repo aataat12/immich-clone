@@ -15,17 +15,17 @@ is Server-tested; installer and browser lifecycle tests have passed on Server 20
 inventory execution in Windows PowerShell 5.1. It does not certify Windows 10,
 media codecs, AI inference, application backups or an installer.
 
-The current slice supports local access-code login, preserved original upload,
-duplicates, JPEG/PNG previews, persistent jobs, download/export and verified backup
-restoration. See [prototype limitations](docs/prototype-notes.txt). Browser-selected folder copy is supported; server-side source scanning, generated
-video thumbnails and AI remain unfinished. Never put personal machine
-reports, media or paths in public issues or artifacts.
+The current prototype supports local access-code login, immutable managed-copy
+upload/folder import, deduplication, image metadata/previews, optional CPU
+HEIC/video previews, browsing, reversible hide/restore, exact original downloads,
+JSON export and verified independent backup restoration. It includes private
+bounded diagnostic export with no automatic upload. See
+[prototype limitations](docs/prototype-notes.txt) and [bulk-import milestones](docs/bulk-import.md).
+Server-side source scanning, bulk-import recovery/paging, AI and mobile features
+are not implemented. Never put personal machine reports, media or paths in
+public issues or artifacts.
 
-[Validated Server prototype run](https://github.com/aataat12/immich-clone/actions/runs/41329698834)
+[Server-tested 0.1.13 prototype](https://github.com/aataat12/immich-clone/actions/runs/41357496504)
 and [local Windows 10 checkpoint instructions](docs/local-validation.md).
 The user-facing local check prints pass/fail only and sends no machine report.
-
-Diagnostic build 0.1.3 adds **Download diagnostics** in the browser and
-**Export diagnostic log** in the Start menu, including when the service is stopped.
-It writes bounded structured events, never machine inventory or personal paths.
-Logs are returned privately by the user; nothing is uploaded automatically.
+See status for later candidates and the limits of user-reported local evidence.

@@ -7,7 +7,7 @@ const path = require('path');
   const errors = [];
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto('http://127.0.0.1:2283');
-  await page.waitForFunction(()=>document.querySelector('#version').textContent==='Version 0.1.11-prototype');
+  await page.waitForFunction(()=>document.querySelector('#version').textContent==='Version 0.1.13-prototype');
   await page.fill('#code',fs.readFileSync(path.join(process.env.IMMICH_TEST_STATE,'access-code.txt'),'utf8').trim());
   await page.click('#loginForm button');
   await page.waitForSelector('#library:not(.hidden)');

@@ -29,10 +29,12 @@ failure message. Do not post transcripts, hardware reports, paths or access code
 to GitHub. No personal machine information is needed in public project records.
 
 Uninstall preserves the application data folder and originals. JSON catalog export
-and ZIP backup are available in the UI. This build lacks AI, generated video
-thumbnails, EXIF orientation processing, HEIC/RAW/HDR preview validation, physical
-disconnect testing and extended endurance. Browser folder copies flatten source
-directory structure. Do not bulk-import the real library yet.
+and ZIP backup are available in the UI. Later builds add JPEG EXIF orientation,
+BMP/GIF/TIFF and optional CPU HEIC/video previews; consult status and prototype
+notes for tested formats and limits. AI, RAW/HDR previews, physical disconnect,
+bulk import and extended endurance remain unaccepted. Managed blobs use content
+hashes; relative source aliases are preserved by folder import and JSON export.
+Do not bulk-import the real library yet.
 
 Local functional checkpoint was reported passed on 2026-11-01, including full-image
 view. Do not ask the user to repeat it without a relevant change or failure.

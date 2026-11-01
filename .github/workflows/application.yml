@@ -1,4 +1,5 @@
 name: Application originals slice
+# Managed-copy queue acceptance includes installer recovery, not just compilation.
 on:
   push:
     paths:
@@ -84,6 +85,6 @@ jobs:
         with:
           name: prototype-server-tested
           path: |
-            dist/ImmichClone-0.1.11-prototype-x64-setup.exe
+            dist/ImmichClone-0.1.13-prototype-x64-setup.exe
             dist/SHA256SUMS.txt
           retention-days: 7

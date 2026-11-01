@@ -5,22 +5,21 @@ Server-first execution amendment. No new charges or parallel agents. No personal
 machine specifications, paths, media or returned logs belong in this repository.
 Historical checkpoints remain in Git history; this file supersedes their gates.
 
-## Clarified intended workflow: external library
+## Confirmed workflow: managed copies and bulk import
 
-The user expects the application to index a large mostly-static existing library
-in place. Current Upload/Choose folder performs managed copy-import; it does not
-merely reference source files. Do not invite bulk copy-import for this use case.
-Next priority is a read-only external-library prototype: references plus generated
-metadata/previews, incremental rescans, source-change/disconnect handling and
-explicit backup semantics. No automatic moves/deletions, folder-permission grants
-or hydration of online-only files. Actual source paths and library inventory stay
-private, not in repository records or CI. Existing managed copies are retained;
-no cleanup/deletion was authorized. Catalog-only backups must be distinguished
-from complete original-file backup/restore. Reuse verified media/service work.
+The user explicitly chose application-owned copies after discussing the storage
+tradeoff. Upload/Choose folder copies bytes into immutable managed storage and
+leaves sources untouched. This supersedes the interim external-library priority;
+no external-library implementation was introduced and no originals are removed.
+Keep personal source paths and inventory out of public records and CI.
 
-Queue-index code below is a useful independent checkpoint, not a new delivered
-installer. Local Linux checks pass; optimized Windows/full acceptance remains
-pending. Keep 0.1.11 as the current delivered build while validating external mode.
+Next: dedicated bulk-import page with copy progress, interruption recovery and
+import-first scheduling. Commit original bytes/catalog jobs before reporting a
+file successful; defer derived processing while an active bulk transfer runs.
+Browser selection cannot promise unattended source access after the page closes;
+recovery must state when reselecting sources is required. See `bulk-import.md`.
+Queue foundation is accepted below. Current Server-tested build: 0.1.13; bulk
+transfer/recovery UI is the next implementation milestone. No local action needed.
 
 ## Current work: catalog/worker scale
 
@@ -33,12 +32,23 @@ Bounded 1k/10k/50k metadata-only measurement found linear idle polling overhead:
 [Windows baseline 41355763079](https://github.com/aataat12/immich-clone/actions/runs/41355763079),
 about 88 MB Go allocations and 131 ms per 50k-row idle poll. Linux baseline was
 similar. Implemented a derived transactional pending-job index; focused Linux
-race/vet and real PNG job checks pass. Windows comparison and full 0.1.13 installer
-acceptance pending. This measures catalog/worker behavior, not bulk ingestion.
+race/vet and real PNG job checks pass. Windows comparison
+[41357496603](https://github.com/aataat12/immich-clone/actions/runs/41357496603)
+passed: idle poll allocates 448 bytes at all measured sizes. Full listing/JSON
+remains linear. Full 0.1.13 acceptance passed in
+[41357496504](https://github.com/aataat12/immich-clone/actions/runs/41357496504),
+commit `d76c40db4f4e3dcc555af9a5ca4f43886e721919`, job `125000596465`.
+Windows storage/HTTP tests, LocalService/Edge, upgrade/injected-failure rollback,
+independent restore/provider regeneration, uninstall retention and actual NTFS
+full-disk recovery passed. Queue publication rollback/rebuild tests passed.
+Installer artifact `13103768097` retrieved and checksum verified:
+`91af2f75ade51c689f901dd5af7213be016cf970603a0fca33aec04222891e0c`.
+Desktop/narrow synthetic screenshots inspected. This measures catalog/worker
+behavior and regression acceptance, not bulk ingestion.
 API/JSON/browser paging remains a separate limitation.
 No user input, local setup or reboot is needed now.
 
-## Latest installer: version display and reversible visibility 0.1.11
+## Prior installer: version display and reversible visibility 0.1.11
 
 User requested running-version identification and removal from the main grid.
 Implemented actual executable version at top-right, reversible hide/unhide with
@@ -124,13 +134,14 @@ Server execution does not establish clean Windows 10 compatibility.
 
 ## Remaining gates and next work
 
-0.1.11 cloud acceptance and checksum verification are complete. Reload the page
-after upgrade, confirm the version and test reversible hide/restore on a test
-item. MOV visibility now works according to the user; request diagnostics only if it recurs.
-No bulk ingestion or reboot requested. Next main work: measure large-library browsing/job behavior and
-address demonstrated bottlenecks. A recommended independent partner task is a
-backup/restore failure-path review; see partner-handoff.md. No partner access,
-invitation or external task dispatch has been performed.
+0.1.13 cloud acceptance and checksum verification are complete. No new local
+checkpoint is needed for this worker-only change. Next: bounded import-first
+transfer scheduling with expiry/restart recovery, followed by a dedicated bulk
+page, actual synthetic import/endurance and gallery paging. See `bulk-import.md`.
+No large real-library import or reboot requested. MOV visibility now works
+according to the user; request diagnostics only if it recurs. A recommended
+independent partner task remains backup/restore failure-path review; see
+partner-handoff.md. No partner access, invitation or dispatch has been performed.
 
 HDR/high bit depth, RAW, bursts, advanced HEIC/TIFF metadata, broad camera coverage
 and optional AI remain unsupported/unverified. AI requires actual intended-model
