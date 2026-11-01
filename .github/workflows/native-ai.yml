@@ -2,7 +2,8 @@ name: Bounded native Windows AI worker
 on:
   push:
     paths:
-      - 'experiments/native-ai/**'
+      - 'experiments/native-ai/worker/**'
+      - 'experiments/native-ai/build.ps1'
       - '.github/workflows/native-ai.yml'
   workflow_dispatch:
 permissions:

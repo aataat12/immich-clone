@@ -10,10 +10,10 @@ import cv2 as cv
 import numpy as np
 root=Path(sys.argv[1]);verify(root)
 cv.setNumThreads(1);cv.ocl.setUseOpenCL(False)
-images={name:cv.imread(str(root/name)) for name in ['astronaut.png','grace_hopper.jpg','coffee.png','chelsea.png']}
+images={name:cv.imdecode(np.frombuffer((root/name).read_bytes(),dtype=np.uint8),cv.IMREAD_COLOR) for name in ['astronaut.png','grace_hopper.jpg','coffee.png','chelsea.png']}
 images['dimmed']=cv.convertScaleAbs(cv.resize(images['astronaut.png'],(448,448)),alpha=.8,beta=15)
-detector=cv.FaceDetectorYN.create(str(root/'yunet.onnx'),'',(512,512),.9,.3,5000,cv.dnn.DNN_BACKEND_OPENCV,cv.dnn.DNN_TARGET_CPU)
-recognizer=cv.FaceRecognizerSF.create(str(root/'sface.onnx'),'',cv.dnn.DNN_BACKEND_OPENCV,cv.dnn.DNN_TARGET_CPU)
+detector=cv.FaceDetectorYN.create('onnx',np.frombuffer((root/'yunet.onnx').read_bytes(),dtype=np.uint8),np.empty(0,dtype=np.uint8),(512,512),.9,.3,5000,cv.dnn.DNN_BACKEND_OPENCV,cv.dnn.DNN_TARGET_CPU)
+recognizer=cv.FaceRecognizerSF.create('onnx',np.frombuffer((root/'sface.onnx').read_bytes(),dtype=np.uint8),np.empty(0,dtype=np.uint8),cv.dnn.DNN_BACKEND_OPENCV,cv.dnn.DNN_TARGET_CPU)
 golden={};manifest={}
 for name,image in images.items():
     assert image is not None
