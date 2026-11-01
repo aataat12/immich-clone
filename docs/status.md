@@ -1,14 +1,15 @@
 # Status — 2026-11-01
 
 Requirements: `../Immich_Clone_Project_Requirements.md`, copied verbatim from the project source.
-No production application or installer exists yet.
+No production application or installer exists yet. Latest user amendment authorizes
+Server-first development and final local Windows 10 validation; see requirements.
 
 ## Milestones and acceptance
 
 | Milestone | Acceptance | State |
 |---|---|---|
-| M0 compatibility | Exact PC edition/build/architecture/hardware; legitimate cloud Windows 10 access, licensing, cost and automation established | PC inventory received privately; blocked on cloud entitlement/access and support policy |
-| M1 dependencies | Pinned versions, redistribution/support ledger; real media operations and intended model CPU inference under service identity; Windows 10 execution | Not passed |
+| M0 compatibility | Exact PC edition/build/architecture/hardware; legitimate cloud Windows 10 access, licensing, cost and automation established | PC inventory received privately; Server-first path authorized; local Windows 10 validation deferred |
+| M1 dependencies | Pinned versions, redistribution/support ledger; real media operations and intended model CPU inference under service identity; Server execution now; final local Windows 10 execution | In progress |
 | M2 originals slice | Safe upload/import, hash preservation, duplicates, metadata, thumbnails, browser listing and exact download; persistent jobs and restart recovery | Gated on applicable M1 evidence |
 | M3 recovery | Fault injection, concurrent uploads, interrupted jobs, consistent backup and actual restore to independent location | Not started |
 | M4 installer | Clean Windows 10 install without SDK, prerequisites, least privilege service, reboot, upgrade/rollback/uninstall preserving media | Not started |
@@ -55,6 +56,6 @@ durability, Windows 10, media codecs or AI. No dependency experiment accepted ye
 
 ## Next
 
-Resolve eligible cloud Windows 10 access. Vet and pin a redistributable media tool
-and actual model/runtime, then run bounded representative experiments; do not build
+Execute the pinned Go/database/service probe on Server, then build the originals
+vertical slice around passing dependencies. AI remains separately gated; do not build
 substantial features around unproven dependencies. No costs authorized.

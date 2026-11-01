@@ -1,3 +1,17 @@
+## Authorized execution amendment — November 1, 2026
+
+The user explicitly authorized developing and validating on the available cloud
+Windows Server 2022 runners, then validating Windows 10 locally once a working,
+packaged build is ready. This supersedes requirements below that make cloud
+Windows 10 access a prerequisite to implementation or local testing. No paid
+Windows 10 cloud machine is required. All other preservation, evidence, installer,
+privacy and cost requirements remain in force. Server results do not certify
+Windows 10. No local dependency setup until the relevant Server validation passes.
+The original project-source text is retained below; this amendment records the
+later user instruction rather than silently changing its historical meaning.
+
+---
+
 Build a reliable, Windows-native, self-hosted photo/video manager with an Immich-style browser experience. Favor correctness, recoverability, straightforward installation, and maintainability over rapid feature accumulation.
 
 ## Nonnegotiable requirements

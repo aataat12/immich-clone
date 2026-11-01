@@ -25,3 +25,13 @@
 - FFmpeg LGPL shared build is an isolated candidate executable, invoked out of
   process. Pin monthly retained build and checksum. This is not redistribution
   approval; corresponding source and transitive license review remain release gates.
+
+- 2026-11-01 user override: cloud Server 2022 validation now authorizes development;
+  final Windows 10 validation moves to the user's PC after a packaged working
+  build. No paid cloud Windows 10 environment needed; earlier cloud-access gates
+  are superseded. Do not request routine milestone approvals.
+- Evaluate Go 1.27.3 with CGO disabled and GOAMD64=v1, bbolt 1.4.3, and x/sys
+  0.49.0 through real LocalService execution before building downstream features.
+  Embedded catalog avoids PostgreSQL installation and preserves a standard file
+  layout plus JSON export migration path. DB is single-writer local state, never
+  inside Dropbox; originals remain independent. Candidate until execution passes.

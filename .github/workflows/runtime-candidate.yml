@@ -1,0 +1,51 @@
+name: Bounded Go runtime and embedded database probe
+on:
+  push:
+    paths:
+      - 'go.mod'
+      - 'cmd/runtimeprobe/**'
+      - 'internal/catalog/**'
+      - '.github/workflows/runtime-candidate.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  runtime:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Execute database and image operations, then service lifecycle as LocalService
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          function Checked([string]$exe,[string[]]$a) { & $exe @a; if ($LASTEXITCODE -ne 0) { throw "$exe failed: $LASTEXITCODE" } }
+          Checked go @('mod','tidy')
+          Get-Content go.sum
+          Checked go @('test','-v','./internal/catalog')
+          $root = Join-Path $env:RUNNER_TEMP 'runtime-probe'
+          New-Item -ItemType Directory -Force $root | Out-Null
+          Checked go @('build','-trimpath','-o',"$root/probe.exe",'./cmd/runtimeprobe')
+          Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)M')
+          $name = 'ImmichCloneRuntimeProbe'
+          try {
+            $credential = [PSCredential]::new('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))
+            New-Service -Name $name -BinaryPathName ('"'+"$root/probe.exe"+'" -data "'+$root+'"') -Credential $credential | Out-Null
+            Start-Service $name
+            $result = Invoke-RestMethod http://127.0.0.1:18769/health
+            if ($result.status -ne 'ok') { throw 'First service check failed' }
+            Restart-Service $name
+            $result = Invoke-RestMethod http://127.0.0.1:18769/health
+            if ($result.previous -ne 'persisted') { throw 'Restart persistence failed' }
+            Write-Output 'PASS: native service as LocalService; HTTP and embedded database commit/read across restart; CGO disabled, GOAMD64=v1.'
+          } finally {
+            if (Get-Service $name -ErrorAction SilentlyContinue) { Stop-Service $name -ErrorAction Continue; Checked sc.exe @('delete',$name) }
+          }
