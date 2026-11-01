@@ -153,17 +153,68 @@ func Restore(archive, target string) (result error) {
 		if z == nil || z.UncompressedSize64 > uint64(MaxUpload) {
 			return errors.New("missing or oversized backup file")
 		}
-		path := filepath.Join(stage, filepath.FromSlash(entry))…4485 tokens truncated…onst img=new Image();img.loading='lazy';img.src='/api/assets/'+a.id+'/preview';img.alt=a.name;photo.append(img)}else photo.textContent=a.preview==='queued'?'Preview queued':'Original preserved';const details=document.createElement('div');details.className='details';const name=document.createElement('div');name.className='name';name.textContent=a.name;name.title=a.name;const meta=document.createElement('div');meta.className='meta';meta.textContent=(a.size/1048576).toFixed(2)+' MB · '+new Date(a.added).toLocaleDateString();const link=document.createElement('a');link.href='/api/assets/'+a.id+'/original';link.textContent='Download original';details.append(name,meta,link);if(['image/jpeg','image/png','video/mp4'].includes(a.mime)){const open=document.createElement('button');open.className='secondary openMedia';open.style.marginTop='10px';open.textContent=a.mime==='video/mp4'?'Play video':'View image';open.onclick=()=>{const element=document.createElement(a.mime==='video/mp4'?'video':'img');element.src='/api/assets/'+a.id+'/view';if(a.mime==='video/mp4'){element.controls=true;element.preload='metadata'}else element.alt=a.name;$('viewName').textContent=' '+a.name;$('viewMedia').replaceChildren(element);$('viewer').showModal()};details.append(open)}if(a.error){const error=document.createElement('p');error.className='error';error.textContent=a.error;details.append(error)}card.append(photo,details);$('grid').append(card)}if(!items.length)$('status').textContent='Your library is empty. Upload a few test files to begin.'}
-$('loginForm').onsubmit=async e=>{e.preventDefault();try{await request('/api/login',{method:'POST',body:JSON.stringify({code:$('code').value.trim()})});$('code').value='';await load()}catch(error){$('loginError').textContent=error.message}};
-$('refresh').onclick=()=>load().catch(e=>$('status').textContent=e.message);
-let selectedFolder=[],controller=null;
-async function upload(files){if(busy)return;busy=true;controller=new AbortController();$('cancelUpload').classList.remove('hidden');let completed=0;try{for(const file of files){$('status').textContent='Copying '+(completed+1)+'/'+files.length+': '+file.name;await request('/api/upload?name='+encodeURIComponent(file.name),{method:'POST',body:file,signal:controller.signal});completed++}await load();$('status').textContent=completed+' files processed. Source files were left untouched.'}catch(e){$('status').textContent=(e.name==='AbortError'?'Upload cancelled':e.message)+'. '+completed+' earlier files processed.';await load().catch(()=>{})}finally{busy=false;controller=null;$('cancelUpload').classList.add('hidden');$('files').value='';$('folder').value=''}}
-$('files').onchange=()=>upload(Array.from($('files').files));
-$('folder').onchange=()=>{selectedFolder=Array.from($('folder').files);$('confirmFolder').classList.toggle('hidden',!selectedFolder.length);const total=selectedFolder.reduce((n,f)=>n+f.size,0);$('status').textContent=selectedFolder.length+' selected files · '+(total/1048576).toFixed(1)+' MB to copy. Originals stay in the source folder. Online-only files may download when read. Click Copy selected folder to begin.'};
-$('confirmFolder').onclick=()=>{$('confirmFolder').classList.add('hidden');const files=selectedFolder;selectedFolder=[];upload(files)};
-$('cancelUpload').onclick=()=>controller?.abort();
-
-$('backup').onclick=()=>{$('status').textContent='Preparing backup download. Keep the archive private: it contains originals and the access code.';window.location.href='/api/backup'};
-$('closeViewer').onclick=()=>{$('viewer').close();$('viewMedia').replaceChildren()};$('viewer').addEventListener('cancel',()=>{$('viewMedia').replaceChildren()});
-load().catch(()=>{});setInterval(()=>{if(!busy&&!$('library').classList.contains('hidden'))load().catch(()=>{})},5000);
-</script></html>
+		path := filepath.Join(stage, filepath.FromSlash(entry))
+		if e = os.MkdirAll(filepath.Dir(path), 0700); e != nil {
+			return e
+		}
+		out, e := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+		if e != nil {
+			return e
+		}
+		in, e := z.Open()
+		if e != nil {
+			out.Close()
+			return e
+		}
+		h := sha256.New()
+		n, copyErr := io.Copy(io.MultiWriter(out, h), io.LimitReader(in, int64(z.UncompressedSize64)+1))
+		in.Close()
+		if copyErr == nil {
+			copyErr = out.Sync()
+		}
+		closeErr := out.Close()
+		if copyErr != nil {
+			return copyErr
+		}
+		if closeErr != nil {
+			return closeErr
+		}
+		if n != int64(z.UncompressedSize64) || hex.EncodeToString(h.Sum(nil)) != expected {
+			return errors.New("backup checksum mismatch")
+		}
+	}
+	restored, e := Open(stage)
+	if e != nil {
+		return e
+	}
+	assets, e := restored.List()
+	if e == nil {
+		e = restored.Verify()
+	}
+	if e == nil {
+		originals := 0
+		for entry := range m.Files {
+			if strings.HasPrefix(entry, "originals/") {
+				originals++
+			}
+		}
+		if originals != len(assets) {
+			e = errors.New("backup catalog/original mismatch")
+		}
+	}
+	if e == nil {
+		for _, a := range assets {
+			if e = restored.Retry(a.ID); e != nil {
+				break
+			}
+		}
+	}
+	closeErr := restored.Close()
+	if e != nil {
+		return e
+	}
+	if closeErr != nil {
+		return closeErr
+	}
+	return os.Rename(stage, target)
+}

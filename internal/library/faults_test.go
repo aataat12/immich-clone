@@ -3,8 +3,10 @@ package library
 import (
 	"bytes"
 	bolt "go.etcd.io/bbolt"
+	"immichclone/internal/diagnostics"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -12,6 +14,9 @@ func TestActualDiskFull(t *testing.T) {
 	volume := os.Getenv("IMMICH_SMALL_VOLUME")
 	if volume == "" {
 		t.Skip("requires isolated bounded CI volume")
+	}
+	if e := diagnostics.Init(filepath.Join(t.TempDir(), "logs"), "0.1.3-prototype", "application"); e != nil {
+		t.Fatal(e)
 	}
 	root, e := os.MkdirTemp(volume, "immich-disk-full-")
 	if e != nil {
@@ -49,6 +54,10 @@ func TestActualDiskFull(t *testing.T) {
 	}
 	if _, _, e = s.Put("should-fail.bin", bytes.NewReader(make([]byte, 8<<20))); e == nil {
 		t.Fatal("full disk upload falsely succeeded")
+	}
+	var support bytes.Buffer
+	if e := diagnostics.Export(&support); e != nil || !strings.Contains(support.String(), "disk_full") {
+		t.Fatal("actual full-disk failure missing from diagnostic log", e)
 	}
 	assets, e := s.List()
 	if e != nil || len(assets) != 1 || assets[0].ID != a.ID {

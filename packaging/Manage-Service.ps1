@@ -97,6 +97,11 @@ try {
     exit 0
 } catch {
     Diagnostic 'installer_failed' $_.Exception.HResult
+    $inner = $_.Exception
+    while ($null -ne $inner) {
+        if ($inner -is [ComponentModel.Win32Exception]) { Diagnostic 'win32_error' $inner.NativeErrorCode }
+        $inner = $inner.InnerException
+    }
     # No paths, credentials, machine inventory or exception text in diagnostics.
     ($stage+'; '+$_.Exception.GetType().Name+'; HResult='+$_.Exception.HResult) | Set-Content (Join-Path $AppDir 'install-diagnostic.txt')
     # Schema 1 installer never mutates originals. Restore prior catalog and binary

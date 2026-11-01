@@ -10,6 +10,7 @@ import (
 	"image"
 	_ "image/jpeg"
 	"image/png"
+	"immichclone/internal/diagnostics"
 	"io"
 	"net/http"
 	"os"
@@ -177,7 +178,9 @@ func fileHash(path string) (string, error) {
 	}
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
-func (s *Store) Put(name string, r io.Reader) (Asset, bool, error) {
+func (s *Store) Put(name string, r io.Reader) (result Asset, duplicate bool, returnErr error) {
+	started := time.Now()
+	defer func() { diagnostics.Record("upload", "original_write", returnErr, 0, result.Size, time.Since(started)) }()
 	s.gate.Lock()
 	defer s.gate.Unlock()
 	var a Asset
@@ -258,6 +261,7 @@ func (s *Store) ProcessOne() (bool, error) {
 			continue
 		}
 		e = s.makePreview(&a)
+		diagnostics.Record("preview", "preview_generate", e, 0, 0, 0)
 		if e != nil {
 			a.Preview = "failed"
 			a.Error = e.Error()
@@ -356,7 +360,9 @@ func (s *Store) Retry(id string) error {
 	a.Error = ""
 	return s.save(a)
 }
-func (s *Store) Verify() error {
+func (s *Store) Verify() (result error) {
+	started := time.Now()
+	defer func() { diagnostics.Record("verify", "integrity", result, 0, 0, time.Since(started)) }()
 	s.gate.Lock()
 	defer s.gate.Unlock()
 	assets, e := s.List()
