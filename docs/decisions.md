@@ -12,3 +12,16 @@
 - AI remains optional; no model selected and no inference success claimed.
 - PC report stays in conversation, never public commits or CI logs. Inventory
   script prints selected technical fields only and makes no configuration changes.
+- 2026-11-01: Target inventory received privately. Treat cloud-synced media as a
+  read-only external source initially: no writes/deletes, no deletion propagation,
+  no database/jobs/cache inside the sync root. Missing/offline sources are an
+  availability failure, not authorization to delete catalog entries. Detect
+  cloud placeholders before opening; do not silently hydrate an entire library.
+  Reject reparse-point traversal and recheck identity/hash around reads before
+  accepting derived results. These are acceptance requirements, not implemented claims.
+- Keep application runtime undecided: current .NET 10 supported-OS documentation
+  omits Windows 10 Pro 22H2. ESU for Windows alone is not assumed to establish .NET
+  vendor support. Resolve support policy before a substantial .NET implementation.
+- FFmpeg LGPL shared build is an isolated candidate executable, invoked out of
+  process. Pin monthly retained build and checksum. This is not redistribution
+  approval; corresponding source and transitive license review remain release gates.

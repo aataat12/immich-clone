@@ -7,7 +7,7 @@ No production application or installer exists yet.
 
 | Milestone | Acceptance | State |
 |---|---|---|
-| M0 compatibility | Exact PC edition/build/architecture/hardware; legitimate cloud Windows 10 access, licensing, cost and automation established | Blocked on PC details and cloud entitlement/access |
+| M0 compatibility | Exact PC edition/build/architecture/hardware; legitimate cloud Windows 10 access, licensing, cost and automation established | PC inventory received privately; blocked on cloud entitlement/access and support policy |
 | M1 dependencies | Pinned versions, redistribution/support ledger; real media operations and intended model CPU inference under service identity; Windows 10 execution | Not passed |
 | M2 originals slice | Safe upload/import, hash preservation, duplicates, metadata, thumbnails, browser listing and exact download; persistent jobs and restart recovery | Gated on applicable M1 evidence |
 | M3 recovery | Fault injection, concurrent uploads, interrupted jobs, consistent backup and actual restore to independent location | Not started |
@@ -25,6 +25,15 @@ run metadata, step results and logs on 2026-11-01. No rerun. See dependency ledg
 Its historical 'next milestone' paragraph is superseded by M0/M1 above.
 
 ## Current work
+
+PC inventory and intended external media folder received in conversation; private
+hardware/drive details are not committed. ESU enrollment unknown. Local Visual
+Studio installation is not evidence of a qualifying subscription. No known licensed
+cloud Windows 10 access. Recommend read-only external-library semantics for synced
+media and application state outside sync roots. User data has not been accessed.
+
+Pinned FFmpeg candidate probe added; execution result pending. This is independent
+of application runtime selection and uses synthetic fixtures only.
 
 Read-only PC inventory script supplied; no dependency installation requested.
 Storage experiment tests synthetic bytes only, independently of media/AI choices.

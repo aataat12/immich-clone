@@ -1,0 +1,21 @@
+name: Bounded media candidate probe
+on:
+  push:
+    paths:
+      - 'experiments/Test-MediaCandidate.ps1'
+      - '.github/workflows/media-candidate.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: media-candidate-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  candidate:
+    runs-on: windows-2022
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Execute pinned FFmpeg candidate against synthetic fixtures
+        shell: powershell
+        run: ./experiments/Test-MediaCandidate.ps1
