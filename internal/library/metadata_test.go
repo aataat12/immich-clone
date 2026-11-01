@@ -7,6 +7,7 @@ import (
 	"image/color"
 	"image/jpeg"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -160,5 +161,36 @@ func TestBigEndianAndCycles(t *testing.T) {
 	binary.BigEndian.PutUint32(b[18:], 8)
 	if m := readTIFF(b); m.Warning != "invalid_exif" {
 		t.Fatal("cyclic IFD not rejected")
+	}
+}
+
+func TestPhotoMetadataAndSourcesSurviveBackup(t *testing.T) {
+	s, _ := openTest(t)
+	a, _, e := s.PutWithPath("photo.jpg", "Trip/photo.jpg", bytes.NewReader(exifJPEG(t, 6)))
+	if e != nil {
+		t.Fatal(e)
+	}
+	s.ProcessOne()
+	var zip bytes.Buffer
+	if e = s.Backup(&zip); e != nil {
+		t.Fatal(e)
+	}
+	archive := filepath.Join(t.TempDir(), "backup.zip")
+	os.WriteFile(archive, zip.Bytes(), 0600)
+	target := filepath.Join(t.TempDir(), "restored")
+	if e = Restore(archive, target); e != nil {
+		t.Fatal(e)
+	}
+	restored, e := Open(target)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer restored.Close()
+	copy, e := restored.Get(a.ID)
+	if e != nil || copy.Photo.Captured != "2024-03-02T10:11:12" || len(copy.Sources) != 1 || copy.Sources[0] != "Trip/photo.jpg" {
+		t.Fatal("metadata or source alias lost during restore")
+	}
+	if e = restored.Verify(); e != nil {
+		t.Fatal(e)
 	}
 }
