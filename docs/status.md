@@ -27,7 +27,7 @@ Its historical 'next milestone' paragraph is superseded by M0/M1 above.
 ## Current work
 
 PC inventory and intended external media folder received in conversation; private
-hardware/drive details are not committed. ESU enrollment unknown. Local Visual
+hardware/drive details are not committed. ESU status confirmed privately; OS security support remains unresolved. Local Visual
 Studio installation is not evidence of a qualifying subscription. No known licensed
 cloud Windows 10 access. Recommend read-only external-library semantics for synced
 media and application state outside sync roots. User data has not been accessed.

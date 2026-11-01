@@ -76,3 +76,32 @@ client dependence under service account, or source deletion propagation is accep
 - No fixed security support horizon claimed for third-party build. Patch monitoring,
   new pinned binary reruns and an ability to replace the subprocess provider are
   required. Production acquisition/reproducibility and update policy remain open.
+
+## Runtime alternative to investigate
+
+[Go minimum requirements](https://go.dev/wiki/MinimumRequirements) explicitly lists
+Windows 10 for Go 1.21 and later; the [current download page](https://go.dev/dl/)
+also lists Windows 10 or later for x64 binaries. This makes Go a candidate for the
+service/API runtime if .NET support remains unsuitable. Not selected or executed:
+exact toolchain/hash, license, native Windows service lifecycle, CPU baseline and
+Windows 10 execution still need evidence. No application rewrite has occurred.
+
+OS security support is separate from runtime compatibility: Windows 10 22H2
+without ESU lacks ongoing normal security updates. ESU enrollment does not by
+itself establish .NET 10 support or a cloud virtualization entitlement. No
+unsupported runtime or internet-exposed deployment is accepted by implication.
+
+## Initial media execution and harness correction
+
+[Run 41322703178](https://github.com/aataat12/immich-clone/actions/runs/41322703178),
+commit `d9022bd5f14154e2f5a08fb31d2df9e8e6657fcc`, executed all nine assertions
+successfully on Server 2022. Job 124896115756 logs inspected. The job itself failed
+because the expected malformed-file rejection left LASTEXITCODE=1, propagated by
+the Windows PowerShell Actions wrapper. Reset that expected exit after asserting
+rejection, then rerun; do not describe the first workflow as passed.
+
+Executed binary identifies as n8.1.3-27-g8dca1586f4-20261031, GCC 16.2.0, LGPLv3
+or later, `--enable-version3`, shared libraries, no GPL/nonfree config flags.
+Bundled DLLs observed: avcodec-62, avdevice-62, avfilter-11, avformat-62,
+avutil-60, swresample-6 and swscale-9. DLL inventory is not a dependency-closure
+proof; target-machine prerequisites and corresponding-source audit remain open.

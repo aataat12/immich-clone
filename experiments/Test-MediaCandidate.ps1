@@ -1,5 +1,6 @@
 # Bounded candidate experiment only. No production dependency acceptance implied.
 $ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
 $root = Join-Path $env:RUNNER_TEMP ('media-probe-' + [guid]::NewGuid().ToString('N'))
 [IO.Directory]::CreateDirectory($root) | Out-Null
 $url = 'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-10-31-12-59/ffmpeg-n8.1.3-27-g8dca1586f4-win64-lgpl-shared-8.1.zip'
@@ -60,6 +61,8 @@ try {
     [IO.File]::WriteAllText($bad, 'deliberately invalid media')
     & $ffprobe -v quiet -show_format -of json $bad | Out-Null
     Assert ($LASTEXITCODE -ne 0) 'malformed-media-rejected'
+    # Windows PowerShell Actions wrapper otherwise propagates the expected failure.
+    $global:LASTEXITCODE = 0
     [ordered]@{
         scope = 'Candidate only; synthetic JPEG/PNG/MPEG4-Part2/AAC; no Windows 10, service-account, real-camera, HEIC, RAW, HDR, H264/HEVC or AI validation'
         os = (Get-CimInstance Win32_OperatingSystem).Caption
