@@ -5,7 +5,7 @@
   superseded by compatibility/dependency acceptance gates.
 - No production .NET/PostgreSQL version selected by the old diagnostic.
   LocalSystem and trust authentication remain disposable diagnostic shortcuts.
-- Windows 10 remains the target. Do not substitute Server/11. Continue only
+- [Historical; superseded by the later Server-first user amendment] Windows 10 remains the target. Do not substitute Server/11. Continue only
   portable experiments and preparatory work while access is unresolved.
 - No Azure provisioning or license purchase without established eligibility,
   bounded cost and user authorization. Prefer an existing eligible entitlement.
@@ -62,3 +62,9 @@
   tests. Uninstall removes service/program files and retains all application data.
 - Prototype artifacts are unsigned and expire after seven days. They are test
   builds, not approved for bulk ingestion or a claim of Windows 10 compatibility.
+
+- Critical checkpoint after the Server-tested native prototype: require actual
+  local Windows 10 installation/helper/reboot results before claiming desktop
+  compatibility or clearing real-library release acceptance. No paid cloud OS
+  provisioning is needed. The application is still an early prototype; broader
+  formats, AI and endurance remain unaccepted.

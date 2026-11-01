@@ -20,3 +20,7 @@ duplicates, JPEG/PNG previews, persistent jobs, download/export and verified bac
 restoration. See [prototype limitations](docs/prototype-notes.txt). Browser-selected folder copy is supported; server-side source scanning, generated
 video thumbnails and AI remain unfinished. Never put personal machine
 reports, media or paths in public issues or artifacts.
+
+[Validated Server prototype run](https://github.com/aataat12/immich-clone/actions/runs/41329698834)
+and [local Windows 10 checkpoint instructions](docs/local-validation.md).
+The user-facing local check prints pass/fail only and sends no machine report.

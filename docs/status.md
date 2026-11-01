@@ -48,10 +48,13 @@ Earlier installer failures exposed PowerShell service command discovery, strict
 CIM parameter widths and false-success exit propagation; fixed and accepted only
 after end-to-end lifecycle passed. No failed build is a validated release.
 
-## Next concrete work
+## Next concrete work — stopped at local compatibility checkpoint
 
-Verify the local validation helper under Windows PowerShell, then hand off the
-packaged prototype for local Windows 10 installation and reboot validation. No bulk
+Cloud prototype acceptance and the local helper are verified. The next critical
+step requires the user to install the unsigned test build into a new empty local
+NTFS data folder outside sync, run the local-only helper, and report its results
+and behavior after a normal reboot. This workspace cannot perform that desktop
+test. No background continuation is scheduled. No bulk
 real-library ingestion, production release, Windows 10 reliability, AI inference
 or clean-machine compatibility claim yet.
 
@@ -79,3 +82,36 @@ installed service. Native PNG decode, restart, original retrieval, independent
 restore and checksum verification passed; no machine inventory is emitted.
 Final service-level recovery test now adds reinstalling against restored state
 while the original directory is unavailable, before the local Windows 10 gate.
+
+## Final Server prototype acceptance / Windows 10 handoff
+
+[Run 41329698834](https://github.com/aataat12/immich-clone/actions/runs/41329698834),
+commit `cad325b672ea115907036ccd4032b03c8755428f`, job `124917002110`: all
+checks passed and logs inspected. Complete recovery also passed: backup,
+uninstall, old state moved unavailable, restore into a different location,
+reinstall against restored state, authenticate with restored secret and retrieve
+the original with matching SHA256. Restored installation uninstalled cleanly.
+
+Validated installer artifact:
+[13092787659](https://github.com/aataat12/immich-clone/actions/runs/41329698834/artifacts/13092787659).
+Archive SHA256 `bc5e1afb65ece79a9099989c9c81e9cc892a383c6e4fee275b30499f9a2a70c7`.
+Installer `ImmichClone-0.1.1-prototype-x64-setup.exe` SHA256
+`2a34dd55c8bee11dbddde6d3c7de36d2b0b6ab2fee44c570ba9e229e5e28465b`.
+Artifact retrieved, archive digest and extracted installer hash verified. Previous
+media-enabled desktop/narrow screenshots inspected; final browser suite passed.
+Artifacts expire 2026-11-08. This is an unsigned prototype, not a production release.
+
+Additional focused cloud check on this source: govulncheck v1.9.0 with Go 1.27.3,
+GOOS=windows, GOARCH=amd64, CGO=0, package ./cmd/immichclone reported
+"No vulnerabilities found." This is a known reachable Go-vulnerability check,
+not a general security audit. No production dependency versions changed.
+
+Full reachable Git history audited for private inventory values and paths: zero
+matches. No user source folder or personal media was accessed, and no machine
+report was sent to CI. Only synthetic media is in browser evidence.
+
+See `local-validation.md`. Remaining beyond this checkpoint: actual Windows 10
+install/reboot behavior, clean-desktop prerequisite confirmation, extended
+endurance, physical disconnect, camera metadata/EXIF orientation, broader media
+previews and optional AI. No bulk personal-library ingestion authorized by a
+claim of completed validation.

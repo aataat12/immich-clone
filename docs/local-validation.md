@@ -10,7 +10,7 @@ the native executable and built-in Windows service facilities are packaged.
    has been purchased. Do not disable antivirus or other protection to run it;
    report a block if it occurs.
 2. Install with administrator permission. Select a **new, empty application data
-   folder outside cloud-sync folders**. This is managed storage, not the personal
+   local NTFS folder outside cloud-sync folders**. This is managed storage, not the personal
    source library. Leave the real source library untouched for this checkpoint.
 3. Open `scripts/Test-LocalPrototype.ps1`, copy its contents and paste them into an
    administrator Windows PowerShell window. It uses local HTTP only, starts from an empty library, uploads two tiny
