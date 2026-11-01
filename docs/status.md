@@ -116,7 +116,7 @@ endurance, physical disconnect, camera metadata/EXIF orientation, broader media
 previews and optional AI. No bulk personal-library ingestion authorized by a
 claim of completed validation.
 
-## Diagnostic build 0.1.3 in progress
+## Diagnostic build 0.1.3 — verified Server test build
 
 User authorized a new diagnostic release. Adds bounded, private structured logs
 for native service startup/shutdown, operation stages, HTTP outcomes, uploads,
@@ -128,5 +128,28 @@ are excluded. Each of three channels retains two 4MiB files (24MiB total).
 Authenticated browser download or standalone Start menu Export diagnostic log
 produces one .log file for private return to this conversation; no automatic
 upload. Export remains available with the service stopped. No log files or user
-diagnostic reports belong in GitHub. New cloud installer/privacy tests pending;
-local race tests and vet passed.
+diagnostic reports belong in GitHub. Cloud installer/privacy tests, local race tests and vet passed.
+
+Diagnostic acceptance: [run 41334317634](https://github.com/aataat12/immich-clone/actions/runs/41334317634),
+commit `c09bf4d98d62d243c542b6ab9c700d9954bdc1e6`, job `124930788161`, all
+steps passed. Logs inspected: authenticated HTTP diagnostic export, offline export
+under Windows PowerShell with service stopped, actual startup permission failure
+capture, absence of state path/media name/access code, installer failure/rollback
+logging, rotation/privacy tests and actual NTFS disk-full error captured. Existing
+media, backup/restore/reinstall and installer lifecycle regressions passed.
+
+Artifact [13095085457](https://github.com/aataat12/immich-clone/actions/runs/41334317634/artifacts/13095085457).
+Archive SHA256 `a31b91398916f4e7a1fb32157d554011ccf61ab52feb2cd193e241f26acc830e`.
+Installer `ImmichClone-0.1.3-prototype-x64-setup.exe` SHA256
+`000c73dac2b6d57d00843fe27cbbbf6eba0b1fc6d1b1fc1ce2a5eaff9e09658c`.
+Archive downloaded and installer hash verified against manifest.
+
+The initial diagnostic CI attempt caught source transport truncation before any
+installer was produced. Recovered affected source from the prior passing revision,
+reapplied instrumentation, and uploaded individual blobs verified against local
+Git object hashes; local/remote diff was empty before final cloud execution.
+
+Next local step: install this diagnostic prototype, reproduce any issue, and use
+Download diagnostics or Start menu Export diagnostic log to return one .log file
+privately. The log is never uploaded automatically; machine specifications and
+personal paths remain excluded. Actual Windows 10 validation remains pending.

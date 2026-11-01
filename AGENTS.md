@@ -10,3 +10,8 @@ details, disk inventory/free space, personal filesystem paths, enrollment state,
 or raw machine reports. Do not echo those values into CI. Public docs may state
 generic product compatibility requirements and disposable-runner evidence only.
 Experiments are not production components. Keep downstream work gated on evidence.
+
+Never commit user-returned support logs. Keep private diagnostic files out of
+GitHub, CI inputs and public issue attachments; only sanitized, generic findings
+may enter project records. For tool-based source uploads, verify each blob SHA
+against the local Git object hash before moving a branch ref.

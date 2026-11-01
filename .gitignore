@@ -6,3 +6,8 @@
 *.db
 *.part
 access-code.txt
+
+# Private support logs must never be committed.
+*.log
+*.jsonl
+*.jsonl.previous
