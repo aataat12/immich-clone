@@ -41,7 +41,7 @@ No original deletion API or server-side source scan. State stays outside sync.
 | Recovery/reinstall | [41329698834](https://github.com/aataat12/immich-clone/actions/runs/41329698834), restored to different location with old state unavailable; auth/original hashes verified |
 | Diagnostic 0.1.3 | [41334317634](https://github.com/aataat12/immich-clone/actions/runs/41334317634), online/offline logs, permission failures, privacy and installer regressions |
 | Metadata 0.1.5 | [41340063567](https://github.com/aataat12/immich-clone/actions/runs/41340063567), all eight transforms, metadata, Edge playback, install/upgrade/rollback/uninstall, independent restore and actual NTFS disk-full recovery |
-| Local Windows 10 | User reports 0.1.3 restricted service, upload/hash, native PNG preview/full view, service restart and independent restore passed. User reports two JPEGs in 0.1.5 display expected date/time and orientation. Limited user-reported evidence; no raw transcript or personal inventory retained |
+| Local Windows 10 | User reports 0.1.3 restricted service, upload/hash, native PNG preview/full view, service restart and independent restore passed. User reports two JPEGs in 0.1.5 display expected date/time and orientation; BMP/GIF/TIFF checks in 0.1.7 pass and previous JPEGs remain correct. Limited user-reported evidence; no raw transcript or personal inventory retained |
 
 No setup reboot is required. User explicitly deferred full OS reboot acceptance
 to the end; it does not block development. No local action currently needed.
@@ -51,7 +51,7 @@ Server execution does not establish clean Windows 10 compatibility.
 
 0.1.7 acceptance, screenshot inspection and artifact checksum verification are
 complete. Installer SHA256 and run/artifact evidence are in dependency-evidence.md.
-This build remains Server-tested; local validation of added formats is unverified.
+User reports 0.1.7 BMP/GIF/TIFF acceptance passed; previous JPEGs remain correct.
 Next: investigate video-thumbnail/HEIC providers and their redistribution/native
 dependency closure through bounded experiments. HEIC/HEIF, RAW,
 HDR/color management and video thumbnails are not supported yet. TIFF variants

@@ -100,3 +100,12 @@
   not a falsely promised full-resolution image. Explicitly defer TIFF metadata,
   HDR/color management, HEIC and RAW. Old unsupported assets reconsider once.
   Version 0.1.6 was a deliberate failed-upgrade fixture; deliver 0.1.7 next.
+
+- User reports 0.1.7 BMP/GIF/TIFF acceptance passed and earlier JPEGs remain good.
+  Keep this as user-reported evidence without private media/logs or inventory.
+- Next provider gate: time-box a minimal FFmpeg 8.1.3 build from pinned official
+  source instead of integrating the broad BtbN binary before its source/native
+  audit is complete. Decoder-only H264/HEVC plus HEIC container experiment; no
+  network, external codec libraries or GPU. Keep exact corresponding source and
+  compiler/configuration evidence together. No app dependency or new installer
+  until actual service operations and remaining distribution/containment gates pass.

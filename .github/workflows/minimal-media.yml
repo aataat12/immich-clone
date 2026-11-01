@@ -1,0 +1,81 @@
+name: Bounded source-built media worker
+on:
+  push:
+    paths:
+      - 'experiments/media-worker/**'
+      - '.github/workflows/minimal-media.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: minimal-media-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Provision build-only cross compiler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends gcc-mingw-w64-x86-64-win32 binutils-mingw-w64-x86-64
+      - name: Build pinned minimal upstream source and retain corresponding source
+        run: bash experiments/media-worker/build.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: experimental-media-source-and-binaries
+          path: media-candidate/*
+          retention-days: 7
+  windows:
+    needs: build
+    runs-on: windows-2022
+    timeout-minutes: 8
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: experimental-media-source-and-binaries
+          path: media-candidate
+      - name: Actual restricted-service media decoding
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          function Checked([string]$exe,[string[]]$a) { & $exe @a; if ($LASTEXITCODE -ne 0) { throw 'Media experiment operation failed' } }
+          foreach ($line in Get-Content media-candidate/SHA256SUMS.txt) {
+            $parts = $line -split '  ',2
+            if ((Get-FileHash (Join-Path media-candidate $parts[1])).Hash.ToLowerInvariant() -ne $parts[0]) { throw 'Candidate checksum mismatch' }
+          }
+          $root = Join-Path $env:RUNNER_TEMP 'minimal-media-service'
+          New-Item -ItemType Directory "$root/tools" -Force | Out-Null
+          Copy-Item media-candidate/* "$root/tools"
+          foreach ($file in Get-ChildItem experiments/media-worker/fixtures/*.b64) { [IO.File]::WriteAllBytes((Join-Path $root $file.BaseName),[Convert]::FromBase64String((Get-Content $file.FullName -Raw))) }
+          Copy-Item experiments/media-worker/fixtures/fixtures.json $root
+          Push-Location experiments/media-worker
+          Checked go @('mod','verify')
+          Checked go @('build','-mod=readonly','-trimpath','-o',"$root/probe.exe",'.')
+          Pop-Location
+          Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)M')
+          $name = 'ImmichCloneMediaProbe'
+          try {
+            $credential = [PSCredential]::new('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))
+            New-Service -Name $name -BinaryPathName ('"'+"$root/probe.exe"+'" -root "'+$root+'"') -Credential $credential | Out-Null
+            Start-Service $name
+            if (!(Test-Path "$root/passed.txt")) { throw 'Media service operations not confirmed' }
+            Restart-Service $name
+            Write-Output 'PASS: source-built CPU H264 HEVC rotated MOV and single-image 8-bit HEIC decode, pixel/dimension assertions, BMP-to-PNG thumbnails, immutable originals, malformed rejection, disabled networking and LocalService restart.'
+            Get-Content "$root/tools/pe-imports.txt"
+            & "$root/tools/ffmpeg.exe" -version
+            if ($LASTEXITCODE -ne 0) { throw 'Version execution failed' }
+          } finally {
+            if (Get-Service $name -ErrorAction SilentlyContinue) { Stop-Service $name -ErrorAction Continue; Checked sc.exe @('delete',$name) }
+            if (Test-Path "$root/failed.txt") { Get-Content "$root/failed.txt" }
+          }
