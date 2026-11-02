@@ -13,7 +13,10 @@ boundaries, aggregate archive/catalog work and native isolation.
 
 Next-release installer candidate replaces root DACLs instead of retaining unknown
 explicit grants and preflights reparse components. Disposable Windows acceptance
-pending (S-010); no installer/version changed.
+passed on Windows Server 2022 (41513726020, S-010): ordinary-user access checks,
+junction preservation, actual production helper/LocalService upload and restart.
+Child explicit ACLs, concurrent path races and staging the new upgrade preparer
+remain gates before packaging. No installer/version changed.
 
 ## Current cloud-accepted prototype: 0.1.29
 

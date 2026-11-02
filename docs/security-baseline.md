@@ -555,3 +555,26 @@ production management plus LocalService upload/catalog/restart on synthetic data
 No private inputs, dependencies, paid resources or production installer/version
 change. This is next-release source only; full installer/upgrade/rollback gates
 remain required. No agreed-plan conflict identified.
+
+
+S-010 acceptance: [41513726020](https://github.com/aataat12/immich-clone/actions/runs/41513726020),
+source a0e4b6bb16193c54ff37cc1200b197199efb46f3, job 125511793161 passed on
+Windows Server 2022 using Windows PowerShell 5.1. Actual disposable standard-user
+logon/impersonation confirmed the old command retained explicit Everyone read
+access; replacement denied secret reads and new writes. Protected-root principal
+inspection passed. Root and ancestor junction rejection left target ACLs/bytes
+unchanged and created no nested directory. Production management initialized
+synthetic state and ran the actual app as LocalService; standard user could not
+read its access code. Authenticated upload/catalog commit, original SHA256 and
+service restart passed. Account/service/fixtures were removed by finally cleanup.
+
+Module verification, library/web tests, cmd build/vet and actual Edge five-page
+desktop/narrow CSP and session regressions passed. No full installer produced.
+Severity: medium for unintended local-user data/code exposure when permissive
+explicit root ACEs preexist; no demonstrated privilege escalation. Existing child
+explicit ACEs still need audit/repair design, and the new checks do not close
+concurrent reparse replacement races or create native worker filesystem isolation.
+The first upgrade currently invokes its retained older Prepare helper before
+new files are copied: stage/use the new preparer and test this transition before
+clearing the next installer gate. Full upgrade/failed rollback/uninstall, target
+Windows 10 and clean-machine acceptance remain open.
