@@ -308,3 +308,26 @@ Bundle with the held login/resource work; final broader-release install/upgrade,
 restore and browser import acceptance remains required. Full security, global
 connection/write-time limits, native servicing and full-library acceptance remain
 open. No project-plan conflict found or local action requested.
+
+## Native zlib replacement candidate (not integrated)
+
+2026-11-02: advance the embedded zlib servicing item to a bounded replacement
+experiment. Pin official zlib 1.3.2 tar.gz SHA256
+bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16;
+license remains the upstream zlib license. Official release page documents audit-
+related changes: https://zlib.net/ . Download digest verified in cloud Linux.
+A source-built static C++ operation test passed version identity, compression/
+decompression roundtrip, inflateCopy continuation and malformed-input rejection.
+
+Windows build first compiles/tests that same small library, then links the
+unchanged OpenCV/model pipeline against the explicit static installation rather
+than OpenCV's old bundled zlib. Retain replacement source, notice, build evidence
+and actual worker-linked version; reject fallback to old bundled zlib. Existing
+native workflow supplies PE import audit and subsequent actual LocalService
+inference/parity/recovery/restart tests. The native build remains capped at 28
+minutes, followed by a separate bounded service job. Compilation is not acceptance.
+
+Installed app/provider hashes remain unchanged. Do not update application provider
+IDs, model definitions or installer inputs until execution/packaging evidence
+passes. Static CRT fixes require this kind of rebuild/retest; no automatic runtime
+servicing claim. No end-user dependency installation or new installer requested.

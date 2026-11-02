@@ -1,5 +1,13 @@
 # Current status
 
+## Native servicing experiment underway (not installed)
+
+A pinned zlib 1.3.2 static operation test passed in cloud Linux. Bounded Windows
+native build and actual LocalService parity/recovery checks are next. The app's
+existing provider/model hashes remain unchanged; no integration or installer
+acceptance claimed. See security-baseline.md for candidate hash and gating.
+No user action or separate login-only release requested.
+
 Authoritative requirements: `../Immich_Clone_Project_Requirements.md` including the
 Server-first amendment. No new charges, parallel agents or publication of personal
 machine reports, private paths/media/inventories or raw support logs. Synthetic/

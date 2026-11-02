@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'experiments/native-ai/worker/**'
+      - 'experiments/native-ai/zlib-check/**'
       - 'experiments/native-ai/build.ps1'
       - '.github/workflows/native-ai.yml'
   workflow_dispatch:
@@ -36,6 +37,7 @@ jobs:
             native-ai-candidate/*.ps1
             native-ai-candidate/*.log
             native-ai-candidate/*.patch
+            native-ai-candidate/zlib-1.3.2-source.tar.gz
             native-ai-candidate/notices/**
           retention-days: 7
   service:

@@ -16,8 +16,28 @@ $patchArgs = @('-C',"$source/3rdparty/protobuf",'apply','--include=src/google/pr
 Checked git ($patchArgs + @('--check',$patch))
 Checked git ($patchArgs + @($patch))
 'Bundled protobuf source modified by the checksum-pinned upstream CVE-2022-1941 backport in protobuf-upstream-0299c030.patch; three parser files only. Not a general security clearance.' | Set-Content "$out/SOURCE-PATCHES.txt"
+# Prove the replacement compression library before compiling the worker.
+$zlibArchive = Join-Path $out 'zlib-1.3.2-source.tar.gz'
+Invoke-WebRequest 'https://zlib.net/zlib-1.3.2.tar.gz' -OutFile $zlibArchive
+if ((Get-FileHash $zlibArchive).Hash.ToLowerInvariant() -ne 'bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16') { throw 'zlib source checksum mismatch' }
+Checked tar @('-xzf',$zlibArchive,'-C',$root)
+$zlibSource = Join-Path $root 'zlib-1.3.2'
+$zlibBuild = Join-Path $root 'zlib-build'
+$zlibInstall = Join-Path $root 'zlib-install'
+Checked cmake @('-S',$zlibSource,'-B',$zlibBuild,'-G','Visual Studio 17 2022','-A','x64','-DZLIB_BUILD_SHARED=OFF','-DZLIB_BUILD_STATIC=ON','-DZLIB_BUILD_TESTING=OFF',"-DCMAKE_INSTALL_PREFIX=$zlibInstall",'-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded')
+Checked cmake @('--build',$zlibBuild,'--config','Release','--parallel','2')
+Checked cmake @('--install',$zlibBuild,'--config','Release')
+$checkBuild = Join-Path $root 'zlib-check'
+Checked cmake @('-S','experiments/native-ai/zlib-check','-B',$checkBuild,'-G','Visual Studio 17 2022','-A','x64',"-DZLIB_INCLUDE_DIR=$zlibInstall/include","-DZLIB_LIBRARY=$zlibInstall/lib/zs.lib","-DZLIB_LIBRARY_RELEASE=$zlibInstall/lib/zs.lib")
+Checked cmake @('--build',$checkBuild,'--config','Release','--parallel','2')
+$check = & "$checkBuild/Release/zlib-check.exe"
+if ($LASTEXITCODE -ne 0) { throw 'Actual zlib operations failed' }
+$check | Set-Content "$out/zlib-operation-evidence.txt"
+Copy-Item "$zlibSource/LICENSE" "$out/zlib-1.3.2-LICENSE.txt"
+Copy-Item experiments/native-ai/zlib-check/zlib-smoke.cpp $out
+'External zlib 1.3.2 source SHA256 bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16. OpenCV bundled zlib is disabled; static external library selected.' | Add-Content "$out/SOURCE-PATCHES.txt"
 $build = Join-Path $root 'build'
-$argsConfigure = @('-S','experiments/native-ai/worker','-B',$build,'-G','Visual Studio 17 2022','-A','x64',"-DOPENCV_SOURCE=$source",'-DCMAKE_CONFIGURATION_TYPES=Release',"-DOPENCV_DOWNLOAD_PATH=$root/downloads")
+$argsConfigure = @('-S','experiments/native-ai/worker','-B',$build,'-G','Visual Studio 17 2022','-A','x64',"-DOPENCV_SOURCE=$source","-DPINNED_ZLIB_ROOT=$zlibInstall",'-DCMAKE_CONFIGURATION_TYPES=Release',"-DOPENCV_DOWNLOAD_PATH=$root/downloads")
 & cmake @argsConfigure *> "$out/configure.log"
 if ($LASTEXITCODE -ne 0) { Get-Content "$out/configure.log" -Tail 100; throw 'Native configure failed' }
 $job = Start-Job -ArgumentList $build,"$out/build.log" -ScriptBlock {
@@ -32,6 +52,7 @@ while ($job.State -eq 'Running' -or $job.State -eq 'NotStarted') {
 $compileResult = @(Receive-Job $job -Wait)
 if ($job.State -ne 'Completed' -or $compileResult.Count -ne 1 -or $compileResult[0] -ne 0) { Get-Content "$out/build.log" -Tail 100; throw 'Native compile failed' }
 Remove-Job $job
+if (Test-Path "$build/opencv/3rdparty/lib/Release/zlib.lib") { throw 'Unexpected fallback to old bundled zlib' }
 Copy-Item "$build/Release/ai-worker.exe" $out
 Copy-Item "$build/CMakeCache.txt" "$out/CMakeCache.txt"
 Copy-Item "$source/LICENSE" "$out/OpenCV-LICENSE.txt"
@@ -61,5 +82,7 @@ $dependencies | Set-Content "$out/pe-imports.txt"
 (& cmake --version) | Set-Content "$out/build-tool-versions.txt"
 (& $dumpbin /headers "$out/ai-worker.exe" | Select-Object -First 12) | Add-Content "$out/build-tool-versions.txt"
 Get-Content "$out/pe-imports.txt"
-Checked "$out/ai-worker.exe" @('--version')
+$workerVersion = & "$out/ai-worker.exe" --version
+if ($LASTEXITCODE -ne 0 -or ($workerVersion | ConvertFrom-Json).zlib -ne '1.3.2') { throw 'Worker linked zlib identity mismatch' }
+$workerVersion | Set-Content "$out/worker-version.txt"
 Get-FileHash "$out/ai-worker.exe" | ForEach-Object { $_.Hash.ToLowerInvariant()+'  '+(Split-Path $_.Path -Leaf) } | Set-Content "$out/SHA256SUMS.txt"
