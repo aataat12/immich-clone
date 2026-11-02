@@ -203,7 +203,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if (r.URL.Path == "/" || r.URL.Path == "/people" || r.URL.Path == "/import" || r.URL.Path == "/backups" || r.URL.Path == "/build-notes") && r.Method == "GET" {
+	if (r.URL.Path == "/" || r.URL.Path == "/login" || r.URL.Path == "/logout" || r.URL.Path == "/people" || r.URL.Path == "/import" || r.URL.Path == "/backups" || r.URL.Path == "/build-notes") && r.Method == "GET" {
 		name := "index.html"
 		if r.URL.Path == "/people" {
 			name = "people.html"
@@ -228,6 +228,16 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.URL.Path == "/api/login" && r.Method == "POST" {
 		s.login(w, r)
+		return
+	}
+	if r.URL.Path == "/api/logout" && r.Method == "POST" {
+		if cookie, err := r.Cookie("session"); err == nil {
+			s.mu.Lock()
+			delete(s.sessions, cookie.Value)
+			s.mu.Unlock()
+		}
+		http.SetCookie(w, &http.Cookie{Name: "session", Value: "", Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode, MaxAge: -1, Expires: time.Unix(1, 0)})
+		jsonResponse(w, map[string]string{"status": "signed out"})
 		return
 	}
 	if !s.authenticated(r) {

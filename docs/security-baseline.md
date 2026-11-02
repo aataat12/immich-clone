@@ -182,3 +182,38 @@ wrapped; no horizontal overflow in browser assertions. No full UI redesign.
 Unsigned candidate, seven-day artifacts. No new local test/reboot requested.
 Broader security/native servicing work above remains open; milestone 2 is not
 marked delivered. No full Windows 10 or production security certification.
+
+
+## Pending next release: explicit session controls
+
+User-reported 0.1.27 functional checks passed; sign-in/out checks were not testable
+with the saved-session UI. Add visible Sign out to all pages; /login explicitly
+shows the code form; /logout is a non-mutating confirmation page. Only the
+same-origin/header-protected POST /api/logout revokes the current server token
+and expires its HttpOnly/SameSite cookie. Replaying that token must fail while an
+independent session remains valid. Idempotent sign-out supports an expired session.
+No code is put in URLs, browser storage, logs or artifacts. Existing Start-menu
+View access code helper stays available. Leaving an active upload may interrupt
+that transfer; accepted originals remain saved. No plan conflict identified.
+
+Linux race/vet tests pass for route availability, GET non-mutation, token replay
+rejection, unrelated-session preservation and cookie clearing. The focused Edge
+probe covers logout confirmation, cross-origin rejection, incorrect code, re-login
+and reload persistence. Bundle in the next broader release; do not publish a
+login-only installer. Windows/browser and final package acceptance remain gates.
+
+### zlib reachability follow-up
+
+Reused the retained exact native build log and opencv-module-sources.zip; no native
+rebuild. The log confirms zlib is compiled and core persistence is present, so it
+cannot be dismissed merely because compressed-image codecs are disabled. Textual
+review of 1,837 archived module-source files found gzopen in core persistence;
+no direct inflateCopy, deflateCopy or crc32_combine calls matched in those module
+sources. This is a textual search, not a complete binary call-graph proof.
+
+The worker itself reads only three fixed ONNX byte buffers and bounded BGR frames,
+uses the ONNX importer directly, and does not expose FileStorage or arbitrary
+model/image loading. The Go wrapper verifies provider/model hashes. These are the
+current mitigation boundaries; do not expand accepted inputs without repeating
+the native review. Full transitive reachability/static-runtime servicing remains
+open. No user media, dynamic model or original storage change was introduced.

@@ -5,9 +5,24 @@ Server-first amendment. No new charges, parallel agents or publication of person
 machine reports, private paths/media/inventories or raw support logs. Synthetic/
 public licensed fixtures only. CI timestamps are UTC.
 
+## Next-release authentication controls (not separately released)
+
+User-reported 0.1.27 upgrade/data preservation, five-page browser/CSP behavior,
+desktop layout and focused media/organization/import/backup/Build Notes checks
+passed. Authentication-flow checks were unavailable, not failures: an existing
+valid session hid the home sign-in form, and no sign-out control/routes existed.
+
+Implement /login, non-mutating /logout confirmation and CSRF-protected POST
+/api/logout with server-side current-session revocation and cookie expiry.
+Expose Sign out from all five pages and show the existing Start-menu access-code
+helper in the sign-in instructions. Other sessions/data/jobs remain independent.
+Linux web race/vet tests passed. Focused Windows browser tests are next; do not
+create a release solely for this work. User explicitly requested bundling these
+changes into the next broader release. No local re-test or reboot requested.
+
 ## Security baseline checkpoint (candidate, not released)
 
-Current locally validated baseline: 0.1.25. Candidate 0.1.27 adds exact-script CSP
+Current user-reported functional baseline: 0.1.27 (limited checks below). Candidate 0.1.27 adds exact-script CSP
 and a tested stalled-login/session-lock fix. Full Windows acceptance run
 [41469530044](https://github.com/aataat12/immich-clone/actions/runs/41469530044)
 passed on Windows Server 2022, job 125359889950, source 19b049ff. Actual
