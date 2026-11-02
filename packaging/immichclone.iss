@@ -1,6 +1,8 @@
 #ifndef AppVersion
 #define AppVersion "0.1.23"
 #endif
+#define ManagementSHA256 GetSHA256OfFile(AddBackslash(SourcePath) + "Manage-Service.ps1")
+#define StorageSecuritySHA256 GetSHA256OfFile(AddBackslash(SourcePath) + "Storage-Security.ps1")
 [Setup]
 AppId={{5DF7680B-6F42-4BAF-AD97-5A3095728DFA}
 AppName=Immich Clone Prototype
@@ -22,10 +24,11 @@ UninstallDisplayIcon={app}\immichclone.exe
 InfoBeforeFile=..\docs\prototype-notes.txt
 
 [Files]
-Source: "..\dist\immichclone.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Export-Diagnostics.ps1"; DestDir: "{app}"; Flags: ignoreversion
+; Extracted before file publication; keep these first with solid compression.
 Source: "Manage-Service.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Storage-Security.ps1"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\immichclone.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Export-Diagnostics.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\dist\THIRD-PARTY-LICENSES.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\docs\prototype-notes.txt"; DestDir: "{app}"; Flags: ignoreversion
 
@@ -88,12 +91,39 @@ begin
   end;
 end;
 
-function RunManagement(Action: String; var ResultCode: Integer): Boolean;
+function RunManagementFrom(ScriptPath, Action: String; var ResultCode: Integer): Boolean;
 begin
   Result := Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
-    '-NoProfile -NonInteractive -ExecutionPolicy Bypass -File "' + ExpandConstant('{app}\Manage-Service.ps1') +
+    '-NoProfile -NonInteractive -ExecutionPolicy Bypass -File "' + ScriptPath +
     '" -Action ' + Action + ' -AppDir "' + ExpandConstant('{app}') + '" -DataDir "' + GetState('') + '"',
     '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+end;
+
+function RunManagement(Action: String; var ResultCode: Integer): Boolean;
+begin
+  Result := RunManagementFrom(ExpandConstant('{app}\Manage-Service.ps1'), Action, ResultCode);
+end;
+
+function RunBundledPreparation(var ResultCode: Integer): Boolean;
+begin
+  Result := False;
+  ResultCode := -1;
+  try
+    ExtractTemporaryFile('Manage-Service.ps1');
+    ExtractTemporaryFile('Storage-Security.ps1');
+    if (CompareText(GetSHA256OfFile(ExpandConstant('{tmp}\Manage-Service.ps1')),
+         '{#ManagementSHA256}') <> 0) or
+       (CompareText(GetSHA256OfFile(ExpandConstant('{tmp}\Storage-Security.ps1')),
+         '{#StorageSecuritySHA256}') <> 0) then
+      exit;
+    { The script dot-sources its sibling helper from this extracted payload.
+      Never execute the retained installed preparer before new validation. }
+    Result := RunManagementFrom(ExpandConstant('{tmp}\Manage-Service.ps1'), 'Prepare', ResultCode);
+  except
+    { Extraction/hash failures abort before service actions or file publication. }
+    Result := False;
+    ResultCode := -1;
+  end;
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
@@ -105,9 +135,8 @@ begin
     Result := 'Changing the data location requires backup and restore. Upgrade refused.';
     exit;
   end;
-  if FileExists(ExpandConstant('{app}\Manage-Service.ps1')) then
-    if not RunManagement('Prepare', ResultCode) or (ResultCode <> 0) then
-      Result := 'Could not prepare the existing service safely. No new files were installed.';
+  if not RunBundledPreparation(ResultCode) or (ResultCode <> 0) then
+    Result := 'Could not prepare the existing service safely. No new files were installed.';
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
