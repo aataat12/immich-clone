@@ -1,159 +1,63 @@
 # Current status
 
-## 0.1.29 integration candidate (not released)
+## Current cloud-accepted prototype: 0.1.29
 
-Integrate the accepted zlib 1.3.2 worker under immutable provider directory
-opencv-4.12.0-zlib-1.3.2-cb35f0ccb3e3, exact worker hash cb35f0cc...; model weights
-unchanged. Candidate bundles held login/resource safeguards, source/notices and
-installed-payload privacy checks. Linux internal-package tests/vet pass. Windows
-acceptance is next, upgrading the actual accepted 0.1.27 package and exercising
-cross-provider failed-upgrade recovery before success. Old ready AI data/names/
-tags must remain intact; a distinct new original must execute the new provider.
-No candidate delivery or local action until acceptance and artifact verification.
+[Acceptance 41487369408](https://github.com/aataat12/immich-clone/actions/runs/41487369408),
+source f2242c2942caf1cc923a1ea7ad708900a8a3ad5a, job 125421140599 passed Windows
+Server 2022. Bundles explicit login/sign-out/current-session revocation, rolling
+copy-idle and admission safeguards, legacy export overlap limits, responsive AI
+status and the verified static zlib 1.3.2 worker. Model weights/schema unchanged.
+Provider directory: opencv-4.12.0-zlib-1.3.2-cb35f0ccb3e3; old immutable provider
+remains available for rollback, not selected by the new executable.
 
-## Native servicing candidate accepted in isolation (not installed)
+Actual restricted-service browser/native/backup/import/paging tests passed, plus
+old 0.1.27 inference/names/tags retained without rerun, failed cross-provider
+rollback back to 0.1.27/old worker, successful 0.1.29 upgrade, actual new-worker
+inference on a distinct original, installed-payload code/private-marker scan,
+0.1.30 failed-upgrade rollback, independent restore/reinstall, original hashes
+and real NTFS full-disk recovery. Linux tests/vet passed. No dependency install.
 
-A pinned zlib 1.3.2 static operation test passed in cloud Linux and Windows.
-Native run 41483644241 passed build/PE audit and actual LocalService
-inference/parity/recovery/restart (source 30fc135b). The app's
-existing provider/model hashes remain unchanged; no integration or installer
-acceptance claimed. See security-baseline.md for candidate hash and gating.
-Windows privacy run 41485726847 passed the scanner controls and exact candidate
-payload scan. Installer privacy-canary hook is prepared but awaits the next
-broader release acceptance run. Integrate the verified native worker only with
-updated hash/path, retained source/notices and full installer/restore validation.
-No user action or separate login-only release requested.
+Artifact 13161554725 retrieved; installer 104117297 bytes SHA256
+646a47acc8ac77751c8343202d12c09eff0a754fd0731f976b0b7e8fc9dcea66
+matches manifest. ZIP SHA256
+458c02d6b316f8054d068565a5815159e20a197472d3e6161812f1e535416493
+verified. Browser artifact 13162742432 ZIP verified; login-narrow, People-narrow
+and Build Notes desktop screenshots inspected. Unsigned prototype, seven-day
+artifacts. Source remains on work/security-baseline/PR #2; no main merge claimed.
 
-Authoritative requirements: `../Immich_Clone_Project_Requirements.md` including the
-Server-first amendment. No new charges, parallel agents or publication of personal
-machine reports, private paths/media/inventories or raw support logs. Synthetic/
-public licensed fixtures only. CI timestamps are UTC.
+Next local check: confirm version/data and exercise sign-out/wrong-code/re-login
+using the private existing Start-menu code helper; see local-validation.md.
+Do not enlarge the library merely to force AI inference: use an already
+unprocessed photo if available, otherwise leave new-provider Windows 10 inference
+pending for normal use. No full-library import or reboot requested. Broader
+security/People milestone, clean Windows 10, long endurance and global connection/
+slow-write/isolation review remain open. Server success is not certification.
 
-## Next-release transfer/export bounds (not separately released)
+## Working boundaries
 
-Added rolling original-copy read-idle deadlines and safe failed-connection cleanup
-for ordinary/bulk transfers, plus fail-fast overlap limits for legacy full-list,
-JSON export and legacy complete-backup requests. Managed backup controls/downloads
-and paged browsing retain their separate paths. Focused Linux race/vet checks
-passed: actual stalled/progressing connections, bulk receipts/retry/replay and
-backpressured export admission. Package-wide Linux web race/vet checks also passed. Windows Server 2022 focused
-run [41481008162](https://github.com/aataat12/immich-clone/actions/runs/41481008162),
-source 97b6e1b2, job 125398974000 passed library/web tests, vet, build and Edge
-session/CSP/desktop/narrow checks. No separate installer requested or created. Before broader-release
-packaging, advance the candidate version and test upgrade from the real accepted
-0.1.27 installer; do not rebuild/relabel these held changes as 0.1.27. See S-007.
-
-## Next-release resource controls (not separately released)
-
-Added fail-fast HTTP original-copy admission across ordinary and bulk uploads,
-matching the existing serialized writer. A held-copy/real-socket test verifies
-429/retry feedback for overlap, responsive gallery/AI status and recovery after
-failure. Removed the read-only AI batch-status dependency on the copy gate using
-atomic runtime availability flags and an existing database read snapshot.
-Linux library/web race and vet checks passed. Windows Server 2022 run
-[41477493372](https://github.com/aataat12/immich-clone/actions/runs/41477493372),
-source bcc0d1fb, job 125386805373 passed library/web tests and vet plus actual
-Edge session/CSP and five-page desktop/narrow checks. No new installer/version or user action requested.
-See security-baseline.md S-006 for bounds and remaining resource review items.
-
-## Next-release authentication controls (not separately released)
-
-User-reported 0.1.27 upgrade/data preservation, five-page browser/CSP behavior,
-desktop layout and focused media/organization/import/backup/Build Notes checks
-passed. Authentication-flow checks were unavailable, not failures: an existing
-valid session hid the home sign-in form, and no sign-out control/routes existed.
-
-Implement /login, non-mutating /logout confirmation and CSRF-protected POST
-/api/logout with server-side current-session revocation and cookie expiry.
-Expose Sign out from all five pages and show the existing Start-menu access-code
-helper in the sign-in instructions. Other sessions/data/jobs remain independent.
-Linux web race/vet tests passed. Focused Windows Server/Edge run
-[41475111595](https://github.com/aataat12/immich-clone/actions/runs/41475111595),
-source e524d363, job 125378498262 passed sign-out/revocation/re-login and five-page
-CSP/layout checks. Final broader-release installer acceptance remains pending; do not
-create a release solely for this work. User explicitly requested bundling these
-changes into the next broader release. No local re-test or reboot requested.
-
-## Security baseline checkpoint (candidate, not released)
-
-Current user-reported functional baseline: 0.1.27 (limited checks below). Candidate 0.1.27 adds exact-script CSP
-and a tested stalled-login/session-lock fix. Full Windows acceptance run
-[41469530044](https://github.com/aataat12/immich-clone/actions/runs/41469530044)
-passed on Windows Server 2022, job 125359889950, source 19b049ff. Actual
-0.1.25 upgrade, failed-upgrade rollback, independent restore and uninstall
-preservation passed. Installer checksum verified; this remains a candidate, not
-completion of the wider security milestone or Windows 10 acceptance. Windows-targeted
-Go source scan (govulncheck v1.9.0) found zero findings against the dated database.
-Native/transitive servicing review remains open; see security-baseline.md.
-
-Security review now leads the next milestone. See security-baseline.md for the
-first candidate mitigation: exact bundled-script CSP hashes, focused Linux
-race/vet results, passed Windows Server/Edge enforcement, endpoint guard matrix,
-limited credential-signature baseline and remaining review gates.
-Ask the user before implementing a mitigation conflicting with the agreed plan.
-No new installer or local action. User reported 0.1.25 backups, Build Notes,
-87/87 eligible-photo bulk AI and data persistence passed; desktop layout passed,
-new-import follow-up and repeated narrow layout were not tested. Preserve this
-limited functional evidence without requesting repeat checks.
-
-## Preserved 0.1.23 backup capacity/progress evidence
-
-[Source 66a698d](https://github.com/aataat12/immich-clone/commit/66a698d066c437219c6e1b23fe8dbd5ed01ad577),
-[acceptance run 41398447659](https://github.com/aataat12/immich-clone/actions/runs/41398447659),
-job 125124797979 passed on Windows Server 2022. No new dependency, native worker/
-model, original layout or backup schema. ZIP stays compatible with existing Restore.
-
-Backups page now provides conservative same-volume free-space preflight, persisted
-service-job status, progress/cancel, complete checksum read-back, archive SHA256,
-retained repeated/range download and explicit temporary-copy discard. A new job
-cannot overwrite the retained ready archive. Originals and downloaded copies are
-unaffected by discard. Jobs survive page closure; service shutdown/restart marks
-active work interrupted and removes incomplete candidates. Unknown/corrupt job
-state disables backups without deleting completed files or disabling the library.
-Archive creation serializes library writes; browsing/status/cancel stay available.
-Read-back/hash happen after releasing the write gate. See backups.md.
-
-Actual acceptance:
-- Linux race/vet and Windows actual snapshot/ZIP/read-back/restore, cancellation,
-  budget/truncation, authentication/origin, unknown-state and retained-file guards.
-- Edge/LocalService: cancellation while a partial upload holds the library write
-  gate; status remains responsive. Create/read-back/hash/download, retained range
-  requests before and after service restart, Home navigation, explicit discard,
-  original/downloaded-copy preservation and diagnostic privacy passed.
-- Both the legacy complete download and the browser-downloaded managed archive
-  were restored independently to new locations. With old state unavailable,
-  original SHA256, names/tags/import receipts and regenerated face crops passed.
-- Real NTFS ENOSPC: original/import test retains its 96MiB volume; backup gets a
-  separate 192MiB fixture to fit its conservative reserve. Space disappears after
-  preflight, copy fails without publishing a partial, preflight rejects the full
-  volume, freeing space allows retry and full archive checksum read-back.
-- Actual accepted 0.1.21 installer upgrade to 0.1.23, injected failed 0.1.24 upgrade
-  rollback, restricted service, reinstall/uninstall/restore and existing 600-image,
-  121-image browser paging, AI/media/import regressions passed.
-
-[Installer artifact](https://github.com/aataat12/immich-clone/actions/runs/41398447659/artifacts/13120556502):
-`ImmichClone-0.1.23-prototype-x64-setup.exe`, 102593297 bytes, SHA256
-`ca713b421b963c0ef645fd8479ce5999c32b5a70e04abd0110f9266779722828`.
-Retrieved ZIP SHA256 `d6982bcc3459c64123638aaad43a544c31409945fbbd566345aedc6e174b6c3b`
-and executable verified against included checksums. Browser artifact 13120586550
-ZIP verified and backup desktop/narrow screenshots inspected. Unsigned prototype,
-7-day artifact retention. Server evidence does not certify clean Windows 10.
-
-Two acceptance-harness failures were resolved before publication: PowerShell's
-reused Range header contaminated a later full download (now isolated and HTTP 200
-asserted), and the backup fixture was initially too small to pass its own reserve.
-No failed-run installer was published. Details in backups.md/dependency-evidence.md.
+Authoritative requirements: ../Immich_Clone_Project_Requirements.md including the
+Server-first amendment. No new charges or parallel agents. Never publish private
+machine details, media/inventories/paths or raw support logs. Public/synthetic
+fixtures only. Ask the user before a security mitigation conflicts with the agreed
+plan. Repository visibility remains unchanged; decision deferred. CI time is UTC.
+Older acceptance checkpoints remain in Git history and dependency-evidence.md.
 
 ## User-reported Windows 10 checkpoints
 
 0.1.15: all twelve People/tag review-flow checks passed; original-photo comparison,
-not newly reported SHA256 proof. 0.1.17: Bulk import worked well. 0.1.17-to-0.1.19:
-both Home controls, desktop/narrow layout, actual version and preservation of
-photos/names/tags/import history passed. 0.1.21: all requested gallery checks passed,
-no observed problems. These are limited functional reports, not broad recognition,
-endurance or clean-PC certification. No raw private reports retained. No repeat of
-completed checks or reboot requested. User-reported 0.1.25 validation includes the backup page;
-keep the ZIP private because it contains originals and the access code.
+not newly reported SHA256 proof. 0.1.17: Bulk import worked well. 0.1.19: Home
+navigation, desktop/narrow layout/version and data preservation passed. 0.1.21:
+requested gallery checks passed. 0.1.25: backups, Build Notes and 87/87 eligible
+photos completed with names/tags/data retained; desktop passed, narrow not repeated
+and new-import follow-up not tested. 0.1.27: version/upgrade, five-page browser/CSP,
+desktop and focused existing media/organization/import/backup/Build Notes passed;
+authentication-flow checks were unavailable because controls were missing.
+
+0.1.29 local acceptance is pending. Do not repeat all prior checks or enlarge the
+library solely for testing. Native Windows 10 inference can wait for an already
+unprocessed photo from normal use. These reports do not certify broad recognition,
+clean-PC prerequisites, endurance or reboot startup. Reboot remains at final gate.
+No raw private reports retained. See local-validation.md for the small new check.
 
 ## Preserved gallery/import/AI baseline
 
@@ -170,34 +74,6 @@ Not RSS/peak memory, a speed guarantee or a 50k-media ingestion result. Prior
 native worker/model/licensing checks are reused; no source rebuild of providers.
 
 ## Next milestones and remaining limits
-
-0.1.25 is cloud-accepted on review branch work/bulk-ai-acceptance, source
-d558f7c35c66e3169c73af3b19b71167d16d1dd0. Full Windows Server 2022 run
-[41406051070](https://github.com/aataat12/immich-clone/actions/runs/41406051070),
-job 125148201437 passed: actual native bulk inference, durable controls and
-restart/restore bookkeeping, names/tags, JSON export, Build Notes/Home desktop
-and narrow navigation, optional-model failure/recovery, original hashes,
-independent restores, real NTFS ENOSPC, actual 0.1.23 upgrade, failed-upgrade
-rollback and uninstall/reinstall checks. Linux race/vet and membership export
-regressions passed. No new provider/model/dependency. User-reported local 0.1.25 functional validation passed; no full-library import or reboot requested.
-
-Installer artifact 13123837527: ImmichClone-0.1.25-prototype-x64-setup.exe,
-102605388 bytes, SHA256
-e88a3fee85da9ecc3efe574b844ab534c5254d9cb1ea455e6d78338e8763bf00.
-Retrieved ZIP SHA256 cbbccb47d52ea91b9a4b259f76bd8fcdb67b69b79288e0cf19220d0b425684fe
-and executable verified. Prior matching Build Notes desktop/narrow screenshots
-were inspected; final synthetic-browser artifact 13123443482 is retained.
-Unsigned prototype; seven-day artifact retention. Server is not Windows 10
-certification. Full remaining acceptance: roadmap.md.
-
-Acceptance found and fixed raw batch-member states incorrectly emitted as
-json.RawMessage, making /api/export empty. Regression tests cover pending,
-cancelled, ready and failed states while excluding embeddings. The missing-model
-harness then needed a fresh unprocessed fixture (bulk processing already completed
-the old one) and a height above the existing 32-pixel provider minimum. The final
-64x48 PNG verifies failure, original download hash and recovery independently.
-No failed-run installer was published. Direct main publication was blocked by
-automatic approval review; PR #1 remains pending explicit merge authorization.
 
 1. Large-container/ZIP64 size and throughput, longer actual mixed-media endurance,
    and storage-disconnect recovery remain open before full real-library import.

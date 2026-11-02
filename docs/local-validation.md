@@ -125,3 +125,23 @@ Use the existing small private test library; no full-library import or reboot.
 4. Report PASS/failure descriptions only. Do not transmit photos, names, private
    paths, credentials or raw logs. The separate small 0.1.23 Backups check can
    also be performed in this build if still pending.
+
+## 0.1.29 bundled-security checkpoint (only after cloud acceptance)
+
+0.1.27 user checks passed for version/upgrade, existing library/organization data,
+five-page browser/CSP behavior and focused media/navigation checks. Its missing
+sign-out control made authentication checks unavailable, not failed credentials.
+No routine repeat of completed old checkpoints or a reboot is requested.
+
+1. Upgrade and confirm Version 0.1.29-prototype. Check existing photos, names,
+   tags, ready AI results and import history remain accessible.
+2. Before signing out, obtain the existing code privately using Start →
+   Immich Clone → View access code. Use Sign out, confirm, try an incorrect code,
+   then unlock with the correct code and reload. Do not send the code or screenshots
+   displaying it. /login and /logout are explicit page routes now.
+3. If there is already an unprocessed supported photo from normal use, analyze
+   it and check results. Otherwise leave new-provider Windows 10 inference pending;
+   do not enlarge the library just to test or ask a ready result to silently rerun.
+4. Report PASS/fail descriptions only. Full-library import, reanalysis/recognition-
+   quality expansion and final reboot remain separate gates. No dependency install
+   or repeat backup creation is requested for this unchanged backup format.

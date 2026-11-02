@@ -401,3 +401,34 @@ provider. Existing full application/installer/restore/full-disk tests and instal
 payload private-canary checks remain required. Candidate 0.1.30 is only a deliberate
 failed-upgrade fixture; deliver neither candidate until its acceptance is complete.
 No production-security or clean Windows 10 claim; wider milestone remains open.
+
+
+## 0.1.29 integrated acceptance and delivery checkpoint
+
+[41487369408](https://github.com/aataat12/immich-clone/actions/runs/41487369408),
+source f2242c2942caf1cc923a1ea7ad708900a8a3ad5a, job 125421140599 passed full
+Windows Server 2022 acceptance. Native provider/hash/notices are now integrated;
+model weights and storage/backup schema are unchanged. Actual old 0.1.27 AI data
+was named/tagged before upgrade. Failed cross-provider upgrade recovered that old
+build/provider and originals; successful upgrade retained old names/tags/ready
+analysis without rerunning it. A byte-distinct public PNG executed the new worker.
+
+Restricted-service Edge sign-out/replay/wrong-code/re-login/reload checks passed,
+with existing media/AI/import/paging/backup and independent restore coverage.
+The installed distribution-payload scanner passed 28454 scan items / 384104155
+checked bytes, finding neither the runtime access code nor unique media canary.
+Protected rollback state was preserved separately as intended. Source dependency
+scan, actual NTFS full disk/retry, 0.1.30 injected rollback, restored reinstall and
+uninstall retention passed. No comprehensive privacy/security certification.
+
+Artifact 13161554725 ZIP SHA256
+458c02d6b316f8054d068565a5815159e20a197472d3e6161812f1e535416493 verified.
+ImmichClone-0.1.29-prototype-x64-setup.exe: 104117297 bytes, SHA256
+646a47acc8ac77751c8343202d12c09eff0a754fd0731f976b0b7e8fc9dcea66 matched manifest.
+Browser artifact 13162742432 ZIP SHA256
+41dcedaaba4a7f9c1e67fba7e8017f8463ed02e6dce99a6245ae487a7e0d2f56 verified;
+login-narrow, People-narrow and Build Notes desktop inspected. Unsigned prototype;
+seven-day artifacts. New-provider Windows 10 inference and local auth checks await
+user/normal use; no new import solely for testing, dependency setup or reboot.
+Milestone 2 remains in progress because the wider security/People criteria are
+not all complete. No project-plan conflict identified or approval bypassed.

@@ -786,3 +786,22 @@ Native candidate archive credential-signature scan passed (4269 scan items,
 72776961 bytes). This is isolated component acceptance, not app/installer
 integration or Windows 10 certification. Existing installed provider ID/hash
 remains unchanged until separately integrated and accepted in the broader release.
+
+
+## zlib 1.3.2 worker integrated in 0.1.29
+
+Use immutable provider opencv-4.12.0-zlib-1.3.2-cb35f0ccb3e3 with the previously
+accepted cb35f0cc... binary and unchanged models. Packaging verifies replacement
+source SHA256, source/license/version evidence and worker hash, without rebuilding
+native code. [41487369408](https://github.com/aataat12/immich-clone/actions/runs/41487369408),
+source f2242c2942caf1cc923a1ea7ad708900a8a3ad5a, job 125421140599 passed installed
+native inference, old-ready-result/name/tag preservation, failed cross-provider
+recovery to the actual 0.1.27 executable/provider, upgrade/rollback, independent
+restore/reinstall, private-canary payload checks and real NTFS full-disk recovery.
+Installed scan: 28454 items / 384104155 bytes, selected signatures/canaries only.
+Installer 104117297 bytes SHA256
+646a47acc8ac77751c8343202d12c09eff0a754fd0731f976b0b7e8fc9dcea66 verified;
+package ZIP SHA256 458c02d6b316f8054d068565a5815159e20a197472d3e6161812f1e535416493.
+Screenshots inspected. No new end-user prerequisite, model update or schema change.
+Clean Windows 10, new-worker target inference, wider security and long endurance
+remain distinct gates; this is an unsigned cloud-accepted prototype.
