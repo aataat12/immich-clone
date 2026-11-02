@@ -213,7 +213,7 @@ func TestActualBackupDiskFull(t *testing.T) {
 		defer f.Close()
 		block := make([]byte, 64<<10)
 		full := false
-		for total := 0; total < 128<<20; total += len(block) {
+		for total := 0; total < 256<<20; total += len(block) {
 			if _, err = f.Write(block); err != nil {
 				full = true
 				break
