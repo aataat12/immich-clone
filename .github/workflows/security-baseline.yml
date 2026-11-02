@@ -31,7 +31,7 @@ jobs:
             Assert-PrivateDirectoryTree -Path $fixture -ReaderSid $sid -ServiceAccess -VerifyInherited
             Write-Output 'PASS: production permission audit smoke test'
           } finally { if (Test-Path -LiteralPath $fixture) { Remove-Item -LiteralPath $fixture -Recurse -Force } }
-      - name: Build exact permission acceptance app
+      - name: Build exact combined acceptance app
         shell: pwsh
         run: |
           go mod verify
@@ -58,7 +58,7 @@ jobs:
         run: |
           ./scripts/Test-StorageSecurity.ps1 -Binary "$env:RUNNER_TEMP/security-app.exe"
           if ($LASTEXITCODE -ne 0) { throw 'Windows storage security acceptance failed' }
-      - name: Focused tests and vet after permission acceptance
+      - name: Complete restore/resource and browser package tests with vet
         shell: pwsh
         run: |
           go mod verify
