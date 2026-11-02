@@ -80,6 +80,11 @@ native worker/model/licensing checks are reused; no source rebuild of providers.
 
 ## Next milestones and remaining limits
 
+Next implementation: bulk local AI analysis, including the requested Build Notes
+page beside People & tags, top-right Home navigation and maintained Status /
+Released In columns. Full remaining milestone acceptance: [roadmap.md](roadmap.md).
+The Build Notes page and bulk-analysis control are not implemented yet.
+
 1. Large-container/ZIP64 size and throughput, longer actual mixed-media endurance,
    and storage-disconnect recovery remain open before full real-library import.
    Web backups still stage a complete archive plus catalog/reserve in application

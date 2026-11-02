@@ -265,3 +265,8 @@
   downloads or managed originals. Restart exposes an interrupted job and removes
   generated incomplete files; unknown/corrupt job state fails closed for backups.
   No external destination, incremental/deduplicated backup or automatic retention.
+
+- Include an offline Build Notes page in the bulk local AI milestone. Place its
+  entry beside People & tags and Home at the page top right. Track all eight
+  remaining milestones with status and actual delivered release; keep shipped
+  content aligned with docs/roadmap.md without forecasting release numbers.
