@@ -157,6 +157,12 @@ func Restore(archive, target string) (result error) {
 		if _, ok := entries[f.Name]; ok {
 			return errors.New("duplicate backup entry")
 		}
+		if (f.Name != "manifest.json" && !backupPayloadName(f.Name)) || !f.Mode().IsRegular() {
+			return errors.New("unsafe backup entry")
+		}
+		if f.UncompressedSize64 > uint64(MaxUpload) {
+			return errors.New("oversized backup file")
+		}
 		entries[f.Name] = f
 	}
 	mf := entries["manifest.json"]
@@ -167,14 +173,26 @@ func Restore(archive, target string) (result error) {
 	if e != nil {
 		return e
 	}
+	// Read through EOF so ZIP CRC/size errors cannot hide behind a complete JSON
+	// prefix. Unmarshal also rejects any non-whitespace trailing JSON/data.
+	data, readErr := io.ReadAll(io.LimitReader(reader, (16<<20)+1))
+	closeErr := reader.Close()
+	if readErr != nil || closeErr != nil || len(data) > 16<<20 || uint64(len(data)) != mf.UncompressedSize64 {
+		return errors.New("invalid backup manifest")
+	}
 	var m Manifest
-	e = json.NewDecoder(io.LimitReader(reader, 16<<20)).Decode(&m)
-	reader.Close()
+	e = json.Unmarshal(data, &m)
 	if e != nil || m.Schema != 1 {
 		return errors.New("invalid manifest schema")
 	}
 	if len(m.Files) != len(entries)-1 || m.Files["catalog.db"] == "" || m.Files["state-format.txt"] == "" {
 		return errors.New("manifest entry mismatch")
+	}
+	// Validate the entire payload index before creating extraction state.
+	for entry, expected := range m.Files {
+		if !backupPayloadName(entry) || !validID(expected) || entries[entry] == nil {
+			return errors.New("unsafe or missing backup entry")
+		}
 	}
 	stage, e := os.MkdirTemp(filepath.Dir(target), "immich-restore-*")
 	if e != nil {
@@ -186,10 +204,6 @@ func Restore(archive, target string) (result error) {
 		}
 	}()
 	for entry, expected := range m.Files {
-		allowed := entry == "catalog.db" || entry == "access-code.txt" || entry == "state-format.txt" || (strings.HasPrefix(entry, "originals/") && validID(strings.TrimPrefix(entry, "originals/")))
-		if !allowed || !validID(expected) {
-			return errors.New("unsafe backup entry")
-		}
 		z := entries[entry]
 		if z == nil || z.UncompressedSize64 > uint64(MaxUpload) {
 			return errors.New("missing or oversized backup file")
@@ -250,7 +264,7 @@ func Restore(archive, target string) (result error) {
 			}
 		}
 	}
-	closeErr := restored.Close()
+	closeErr = restored.Close()
 	if e != nil {
 		return e
 	}
@@ -258,4 +272,10 @@ func Restore(archive, target string) (result error) {
 		return closeErr
 	}
 	return os.Rename(stage, target)
+}
+
+// Backup payload names are format-defined, never arbitrary extraction paths.
+func backupPayloadName(name string) bool {
+	return name == "catalog.db" || name == "access-code.txt" || name == "state-format.txt" ||
+		(strings.HasPrefix(name, "originals/") && validID(strings.TrimPrefix(name, "originals/")))
 }

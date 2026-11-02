@@ -479,3 +479,38 @@ tests passed. Credential-signature scan: 782 text inputs, zero matches/exclusion
 its documented coverage limits remain. Server evidence does not certify Windows
 10, native isolation or full-library endurance. Bundle with the next broader
 release and rerun installer/upgrade/restore gates for that candidate.
+
+
+## S-009: complete restore manifest and archive-entry validation (next release)
+
+Reproduced on the previous parser: a schema-1 manifest followed by another JSON
+value, and a manifest with a bad ZIP CRC, were accepted. JSON Decode returned on
+the first value without requiring the ZIP reader's final integrity result. This
+is an archive-integrity validation gap, not demonstrated code execution. Link,
+directory and device entry modes were also accepted but written as regular files;
+no archive-created link/path escape was demonstrated.
+
+Restore now reads the bounded manifest fully through EOF, checks read/close/size
+results, and unmarshals exactly one JSON value (normal trailing whitespace remains
+valid). All ZIP entries must be format-defined canonical names and regular files
+within the existing per-file limit. The complete manifest index is checked before
+creating extraction state. Existing exact-name duplicate rejection, SHA256 checks,
+catalog/original verification, exclusive writes and staged publication remain.
+No schema, original, backup generation, dependency or installer/version change.
+
+Linux Go 1.27.3 regression first failed the five reproduced acceptance cases, then
+passed after the fix. Seventeen hostile cases cover trailing JSON, bad manifest
+CRC, duplicates, special modes, declared oversize, traversal, rooted/drive/UNC
+paths, alternate streams, trailing dots/spaces and case aliases. Each rejects
+without publishing the target, changing an outside sentinel or retaining restore
+staging. Focused restore/backup race tests, library/web/cmd tests and vet passed,
+including actual independent valid backup restoration and original verification.
+Windows focused validation is pending. No supplied private media/logs used.
+
+This does not authenticate a backup against deliberate replacement: an attacker
+can recompute ZIP/SHA256 metadata. Existing entry/manifest/per-file limits do not
+prove a safe aggregate archive size or bound hostile catalog work. Parent-folder
+reparse races, Windows ACL attacks, bbolt input robustness and native containment
+remain separate review gates. Do not treat this as full untrusted-backup isolation
+or target Windows 10 certification. No conflict with the agreed plan identified;
+hold for the next broader release and repeat its installer/restore acceptance.

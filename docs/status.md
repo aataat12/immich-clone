@@ -5,6 +5,10 @@ response write-idle bound. Linux real-socket race tests/vet passed; focused Wind
 validation passed on Windows Server 2022/Edge (41501827158). See
 security-baseline.md S-008. No installer/version changed.
 
+Next-release restore candidate: validate the complete manifest/ZIP integrity and
+reject noncanonical or special-file archive entries before extraction. Linux
+negative/valid-restore tests and vet passed; Windows validation pending (S-009).
+
 ## Current cloud-accepted prototype: 0.1.29
 
 [Acceptance 41487369408](https://github.com/aataat12/immich-clone/actions/runs/41487369408),
@@ -37,8 +41,8 @@ were not tested; see local-validation.md. No repeat of passed checks requested.
 Do not enlarge the library merely to force AI inference: use an already
 unprocessed photo if available, otherwise leave new-provider Windows 10 inference
 pending for normal use. No full-library import or reboot requested. Broader
-security/People milestone, clean Windows 10, long endurance and global connection/
-slow-write/isolation review remain open. Server success is not certification.
+security/People milestone, clean Windows 10, long endurance and wider resource/
+storage/isolation review remain open. Server success is not certification.
 
 ## Working boundaries
 
