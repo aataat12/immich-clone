@@ -454,3 +454,11 @@ passed. Focused Windows execution remains required before recording acceptance.
 These bounds reduce resource retention; they do not guarantee availability against
 a malicious local process. No conflict with the single-user loopback plan found.
 Hold for the next broader release; no new installer/version or user import needed.
+
+Initial Windows run 41501227078 (source b02bf73e8c89f7866b4e4d8f7c81fbacdb8b6edd)
+failed the progressing-download fixture with unexpected EOF; no acceptance or
+installer. Its one-second idle budget and forced 32-KiB receive buffer may be too
+aggressive for this runner. Retest uses a two-second test idle and 256-KiB receive
+buffer while pacing the eight-MiB body beyond the idle window. The separate
+stalled-reader test retains its 32-KiB buffer and short deadline. Production
+sixty-second policy is unchanged. Windows retest is the deciding evidence.

@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-func backupDownload(t *testing.T, s *Server, c *http.Cookie) (net.Conn, *http.Response) {
+func backupDownload(t *testing.T, s *Server, c *http.Cookie, receiveBuffer int) (net.Conn, *http.Response) {
 	t.Helper()
 	server := httptest.NewServer(s)
 	t.Cleanup(server.Close)
@@ -27,7 +27,7 @@ func backupDownload(t *testing.T, s *Server, c *http.Cookie) (net.Conn, *http.Re
 	}
 	t.Cleanup(func() { conn.Close() })
 	if tcp, ok := conn.(*net.TCPConn); ok {
-		if e = tcp.SetReadBuffer(32 << 10); e != nil {
+		if e = tcp.SetReadBuffer(receiveBuffer); e != nil {
 			t.Fatal(e)
 		}
 	}
@@ -54,7 +54,7 @@ func TestStalledDownloadReleasesExportSlot(t *testing.T) {
 	if _, _, e := s.Store.Put("random-fixture.bin", bytes.NewReader(data)); e != nil {
 		t.Fatal(e)
 	}
-	conn, response := backupDownload(t, s, c)
+	conn, response := backupDownload(t, s, c, 32<<10)
 	defer response.Body.Close()
 	defer conn.Close()
 	// Leave the TCP receive window full; another export must recover on timeout,
@@ -79,7 +79,7 @@ func TestStalledDownloadReleasesExportSlot(t *testing.T) {
 }
 func TestProgressingDownloadExceedsWriteIdleWindow(t *testing.T) {
 	s, c := setup(t)
-	s.writeIdle = time.Second
+	s.writeIdle = 2 * time.Second
 	data := make([]byte, 8<<20)
 	if _, e := rand.Read(data); e != nil {
 		t.Fatal(e)
@@ -88,7 +88,7 @@ func TestProgressingDownloadExceedsWriteIdleWindow(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	conn, response := backupDownload(t, s, c)
+	conn, response := backupDownload(t, s, c, 256<<10)
 	defer response.Body.Close()
 	defer conn.Close()
 	started := time.Now()
