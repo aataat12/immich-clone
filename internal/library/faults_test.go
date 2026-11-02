@@ -2,6 +2,7 @@ package library
 
 import (
 	"bytes"
+	"context"
 	bolt "go.etcd.io/bbolt"
 	"immichclone/internal/diagnostics"
 	"os"
@@ -33,6 +34,13 @@ func TestActualDiskFull(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
+	m, e := s.CreateImport([]ImportFile{{Name: "bulk-full.bin", Size: 8 << 20}})
+	if e != nil {
+		t.Fatal(e)
+	}
+	if e = s.ControlImport(m.ID, "start"); e != nil {
+		t.Fatal(e)
+	}
 	fillerPath := filepath.Join(root, "filler.bin")
 	f, e := os.Create(fillerPath)
 	if e != nil {
@@ -55,6 +63,13 @@ func TestActualDiskFull(t *testing.T) {
 	if _, _, e = s.Put("should-fail.bin", bytes.NewReader(make([]byte, 8<<20))); e == nil {
 		t.Fatal("full disk upload falsely succeeded")
 	}
+	if _, e = s.PutImport(context.Background(), m.ID, 0, bytes.NewReader(make([]byte, 8<<20))); e == nil {
+		t.Fatal("full disk import falsely succeeded")
+	}
+	page, e := s.ImportPage(m.ID, 0)
+	if e != nil || page.Session.AcceptedFiles != 0 || page.Entries[0].AssetID != "" {
+		t.Fatal("full disk created false receipt", e)
+	}
 	var support bytes.Buffer
 	if e := diagnostics.Export(&support); e != nil || !strings.Contains(support.String(), "disk_full") {
 		t.Fatal("actual full-disk failure missing from diagnostic log", e)
@@ -68,6 +83,16 @@ func TestActualDiskFull(t *testing.T) {
 	}
 	if e = os.Remove(fillerPath); e != nil {
 		t.Fatal(e)
+	}
+	if _, e = s.PutImport(context.Background(), m.ID, 0, bytes.NewReader(make([]byte, 8<<20))); e != nil {
+		t.Fatal("import did not recover", e)
+	}
+	if e = s.ControlImport(m.ID, "finish"); e != nil {
+		t.Fatal(e)
+	}
+	page, _ = s.ImportPage(m.ID, 0)
+	if page.Session.AcceptedFiles != 1 || page.Session.AcceptedBytes != 8<<20 || s.ImportsRunning() {
+		t.Fatal("recovered receipt incorrect")
 	}
 	if _, _, e = s.Put("after-recovery.bin", bytes.NewReader(make([]byte, 8<<20))); e != nil {
 		t.Fatal("storage did not recover after space was freed", e)
