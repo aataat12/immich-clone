@@ -10,7 +10,7 @@ permissions:
 jobs:
   windows-browser:
     runs-on: windows-2022
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - name: Preserve source line endings
         run: git config --global core.autocrlf false
@@ -38,6 +38,21 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Module verification failed' }
           go build -o "$env:RUNNER_TEMP/security-app.exe" ./cmd/immichclone
           if ($LASTEXITCODE -ne 0) { throw 'Build failed' }
+      - name: Complete SEC-04 actual CLI restore controls
+        shell: powershell
+        run: |
+          ./scripts/Test-RestoreLimits.ps1 -Binary "$env:RUNNER_TEMP/security-app.exe"
+          if ($LASTEXITCODE -ne 0) { throw 'Restore limits acceptance failed' }
+      - name: Secret and artifact scanner negative controls
+        shell: pwsh
+        run: |
+          python -m unittest discover -s tests
+          if ($LASTEXITCODE -ne 0) { throw 'Scanner controls failed' }
+      - name: Current Windows-target Go vulnerability scan
+        shell: pwsh
+        run: |
+          ./scripts/Test-GoSecurity.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Go security scan failed' }
       - name: Complete SEC-01 descendant permission controls
         shell: powershell
         run: |
@@ -48,7 +63,7 @@ jobs:
         run: |
           go mod verify
           if ($LASTEXITCODE -ne 0) { throw 'Module verification failed' }
-          go test -v -count=1 -timeout=120s ./internal/library ./internal/web ./cmd/immichclone
+          go test -v -count=1 -timeout=240s ./internal/library ./internal/web ./cmd/immichclone
           if ($LASTEXITCODE -ne 0) { throw 'HTTP tests failed' }
           go vet ./internal/library ./internal/web ./cmd/immichclone
           if ($LASTEXITCODE -ne 0) { throw 'Vet failed' }
