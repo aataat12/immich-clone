@@ -153,9 +153,32 @@ standalone-app socket probe also passed with authenticated reads responsive.
 
 Cloud Linux focused web race/vet and all internal-package tests passed, including
 valid login, incomplete-body concurrency and extra/oversized/unknown-field JSON
-rejection. Full Windows acceptance is rerunning with this fix. The socket probe initially
+rejection. Full Windows acceptance passed with this fix: run 41469530044, source
+19b049ffeb7902fe4509a0c50a83b3c754901c8d, job 125359889950. The socket probe initially
 found that clearing a failed read deadline allowed response cleanup to stall;
 failed-login connections now close without clearing that deadline. Earlier Windows
 acceptance caught a test hashing raw CRLF rather than HTML-normalized text; that
 expectation was corrected before the rerun, without changing CSP behavior. No
 failed-run installer is published. No project-plan conflict identified.
+
+## 0.1.27 candidate package acceptance
+
+[Windows Server 2022 acceptance 41469530044](https://github.com/aataat12/immich-clone/actions/runs/41469530044)
+passed source 19b049ffeb7902fe4509a0c50a83b3c754901c8d, job 125359889950.
+Actual Windows stalled-login socket test, request guards, source dependency scan,
+LocalService/Edge media/AI/People/bulk/import/paging/backup flows, independent
+restoration, real NTFS ENOSPC, actual checksum-verified 0.1.25 installer upgrade,
+injected 0.1.28 rollback, restored reinstall and uninstall preservation passed.
+The exact previously proven native providers/models were reused, not rebuilt.
+
+Artifact 13153699093 retrieved: ZIP SHA256
+2de7c9374df99ea0fb0c698236b64de8cd0afc4f955a04b3e804766fc7191d65.
+Installer ImmichClone-0.1.27-prototype-x64-setup.exe, 102607252 bytes, SHA256
+cffb19c052ac17cac30c62f845225cc6e30868f8d14389dc9e7ffd75876312ff,
+matched its packaged manifest. Browser artifact 13154618150 ZIP SHA256
+ ec567c2e9efdd3c4d1a7b5cba26bec9c4f6b4b9d927325fe02b08844cd8d23ca
+verified; Build Notes desktop/narrow screenshots inspected. Narrow table remains
+wrapped; no horizontal overflow in browser assertions. No full UI redesign.
+Unsigned candidate, seven-day artifacts. No new local test/reboot requested.
+Broader security/native servicing work above remains open; milestone 2 is not
+marked delivered. No full Windows 10 or production security certification.

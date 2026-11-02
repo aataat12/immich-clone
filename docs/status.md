@@ -10,7 +10,10 @@ public licensed fixtures only. CI timestamps are UTC.
 Current locally validated baseline: 0.1.25. Candidate 0.1.27 adds exact-script CSP
 and a tested stalled-login/session-lock fix. Full Windows acceptance run
 [41469530044](https://github.com/aataat12/immich-clone/actions/runs/41469530044)
-is queued/running; no passing final installer result claimed. Windows-targeted
+passed on Windows Server 2022, job 125359889950, source 19b049ff. Actual
+0.1.25 upgrade, failed-upgrade rollback, independent restore and uninstall
+preservation passed. Installer checksum verified; this remains a candidate, not
+completion of the wider security milestone or Windows 10 acceptance. Windows-targeted
 Go source scan (govulncheck v1.9.0) found zero findings against the dated database.
 Native/transitive servicing review remains open; see security-baseline.md.
 

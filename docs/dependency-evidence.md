@@ -735,3 +735,24 @@ artifact ZIP SHA256 cbbccb47d52ea91b9a4b259f76bd8fcdb67b69b79288e0cf19220d0b4256
 Both verified. Seven-day artifacts; unsigned prototype. Source remains in PR #1
 pending main-merge authorization. No target Windows 10/broad quality/endurance
 claim; no full-library import or reboot requested.
+
+
+## Security candidate 0.1.27 — 2026-11-02
+
+No installed dependency/model/native-provider change. govulncheck v1.9.0 was
+acquired as a checksum-verified Go build/test tool, not added to app go.mod.
+Windows-targeted source/symbol scan against cmd/immichclone returned zero findings
+using database https://vuln.go.dev, timestamp 2026-10-27T21:16:18Z; actual Windows
+runner scan passed as well. This excludes C/C++, installer tools and unknown
+vulnerabilities. Selective current native advisory review and remaining zlib/
+static-runtime servicing gates are in security-baseline.md; no blanket clearance.
+
+[41469530044](https://github.com/aataat12/immich-clone/actions/runs/41469530044),
+source 19b049ffeb7902fe4509a0c50a83b3c754901c8d, job 125359889950 passed actual
+Windows socket-deadline regression and the full existing service/browser/native/
+restore/ENOSPC/0.1.25-upgrade/failed-upgrade rollback/reinstall/uninstall chain.
+Installer 102607252 bytes SHA256
+cffb19c052ac17cac30c62f845225cc6e30868f8d14389dc9e7ffd75876312ff
+retrieved and verified against manifest; package ZIP digest verified separately.
+Build Notes screenshots inspected. Unsigned prototype candidate; broader security
+milestone, target Windows 10 and extended reliability remain unaccepted.
