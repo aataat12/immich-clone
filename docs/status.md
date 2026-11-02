@@ -25,8 +25,10 @@ verified. Browser artifact 13162742432 ZIP verified; login-narrow, People-narrow
 and Build Notes desktop screenshots inspected. Unsigned prototype, seven-day
 artifacts. Source remains on work/security-baseline/PR #2; no main merge claimed.
 
-Next local check: confirm version/data and exercise sign-out/wrong-code/re-login
-using the private existing Start-menu code helper; see local-validation.md.
+User-reported 0.1.29 local version/data, sign-out/confirmation, wrong-code
+rejection, manual unlock, refresh persistence and five-page desktop/CSP checks
+passed, with no observed failures. Updated native inference and narrow layout
+were not tested; see local-validation.md. No repeat of passed checks requested.
 Do not enlarge the library merely to force AI inference: use an already
 unprocessed photo if available, otherwise leave new-provider Windows 10 inference
 pending for normal use. No full-library import or reboot requested. Broader
@@ -53,11 +55,17 @@ and new-import follow-up not tested. 0.1.27: version/upgrade, five-page browser/
 desktop and focused existing media/organization/import/backup/Build Notes passed;
 authentication-flow checks were unavailable because controls were missing.
 
-0.1.29 local acceptance is pending. Do not repeat all prior checks or enlarge the
-library solely for testing. Native Windows 10 inference can wait for an already
+0.1.29: user-reported version/upgrade and existing photos/names/tags/ready AI,
+pagination/import history passed; sign-out confirmation, incorrect-code rejection,
+manual re-login and authenticated refresh/navigation passed. All five pages and
+AI batch status worked at desktop width without blocking JavaScript/CSP errors.
+No failures observed. Updated runtime inference was not tested (no eligible
+unprocessed photo); unsupported video remains outside still-photo AI. Narrow
+layout was not tested because that viewport was unavailable in the test surface.
+Do not repeat passed checks or enlarge the library solely for testing. Native Windows 10 inference can wait for an already
 unprocessed photo from normal use. These reports do not certify broad recognition,
 clean-PC prerequisites, endurance or reboot startup. Reboot remains at final gate.
-No raw private reports retained. See local-validation.md for the small new check.
+No raw private reports retained. See local-validation.md for the recorded result and remaining scope.
 
 ## Preserved gallery/import/AI baseline
 

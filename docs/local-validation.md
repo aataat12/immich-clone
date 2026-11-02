@@ -145,3 +145,22 @@ No routine repeat of completed old checkpoints or a reboot is requested.
 4. Report PASS/fail descriptions only. Full-library import, reanalysis/recognition-
    quality expansion and final reboot remain separate gates. No dependency install
    or repeat backup creation is requested for this unchanged backup format.
+
+
+### User-reported 0.1.29 result — 2026-11-02
+
+PASS: actual version, upgrade/data preservation (photos, names, tags, completed
+AI, pagination and import history), visible sign-out and confirmation, incorrect
+code rejection, manual unlock, authenticated refresh/navigation, five-page desktop
+operation and AI batch status. No blocking JavaScript/CSP errors or other observed
+failures. This is a limited functional Windows 10 report, not certification.
+
+NOT TESTED: replacement native-runtime inference because no eligible unprocessed
+photo was available; remaining unsupported video cannot exercise still-photo AI.
+Existing ready results remaining intact is preservation evidence, not inference.
+Narrow layout was not tested because the embedded test surface had no narrow
+viewport control. Prior cloud narrow-layout evidence remains separate.
+
+No repeat checks, new import solely for testing, dependency installation, viewport
+workaround or reboot requested. New-runtime inference can wait for normal use.
+No private media, names, code, paths or raw support logs retained in this record.
