@@ -1,5 +1,11 @@
 # Current status
 
+People candidate: reversible false-face dismissal/restoration preserving names,
+undo history, tags, analysis and originals. Linux focused race/full tests/vet
+passed; Windows/Edge acceptance pending. Security worker source reviews are in
+security-installer-review.md and security-worker-isolation-review.md; neither
+claims new runtime evidence or clears the outstanding security release gates.
+
 Next-release candidate: 64 accepted TCP connection cap and rolling sixty-second
 response write-idle bound. Linux real-socket race tests/vet passed; focused Windows
 validation passed on Windows Server 2022/Edge (41501827158). See
@@ -56,7 +62,8 @@ storage/isolation review remain open. Server success is not certification.
 ## Working boundaries
 
 Authoritative requirements: ../Immich_Clone_Project_Requirements.md including the
-Server-first amendment. No new charges or parallel agents. Never publish private
+Server-first amendment. No new charges. User authorized two bounded security workers alongside People
+feature development on 2026-11-02; release security gates remain. Never publish private
 machine details, media/inventories/paths or raw support logs. Public/synthetic
 fixtures only. Ask the user before a security mitigation conflicts with the agreed
 plan. Repository visibility remains unchanged; decision deferred. CI time is UTC.

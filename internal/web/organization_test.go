@@ -104,3 +104,53 @@ func TestAnalysisBatchProtectionAndBuildNotes(t *testing.T) {
 		t.Fatal("milestone row count")
 	}
 }
+
+func TestFaceDismissalAuthorizationAndRestore(t *testing.T) {
+	s, c := setup(t)
+	a, _, e := s.Store.Put("face.png", bytes.NewReader(func() []byte {
+		var b bytes.Buffer
+		png.Encode(&b, image.NewRGBA(image.Rect(0, 0, 100, 100)))
+		return b.Bytes()
+	}()))
+	if e != nil {
+		t.Fatal(e)
+	}
+	if e = s.Store.ManualFace(context.Background(), a.ID, []float64{.1, .1, .4, .4}, "Kept name"); e != nil {
+		t.Fatal(e)
+	}
+	page, _ := s.Store.OrganizationPage("", "", "")
+	id := page.Faces[0].ID
+	path := "/api/faces/" + id + "/dismiss"
+	if w := request(s, "POST", path, `{}`, nil); w.Code != 401 {
+		t.Fatal("unprotected dismissal")
+	}
+	r := httptest.NewRequest("POST", "http://127.0.0.1:2283"+path, bytes.NewBufferString(`{}`))
+	r.AddCookie(c)
+	r.Header.Set("X-Immich-Request", "1")
+	r.Header.Set("Origin", "http://evil.example")
+	w := httptest.NewRecorder()
+	s.ServeHTTP(w, r)
+	if w.Code != 403 {
+		t.Fatal("foreign origin dismissal")
+	}
+	if w := request(s, "POST", path, `{"unexpected":true}`, c); w.Code != 400 {
+		t.Fatal("unknown dismissal input")
+	}
+	if w := request(s, "POST", path, `{}`, c); w.Code != 200 {
+		t.Fatal(w.Body.String())
+	}
+	page, _ = s.Store.OrganizationPage("", "", "")
+	if len(page.Faces) != 0 {
+		t.Fatal("active dismissed face")
+	}
+	if w := request(s, "GET", "/api/organization?dismissed=1", "", c); w.Code != 200 || !bytes.Contains(w.Body.Bytes(), []byte(`"dismissed":true`)) {
+		t.Fatal("dismissed review unavailable")
+	}
+	if w := request(s, "POST", path, `{"restore":true}`, c); w.Code != 200 {
+		t.Fatal(w.Body.String())
+	}
+	page, _ = s.Store.OrganizationPage("", "", "")
+	if len(page.Faces) != 1 || page.Faces[0].Name != "Kept name" {
+		t.Fatal("restore lost name")
+	}
+}

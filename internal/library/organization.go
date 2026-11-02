@@ -42,11 +42,13 @@ type StoredFace struct {
 	Provider  string    `json:"provider"`
 }
 type FaceLabel struct {
-	Name     string `json:"name"`
-	Previous string `json:"previous,omitempty"`
-	CanUndo  bool   `json:"can_undo"`
+	Dismissed bool   `json:"dismissed,omitempty"`
+	Name      string `json:"name"`
+	Previous  string `json:"previous,omitempty"`
+	CanUndo   bool   `json:"can_undo"`
 }
 type FaceView struct {
+	Dismissed  bool      `json:"dismissed"`
 	ID         string    `json:"id"`
 	AssetID    string    `json:"asset_id"`
 	AssetName  string    `json:"asset_name"`
@@ -453,6 +455,9 @@ func (s *Store) LabelFaces(ids []string, name string) error {
 			if e != nil && !errors.Is(e, os.ErrNotExist) {
 				return e
 			}
+			if label.Dismissed {
+				return ErrOrganizationInput
+			}
 			if label.Name == name {
 				continue
 			}
@@ -518,6 +523,11 @@ func (s *Store) SetTags(id string, tags []string) error {
 
 // OrganizationPage is a bounded pilot review view; hidden records remain stored.
 func (s *Store) OrganizationPage(after, faceAfter, query string) (Organization, error) {
+	return s.OrganizationReviewPage(after, faceAfter, query, false)
+}
+
+// OrganizationReviewPage separates dismissed corrections from active references.
+func (s *Store) OrganizationReviewPage(after, faceAfter, query string, dismissed bool) (Organization, error) {
 	out := Organization{Faces: []FaceView{}, Assets: []OrganizationAsset{}, Names: []string{}}
 	if (after != "" && !validID(after)) || (faceAfter != "" && !validID(faceAfter)) {
 		return out, ErrOrganizationInput
@@ -564,7 +574,7 @@ func (s *Store) OrganizationPage(after, faceAfter, query string) (Organization, 
 			if e != nil && !errors.Is(e, os.ErrNotExist) {
 				return e
 			}
-			if l.Name != "" {
+			if l.Name != "" && !l.Dismissed {
 				names[l.Name] = true
 				namesByAsset[f.AssetID] = append(namesByAsset[f.AssetID], l.Name)
 			}
@@ -578,6 +588,9 @@ func (s *Store) OrganizationPage(after, faceAfter, query string) (Organization, 
 		}
 		sort.Strings(out.Names)
 		for _, r := range all {
+			if r.l.Dismissed != dismissed {
+				continue
+			}
 			if r.f.ID <= faceAfter {
 				continue
 			}
@@ -585,14 +598,14 @@ func (s *Store) OrganizationPage(after, faceAfter, query string) (Organization, 
 				out.FaceAfter = out.Faces[len(out.Faces)-1].ID
 				break
 			}
-			view := FaceView{ID: r.f.ID, AssetID: r.f.AssetID, AssetName: assets[r.f.AssetID].Name, Box: r.f.Box, Name: r.l.Name, CanUndo: r.l.CanUndo}
+			view := FaceView{Dismissed: r.l.Dismissed, ID: r.f.ID, AssetID: r.f.AssetID, AssetName: assets[r.f.AssetID].Name, Box: r.f.Box, Name: r.l.Name, CanUndo: r.l.CanUndo}
 			if query != "" && !strings.Contains(strings.ToLower(view.Name), strings.ToLower(query)) && !strings.Contains(strings.ToLower(view.AssetName), strings.ToLower(query)) {
 				continue
 			}
-			if view.Name == "" {
+			if view.Name == "" && !view.Dismissed {
 				scores := map[string]float64{}
 				for _, ref := range all {
-					if ref.l.Name == "" || ref.f.Provider != r.f.Provider || len(ref.f.Embedding) != 128 || len(r.f.Embedding) != 128 {
+					if ref.l.Dismissed || ref.l.Name == "" || ref.f.Provider != r.f.Provider || len(ref.f.Embedding) != 128 || len(r.f.Embedding) != 128 {
 						continue
 					}
 					score := 0.
@@ -840,4 +853,29 @@ func validFace(f StoredFace, key string) bool {
 		norm += v * v
 	}
 	return math.Abs(norm-1) <= .02
+}
+
+// DismissFace preserves the detection, name/undo history and original bytes.
+func (s *Store) DismissFace(id string, restore bool) error {
+	if !validID(id) {
+		return ErrOrganizationInput
+	}
+	s.gate.Lock()
+	defer s.gate.Unlock()
+	return s.db.Update(func(tx *bolt.Tx) error {
+		var f StoredFace
+		if e := readJSON(tx.Bucket([]byte(facesBucket)), id, &f); e != nil {
+			return e
+		}
+		if !validFace(f, id) {
+			return ErrOrganizationInput
+		}
+		var label FaceLabel
+		e := readJSON(tx.Bucket([]byte(labelsBucket)), id, &label)
+		if e != nil && !errors.Is(e, os.ErrNotExist) {
+			return e
+		}
+		label.Dismissed = !restore
+		return writeJSON(tx.Bucket([]byte(labelsBucket)), id, label)
+	})
 }

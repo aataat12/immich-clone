@@ -277,3 +277,12 @@
   not_requested, allowing active inference to finish. Skip failed/ready/queued work
   and preserve manual corrections; no automatic retry or naming. Missing provider
   leaves batch work waiting. Build Notes ships offline with the actual release.
+
+
+- 2026-11-02 user authorized two bounded security workers while the primary agent
+  resumes People functionality coding. Installer/ACL and native-isolation reviews
+  have separate owned artifacts; no unrestricted delegation or release bypass.
+- False-face dismissal is an additive face-label correction, not detection/original
+  deletion. Exclude dismissed faces from active review and name suggestions, retain
+  names/undo history, and provide a separate restore view. Existing full-catalog
+  backups/JSON export retain the correction. No provider rerun or new dependency.

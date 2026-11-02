@@ -2,7 +2,7 @@
 
 Read `Immich_Clone_Project_Requirements.md`, then `docs/status.md`,
 `docs/decisions.md`, and `docs/dependency-evidence.md` before work.
-The requirements are authoritative. No parallel agents. No new charges.
+The requirements are authoritative. Parallel agents require explicit user authorization. No new charges.
 Record actual environment and evidence; Server results never certify Windows 10.
 Keep private PC reports out of this public repository and Actions artifacts.
 Never publish the user's exact OS build, hardware models, memory, GPU/driver

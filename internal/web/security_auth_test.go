@@ -22,7 +22,7 @@ func TestSensitiveRouteGuardMatrix(t *testing.T) {
 		{"POST", "/api/imports/missing/resume"}, {"POST", "/api/imports/missing/pause"},
 		{"POST", "/api/imports/missing/cancel"}, {"POST", "/api/imports/missing/files/0"},
 		{"POST", "/api/upload?name=guard.txt"}, {"POST", "/api/faces/label"},
-		{"GET", "/api/faces/missing/crop"}, {"POST", "/api/faces/missing/undo"},
+		{"POST", "/api/faces/missing/dismiss"}, {"GET", "/api/faces/missing/crop"}, {"POST", "/api/faces/missing/undo"},
 	}
 	for _, action := range []string{"original", "preview", "view", "retry", "hide", "unhide", "analyze", "tags", "dismiss-tag", "manual-face"} {
 		method := "POST"

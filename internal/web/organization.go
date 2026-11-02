@@ -51,7 +51,7 @@ func (s *Server) organizationHTTP(w http.ResponseWriter, r *http.Request) bool {
 	}
 
 	if r.URL.Path == "/api/organization" && r.Method == "GET" {
-		result, e := s.Store.OrganizationPage(r.URL.Query().Get("after"), r.URL.Query().Get("face_after"), r.URL.Query().Get("q"))
+		result, e := s.Store.OrganizationReviewPage(r.URL.Query().Get("after"), r.URL.Query().Get("face_after"), r.URL.Query().Get("q"), r.URL.Query().Get("dismissed") == "1")
 		if e != nil {
 			http.Error(w, "review catalog unavailable", 400)
 		} else {
@@ -87,6 +87,20 @@ func (s *Server) organizationHTTP(w http.ResponseWriter, r *http.Request) bool {
 			} else {
 				w.Header().Set("Content-Type", "image/png")
 				http.ServeFile(w, r, path)
+			}
+			return true
+		}
+		if parts[1] == "dismiss" && r.Method == "POST" {
+			var input struct {
+				Restore bool `json:"restore"`
+			}
+			if !organizationInput(w, r, &input) {
+				return true
+			}
+			if e := s.Store.DismissFace(parts[0], input.Restore); e != nil {
+				http.Error(w, "face review change failed", 400)
+			} else {
+				jsonResponse(w, map[string]bool{"saved": true})
 			}
 			return true
 		}
