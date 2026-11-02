@@ -9,6 +9,16 @@ for(const route of ['/','/people','/import','/backups','/build-notes']){await pa
 await page.evaluate(()=>{window.violations=[];document.addEventListener('securitypolicyviolation',e=>window.violations.push(e.effectiveDirective));const s=document.createElement('script');s.textContent='window.injectedSecurityCanary = true';document.body.append(s);const b=document.createElement('button');b.setAttribute('onclick','window.injectedSecurityCanary = true');document.body.append(b);b.click();});
 await page.waitForFunction(()=>window.violations.length>=2);assert.equal(await page.evaluate(()=>window.injectedSecurityCanary),undefined);
 }await page.close();}
+// Exercise reversible face review with a generated public synthetic PNG; no AI provider required.
+{
+const headers={'X-Immich-Request':'1'};
+const upload=await context.request.post('http://127.0.0.1:24831/api/upload?name=review-fixture.png',{headers,data:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAIAAAAuKetIAAAAU0lEQVR4nO3PQQ3AIADAQEAbjhCLnYngcVnSU9DOfe74s6UDXjWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaA1oDWgNaB9L9IB7tRAThgAAAAASUVORK5CYII=','base64')});assert.equal(upload.status(),200);const asset=(await upload.json()).asset;
+assert.equal((await context.request.post('http://127.0.0.1:24831/api/assets/'+asset.id+'/manual-face',{headers,data:{box:[.1,.1,.4,.4],name:'Review fixture'}})).status(),200);
+const review=(await(await context.request.get('http://127.0.0.1:24831/api/organization')).json()).faces[0];
+const p=await context.newPage();await p.goto('http://127.0.0.1:24831/people');const card=p.locator('[data-face="'+review.id+'"]');await card.getByRole('button',{name:'Not a face',exact:true}).click();await card.waitFor({state:'detached'});
+await p.reload();await p.locator('#dismissedFaces').check();await card.getByRole('button',{name:'Restore face',exact:true}).waitFor();assert((await card.textContent()).includes('Review fixture'));await card.getByRole('button',{name:'Restore face',exact:true}).click();await card.waitFor({state:'detached'});await p.locator('#dismissedFaces').uncheck();await card.getByRole('button',{name:'Not a face',exact:true}).waitFor();assert.equal(await card.locator('input[type=text]').inputValue(),'Review fixture');await p.close();
+console.log('PASS: face dismissal, reload, dismissed review and restore preserve name');
+}
 const page=await context.newPage();const prior=(await context.cookies('http://127.0.0.1:24831')).find(c=>c.name==='session');
 await page.goto('http://127.0.0.1:24831/logout');await page.locator('#logoutConfirmation:not(.hidden)').waitFor();
 assert.equal((await context.request.get('http://127.0.0.1:24831/api/assets')).status(),200);
