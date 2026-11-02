@@ -1,5 +1,12 @@
 # Security baseline — work in progress
 
+Current authoritative closure: original SEC-01/04/07 are complete, 3 closed /
+5 open; see security-worklist.md. Complete review/scan/advisory/servicing coverage
+is security-review-closeout.md, which records NR-01 as an unresolved native
+provider release blocker. Historical sections below retain their original scope.
+Latest combined Windows acceptance: 41547447887 (source
+1f1cdb912b223634dec0350e58e9ae86b11893b0); no installer or Windows 10 certification.
+
 Scope: loopback-only, single-user Windows photo library; not LAN or Internet
 hosting. Assets include immutable originals, access code/session cookies, names,
 tags/face embeddings, catalog, backups and diagnostic exports. Trust boundaries:

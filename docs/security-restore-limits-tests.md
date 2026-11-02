@@ -41,3 +41,22 @@ Do not close SEC-04 from cross-compilation, the helper starting, or a successful
 ## Exact enforcement scope
 
 ZIP extraction uses a strict aggregate writer. Catalog processing is entirely in the bounded child, including opening, integrity checking, rebuilding derived data, listing, verification, retries, and closing. The Windows Job supplies the hard memory bound; the parent deadline and process kill contain noncooperative CPU work. Catalog growth is checked every 20 ms and before publication, so it has monitoring latency and is not an atomic disk quota. Dynamic available-space defaults also cannot reserve space against unrelated concurrent applications. These are residual limits, not claims of perfect disk isolation.
+
+## Actual Windows acceptance — 2026-11-02
+
+Independent reviewer fetched and inspected the actual decoded job logs for [run 41547447887, job 125626387613](https://github.com/aataat12/immich-clone/actions/runs/41547447887/job/125626387613), source `1f1cdb912b223634dec0350e58e9ae86b11893b0`. The runner was Windows Server 2022, build 10.0.20348. This is execution evidence, not cross-compilation evidence.
+
+| Acceptance | Actual result |
+| --- | --- |
+| Product CLI default and explicit old-format restore, seven low-budget refusals, staging cleanup, original/metadata preservation | PASS; fixed CLI success message present |
+| Aggregate, entry, manifest, catalog, metadata and overflow controls; independent recovery and high-expansion positive | PASS, 0.76 s |
+| Invalid and self-cyclic bbolt catalogs, cleanup | PASS, 1.70 s; cyclic root contained in 1.53 s |
+| Hard Windows memory control | PASS, not skipped: 32 MiB control 0.04 s; excessive 600 MiB allocation 0.03 s under 512 MiB Job |
+| Supervisor success, noncooperative timeout, output flood | PASS, 1.06 s |
+| Explicit cancellation and child reaping | PASS, 0.06 s |
+| Live catalog-growth cancellation | PASS, 0.02 s |
+| Cancellation after staging appeared, cleanup and unchanged input ZIP | PASS, 0.17 s |
+| Copied-byte guard and nonwrapping budget arithmetic | PASS |
+| Full library and web suites | PASS, 58.140 s and 24.745 s respectively |
+
+**Independent disposition: original SEC-04 is ready to close.** Aggregate extraction and catalog-processing work have implemented controls and actual Windows adversarial/positive acceptance. The 20 ms catalog-growth monitor remains a bounded-latency check, not an atomic disk quota; unrelated applications can consume available disk space. Windows 10 compatibility is unchanged and is not established by this Windows Server run. Closure does not extend to the separately tracked filesystem race or native AI worker isolation items.

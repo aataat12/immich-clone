@@ -1,14 +1,30 @@
 # Current status
 
-Current parallel assignments: SEC-04 hostile backup limits and SEC-07 review
-closeout, each with implementation and independent verification workers. Both
-remain open until full evidence review; no category renaming. Primary People
-work adds independent previous-page histories (people-review-navigation.md).
+Four authorized workers completed original SEC-04 hostile backup limits and
+SEC-07 review closeout, each with implementation and independent verification.
+Combined Windows Server 2022/Edge acceptance [41547447887](https://github.com/aataat12/immich-clone/actions/runs/41547447887),
+source 1f1cdb912b223634dec0350e58e9ae86b11893b0, job 125626387613, passed in full.
+The fixed original list now has **3 closed / 5 open**: SEC-01, SEC-04, SEC-07 closed;
+SEC-02, SEC-03, SEC-05, SEC-06, SEC-08 open. No item renaming or partial-probe closure.
+See security-worklist.md, security-restore-limits.md and security-review-closeout.md.
 
-Authoritative security progress: security-worklist.md retains the original eight
-items and stable SEC-01..SEC-08 IDs. SEC-01 is closed after complete implementation and independent Windows
-permission/normal-service/Setup acceptance (full all-green run 41535508518); SEC-02..SEC-08 stay open.
-Progress is 1 closed / 7 open, with original item names unchanged. See security-permissions-completion.md and security-permissions-tests.md.
+Restore limits cover full ZIP/catalog work in a supervised worker, strict copied-byte
+budgets, finite wall/committed-memory limits, growth detection and unpublished-failure
+cleanup. Actual Windows memory-positive/excess controls, cancellation/reaping,
+hostile catalogs, CLI default/explicit valid old-format restoration and seven
+low-budget refusals passed. Catalog monitoring is not an atomic disk quota.
+Review closeout completes threat/advisory/control/servicing coverage; it found
+NR-01, an OpenCV NaryEltwise/core-safety release blocker requiring provider
+remediation and actual validation under SEC-06/08. Review closure does not fix or
+accept that risk, and native child filesystem isolation remains SEC-05.
+
+Primary functionality adds independent Previous faces / Previous photos navigation.
+Actual Edge checks passed with 102 persisted synthetic faces and 52 synthetic
+originals: prior-page identity, independent cursors, selection and filter resets.
+All five pages, desktop/narrow, CSP/session and existing People corrections passed.
+See people-review-navigation.md. No user-media enlargement or product installer.
+No Windows 10 certification, main merge or release/version change.
+
 People candidate adds photo context from active/dismissed face review without
 mutating data. See people-photo-context.md; Windows Server 2022/Edge acceptance
 passed (41535508518), including desktop/narrow and error/close behavior.

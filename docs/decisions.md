@@ -301,3 +301,10 @@
   SEC-04 and SEC-07, each with implementation plus independent verification.
   No partial probe or reassigned unfinished review counts as closure. Main agent
   handles People previous-page navigation and integration. No release bypass.
+
+- SEC-04/07 closure follows full combined Windows execution 41547447887 and
+  independent review, not source readiness. Original tracker is 3 closed / 5 open.
+  NR-01 from the completed review blocks release until the native provider is
+  patched/replaced and actual parity/hostile/integration checks pass; no risk
+  acceptance or silent codec/model removal. People Previous navigation remains
+  held for the combined release, with no installer/version/main change.

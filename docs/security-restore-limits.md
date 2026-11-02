@@ -116,8 +116,9 @@ progress files are removed before rename and are not published in restored state
 The extraction budget counts manifest read bytes plus payload writes; catalog
 processing additionally accounts for the current catalog size replacing its input
 size. Final actual stage files must fit the selected aggregate budget. Temporary
-protocol files and filesystem metadata have small separate overhead within the
-reserve; free-space checks cannot reserve capacity against competing applications.
+protocol files have separate overhead. The 64MiB reserve is a conservative allowance,
+not a guarantee that filesystem allocation/metadata overhead fits; free-space
+checks cannot reserve capacity against competing applications.
 ENOSPC/permission failures still reject and clean unpublished staging. No free-space
 or maximum transient overshoot guarantee is made.
 
@@ -146,3 +147,18 @@ SEC-03; same-token filesystem authority remains SEC-05; broader input review,
 combined accepted-old-installer/restore, clean Windows 10 and long endurance remain
 their separate gates. No product installer or broad security certification is
 created merely by passing these resource controls.
+
+
+## Reviewed Windows completion
+
+All-green [41547447887](https://github.com/aataat12/immich-clone/actions/runs/41547447887), source
+1f1cdb912b223634dec0350e58e9ae86b11893b0, job 125626387613, executed the production
+Windows Job supervisor and actual app CLI. Both memory controls ran without a
+skip; hard timeout, explicit cancellation, output flood, confirmed reaping, live
+growth cancellation, hostile catalogs and staging cleanup passed. Default and
+explicit valid old-format restores preserved originals/corrections/ready results
+and the synthetic access code; seven CLI refusals left no publication. Existing
+Go/web/vet, permission/LocalService, Setup and desktop/narrow Edge controls passed.
+Independent acceptance is security-restore-limits-tests.md. Root closes SEC-04
+for these stated controls and limits; overall installer/Windows 10 and other
+original security items retain their separate gates.

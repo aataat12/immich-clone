@@ -251,3 +251,23 @@ and source-test SHA256 `fde1cd9618cb6891e793c059c35473cf67291c658351bf15a1713b96
   [Inno security measures](https://jrsoftware.org/is6help/topic_securitymeasures.htm).
 - FFmpeg official security/download/source-fix URLs and exact source comparisons
   are enumerated in the independent companion, not replaced by third-party feeds.
+
+
+## Final integrated acceptance
+
+Root and the independent verifier accepted complete SEC-07 review coverage after
+all-green [41547447887](https://github.com/aataat12/immich-clone/actions/runs/41547447887),
+source 1f1cdb912b223634dec0350e58e9ae86b11893b0, job 125626387613. All 18
+controls ran on Windows (4.620s), including actual hook positive/denial controls;
+govulncheck 1.9.0 found no Go vulnerabilities. Source/history receipt after fetching
+that candidate and before final evidence edits: 924 text inputs / 7,167,666 bytes,
+zero supported signatures and zero exclusions. Final test SHA256:
+7edb17177b7db12bb423089a338d54ac5a6fe2b509223aaf30d88bc271982160.
+The earlier Windows run failed the test fixture's nonportable Python shebang; the
+portable shell wrapper was independently reviewed and rerun successfully, without
+skipping or weakening either assertion. Production scanner unchanged.
+
+SEC-04's independent Windows implementation acceptance also passed in this run;
+its controls are closed by their separate evidence, not merely by this review.
+NR-01 remediation remains an explicit SEC-06/08 release blocker. No new payload
+was built/scanned or provider updated, and no Windows 10 certification is implied.
