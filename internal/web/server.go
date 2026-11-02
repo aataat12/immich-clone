@@ -63,6 +63,7 @@ type Server struct {
 	Root         string
 	mu           sync.Mutex
 	copyIdle     time.Duration
+	writeIdle    time.Duration
 	uploadSlot   chan struct{}
 	snapshotSlot chan struct{}
 	sessions     map[string]time.Time
@@ -113,7 +114,7 @@ func New(store *library.Store, root, code string, builds ...string) *Server {
 	if len(builds) > 0 {
 		build = builds[0]
 	}
-	return &Server{Store: store, Root: root, Code: code, Version: build, sessions: map[string]time.Time{}, uploadSlot: make(chan struct{}, 1), snapshotSlot: make(chan struct{}, 1), copyIdle: 60 * time.Second, backups: newBackupJobs(root, store)}
+	return &Server{Store: store, Root: root, Code: code, Version: build, sessions: map[string]time.Time{}, uploadSlot: make(chan struct{}, 1), snapshotSlot: make(chan struct{}, 1), copyIdle: 60 * time.Second, writeIdle: 60 * time.Second, backups: newBackupJobs(root, store)}
 }
 func jsonResponse(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
@@ -122,13 +123,16 @@ func jsonResponse(w http.ResponseWriter, v any) {
 
 type observedResponse struct {
 	http.ResponseWriter
-	status int
-	bytes  int64
+	status   int
+	bytes    int64
+	idle     time.Duration
+	writeErr error
 }
 
 func (w *observedResponse) WriteHeader(status int) {
 	if w.status == 0 {
 		w.status = status
+		w.renewWriteDeadline()
 		w.ResponseWriter.WriteHeader(status)
 	}
 }
@@ -136,9 +140,18 @@ func (w *observedResponse) Write(b []byte) (int, error) {
 	if w.status == 0 {
 		w.WriteHeader(200)
 	}
+	w.renewWriteDeadline()
 	n, e := w.ResponseWriter.Write(b)
+	if e != nil && w.writeErr == nil {
+		w.writeErr = e
+	}
 	w.bytes += int64(n)
 	return n, e
+}
+func (w *observedResponse) renewWriteDeadline() {
+	if w.idle > 0 {
+		_ = http.NewResponseController(w.ResponseWriter).SetWriteDeadline(time.Now().Add(w.idle))
+	}
 }
 func (w *observedResponse) Unwrap() http.ResponseWriter { return w.ResponseWriter }
 func requestStage(path string) string {
@@ -172,7 +185,7 @@ func requestStage(path string) string {
 	return "unknown"
 }
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	observed := &observedResponse{ResponseWriter: w}
+	observed := &observedResponse{ResponseWriter: w, idle: s.writeIdle}
 	w = observed
 	started := time.Now()
 	defer func() {
@@ -180,7 +193,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if status == 0 {
 			status = 200
 		}
-		diagnostics.Record("http", requestStage(r.URL.Path), nil, status, observed.bytes, time.Since(started))
+		diagnostics.Record("http", requestStage(r.URL.Path), observed.writeErr, status, observed.bytes, time.Since(started))
 	}()
 
 	w.Header().Set("X-Content-Type-Options", "nosniff")

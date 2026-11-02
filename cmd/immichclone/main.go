@@ -52,6 +52,7 @@ func start(ctx context.Context, o options) (func() error, error) {
 		s.Close()
 		return nil, e
 	}
+	listener = web.LimitConnections(listener, web.MaxConnections)
 	diagnostics.Record("startup", "ready", nil, 0, 0, 0)
 	handler := web.New(s, o.Data, code, version)
 	server := &http.Server{Handler: handler, ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}

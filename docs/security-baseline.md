@@ -432,3 +432,25 @@ seven-day artifacts. New-provider Windows 10 inference and local auth checks awa
 user/normal use; no new import solely for testing, dependency setup or reboot.
 Milestone 2 remains in progress because the wider security/People criteria are
 not all complete. No project-plan conflict identified or approval bypassed.
+
+
+## S-008: accepted sockets and stalled response bounds (next release)
+
+The production listener now admits at most 64 active/idle TCP connections. Excess
+sockets close before HTTP handler allocation; there is no waiting admission queue
+or per-rejection log amplification. Closing an admitted socket releases its slot
+once. Existing five-second header and sixty-second keep-alive limits remain.
+
+Responses renew a sixty-second write deadline before each header/body write. A
+client that stops reading cannot indefinitely retain the legacy export slot; a
+progressing download has no total-duration cutoff. Write errors feed the existing
+redacted diagnostics. No original, backup format, provider, or session change.
+
+Linux Go 1.27.3 focused real-TCP tests with the race detector passed: admission
+overflow/recovery, concurrent repeated close, listener shutdown, a blocked backup
+releasing export admission without client close, and an eight-MiB progressing
+archive exceeding its idle window with its original SHA256 intact. Web/cmd vet
+passed. Focused Windows execution remains required before recording acceptance.
+These bounds reduce resource retention; they do not guarantee availability against
+a malicious local process. No conflict with the single-user loopback plan found.
+Hold for the next broader release; no new installer/version or user import needed.

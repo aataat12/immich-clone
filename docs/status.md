@@ -1,5 +1,9 @@
 # Current status
 
+Next-release candidate: 64 accepted TCP connection cap and rolling sixty-second
+response write-idle bound. Linux real-socket race tests/vet passed; focused Windows
+validation pending. See security-baseline.md S-008. No installer/version changed.
+
 ## Current cloud-accepted prototype: 0.1.29
 
 [Acceptance 41487369408](https://github.com/aataat12/immich-clone/actions/runs/41487369408),
