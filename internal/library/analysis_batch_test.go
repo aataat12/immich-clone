@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
+	bolt "go.etcd.io/bbolt"
 	"image"
 	"image/color"
 	"image/png"
@@ -231,4 +233,38 @@ func TestAnalysisBatchFailureImportPriorityAndShutdownRecovery(t *testing.T) {
 	if job := batchControl(t, r, "start"); job.Total != 1 {
 		t.Fatal(job)
 	}
+}
+
+// Metadata-only multipage bookkeeping test; not a claim of media inference scale.
+func TestAnalysisBatchMultipageCancellation(t *testing.T) {
+	s, root := openTest(t)
+	s.SetRecognizer(fakeAnalysis, true)
+	if e := s.db.Update(func(tx *bolt.Tx) error {
+		for i := 0; i < 2000; i++ {
+			id := fmt.Sprintf("%064x", i)
+			if e := writeJSON(tx.Bucket([]byte("assets")), id, Asset{ID: id, MIME: "image/png", Size: 100}); e != nil {
+				return e
+			}
+		}
+		return nil
+	}); e != nil {
+		t.Fatal(e)
+	}
+	if b := batchControl(t, s, "start"); b.Total != 2000 {
+		t.Fatal(b)
+	}
+	if b := batchControl(t, s, "cancel"); b.Cancelled != 2000 || b.Pending != 0 {
+		t.Fatal(b)
+	}
+	s.Close()
+	r, e := Open(root)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer r.Close()
+	r.SetRecognizer(fakeAnalysis, true)
+	if b := batchControl(t, r, "start"); b.Total != 2000 {
+		t.Fatal("multipage cancellation skipped entries", b)
+	}
+	batchControl(t, r, "pause")
 }

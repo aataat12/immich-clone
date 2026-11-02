@@ -122,7 +122,11 @@ func (s *Store) ControlAnalysisBatch(ctx context.Context, action string) error {
 			if b.Status != "running" && b.Status != "paused" {
 				return errors.New("batch is not active")
 			}
+			var cancelled []string
 			e = members.ForEach(func(k, v []byte) error {
+				if e := ctx.Err(); e != nil {
+					return e
+				}
 				if string(v) != "pending" || string(k) == s.activeAnalysis {
 					return nil
 				}
@@ -139,15 +143,18 @@ func (s *Store) ControlAnalysisBatch(ctx context.Context, action string) error {
 				if e := analyses.Delete(k); e != nil {
 					return e
 				}
-				if e := members.Put(k, []byte("cancelled")); e != nil {
-					return e
-				}
+				cancelled = append(cancelled, string(k))
 				b.Pending--
 				b.Cancelled++
 				return nil
 			})
 			if e != nil {
 				return e
+			}
+			for _, id := range cancelled {
+				if e := members.Put([]byte(id), []byte("cancelled")); e != nil {
+					return e
+				}
 			}
 			b.Status = "cancelled"
 		default:
@@ -198,6 +205,7 @@ func recoverAnalysisBatch(tx *bolt.Tx) error {
 	m := tx.Bucket([]byte(batchMembers))
 	a := tx.Bucket([]byte(analysisBucket))
 	q := tx.Bucket([]byte(analysisQueue))
+	updates := map[string]string{}
 	e = m.ForEach(func(k, v []byte) error {
 		state := string(v)
 		if state == "pending" {
@@ -221,9 +229,7 @@ func recoverAnalysisBatch(tx *bolt.Tx) error {
 			default:
 				return errors.New("invalid batch analysis status")
 			}
-			if e := m.Put(k, []byte(state)); e != nil {
-				return e
-			}
+			updates[string(k)] = state
 		}
 		b.Total++
 		switch state {
@@ -242,6 +248,11 @@ func recoverAnalysisBatch(tx *bolt.Tx) error {
 	})
 	if e != nil {
 		return e
+	}
+	for id, state := range updates {
+		if e := m.Put([]byte(id), []byte(state)); e != nil {
+			return e
+		}
 	}
 	if b.Pending == 0 && (b.Status == "running" || b.Status == "paused") {
 		b.Status = "complete"
