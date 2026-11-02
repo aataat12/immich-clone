@@ -358,25 +358,39 @@ func (s *Server) authenticated(r *http.Request) bool {
 	return ok && time.Now().Before(expires)
 }
 func (s *Server) login(w http.ResponseWriter, r *http.Request) {
+	// Reserve the attempt under the mutex, but never hold session access hostage
+	// while reading an unauthenticated request body.
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	now := time.Now()
 	if now.Sub(s.window) > time.Minute {
 		s.attempts = 0
 		s.window = now
 	}
 	s.attempts++
-	if s.attempts > 10 {
+	limited := s.attempts > 10
+	s.mu.Unlock()
+	if limited {
+		w.Header().Set("Retry-After", "60")
 		http.Error(w, "try again in one minute", 429)
 		return
 	}
+	controller := http.NewResponseController(w)
+	_ = controller.SetReadDeadline(time.Now().Add(10 * time.Second))
+	defer controller.SetReadDeadline(time.Time{})
+	r.Body = http.MaxBytesReader(w, r.Body, 1024)
 	var input struct {
 		Code string `json:"code"`
 	}
-	if json.NewDecoder(io.LimitReader(r.Body, 1024)).Decode(&input) != nil || subtle.ConstantTimeCompare([]byte(input.Code), []byte(s.Code)) != 1 {
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	var extra any
+	if decoder.Decode(&input) != nil || !errors.Is(decoder.Decode(&extra), io.EOF) || subtle.ConstantTimeCompare([]byte(input.Code), []byte(s.Code)) != 1 {
 		http.Error(w, "incorrect access code", 401)
 		return
 	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	now = time.Now()
 	for k, expiry := range s.sessions {
 		if now.After(expiry) {
 			delete(s.sessions, k)
@@ -391,6 +405,7 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{Name: "session", Value: token, Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode, MaxAge: 43200})
 	jsonResponse(w, map[string]string{"status": "ok"})
 }
+
 func (s *Server) backup(w http.ResponseWriter, r *http.Request) {
 	name := filepath.Join(s.Root, "backups", random()+".part")
 	defer os.Remove(name)
