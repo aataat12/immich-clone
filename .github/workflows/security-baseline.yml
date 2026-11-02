@@ -31,7 +31,19 @@ jobs:
             Assert-PrivateDirectoryTree -Path $fixture -ReaderSid $sid -ServiceAccess
             Write-Output 'PASS: production permission audit smoke test'
           } finally { if (Test-Path -LiteralPath $fixture) { Remove-Item -LiteralPath $fixture -Recurse -Force } }
-      - name: Focused restore and security tests and build
+      - name: Build exact permission acceptance app
+        shell: pwsh
+        run: |
+          go mod verify
+          if ($LASTEXITCODE -ne 0) { throw 'Module verification failed' }
+          go build -o "$env:RUNNER_TEMP/security-app.exe" ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'Build failed' }
+      - name: Complete SEC-01 descendant permission controls
+        shell: powershell
+        run: |
+          ./scripts/Test-StorageSecurity.ps1 -Binary "$env:RUNNER_TEMP/security-app.exe"
+          if ($LASTEXITCODE -ne 0) { throw 'Windows storage security acceptance failed' }
+      - name: Focused tests and vet after permission acceptance
         shell: pwsh
         run: |
           go mod verify
@@ -40,13 +52,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'HTTP tests failed' }
           go vet ./internal/library ./internal/web ./cmd/immichclone
           if ($LASTEXITCODE -ne 0) { throw 'Vet failed' }
-          go build -o "$env:RUNNER_TEMP/security-app.exe" ./cmd/immichclone
-          if ($LASTEXITCODE -ne 0) { throw 'Build failed' }
-      - name: Complete SEC-01 descendant permission controls
-        shell: powershell
-        run: |
-          ./scripts/Test-StorageSecurity.ps1 -Binary "$env:RUNNER_TEMP/security-app.exe"
-          if ($LASTEXITCODE -ne 0) { throw 'Windows storage security acceptance failed' }
       - name: Native child authority and resource canaries
         shell: powershell
         run: |
