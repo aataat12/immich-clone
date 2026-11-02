@@ -265,6 +265,12 @@ try {
  Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'normal LocalService remains usable after rejected descendant fixtures'
  Assert ((Get-FileHash (Join-Path $state ('originals/'+$upload.asset.id))).Hash -eq (Get-FileHash $source).Hash) 'normal original unchanged after descendant permission tests'
 
+} catch {
+ $kind=$_.Exception.GetType().Name
+ $lines=@([regex]::Matches([string]$_.ScriptStackTrace,'(?i)line\s+(\d+)') | Select-Object -First 16 | ForEach-Object {$_.Groups[1].Value}) -join ','
+ Write-Output ('STORAGE_FAILURE_TYPE='+$kind)
+ Write-Output ('STORAGE_FAILURE_LINES='+$lines)
+ throw 'Storage security acceptance failed; see redacted failure coordinates.'
 } finally {
  if($serviceAttempted) {Stop-Service ImmichClone -Force -ErrorAction SilentlyContinue;& sc.exe delete ImmichClone | Out-Null}
  if($created) {Remove-LocalUser -Name $user -ErrorAction SilentlyContinue}

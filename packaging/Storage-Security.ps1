@@ -41,14 +41,14 @@ function Set-PrivateDirectoryAcl([string]$Path, [string]$ReaderSid, [switch]$Ser
 
 function Get-PrivateDirectoryPolicy([string]$ReaderSid, [switch]$ServiceAccess) {
     $policy = @{
-        'S-1-5-18' = [int64][Security.AccessControl.FileSystemRights]::FullControl
-        'S-1-5-32-544' = [int64][Security.AccessControl.FileSystemRights]::FullControl
+        'S-1-5-18' = [int64][int][Security.AccessControl.FileSystemRights]::FullControl
+        'S-1-5-32-544' = [int64][int][Security.AccessControl.FileSystemRights]::FullControl
     }
-    if ($ServiceAccess) { $policy['S-1-5-19'] = [int64][Security.AccessControl.FileSystemRights]::Modify }
-    if ($ReaderSid -and !$policy.ContainsKey($ReaderSid)) { $policy[$ReaderSid] = [int64][Security.AccessControl.FileSystemRights]::ReadAndExecute }
+    if ($ServiceAccess) { $policy['S-1-5-19'] = [int64][int][Security.AccessControl.FileSystemRights]::Modify }
+    if ($ReaderSid -and !$policy.ContainsKey($ReaderSid)) { $policy[$ReaderSid] = [int64][int][Security.AccessControl.FileSystemRights]::ReadAndExecute }
     foreach ($sid in @($policy.Keys)) {
         # Windows adds Synchronize to normal Allow rules created from these rights.
-        $policy[$sid] = $policy[$sid] -bor [int64][Security.AccessControl.FileSystemRights]::Synchronize
+        $policy[$sid] = $policy[$sid] -bor [int64][int][Security.AccessControl.FileSystemRights]::Synchronize
     }
     return $policy
 }
@@ -99,7 +99,7 @@ function Assert-PrivateDirectoryTree([string]$Path, [string]$ReaderSid, [switch]
                 # are audited separately. Protected DACLs receive no root repair.
                 if ($rule.IsInherited -and !$acl.AreAccessRulesProtected) { continue }
                 $sid = $rule.IdentityReference.Value
-                $rights = [int64]$rule.FileSystemRights
+                $rights = [int64][int]$rule.FileSystemRights
                 if ($rule.AccessControlType -ne [Security.AccessControl.AccessControlType]::Allow -or !$policy.ContainsKey($sid) -or $rights -lt 0 -or ($rights -band (-bnot $policy[$sid])) -ne 0) { throw 'Application-owned tree has an unsafe descendant access rule' }
                 if (($rule.PropagationFlags -band [Security.AccessControl.PropagationFlags]::InheritOnly) -eq 0) { $selfRights[$sid] = [int64]$selfRights[$sid] -bor $rights }
                 if ($rule.PropagationFlags -eq [Security.AccessControl.PropagationFlags]::None -and ($rule.InheritanceFlags -band [Security.AccessControl.InheritanceFlags]'ContainerInherit,ObjectInherit') -eq [Security.AccessControl.InheritanceFlags]'ContainerInherit,ObjectInherit') { $childRights[$sid] = [int64]$childRights[$sid] -bor $rights }
