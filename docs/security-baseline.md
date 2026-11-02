@@ -81,3 +81,81 @@ Added .env/.env.* ignore rules, with deliberate .env.example exception. Ignoring
 a file does not remove an already tracked secret or replace credential rotation.
 Synthetic positive/negative signature controls passed.
 No user secrets were requested, printed or uploaded.
+
+## S-004: Go dependency check (2026-11-02)
+
+Actual cloud Linux source analysis targeting GOOS=windows, GOARCH=amd64,
+CGO_ENABLED=0, Go 1.27.3: govulncheck v1.9.0, source/symbol mode against
+./cmd/immichclone, database https://vuln.go.dev last modified
+2026-10-27T21:16:18Z, zero findings. The JSON stream included 203 advisory records;
+those are not 203 application vulnerabilities. Tool acquisition uses official
+Go module checksum verification; it is a build/test tool, not a product dependency.
+scripts/Test-GoSecurity.ps1 repeats this check on the Windows acceptance runner
+and fails the job on scanner/provisioning/findings errors. This does not cover
+C/C++, models, installer tooling, unknown vulnerabilities or excluded build tags.
+
+Source: https://go.dev/doc/security/vuln/ (reviewed 2026-11-02).
+
+## Native dependency review — selective, remaining work explicit
+
+| Component | Checked evidence and present conclusion | Remaining gate |
+|---|---|---|
+| FFmpeg 8.1.3 | Upstream download page still lists 8.1.3 for the 8.1 branch. The pinned build disables network and all components except the documented decoder/demuxer/filter allowlist. HLS/TLS/TIFF paths are excluded. This narrows applicability, not a blanket security clearance. | Complete advisory-to-source applicability inventory for enabled MOV/Matroska/H264/HEVC/AAC/filter code; maintain replacement/retest procedure. |
+| OpenCV 4.12.0 | Upstream CVE-2025-53644 disclosure identifies 4.12.0 as fixed; this worker also omits imgcodecs. Fixed weights and bounded BGR input are reused. Its security page is a reporting policy, not a support SLA or clean scan. | Wider current advisory review, runtime servicing and stronger token/filesystem isolation assessment. |
+| Embedded protobuf 3.19.1 | Retain the previously verified CVE-2022-1941 parser backport. GHSA-h5g9-ghrj-76p5 says the JSON defect was introduced in 4.22.0; 3.19.1 predates it and the worker uses ONNX binary parsing. PHP/Python/Java advisories do not directly describe this C++ path. | Do not treat a single backport as comprehensive servicing; keep exact source changes and re-evaluate on provider changes. |
+| Embedded zlib 1.3.1 | Upstream 1.3.2 includes audit-related changes. This is an open review item, not silently cleared because the worker tests pass. No native binary replacement occurred in this slice. | Determine compiled/reachable affected functions and whether update/backport or removal is appropriate; rebuild/retest provider if required. |
+| Go modules and native providers | Existing exact versions, checksums, redistribution notices and replacement boundaries are retained in dependency-evidence.md and preparation scripts. | Signed release arrangements and static CRT servicing remain production gates. |
+
+Primary sources reviewed 2026-11-02:
+- https://www.ffmpeg.org/download.html
+- https://github.com/FFmpeg/web/blob/master/src/security
+- https://github.com/opencv/opencv/security
+- https://securitylab.github.com/advisories/GHSL-2025-057_OpenCV/
+- https://github.com/protocolbuffers/protobuf/security/advisories
+- https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h5g9-ghrj-76p5
+- https://zlib.net/
+
+## OWASP Top 10:2025 applicability checkpoint
+
+This is a review map, not certification or ten passed audits. Source:
+https://top10.owasp.org/2025/ (reviewed 2026-11-02).
+
+| Area | Project-specific evidence and remaining review |
+|---|---|
+| A01 access control | Common HTTP guard matrix passed; Windows ACL/reparse and handler-specific checks remain. |
+| A02 configuration | Loopback binding, Host/Origin and CSP reviewed; installed configuration remains in acceptance. |
+| A03 supply chain | Pinned modules/providers and Go scan; native/transitive applicability remains open. |
+| A04 cryptography | Random access/session tokens and SHA256 integrity; private backups are not encrypted. Preserve documented local-only boundary; do not introduce an incompatible backup change silently. |
+| A05 injection | Text rendering, bounded typed request handling and CSP; broader malicious metadata/path and stored-input tests remain. bbolt uses no SQL. |
+| A06 design | Explicit trust boundaries, managed immutable copies and reviewed AI suggestions; abuse/concurrency and worker isolation remain open. |
+| A07 authentication | Code-cookie sessions and expiry/forgery tests; brute-force/session-cap coverage remains to review. |
+| A08 integrity | Pinned hashes, atomic catalog operations and independent restore tests; artifact privacy/integrity review remains. |
+| A09 logging | Existing allowlisted private diagnostic records; new artifact/canary checks and retention review remain. |
+| A10 exceptional conditions | Existing cancellation, restart, ENOSPC and rollback tests; extended/disconnected-storage abuse remains open. |
+
+## S-005: stalled login blocks authenticated requests (fixed candidate)
+
+Confirmed by a regression that fails against the preceding source: login held the
+shared session mutex while decoding an unauthenticated body. A stalled request
+therefore blocked existing-session authentication. Severity: medium availability
+for a local client able to issue the required request header; no data-exposure or
+remote exploit claim. Browser cross-origin/header restrictions remain relevant.
+
+Reserve/rate-limit attempts under the mutex, release it before reading, then
+acquire it only to publish a validated session. Enforce a 1024-byte login body,
+10-second read deadline on the real HTTP connection, strict fields and one JSON
+value; advertise Retry-After on attempt throttling. Normal login shape, code
+storage and 12-hour session policy stay unchanged. Existing MaxBytesReader and
+ResponseController are used; no new dependency. Deadline bounds a login only,
+not media uploads. A synthetic reader verifies mutex independence; a separate real-socket
+HTTP regression verifies the 10-second deadline and connection close. A Linux
+standalone-app socket probe also passed with authenticated reads responsive.
+
+Cloud Linux focused web race/vet and all internal-package tests passed, including
+valid login, incomplete-body concurrency and extra/oversized/unknown-field JSON
+rejection. Full Windows acceptance is rerunning with this fix. The socket probe initially
+found that clearing a failed read deadline allowed response cleanup to stall;
+failed-login connections now close without clearing that deadline. Earlier Windows
+acceptance caught a test hashing raw CRLF rather than HTML-normalized text; that
+expectation was corrected before the rerun, without changing CSP behavior. No
+failed-run installer is published. No project-plan conflict identified.

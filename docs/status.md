@@ -7,6 +7,13 @@ public licensed fixtures only. CI timestamps are UTC.
 
 ## Security baseline checkpoint (candidate, not released)
 
+Current locally validated baseline: 0.1.25. Candidate 0.1.27 adds exact-script CSP
+and a tested stalled-login/session-lock fix. Full Windows acceptance run
+[41469530044](https://github.com/aataat12/immich-clone/actions/runs/41469530044)
+is queued/running; no passing final installer result claimed. Windows-targeted
+Go source scan (govulncheck v1.9.0) found zero findings against the dated database.
+Native/transitive servicing review remains open; see security-baseline.md.
+
 Security review now leads the next milestone. See security-baseline.md for the
 first candidate mitigation: exact bundled-script CSP hashes, focused Linux
 race/vet results, passed Windows Server/Edge enforcement, endpoint guard matrix,
@@ -17,7 +24,7 @@ No new installer or local action. User reported 0.1.25 backups, Build Notes,
 new-import follow-up and repeated narrow layout were not tested. Preserve this
 limited functional evidence without requesting repeat checks.
 
-## Current prototype: 0.1.23 backup capacity/progress
+## Preserved 0.1.23 backup capacity/progress evidence
 
 [Source 66a698d](https://github.com/aataat12/immich-clone/commit/66a698d066c437219c6e1b23fe8dbd5ed01ad577),
 [acceptance run 41398447659](https://github.com/aataat12/immich-clone/actions/runs/41398447659),
@@ -73,7 +80,7 @@ both Home controls, desktop/narrow layout, actual version and preservation of
 photos/names/tags/import history passed. 0.1.21: all requested gallery checks passed,
 no observed problems. These are limited functional reports, not broad recognition,
 endurance or clean-PC certification. No raw private reports retained. No repeat of
-completed checks or reboot requested. Small 0.1.23 backup-page validation is next;
+completed checks or reboot requested. User-reported 0.1.25 validation includes the backup page;
 keep the ZIP private because it contains originals and the access code.
 
 ## Preserved gallery/import/AI baseline
@@ -100,8 +107,7 @@ restart/restore bookkeeping, names/tags, JSON export, Build Notes/Home desktop
 and narrow navigation, optional-model failure/recovery, original hashes,
 independent restores, real NTFS ENOSPC, actual 0.1.23 upgrade, failed-upgrade
 rollback and uninstall/reinstall checks. Linux race/vet and membership export
-regressions passed. No new provider/model/dependency. Local 0.1.25 validation
-is pending; no full-library import or reboot requested.
+regressions passed. No new provider/model/dependency. User-reported local 0.1.25 functional validation passed; no full-library import or reboot requested.
 
 Installer artifact 13123837527: ImmichClone-0.1.25-prototype-x64-setup.exe,
 102605388 bytes, SHA256
