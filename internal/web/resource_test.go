@@ -27,9 +27,20 @@ func TestConcurrentOriginalCopiesFailFastAndRecover(t *testing.T) {
 			t.Fatalf("concurrent copy not rejected: %d", w.Code)
 		}
 	}
-	if request(s, "GET", "/api/assets", "", c).Code != 200 || request(s, "GET", "/api/analysis-batch", "", c).Code != 200 {
-		t.Fatal("reads/status blocked by copy")
+
+	for _, path := range []string{"/api/assets", "/api/analysis-batch"} {
+		result := make(chan int, 1)
+		go func() { result <- request(s, "GET", path, "", c).Code }()
+		select {
+		case status := <-result:
+			if status != 200 {
+				t.Fatalf("read/status unavailable: %d", status)
+			}
+		case <-time.After(time.Second):
+			t.Fatal("read/status blocked by copy")
+		}
 	}
+
 	// A rejected real connection must not wait to drain a body it never accepted.
 	server := httptest.NewServer(s)
 	defer server.Close()

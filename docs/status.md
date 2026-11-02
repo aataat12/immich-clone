@@ -12,8 +12,10 @@ matching the existing serialized writer. A held-copy/real-socket test verifies
 429/retry feedback for overlap, responsive gallery/AI status and recovery after
 failure. Removed the read-only AI batch-status dependency on the copy gate using
 atomic runtime availability flags and an existing database read snapshot.
-Linux focused web and library batch/organization race checks passed; Windows
-focused acceptance is next. No new installer/version or user action requested.
+Linux library/web race and vet checks passed. Windows Server 2022 run
+[41477493372](https://github.com/aataat12/immich-clone/actions/runs/41477493372),
+source bcc0d1fb, job 125386805373 passed library/web tests and vet plus actual
+Edge session/CSP and five-page desktop/narrow checks. No new installer/version or user action requested.
 See security-baseline.md S-006 for bounds and remaining resource review items.
 
 ## Next-release authentication controls (not separately released)

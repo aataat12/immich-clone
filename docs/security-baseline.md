@@ -256,3 +256,15 @@ expensive export/list/legacy-backup concurrency and global connection bounds
 remain separate review items. No dependency/schema/provider change. No conflict
 with the existing single-copy plan identified. Ship with a broader release,
 including the already-tested login controls, not a separate control-only installer.
+
+
+S-006 focused Windows acceptance: [41477493372](https://github.com/aataat12/immich-clone/actions/runs/41477493372),
+source bcc0d1fbfa390ad7cf85184db76b6ade30266221, job 125386805373 passed full
+library/web package tests and vet, executable build, real-socket overlap rejection,
+copy failure recovery, responsive gallery/AI status, and the existing five-page
+Edge session/CSP/desktop/narrow checks. Linux full library/web race tests passed.
+The held-copy regression exposed the pre-existing status/copy-lock dependency;
+a follow-up bounded its status assertion so regressions fail promptly rather
+than waiting for the package timeout (Linux focused rerun passed). No application
+code changed after the Windows run. No new installer was built. Final broader-
+release upgrade/restore/import acceptance remains required before shipping.
