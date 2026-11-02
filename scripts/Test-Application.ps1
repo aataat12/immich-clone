@@ -147,12 +147,15 @@ try {
         $managedArchive=Join-Path $env:IMMICH_BROWSER_OUTPUT 'managed-backup.zip'
         Assert ($backupJob.status -eq 'ready' -and $backupJob.sha256 -eq (Get-FileHash $managedArchive).Hash.ToLowerInvariant()) 'completed verified backup remains downloadable after service restart'
         $retainedPrefix=Join-Path $root 'retained-backup-prefix.bin'
-        $rangeResult=Invoke-WebRequest ("http://127.0.0.1:2283/api/backup-job/download?id="+$backupJob.id) -Headers @{Range='bytes=0-15'} -WebSession $session -OutFile $retainedPrefix -PassThru
+        $rangeSession=[Microsoft.PowerShell.Commands.WebRequestSession]::new();$rangeSession.Cookies=$session.Cookies
+        $rangeResult=Invoke-WebRequest ("http://127.0.0.1:2283/api/backup-job/download?id="+$backupJob.id) -Headers @{Range='bytes=0-15'} -WebSession $rangeSession -OutFile $retainedPrefix -PassThru
         Assert ($rangeResult.StatusCode -eq 206 -and (Get-Item $retainedPrefix).Length -eq 16) 'retained backup supports real range download after restart'
+        Assert (!$session.Headers.ContainsKey('Range')) 'range probe cannot contaminate subsequent full downloads'
         $env:IMMICH_TEST_STATE=$state;Checked node @('tests/backup.cjs','--discard');Remove-Item Env:IMMICH_TEST_STATE
     }
     $backup = Join-Path $root 'backup.zip'
-    Invoke-WebRequest http://127.0.0.1:2283/api/backup -WebSession $session -OutFile $backup
+    $backupResponse=Invoke-WebRequest http://127.0.0.1:2283/api/backup -WebSession $session -OutFile $backup -PassThru
+    Assert ($backupResponse.StatusCode -eq 200 -and (Get-Item $backup).Length -gt 16) 'legacy backup download is a complete response before restore'
     Stop-Service $name
     $restored = Join-Path $root 'restored'
     Checked $binary @('-mode','restore','-data',$restored,'-archive',$backup)
