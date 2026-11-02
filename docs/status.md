@@ -1,9 +1,12 @@
 # Current status
 
 People filtering candidate: server-side unnamed filtering and accurate search/
-face continuation. Linux race/full tests/vet passed; Windows/Edge pending. See
-people-review-paging.md. User-authorized workers are implementing focused staged-
-upgrade and native-child canary probes, not clearing broader security gates.
+face continuation. Linux race/full tests/vet and Windows Server 2022/Edge acceptance passed
+(41525562509). See people-review-paging.md. User-authorized workers completed
+staged-Setup preparation and native-child authority probes, with exact evidence in
+security-upgrade-preparation.md and security-worker-canary.md. The former passed
+its focused Setup fixture; the latter proves same-token state access remains
+allowed despite working resource limits. Wider security gates remain open.
 
 People candidate: reversible false-face dismissal/restoration preserving names,
 undo history, tags, analysis and originals. Linux focused race/full tests/vet
@@ -27,8 +30,10 @@ Next-release installer candidate replaces root DACLs instead of retaining unknow
 explicit grants and preflights reparse components. Disposable Windows acceptance
 passed on Windows Server 2022 (41513726020, S-010): ordinary-user access checks,
 junction preservation, actual production helper/LocalService upload and restart.
-Child explicit ACLs, concurrent path races and staging the new upgrade preparer
-remain gates before packaging. No installer/version changed.
+Bundled new preparation now passes actual Setup/junction/current-runtime
+LocalService execution (41525562509). Child explicit ACLs, writable custom AppDir,
+concurrent races, staging-token access and actual old-package full upgrade/rollback
+remain gates before packaging. No release installer/version changed.
 
 ## Current cloud-accepted prototype: 0.1.29
 

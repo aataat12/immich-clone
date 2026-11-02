@@ -578,3 +578,29 @@ The first upgrade currently invokes its retained older Prepare helper before
 new files are copied: stage/use the new preparer and test this transition before
 clearing the next installer gate. Full upgrade/failed rollback/uninstall, target
 Windows 10 and clean-machine acceptance remain open.
+
+
+## Delegated security probes alongside People functionality
+
+User-authorized bounded workers implemented the staged-new-preparer mitigation
+and a production-launcher canary, while primary work fixed People filtering/paging.
+Accepted focused run [41525562509](https://github.com/aataat12/immich-clone/actions/runs/41525562509),
+source bb602630fe1e49f905b51635ab174b97264be54c, job 125552255121 passed on
+Windows Server 2022. See security-upgrade-preparation.md for actual production
+Inno/Setup execution against junction and current-runtime LocalService fixtures;
+no retained old-helper marker ran, rejected preparation published no app changes,
+and successful snapshots/service/original preservation/uninstall passed.
+This does not clear actual old-installer/provider upgrade/failed rollback, custom
+AppDir trust, child explicit ACLs, staging-directory token tests or path races.
+
+See security-worker-canary.md for actual LocalService control/job child execution.
+Resource limits refused 600MiB allocation and process spawn inside the production
+job, while same-token secret/catalog reads and synthetic-original writes remained
+allowed. SYSTEM/Administrators-only negative controls denied read/write. This
+is execution evidence of the remaining file-authority boundary gap, not a parser
+exploit or successful filesystem isolation. Stronger child containment remains a
+release gate; no production token/launcher change was made by this experiment.
+
+No disposable probe package is a delivered installer. Primary Linux tests/race/vet
+and focused Windows Go/browser/ACL regressions passed; broader security acceptance
+and target Windows 10 remain separate gates. No private inputs or paid resources.

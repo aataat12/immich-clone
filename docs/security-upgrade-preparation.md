@@ -2,7 +2,8 @@
 
 Scope: IR-002 from `security-installer-review.md`. Source base for this change is
 `9c8dcbd`. No version, original format, provider, model, dependency or schema change.
-This note initially records source/test design only; Windows execution is pending.
+Focused Windows Server 2022 execution passed as recorded below; broader release
+acceptance remains separate.
 
 ## Change
 
@@ -74,10 +75,29 @@ current-runtime existing-service fixture: it is not the actual accepted old
 0.1.29 package, not a cross-provider upgrade, and not a full failed-upgrade or
 independent-restore test.
 
-## Acceptance still required
+## Focused Windows acceptance
 
-- Execute the above probe on Windows and inspect actual results; source/readiness
-  does not constitute a pass. Existing S-010 evidence does not cover this change.
+[Run 41525562509](https://github.com/aataat12/immich-clone/actions/runs/41525562509),
+source `bb602630fe1e49f905b51635ab174b97264be54c`, job `125552255121` passed
+on Windows Server 2022. The primary agent inspected the successful job evidence.
+The pinned Inno 6.7.4 setup checksum/provisioning and compilation of the production
+`.iss` passed, followed by actual Setup execution rather than compilation alone.
+
+The junction case rejected before replacement application files, service or state
+registration were published. The retained preparer marker was absent; retained
+app bytes and outside target ACL/bytes remained unchanged. The normal existing
+LocalService/library fixture completed Setup without executing its retained marker
+preparer. Real prior binary/catalog/access-code rollback snapshots existed, exact
+candidate management/helper bytes were installed, original/code/data location
+were preserved, and the LocalService returned healthy. Actual uninstall succeeded
+and retained the managed original bytes.
+
+This clears the focused staged-preparer execution gate only. The current-runtime
+fixture/minimal provider limitations above still apply. No product installer,
+actual accepted older-installer transition, full-provider upgrade or complete
+failed-upgrade/restore acceptance is claimed by this probe.
+
+## Acceptance still required
 - Prove the staging directory and extracted helpers are not writable by a separate
   standard-user token. The SHA256 match alone is not that evidence.
 - Build the broader real candidate from its pinned payloads, upgrade the actual
