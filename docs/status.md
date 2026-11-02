@@ -92,7 +92,11 @@ browser controls. Batch membership stores raw state strings; exporting them as
 json.RawMessage made /api/export return an empty HTTP 200. The branch fixes string
 encoding and tests pending/cancelled/ready/failed exports, preserving embedding
 exclusion. Full Linux race/vet passed before the fix; focused regression and
-Windows rerun results are tracked in PR #1. No accepted 0.1.25 installer yet.
+Windows rerun results are tracked in PR #1. Run 41404730950 then passed native bulk AI controls, exports and Build Notes
+navigation on desktop/narrow Edge. The subsequent missing-model probe incorrectly
+reused an already analyzed fixture; ready analysis deliberately does not rerun.
+Use a newly generated valid PNG and check its original download hash instead.
+No accepted 0.1.25 installer yet.
 Direct main publication was blocked by automatic approval review; changes remain
 on the review branch pending explicit merge authorization.
 
