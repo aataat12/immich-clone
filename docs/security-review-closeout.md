@@ -65,10 +65,11 @@ imports determine the inventory.
 | zlib 1.3.2 static | Installed 0.1.29 provider already uses this replacement, not 1.3.1. Official February 2026 release/audit changes were compared with exact build and linked version; roundtrip/inflateCopy/malformed execution passed in 41483644241. Current vendor release is 1.3.2. No fallback bundled old zlib; future fixes require provider rebuild/retest. |
 | FlatBuffers 23.5.9 builtin headers | Accepted configure reports this transitive DNN dependency. TFLite importer exists in the module, but the worker exclusively calls ONNX byte-buffer APIs. Vendor advisory page has no published GHSAs; current size-verifier change #8740 and unverified-buffer hardening report #9295 were classified as TFLite/FlatBuffers paths not reached by this fixed worker, not a library-wide clearance. Arbitrary/TFLite models stay disallowed. |
 | OpenCV embedded SoftFloat/FDLIBM/FLANN and Windows Concurrency backend | These are source portions of the exact pinned OpenCV module archive, not independently downloaded versions. Their implementation is retained with notices; current related FLANN/SIMD/floating-point safety fixes are covered below. Default ADE download is not a linked G-API dependency: gapi is disabled by build-list resolution. |
+| GCC/MinGW media toolchain and runtime shims | Retained exact receipt: GCC 13.2.0-6ubuntu1+26.1, binutils 2.41.90.20240122-1ubuntu1+11.4, MinGW headers/CRT 11.0.1-3build1. GCC CVE-2023-4039 is AArch64, not this x86-64 target; glibc findings are not Windows msvcrt. Current MinGW aligned-allocation report #1039 was checked against both hash-verified PE imports: aligned malloc/realloc/free resolve to native msvcrt.dll, which the report excludes, not the defective MinGW fallback. FFmpeg also applies its 64 MiB allocation guard. Exact evidence and primary references are in the independent companion; no global MinGW/GCC runtime clearance. |
 | MSVC 19.44.35229.0 / v143 14.44.35207, static /MT CRT/STL/Concurrency | Replacement build job 125408169198 logs independently confirmed both compiler identity and toolset path. PE imports only kernel32.dll; no redistributable update can replace this embedded runtime. Microsoft 17.14 vendor security tables/lifecycle reviewed: no entry there identifies this selected CRT as an affected runtime; IDE/.NET/Git/curl/Brotli/MsQuic/PDB tooling entries are not shipped native dependencies. This is a bounded vendor-record result, not binary CVE certification. Latest serviced toolset/runtime must be reviewed when rebuilding; NR-02 below preserves this obligation. |
 | OS DLLs / PowerShell | AI imports kernel32; media imports KERNEL32/SHELL32/bcrypt/msvcrt. Windows PowerShell management/security modules are OS-provided, not bundled. OS lifecycle/patching is an explicit external requirement, not cleared by Server 2022 tests. No Linux/WSL/VM/local SDK dependency is introduced. |
 | Inno Setup 6.7.4 | Current 6.x vendor release, dated 2026-10-28. COM/variant over-release and child RedirectionGuard inheritance fixes are in this pin. App does not expose COM scripting; elevated Setup helper invocation/upgrade entry is still SEC-02/03/08. No claim that Inno's mitigation removes application path races. |
-| Build/test-only Python, NumPy/OpenCV reference wheels, CMake/MSVC/MinGW, Node/Playwright 1.62.1, govulncheck | Not included as app runtime prerequisites. Native/reference/tool source and licenses remain in existing evidence. Use serviced disposable builders, checksum-pinned downloads and pinned actions; do not transfer a test-wheel vulnerability or OS library into the standalone worker inventory without linkage evidence. Current payload must be inspected, not inferred from this table. |
+| Build/test-only Python, NumPy/OpenCV reference wheels, CMake/compiler executables, Node/Playwright 1.62.1, govulncheck | Not included as app runtime prerequisites. Native/reference/tool source and licenses remain in existing evidence. Use serviced disposable builders, checksum-pinned downloads and pinned actions; do not transfer a test-wheel vulnerability or OS library into the standalone worker inventory without linkage evidence. Current payload must be inspected, not inferred from this table. |
 
 Immutable AI worker identity remains
 `cb35f0ccb3e38a6120a6f84fe91d17beaa719f9dcb9329c192b2c885bfb121ba`, provider
@@ -122,8 +123,9 @@ proof and does not resolve it.
 The [independent receipt](security-review-closeout-verification.md) records actual
 current commands, results and control-source SHA256s: Windows-target Go source/
 symbol scan exit 0/zero findings; **twelve source/history tests plus six artifact
-tests passed**. Current source/history scan receipt before companion finalization:
-**893 text inputs / 6,865,696 bytes; zero findings; binary=3; other exclusions=0**.
+tests passed**. Final precommit source/history scan receipt, independently reproduced before
+companion finalization:
+**900 text inputs / 6,903,607 bytes; zero findings; all exclusions=0**.
 Counters change when documentation/history changes; the final frozen candidate
 must rerun and retain its own receipt. Current native/model binaries are unchanged;
 no claim is made that an as-yet-unbuilt new installer payload was scanned.
@@ -224,6 +226,10 @@ workers may investigate/verify only within user-authorized scope.
 
 All retrieved/reviewed 2026-11-02; existing execution receipts are linked in
 `dependency-evidence.md`, `security-baseline.md` and the independent companion.
+The independent reviewer inspected this complete companion and found no missing
+known finding, owner or closure gate. Its final control receipts include scanner
+SHA256 `cd5a76a061540b3073e712ba3075195a9b51fa8396ee29e855fa138125a27568`
+and source-test SHA256 `fde1cd9618cb6891e793c059c35473cf67291c658351bf15a1713b9621f6aa4f`.
 
 - [OpenCV security policy](https://github.com/opencv/opencv/security/),
   [official changelog](https://github.com/opencv/opencv/wiki/OpenCV-Change-Logs),

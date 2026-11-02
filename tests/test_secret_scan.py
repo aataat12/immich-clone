@@ -2,6 +2,7 @@ import contextlib
 import importlib.util
 import io
 import os
+import shlex
 from pathlib import Path
 import subprocess
 import sys
@@ -146,11 +147,16 @@ class SecretScanTests(unittest.TestCase):
         args = scanner.git_command(self.root, 'ls-files')
         self.assertIn('core.fsmonitor=false', args)
         self.assertIn('core.hooksPath=' + os.devnull, args)
-        hook = self.root / 'fsmonitor.py'
+        hook = self.root / 'fsmonitor-hook'
+        helper = self.root / 'fsmonitor-helper.py'
         marker = self.root / 'hook-ran'
-        hook.write_text('#!' + Path(sys.executable).as_posix() + '\nimport pathlib,sys; pathlib.Path(' + repr(str(marker)) + ').write_text("unexpected"); sys.stdout.buffer.write(b"token\\0")\n')
+        helper.write_text('import pathlib,sys; pathlib.Path(' + repr(str(marker)) + ').write_text("unexpected"); sys.stdout.buffer.write(b"token\\0")\n')
+        # Git for Windows understands its portable /bin/sh shebang, whereas a
+        # Windows Python executable path is not a portable shebang interpreter.
+        # Quote both arguments for that shell; the same fixture runs on Linux.
+        hook.write_text('#!/bin/sh\nexec ' + shlex.quote(Path(sys.executable).as_posix()) + ' ' + shlex.quote(helper.as_posix()) + '\n', newline='\n')
         hook.chmod(0o755)
-        self.git('config', 'core.fsmonitor', str(hook))
+        self.git('config', 'core.fsmonitor', hook.as_posix())
         self.git('status', '--porcelain')
         self.assertTrue(marker.exists(), 'configured fixture hook did not execute in positive control')
         marker.unlink()
