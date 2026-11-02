@@ -20,12 +20,12 @@ import (
 	"time"
 )
 
-const ProviderID = "opencv-4.12.0-a83dcef02ebe"
+const ProviderID = "opencv-4.12.0-zlib-1.3.2-cb35f0ccb3e3"
 const AnalysisID = ProviderID + "-bgr960-v1"
 
 var ErrUnavailable = errors.New("local AI provider unavailable; originals remain available")
 var hashes = map[string]string{
-	"ai-worker.exe": "a83dcef02ebef33beccea8a3b21b88ed2bc18b298040f592be31ee9e72191ec6",
+	"ai-worker.exe": "cb35f0ccb3e38a6120a6f84fe91d17beaa719f9dcb9329c192b2c885bfb121ba",
 	"yunet.onnx":    "8f2383e4dd3cfbb4553ea8718107fc0423210dc964f9f4280604804ed2552fa4",
 	"sface.onnx":    "0ba9fbfa01b5270c96627c4ef784da859931e02f04419c829e83484087c34e79",
 	"yolox.onnx":    "c5c2d13e59ae883e6af3b45daea64af4833a4951c92d116ec270d9ddbe998063",

@@ -13,8 +13,8 @@ function Login {
 }
 try {
     ./scripts/Prepare-MediaProvider.ps1 -Destination (Join-Path $root 'media/ffmpeg-8.1.3-7eb77d88e2e9')
-    ./scripts/Prepare-AIProvider.ps1 -Destination (Join-Path $root 'ai/opencv-4.12.0-a83dcef02ebe')
-    Checked go @('build','-trimpath','-ldflags','-X main.version=0.1.27-prototype','-o',$binary,'./cmd/immichclone')
+    ./scripts/Prepare-AIProvider.ps1 -Destination (Join-Path $root 'ai/opencv-4.12.0-zlib-1.3.2-cb35f0ccb3e3')
+    Checked go @('build','-trimpath','-ldflags','-X main.version=0.1.29-prototype','-o',$binary,'./cmd/immichclone')
     Checked $binary @('-mode','init','-data',$state)
     Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)RX')
     Checked icacls @($state,'/grant','*S-1-5-19:(OI)(CI)M')
@@ -114,7 +114,7 @@ try {
     }
     if ($env:IMMICH_BROWSER_MODULE) {
         Stop-Service $name
-        $aiModel=Join-Path $root 'ai/opencv-4.12.0-a83dcef02ebe/sface.onnx'
+        $aiModel=Join-Path $root 'ai/opencv-4.12.0-zlib-1.3.2-cb35f0ccb3e3/sface.onnx'
         Move-Item $aiModel ($aiModel+'.held')
         Start-Service $name;Login
         $org=Invoke-RestMethod http://127.0.0.1:2283/api/organization -WebSession $session

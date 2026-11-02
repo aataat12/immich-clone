@@ -5,7 +5,7 @@ $state = Join-Path $root 'state'
 New-Item -ItemType Directory $root | Out-Null
 function Assert([bool]$condition,[string]$message) { if (!$condition) { throw $message }; Write-Output "PASS: $message" }
 function Install([string]$version) {
-    if ($version -eq '0.1.25') { $setup=Join-Path 'previous-installer' 'ImmichClone-0.1.25-prototype-x64-setup.exe';if ((Get-FileHash $setup).Hash.ToLowerInvariant() -ne 'e88a3fee85da9ecc3efe574b844ab534c5254d9cb1ea455e6d78338e8763bf00') { throw 'Previous installer checksum mismatch' }; $setup=(Resolve-Path $setup).Path } else { $setup=(Resolve-Path "dist/ImmichClone-$version-prototype-x64-setup.exe").Path }
+    if ($version -eq '0.1.27') { $setup=Join-Path 'previous-installer' 'ImmichClone-0.1.27-prototype-x64-setup.exe';if ((Get-FileHash $setup).Hash.ToLowerInvariant() -ne 'cffb19c052ac17cac30c62f845225cc6e30868f8d14389dc9e7ffd75876312ff') { throw 'Previous installer checksum mismatch' }; $setup=(Resolve-Path $setup).Path } else { $setup=(Resolve-Path "dist/ImmichClone-$version-prototype-x64-setup.exe").Path }
     $process = Start-Process $setup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$app+'"'),('/STATE="'+$state+'"'),('/LOG="'+$root+'/setup-'+$version+'.log"')) -Wait -PassThru
     if ($process.ExitCode -ne 0) {
         Get-Content "$root/setup-$version.log" -Tail 25 | ForEach-Object { Write-Host $_ }
@@ -14,11 +14,11 @@ function Install([string]$version) {
     return $process.ExitCode
 }
 try {
-    Assert ((Install '0.1.25') -eq 0) 'installer fresh install succeeds in path containing spaces'
+    Assert ((Install '0.1.27') -eq 0) 'installer fresh install succeeds in path containing spaces'
     Assert (Test-Path "$app/media/ffmpeg-8.1.3-7eb77d88e2e9/ffmpeg-8.1.3-source.tar.gz") 'installer includes exact media source and notices'
     $service = Get-CimInstance Win32_Service -Filter "Name='ImmichClone'"
     Write-Output ('Disposable CI service evidence: '+($service | Select-Object Name,StartName,StartMode,State | ConvertTo-Json -Compress))
-    if (!$service -or $service.StartName -ne 'NT AUTHORITY\LocalService' -or $service.StartMode -ne 'Auto') { Get-Content "$root/setup-0.1.25.log" -Tail 35 }
+    if (!$service -or $service.StartName -ne 'NT AUTHORITY\LocalService' -or $service.StartMode -ne 'Auto') { Get-Content "$root/setup-0.1.27.log" -Tail 35 }
     Assert (Test-Path "$app/Export-Diagnostics.ps1") 'installer includes standalone diagnostic exporter'
     Assert ($service.StartName -eq 'NT AUTHORITY\LocalService' -and $service.StartMode -eq 'Auto') 'installer configures restricted automatic service'
     & "$env:SystemRoot/System32/WindowsPowerShell/v1.0/powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/Test-LocalPrototype.ps1
@@ -31,10 +31,36 @@ try {
     [IO.File]::WriteAllText($fixture,$privateMarker)
     $asset = (Invoke-RestMethod 'http://127.0.0.1:2283/api/upload?name=synthetic.txt' -Method Post -Headers @{'X-Immich-Request'='1'} -InFile $fixture -WebSession $session).asset
     $hash = (Get-FileHash $fixture).Hash
-    Assert ((Install '0.1.27') -eq 0) 'installer upgrade succeeds'
-    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.27-prototype') 'upgrade deploys new executable version'
-    Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.27-prototype') 'installed health reports actual executable build'
+    $beforeAI=Join-Path $root 'before-upgrade-ai.png'
+    Invoke-WebRequest 'https://raw.githubusercontent.com/scikit-image/scikit-image/e8a42ba85aaf5fd9322ef9ca51bc21063b22fcae/skimage/data/astronaut.png' -OutFile $beforeAI
+    Assert ((Get-FileHash $beforeAI).Hash.ToLowerInvariant() -eq '88431cd9653ccd539741b555fb0a46b61558b301d4110412b5bc28b5e3ea6cb5') 'pre-upgrade public fixture hash verified'
+    $beforeAsset=(Invoke-RestMethod 'http://127.0.0.1:2283/api/upload?name=before-upgrade-ai.png' -Method Post -Headers @{'X-Immich-Request'='1'} -InFile $beforeAI -WebSession $session).asset
+    $null=Invoke-RestMethod "http://127.0.0.1:2283/api/assets/$($beforeAsset.id)/analyze" -Method Post -Headers @{'X-Immich-Request'='1'} -WebSession $session
+    for($i=0;$i -lt 30;$i++){ $beforeOrg=Invoke-RestMethod http://127.0.0.1:2283/api/organization -WebSession $session;$beforeEntry=$beforeOrg.assets | Where-Object {$_.asset.id -eq $beforeAsset.id};if($beforeEntry.analysis.status -eq 'ready'){break};Start-Sleep -Seconds 1 }
+    Assert ($beforeEntry.analysis.status -eq 'ready') 'actual previous installer supplies ready AI data'
+    $beforeFace=@($beforeOrg.faces | Where-Object asset_id -eq $beforeAsset.id)[0]
+    $null=Invoke-RestMethod 'http://127.0.0.1:2283/api/faces/label' -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{ids=@($beforeFace.id);name='Before upgrade person'}|ConvertTo-Json) -WebSession $session
+    $null=Invoke-RestMethod "http://127.0.0.1:2283/api/assets/$($beforeAsset.id)/tags" -Method Post -Headers @{'X-Immich-Request'='1'} -Body '{"tags":["Before upgrade tag"]}' -WebSession $session
+
+    # Fail the first cross-provider upgrade too, then prove old executable/provider
+    # and original data still work before attempting a successful upgrade.
+    $env:IMMICH_INSTALL_TEST_FAILURE='1'
+    $crossProviderFailure=Install '0.1.29'
+    Remove-Item Env:IMMICH_INSTALL_TEST_FAILURE
+    Assert ($crossProviderFailure -ne 0) 'cross-provider failed upgrade is rejected'
+    Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.27-prototype') 'cross-provider rollback restores prior build'
+    Assert ((Get-FileHash "$app/ai/opencv-4.12.0-a83dcef02ebe/ai-worker.exe").Hash.ToLowerInvariant() -eq 'a83dcef02ebef33beccea8a3b21b88ed2bc18b298040f592be31ee9e72191ec6') 'cross-provider rollback retains old immutable worker'
+    Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'cross-provider rollback preserves original bytes'
+    Assert ((Install '0.1.29') -eq 0) 'installer upgrade succeeds'
+    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.29-prototype') 'upgrade deploys new executable version'
+    Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.29-prototype') 'installed health reports actual executable build'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'upgrade preserves original bytes'
+    $session=[Microsoft.PowerShell.Commands.WebRequestSession]::new()
+    $null=Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$code}|ConvertTo-Json) -WebSession $session
+    $preservedOrg=Invoke-RestMethod http://127.0.0.1:2283/api/organization -WebSession $session
+    $preservedEntry=$preservedOrg.assets | Where-Object {$_.asset.id -eq $beforeAsset.id}
+    Assert (@($preservedOrg.faces | Where-Object name -eq 'Before upgrade person').Count -eq 1 -and $preservedEntry.tags -contains 'Before upgrade tag' -and $preservedEntry.analysis.status -eq 'ready' -and $preservedEntry.analysis.provider -eq 'opencv-4.12.0-a83dcef02ebe-bgr960-v1') 'provider upgrade preserves old names tags and ready analysis without rerunning it'
+
     # Scan installed distribution payloads, never the protected runtime rollback
     # snapshot (which intentionally preserves the catalog and access code).
     $forbidden = Join-Path $root 'private-package-canaries.txt'
@@ -57,6 +83,10 @@ try {
     $aiFixture=Join-Path $root 'public-ai.png'
     Invoke-WebRequest 'https://raw.githubusercontent.com/scikit-image/scikit-image/e8a42ba85aaf5fd9322ef9ca51bc21063b22fcae/skimage/data/astronaut.png' -OutFile $aiFixture
     Assert ((Get-FileHash $aiFixture).Hash.ToLowerInvariant() -eq '88431cd9653ccd539741b555fb0a46b61558b301d4110412b5bc28b5e3ea6cb5') 'public AI fixture hash verified'
+    # Keep the same public image pixels but a distinct original identity so this
+    # job must actually execute the replacement provider instead of reusing ready data.
+    [IO.File]::WriteAllBytes($aiFixture,([IO.File]::ReadAllBytes($aiFixture)+[Text.Encoding]::ASCII.GetBytes('new provider fixture')))
+
     $aiHeaders=@{'X-Immich-Request'='1'}
     $aiAsset=(Invoke-RestMethod 'http://127.0.0.1:2283/api/upload?name=public-ai.png' -Method Post -Headers $aiHeaders -InFile $aiFixture -WebSession $session).asset
     $null=Invoke-RestMethod "http://127.0.0.1:2283/api/assets/$($aiAsset.id)/analyze" -Method Post -Headers $aiHeaders -WebSession $session
@@ -66,12 +96,12 @@ try {
     $null=Invoke-RestMethod 'http://127.0.0.1:2283/api/faces/label' -Method Post -Headers $aiHeaders -Body (@{ids=@($face.id);name='Installer Person'}|ConvertTo-Json) -WebSession $session
     $null=Invoke-RestMethod "http://127.0.0.1:2283/api/assets/$($aiAsset.id)/tags" -Method Post -Headers $aiHeaders -Body '{"tags":["Installer tag"]}' -WebSession $session
     $env:IMMICH_INSTALL_TEST_FAILURE = '1'
-    $failedCode = Install '0.1.28'
+    $failedCode = Install '0.1.30'
     Remove-Item Env:IMMICH_INSTALL_TEST_FAILURE
     $installLog = Get-Content (Join-Path $env:ProgramData 'ImmichCloneDiagnostics/installer.jsonl') -Raw
     Assert ($installLog.Contains('installer_failed') -and $installLog.Contains('rollback_complete') -and !$installLog.Contains($state)) 'installer logs failed-upgrade and rollback stages without data paths'
     Assert ($failedCode -ne 0) 'injected failed upgrade returns failure'
-    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.27-prototype') 'failed upgrade restores previous executable'
+    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.29-prototype') 'failed upgrade restores previous executable'
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'rollback restores healthy service'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'failed upgrade preserves original bytes'
     Assert ((Get-FileHash "$state/originals/$($heicAsset.id)").Hash -eq $heicHash) 'failed upgrade preserves HEIC original'
@@ -95,7 +125,7 @@ try {
     $state = Join-Path $root 'restored state'
     & $recoveryTool -mode restore -data $state -archive $archive
     Assert ($LASTEXITCODE -eq 0) 'offline restoration succeeds at a different location'
-    Assert ((Install '0.1.27') -eq 0) 'installer starts a restored library without the original data folder'
+    Assert ((Install '0.1.29') -eq 0) 'installer starts a restored library without the original data folder'
     $session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
     $restoredCode = (Get-Content "$state/access-code.txt" -Raw).Trim()
     $null = Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$restoredCode}|ConvertTo-Json) -WebSession $session

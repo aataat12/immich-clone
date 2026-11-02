@@ -386,3 +386,18 @@ selected signature/canary detection and budget/redaction handling, not absence o
 all private content. No supplied user secrets/media were used. The installed-
 payload canary hook remains unexecuted until the broader installer acceptance
 run; native provider integration and target Windows 10 checks also remain open.
+
+
+## Broader 0.1.29 integration candidate
+
+Point the app/packager at the isolated accepted worker by new immutable provider
+path and exact SHA256; keep model hashes and original/backup schema unchanged.
+Require the replacement zlib archive/license/version evidence when packaging.
+Existing ready results are not rerun solely for a provider change; manual names,
+tags and geometry remain authoritative. Windows acceptance must exercise actual
+0.1.27 inference/labels before upgrade, failed cross-provider rollback, successful
+upgrade preserving those records, and a distinct new original executing the new
+provider. Existing full application/installer/restore/full-disk tests and installed
+payload private-canary checks remain required. Candidate 0.1.30 is only a deliberate
+failed-upgrade fixture; deliver neither candidate until its acceptance is complete.
+No production-security or clean Windows 10 claim; wider milestone remains open.

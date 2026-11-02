@@ -1,8 +1,11 @@
 param([Parameter(Mandatory=$true)][string]$Destination)
 $ErrorActionPreference='Stop'
-$workerHash='a83dcef02ebef33beccea8a3b21b88ed2bc18b298040f592be31ee9e72191ec6'
+$workerHash='cb35f0ccb3e38a6120a6f84fe91d17beaa719f9dcb9329c192b2c885bfb121ba'
 if ((Get-FileHash 'native-ai-candidate/ai-worker.exe').Hash.ToLowerInvariant() -ne $workerHash) { throw 'AI worker checksum mismatch' }
-foreach ($file in @('OpenCV-LICENSE.txt','SOURCE-PATCHES.txt','opencv-module-sources.zip','protobuf-upstream-0299c030.patch','UPSTREAM-SOURCE.txt','CMakeCache.txt','pe-imports.txt')) { if (!(Test-Path "native-ai-candidate/$file")) { throw 'AI provenance missing' } }
+foreach ($file in @('OpenCV-LICENSE.txt','SOURCE-PATCHES.txt','opencv-module-sources.zip','protobuf-upstream-0299c030.patch','UPSTREAM-SOURCE.txt','CMakeCache.txt','pe-imports.txt','worker-version.txt','zlib-1.3.2-source.tar.gz','zlib-1.3.2-LICENSE.txt','zlib-operation-evidence.txt')) { if (!(Test-Path "native-ai-candidate/$file")) { throw 'AI provenance missing' } }
+if ((Get-FileHash 'native-ai-candidate/zlib-1.3.2-source.tar.gz').Hash.ToLowerInvariant() -ne 'bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16') { throw 'Replacement zlib source checksum mismatch' }
+$nativeVersion=Get-Content 'native-ai-candidate/worker-version.txt' -Raw | ConvertFrom-Json
+if ($nativeVersion.zlib -ne '1.3.2' -or $nativeVersion.opencv -ne '4.12.0') { throw 'Native provenance version mismatch' }
 New-Item -ItemType Directory -Force $Destination | Out-Null
 Copy-Item native-ai-candidate/* $Destination -Recurse -Force
 $base='https://media.githubusercontent.com/media/opencv/opencv_zoo/48b10fa505aeb51fbd127fc60a5c660040e823b7/models/'

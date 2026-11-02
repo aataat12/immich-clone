@@ -1,4 +1,4 @@
-IMMICH CLONE 0.1.27 - EARLY TEST BUILD
+IMMICH CLONE 0.1.29 - EARLY TEST BUILD
 
 This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.

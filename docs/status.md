@@ -1,5 +1,16 @@
 # Current status
 
+## 0.1.29 integration candidate (not released)
+
+Integrate the accepted zlib 1.3.2 worker under immutable provider directory
+opencv-4.12.0-zlib-1.3.2-cb35f0ccb3e3, exact worker hash cb35f0cc...; model weights
+unchanged. Candidate bundles held login/resource safeguards, source/notices and
+installed-payload privacy checks. Linux internal-package tests/vet pass. Windows
+acceptance is next, upgrading the actual accepted 0.1.27 package and exercising
+cross-provider failed-upgrade recovery before success. Old ready AI data/names/
+tags must remain intact; a distinct new original must execute the new provider.
+No candidate delivery or local action until acceptance and artifact verification.
+
 ## Native servicing candidate accepted in isolation (not installed)
 
 A pinned zlib 1.3.2 static operation test passed in cloud Linux and Windows.
