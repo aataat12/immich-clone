@@ -296,3 +296,8 @@
   Keep the original eight stable IDs in security-worklist.md. Two authorized
   workers jointly own SEC-01 implementation and independent Windows negative/
   normal controls; only reviewed passing completion evidence closes the item.
+
+- 2026-11-02 user authorized four workers for two complete original items:
+  SEC-04 and SEC-07, each with implementation plus independent verification.
+  No partial probe or reassigned unfinished review counts as closure. Main agent
+  handles People previous-page navigation and integration. No release bypass.

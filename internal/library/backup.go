@@ -138,35 +138,58 @@ func (s *Store) backupLocked(ctx context.Context, w io.Writer, report func(Backu
 
 // Restore never overwrites an existing directory. Publication happens only after
 // all checksums and catalog/original relationships have been validated.
-func Restore(archive, target string) (result error) {
-	started := time.Now()
-	defer func() { diagnostics.Record("restore", "archive_restore", result, 0, 0, time.Since(started)) }()
-	if _, e := os.Lstat(target); !errors.Is(e, os.ErrNotExist) {
-		return errors.New("restore destination must not exist")
-	}
+func Restore(archive, target string) error {
+	return RestoreWithLimits(context.Background(), archive, target, RestoreLimits{})
+}
+func recordRestore(result error, elapsed time.Duration) {
+	diagnostics.Record("restore", "archive_restore", result, 0, 0, elapsed)
+}
+func restoreArchiveToStage(archive, stage string, limits RestoreLimits, nonce string) (result error) {
 	zr, e := zip.OpenReader(archive)
 	if e != nil {
 		return e
 	}
 	defer zr.Close()
-	if len(zr.File) > 100000 {
-		return errors.New("backup exceeds 100000 entry limit")
+	if uint64(len(zr.File)) > limits.MaxEntries {
+		return ErrRestoreBudget
 	}
 	entries := map[string]*zip.File{}
+	var declared uint64
+	metadata := uint64(len(zr.Comment))
+	if metadata > limits.MaxMetadataBytes {
+		return ErrRestoreBudget
+	}
 	for _, f := range zr.File {
+		for _, cost := range []uint64{46, uint64(len(f.Name)), uint64(len(f.Extra)), uint64(len(f.Comment))} {
+			metadata, e = restoreAddWithin(metadata, cost, limits.MaxMetadataBytes)
+			if e != nil {
+				return e
+			}
+		}
+		declared, e = restoreAddWithin(declared, f.UncompressedSize64, limits.MaxBytes)
+		if e != nil {
+			return e
+		}
 		if _, ok := entries[f.Name]; ok {
 			return errors.New("duplicate backup entry")
 		}
 		if (f.Name != "manifest.json" && !backupPayloadName(f.Name)) || !f.Mode().IsRegular() {
 			return errors.New("unsafe backup entry")
 		}
-		if f.UncompressedSize64 > uint64(MaxUpload) {
-			return errors.New("oversized backup file")
+		fileLimit := uint64(MaxUpload)
+		if f.Name == "catalog.db" {
+			fileLimit = limits.MaxCatalogBytes
+		}
+		if f.Name == "manifest.json" {
+			fileLimit = limits.MaxManifestBytes
+		}
+		if f.UncompressedSize64 > fileLimit {
+			return ErrRestoreBudget
 		}
 		entries[f.Name] = f
 	}
 	mf := entries["manifest.json"]
-	if mf == nil || mf.UncompressedSize64 > 16<<20 {
+	if mf == nil || mf.UncompressedSize64 > limits.MaxManifestBytes {
 		return errors.New("missing or oversized manifest")
 	}
 	reader, e := mf.Open()
@@ -175,9 +198,9 @@ func Restore(archive, target string) (result error) {
 	}
 	// Read through EOF so ZIP CRC/size errors cannot hide behind a complete JSON
 	// prefix. Unmarshal also rejects any non-whitespace trailing JSON/data.
-	data, readErr := io.ReadAll(io.LimitReader(reader, (16<<20)+1))
+	data, readErr := io.ReadAll(io.LimitReader(reader, int64(limits.MaxManifestBytes)+1))
 	closeErr := reader.Close()
-	if readErr != nil || closeErr != nil || len(data) > 16<<20 || uint64(len(data)) != mf.UncompressedSize64 {
+	if readErr != nil || closeErr != nil || uint64(len(data)) > limits.MaxManifestBytes || uint64(len(data)) != mf.UncompressedSize64 {
 		return errors.New("invalid backup manifest")
 	}
 	var m Manifest
@@ -194,19 +217,11 @@ func Restore(archive, target string) (result error) {
 			return errors.New("unsafe or missing backup entry")
 		}
 	}
-	stage, e := os.MkdirTemp(filepath.Dir(target), "immich-restore-*")
-	if e != nil {
-		return e
-	}
-	defer func() {
-		if result != nil {
-			os.RemoveAll(stage)
-		}
-	}()
+	remaining := limits.MaxBytes - uint64(len(data))
 	for entry, expected := range m.Files {
 		z := entries[entry]
-		if z == nil || z.UncompressedSize64 > uint64(MaxUpload) {
-			return errors.New("missing or oversized backup file")
+		if z == nil {
+			return errors.New("missing backup file")
 		}
 		path := filepath.Join(stage, filepath.FromSlash(entry))
 		if e = os.MkdirAll(filepath.Dir(path), 0700); e != nil {
@@ -222,7 +237,9 @@ func Restore(archive, target string) (result error) {
 			return e
 		}
 		h := sha256.New()
-		n, copyErr := io.Copy(io.MultiWriter(out, h), io.LimitReader(in, int64(z.UncompressedSize64)+1))
+		bounded := restoreBudgetWriter{Writer: io.MultiWriter(out, h), Remaining: remaining}
+		n, copyErr := io.Copy(&bounded, io.LimitReader(in, int64(z.UncompressedSize64)+1))
+		remaining = bounded.Remaining
 		in.Close()
 		if copyErr == nil {
 			copyErr = out.Sync()
@@ -237,6 +254,35 @@ func Restore(archive, target string) (result error) {
 		if n != int64(z.UncompressedSize64) || hex.EncodeToString(h.Sum(nil)) != expected {
 			return errors.New("backup checksum mismatch")
 		}
+	}
+	base := declared - entries["catalog.db"].UncompressedSize64
+	if e = writeRestoreProgress(stage, nonce, base); e != nil {
+		return e
+	}
+	// Read-only structural checking is untrusted work too: it remains inside the
+	// same hard-limited process before Open can rebuild/write derived indexes.
+	catalog, e := bolt.Open(filepath.Join(stage, "catalog.db"), 0600, &bolt.Options{ReadOnly: true, Timeout: time.Second})
+	if e != nil {
+		return e
+	}
+	checkErr := catalog.View(func(tx *bolt.Tx) error {
+		invalid := false
+		for problem := range tx.Check() {
+			if problem != nil {
+				invalid = true
+			}
+		}
+		if invalid {
+			return errors.New("invalid backup catalog structure")
+		}
+		return nil
+	})
+	closeErr = catalog.Close()
+	if checkErr != nil {
+		return checkErr
+	}
+	if closeErr != nil {
+		return closeErr
 	}
 	restored, e := Open(stage)
 	if e != nil {
@@ -271,7 +317,7 @@ func Restore(archive, target string) (result error) {
 	if closeErr != nil {
 		return closeErr
 	}
-	return os.Rename(stage, target)
+	return checkRestoreStage(stage, limits)
 }
 
 // Backup payload names are format-defined, never arbitrary extraction paths.

@@ -20,3 +20,7 @@ access-code.txt
 .env
 .env.*
 !.env.example
+
+# Reproducible Python test caches are not project deliverables.
+__pycache__/
+*.py[cod]

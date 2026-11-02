@@ -114,6 +114,13 @@ func main() {
 	mode := flag.String("mode", "serve", "serve, service, init, verify, backup, restore, show-code or version")
 	logs := flag.String("logs", diagnostics.DefaultDir(), "private diagnostic directory")
 	archive := flag.String("archive", "", "backup archive file")
+	restoreBytes := flag.Uint64("restore-max-bytes", 0, "restore aggregate bytes (0: destination free bytes minus reserve)")
+	restoreEntries := flag.Uint64("restore-max-entries", 0, "restore ZIP entries (0: 100000)")
+	restoreManifest := flag.Uint64("restore-max-manifest-bytes", 0, "restore manifest bytes (0: 16MiB)")
+	restoreCatalog := flag.Uint64("restore-max-catalog-bytes", 0, "restore catalog bytes (0: 4GiB)")
+	restoreMetadata := flag.Uint64("restore-max-metadata-bytes", 0, "restore ZIP metadata bytes (0: 64MiB)")
+	restoreMemory := flag.Uint64("restore-memory-bytes", 0, "restore worker memory budget (0: 512MiB)")
+	restoreTimeout := flag.Duration("restore-timeout", 0, "restore wall timeout (0: 30m)")
 	flag.Parse()
 	if *mode == "version" {
 		fmt.Println(version)
@@ -143,9 +150,30 @@ func main() {
 		return
 	}
 	if *mode == "restore" {
-		if e := library.Restore(*archive, *data); e != nil {
+		ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+		defer cancel()
+		limits := library.RestoreLimits{MaxBytes: *restoreBytes, MaxEntries: *restoreEntries, MaxManifestBytes: *restoreManifest, MaxCatalogBytes: *restoreCatalog, MaxMetadataBytes: *restoreMetadata, MemoryBytes: *restoreMemory, Timeout: *restoreTimeout}
+		if e := library.RestoreWithLimits(ctx, *archive, *data, limits); e != nil {
 			diagnostics.Record("restore", "failed", e, 0, 0, 0)
-			log.Fatal("Restore refused or failed validation; existing data was not replaced")
+			if errors.Is(e, library.ErrRestoreCleanup) {
+				log.Fatal("Restore failed; private staging beside the requested destination could not be fully cleaned. Existing data was not replaced.")
+			}
+			if errors.Is(e, library.ErrRestoreInvalidArchive) {
+				log.Fatal("Restore archive failed structure, checksum, or catalog validation. Existing data was not replaced.")
+			}
+			if errors.Is(e, library.ErrRestoreWorkerFailed) || errors.Is(e, library.ErrRestoreOutputLimit) {
+				log.Fatal("Restore worker failed or exceeded its memory/process/output budget; inspect the archive and selected -restore-memory-bytes budget before retrying. Existing data was not replaced.")
+			}
+			if errors.Is(e, context.Canceled) {
+				log.Fatal("Restore cancelled before publication; existing data was not replaced.")
+			}
+			if errors.Is(e, library.ErrRestoreBudget) {
+				log.Fatal("Restore exceeded a configured byte/entry budget or destination capacity; adjust the restore budget flags or available space before retrying. Existing data was not replaced.")
+			}
+			if errors.Is(e, context.DeadlineExceeded) {
+				log.Fatal("Restore exceeded its hard worker timeout; adjust -restore-timeout for a larger recovery. Existing data was not replaced.")
+			}
+			log.Fatal("Restore refused, failed validation, or exceeded worker resources; check selected restore limits. Existing data was not replaced.")
 		}
 		diagnostics.Record("restore", "complete", nil, 0, 0, 0)
 		fmt.Println("Restore verified and published; previews queued for regeneration")

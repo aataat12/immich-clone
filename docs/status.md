@@ -1,5 +1,10 @@
 # Current status
 
+Current parallel assignments: SEC-04 hostile backup limits and SEC-07 review
+closeout, each with implementation and independent verification workers. Both
+remain open until full evidence review; no category renaming. Primary People
+work adds independent previous-page histories (people-review-navigation.md).
+
 Authoritative security progress: security-worklist.md retains the original eight
 items and stable SEC-01..SEC-08 IDs. SEC-01 is closed after complete implementation and independent Windows
 permission/normal-service/Setup acceptance (full all-green run 41535508518); SEC-02..SEC-08 stay open.
