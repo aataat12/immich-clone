@@ -371,12 +371,12 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	s.mu.Unlock()
 	if limited {
 		w.Header().Set("Retry-After", "60")
+		w.Header().Set("Connection", "close")
 		http.Error(w, "try again in one minute", 429)
 		return
 	}
 	controller := http.NewResponseController(w)
 	_ = controller.SetReadDeadline(time.Now().Add(10 * time.Second))
-	defer controller.SetReadDeadline(time.Time{})
 	r.Body = http.MaxBytesReader(w, r.Body, 1024)
 	var input struct {
 		Code string `json:"code"`
@@ -385,9 +385,13 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	decoder.DisallowUnknownFields()
 	var extra any
 	if decoder.Decode(&input) != nil || !errors.Is(decoder.Decode(&extra), io.EOF) || subtle.ConstantTimeCompare([]byte(input.Code), []byte(s.Code)) != 1 {
+		// Do not clear a failed read deadline before net/http finishes the
+		// response: draining an incomplete body could otherwise stall again.
+		w.Header().Set("Connection", "close")
 		http.Error(w, "incorrect access code", 401)
 		return
 	}
+	_ = controller.SetReadDeadline(time.Time{})
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	now = time.Now()

@@ -1,7 +1,11 @@
 package web
 
 import (
+	"bufio"
+	"fmt"
 	"io"
+	"net"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -46,5 +50,34 @@ func TestLoginRejectsExtraAndOversizedJSON(t *testing.T) {
 	}
 	if w := request(s, "POST", "/api/login", valid, nil); w.Code != 200 {
 		t.Fatal("valid login rejected")
+	}
+}
+
+// Exercise a real connection: a recorder cannot prove a network read deadline.
+func TestLoginNetworkReadDeadline(t *testing.T) {
+	s, _ := setup(t)
+	server := httptest.NewServer(s)
+	defer server.Close()
+	address := strings.TrimPrefix(server.URL, "http://")
+	conn, e := net.DialTimeout("tcp", address, time.Second)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer conn.Close()
+	if e = conn.SetDeadline(time.Now().Add(15 * time.Second)); e != nil {
+		t.Fatal(e)
+	}
+	start := time.Now()
+	_, e = fmt.Fprintf(conn, "POST /api/login HTTP/1.1\r\nHost: %s\r\nX-Immich-Request: 1\r\nContent-Length: 1000\r\n\r\n{\"code\":\"", address)
+	if e != nil {
+		t.Fatal(e)
+	}
+	response, e := http.ReadResponse(bufio.NewReader(conn), nil)
+	if e != nil {
+		t.Fatal("stalled login did not terminate", e)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != 401 || !response.Close || time.Since(start) < 8*time.Second {
+		t.Fatal("login deadline/connection close not enforced")
 	}
 }
