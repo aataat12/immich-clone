@@ -11,6 +11,10 @@ negative/valid-restore tests and vet passed; Windows Server 2022/Edge validation
 passed (41510214737, S-009). Next security review: parent-folder/reparse and ACL
 boundaries, aggregate archive/catalog work and native isolation.
 
+Next-release installer candidate replaces root DACLs instead of retaining unknown
+explicit grants and preflights reparse components. Disposable Windows acceptance
+pending (S-010); no installer/version changed.
+
 ## Current cloud-accepted prototype: 0.1.29
 
 [Acceptance 41487369408](https://github.com/aataat12/immich-clone/actions/runs/41487369408),

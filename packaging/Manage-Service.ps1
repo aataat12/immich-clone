@@ -9,12 +9,16 @@ $ErrorActionPreference = 'Stop'
 $env:PSModulePath = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\Modules'
 Import-Module Microsoft.PowerShell.Management -Force
 Import-Module Microsoft.PowerShell.Security -Force
+. (Join-Path $PSScriptRoot 'Storage-Security.ps1')
 $name = 'ImmichClone'
 $binary = Join-Path $AppDir 'immichclone.exe'
 $rollback = Join-Path $AppDir 'rollback'
 $stage = 'inspect service'
+$pathsValidated = $false
+$diagnosticsReady = $false
 $logRoot = Join-Path $env:ProgramData 'ImmichCloneDiagnostics'
 function Diagnostic([string]$event,[int]$result=0) {
+    if (!$diagnosticsReady) { return }
     try {
         $file = Join-Path $logRoot 'installer.jsonl'
         if ((Test-Path $file) -and (Get-Item $file).Length -gt 4MB-1024) {
@@ -40,9 +44,13 @@ function Health {
     throw 'Installed service did not become healthy'
 }
 try {
-    New-Item -ItemType Directory -Force $logRoot | Out-Null
+    Assert-NoReparsePath $AppDir
+    Assert-NoReparsePath $DataDir
+    Assert-NoReparsePath $logRoot
+    $pathsValidated = $true
     $logIdentity = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
-    Checked icacls @($logRoot,'/inheritance:r','/grant:r','*S-1-5-18:(OI)(CI)F','*S-1-5-32-544:(OI)(CI)F','*S-1-5-19:(OI)(CI)M',('*'+$logIdentity+':(OI)(CI)RX'))
+    Set-PrivateDirectoryAcl -Path $logRoot -ReaderSid $logIdentity -ServiceAccess
+    $diagnosticsReady = $true
     Diagnostic 'installer_begin'
     $owned = Own-Service
     if ($Action -eq 'Prepare') {
@@ -50,8 +58,7 @@ try {
             $stage = 'snapshot previous installation'
             Diagnostic 'upgrade_prepare'
             Stop-Service $name
-            New-Item -ItemType Directory -Force $rollback | Out-Null
-            Checked icacls @($rollback,'/inheritance:r','/grant:r','*S-1-5-18:(OI)(CI)F','*S-1-5-32-544:(OI)(CI)F')
+            Set-PrivateDirectoryAcl -Path $rollback
             Copy-Item $binary "$rollback/immichclone.exe" -Force
             Copy-Item "$DataDir/catalog.db" "$rollback/catalog.db" -Force
             Copy-Item "$DataDir/access-code.txt" "$rollback/access-code.txt" -Force
@@ -69,11 +76,10 @@ try {
     if ([IO.Path]::GetFullPath($AppDir).TrimEnd('\') -eq [IO.Path]::GetFullPath($DataDir).TrimEnd('\')) { throw 'State and installation directories must differ' }
     foreach ($component in ($DataDir -split '[\\/]')) { if ($component -ieq 'Dropbox') { throw 'Application state cannot be inside a sync folder' } }
     if ((Test-Path $DataDir) -and !(Test-Path "$DataDir/state-format.txt") -and @(Get-ChildItem -LiteralPath $DataDir -Force).Count -gt 0) { throw 'Refusing an unrelated nonempty data directory' }
-    New-Item -ItemType Directory -Force $DataDir | Out-Null
     $stage = 'configure state ACL'
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
     Checked icacls @($AppDir,'/grant','*S-1-5-19:(OI)(CI)RX')
-    Checked icacls @($DataDir,'/inheritance:r','/grant:r','*S-1-5-18:(OI)(CI)F','*S-1-5-32-544:(OI)(CI)F','*S-1-5-19:(OI)(CI)M',('*'+$identity+':(OI)(CI)RX'))
+    Set-PrivateDirectoryAcl -Path $DataDir -ReaderSid $identity -ServiceAccess
     $stage = 'initialize state'
     Checked $binary @('-mode','init','-data',$DataDir)
     if (!$owned) {
@@ -96,6 +102,10 @@ try {
     Diagnostic 'installer_complete'
     exit 0
 } catch {
+    if (!$pathsValidated) {
+        Write-Error 'Installation paths could not be validated; no installation action performed.' -ErrorAction Continue
+        exit 1
+    }
     Diagnostic 'installer_failed' $_.Exception.HResult
     $inner = $_.Exception
     while ($null -ne $inner) {

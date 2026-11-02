@@ -25,6 +25,7 @@ InfoBeforeFile=..\docs\prototype-notes.txt
 Source: "..\dist\immichclone.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Export-Diagnostics.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Manage-Service.ps1"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Storage-Security.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\dist\THIRD-PARTY-LICENSES.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\docs\prototype-notes.txt"; DestDir: "{app}"; Flags: ignoreversion
 

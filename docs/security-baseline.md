@@ -531,3 +531,27 @@ upgrade/restore acceptance. Linux credential-signature baseline: 788 text inputs
 zero matches/exclusions; arbitrary passwords and other stated exclusions remain.
 Windows 10, parent-folder reparse races, aggregate archive/catalog resource abuse
 and worker isolation are not cleared by these results.
+
+
+## S-010: installer root DACL replacement and reparse preflight (candidate)
+
+Source review found that icacls /inheritance:r /grant:r replaces permissions only
+for named principals. A preexisting explicit Everyone ACE can survive on a chosen
+empty state root, diagnostics root or retained rollback root. Candidate replaces
+the full root DACL: SYSTEM/Administrators full, LocalService modify for data/logs,
+installing account read/execute; rollback permits only SYSTEM/Administrators.
+Existing intentional service/user rights are unchanged. Owner is not reset.
+
+A shared packaging helper rejects existing reparse components before creating or
+changing these directories; production management checks app/data/log paths before
+service actions, diagnostics or failure-path writes. This is a preflight, not a
+handle-relative race-resistant filesystem sandbox. Existing descendant explicit
+ACLs and privileged replacement races are not normalized or certified here.
+
+Disposable Windows acceptance is pending: reproduce the previous command with
+actual separate-user read access, require replacement to deny read/write, inspect
+principals, reject junction roots/ancestors without target modification, and execute
+production management plus LocalService upload/catalog/restart on synthetic data.
+No private inputs, dependencies, paid resources or production installer/version
+change. This is next-release source only; full installer/upgrade/rollback gates
+remain required. No agreed-plan conflict identified.
