@@ -1,5 +1,8 @@
 # Dependency and environment evidence
 
+Historical candidate table below describes the original diagnostic. Later executed
+component and release checkpoints supersede its initial unselected status.
+
 ## Existing executed diagnostic
 
 [Run 41320566461](https://github.com/aataat12/immich-clone/actions/runs/41320566461),
@@ -583,3 +586,47 @@ remain exact pinned candidates in ai-probe; no arbitrary user-supplied model inp
 Replaceable provider and independent originals/catalog remain the migration path.
 Sources: OpenCV source/configuration/license links in native-ai/README and
 https://learn.microsoft.com/en-us/cpp/windows/deployment-in-visual-cpp .
+
+
+## Native AI pilot packaging review — 2026-11-02
+
+The candidate packages the previously executed worker without rebuilding or
+changing its hash, alongside the same three hash-pinned weights. Model-directory
+LICENSE and README notices from the immutable Zoo commit, selected OpenCV module
+sources/notices, protobuf backport and build provenance are installed together.
+OpenCV is Apache-2.0, YuNet MIT, SFace/YOLOX Apache-2.0; model-directory terms are
+evidence of published redistribution terms, not an audit of training-data rights.
+The source-built static runtime has no promised security servicing horizon.
+
+Current primary-source review: OpenCV's security page lists its private reporting
+policy, not a supported-version SLA or a clean bill of health. GitHub Security
+Lab's CVE-2025-53644 JPEG2000 report identifies 4.12.0 as the fixed release; this
+worker also excludes imgcodecs and consumes only bounded BGR frames. Protobuf's
+2026 GHSA-p2gh-cfq4-4wjc concerns its PHP parser, which is not bundled. The C++
+parser backport recorded above remains explicit. Only the three bundled,
+checksum-verified model files are loaded; arbitrary user model files are not
+accepted. These scope checks do not establish absence of other vulnerabilities.
+Rebuild and retest the replaceable provider for native/runtime security updates.
+
+Primary sources checked:
+- https://github.com/opencv/opencv/security
+- https://securitylab.github.com/advisories/GHSL-2025-057_OpenCV/
+- https://github.com/advisories/GHSA-p2gh-cfq4-4wjc
+- https://docs.opencv.org/4.12.0/db/d05/tutorial_config_reference.html
+
+The application additionally verifies original hashes before native decoding,
+limits encoded inputs to 64MiB/40MP and working frames to 960px, runs one native
+task at a time within the existing 512MiB Windows Job Object and child deadlines,
+and validates normalized geometry and embeddings before a catalog transaction.
+Names, custom tags and undo are independent from provider results. No GPU, Python,
+SDK or local model download is an end-user prerequisite. Windows Server runner
+evidence does not establish clean Windows 10 or broader face/object quality.
+
+
+Pilot acceptance: application run 41374756786, job 125052477428, source
+`98a6688d502e8ce3ca696487a5554027cd02b735` passed the full Windows Server 2022
+Go-to-native/browser/installed-service/recovery/independent-restore chain with
+this exact worker. Installer retrieved and SHA256 verified:
+`f99e4d68ae45aaf067886a59fa49e38c9fdea17d92b08276510c995e36e51623`.
+No native rebuild or model change; no paid infrastructure. Clean target Windows
+10, reboot, broad quality and extended reliability remain unaccepted.

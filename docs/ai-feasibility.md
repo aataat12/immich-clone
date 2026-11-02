@@ -179,3 +179,26 @@ broad recognition acceptance. Next: finish packaging review, optional app worker
 integration, and the review-first People/custom-tag UI with persistent corrections
 and restore tests. Basic originals access must survive absent/failed AI. Import
 and Hidden Media remain queued; no new installer or local setup requested.
+
+
+## First integrated People/tag pilot accepted on Server — 0.1.15
+
+[Application run 41374756786](https://github.com/aataat12/immich-clone/actions/runs/41374756786)
+at `98a6688d502e8ce3ca696487a5554027cd02b735` passed actual Go-frame/native
+YuNet/SFace/YOLOX analysis under LocalService, Edge face/name/confirm/undo/manual-box
+and object/custom-tag controls, optional-provider removal/recovery, installed
+inference, rollback and independent organization backup restore. Original hashes
+unchanged; labels/tags survived and face caches regenerated with old state and AI
+unavailable. Packaging includes fixed models, notices and source provenance.
+Exact delivered checksum and artifact are authoritative in status.md.
+
+The dimmed/resized public portrait regression proves suggestion handling, not
+distinct-photo quality. No automatic naming, pair-based merging or unreviewed
+propagation. This additive pilot implements per-face reassignment and selected-
+face naming rather than claiming full clustering or all approved review controls.
+Native JPEG/PNG/BMP, first GIF/TIFF only; 64MiB/40MP original and 960px frame limits.
+HEIC/video AI, face dismissal, ready reanalysis and large-library scalability remain
+open. Prior historical notes above about no app integration are superseded.
+Next value gate: a small private target-PC test with different photographs,
+including unrelated identities, age/profile variation and missed-face corrections.
+No personal media/identity names or raw support logs belong in public records.

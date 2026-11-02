@@ -39,3 +39,30 @@ Do not bulk-import the real library yet.
 Local functional checkpoint was reported passed on 2026-11-01, including full-image
 view. Do not ask the user to repeat it without a relevant change or failure.
 Post-reboot validation is explicitly deferred until the end of development.
+
+
+## People and tags pilot: small private checkpoint
+
+After the 0.1.15 Server acceptance gate passes, upgrade the existing installation
+and confirm `0.1.15-prototype` at the top right. No new data location, dependency
+installation, mass import or reboot is requested.
+
+1. Open **People & tags**. Use two or three ordinary JPEG/PNG photos of the same
+   person, plus a photo of someone else. Use different photographs, not copies.
+2. Select **Analyze photo locally** on the first photo. Check the detected face
+   crop, enter a name and save it. Analyze the others. Confirm a correct suggestion
+   or supply the correct name; check that nobody gets named automatically.
+3. Try **Undo name**. For a missed face, choose **Mark missed face**, drag a box
+   and supply a name. Try selecting faces and applying an existing or new name.
+4. Add a custom tag, find it with search, and dismiss/restore an incorrect AI tag.
+   Refresh the page and check that your corrections remain.
+5. Download an original and confirm it is still the original file. Report only
+   whether analysis works, obvious missed/wrong matches, and correction behavior.
+   Keep private photos, names, paths, access codes and raw logs out of GitHub.
+
+This is a manually requested CPU pilot, not full-library recognition acceptance.
+AI is limited to native JPEG/PNG/BMP, first GIF frame and first TIFF page, up to
+64MiB/40MP, with a 960px working frame. Small/profile/aged faces may be missed;
+80 common object categories are supported. HEIC/video AI, automatic clustering,
+face dismissal and ready-result reanalysis remain deferred. A transformed public
+fixture in CI proves the suggestion controls, not independent-photo accuracy.

@@ -1,24 +1,46 @@
-# Current status — 2026-11-01
+# Current status — 2026-11-02
 
 Authoritative requirements: `../Immich_Clone_Project_Requirements.md` and its
 Server-first execution amendment. No new charges or parallel agents. No personal
 machine specifications, paths, media or returned logs belong in this repository.
 Historical checkpoints remain in Git history; this file supersedes their gates.
 
-## Candidate 0.1.15: first People and tags pilot (acceptance pending)
+## Delivered 0.1.15: first People and tags pilot
 
-Implemented optional native worker/model packaging; explicit local still-photo
-analysis with persistent jobs; detected/manual face review and naming, selected-
-face reassignment, one-level name undo and confirmed suggestions; custom searchable
-tags and dismiss/restore AI labels. Names/corrections are separate from model data.
-Hash-verified original-derived oriented 960px analysis frames; provider failures
-leave the basic library usable. Hidden media excluded; no permanent deletion yet.
+[Source 98a6688](https://github.com/aataat12/immich-clone/commit/98a6688d502e8ce3ca696487a5554027cd02b735),
+[acceptance run 41374756786](https://github.com/aataat12/immich-clone/actions/runs/41374756786),
+job 125052477428 passed on Windows Server 2022. Optional packaged local CPU
+analysis; durable explicit jobs; detected/manual faces, selected-face naming,
+one-level undo and confirmed suggestions; searchable custom tags and dismissible
+AI labels. Hash-verified original-derived oriented 960px frames. Provider failures
+leave basic storage and existing organization usable. Originals stay unchanged.
 
-Linux race/vet, authorization/shape/forged-face guards, cancellation/reopen,
-concurrent backup, independent organization restore and crop rebuild checks pass.
-Windows actual Go-to-native/browser/installer/recovery acceptance is pending.
-No new installer delivered yet; current delivered build remains 0.1.13. No local
-setup or reboot requested. Bulk import and repository visibility changes deferred.
+Passed Linux race/vet checks and Windows authorization/result/forged-face guards,
+cancellation/reopen, concurrent backup, actual Go-to-native inference, Edge desktop
+and narrow review controls, name-confirm/undo, missed-face marking, tag search and
+dismiss/restore, diagnostic privacy, absent-model recovery, installed inference
+from a path with spaces, upgrade/failed-upgrade rollback, uninstall and independent
+restore/reinstall with old data unavailable. Restored names/tags retained and face
+caches rebuilt without AI. Existing image/video regression and real NTFS ENOSPC
+checks passed. Browser screenshots retrieved and visually inspected.
+
+[Installer artifact](https://github.com/aataat12/immich-clone/actions/runs/41374756786/artifacts/13111240610)
+contains `ImmichClone-0.1.15-prototype-x64-setup.exe` (102562928 bytes), SHA256
+`f99e4d68ae45aaf067886a59fa49e38c9fdea17d92b08276510c995e36e51623`.
+Retrieved ZIP SHA256 `c53cb3bf94ca2ffc944f9272a24ec35ac836158b44524de73ad187f33eb36c60`
+and executable verified against included checksums. Artifact retained until Nov 9;
+installer remains unsigned. Native worker reused without recompiling or changing
+its accepted hash. Dependency/notice/security scope is in dependency-evidence.md.
+
+Next: small private Windows 10 People/tag checkpoint in local-validation.md using
+different photos, including unrelated people. Server and transformed-fixture UI
+checks do not establish target compatibility or broad recognition quality. No
+dependency installation, mass import or reboot requested. HEIC/video AI, automatic
+clustering, face dismissal and ready-result reanalysis remain deferred. Hidden
+Media permanent deletion and bulk import remain queued. Visibility changes deferred.
+
+Earlier feasibility sections below record prior gates; this delivered checkpoint
+supersedes their statements that app/installer integration is still pending.
 
 ## Current priority: people and object organization
 
