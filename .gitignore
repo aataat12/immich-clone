@@ -15,3 +15,8 @@ access-code.txt
 /media-candidate/
 
 /native-ai-candidate/
+
+# Local secrets; documentation examples may be tracked deliberately.
+.env
+.env.*
+!.env.example

@@ -9,7 +9,8 @@ public licensed fixtures only. CI timestamps are UTC.
 
 Security review now leads the next milestone. See security-baseline.md for the
 first candidate mitigation: exact bundled-script CSP hashes, focused Linux
-race/vet results, browser-environment limitation and remaining review gates.
+race/vet results, passed Windows Server/Edge enforcement, endpoint guard matrix,
+limited credential-signature baseline and remaining review gates.
 Ask the user before implementing a mitigation conflicting with the agreed plan.
 No new installer or local action. User reported 0.1.25 backups, Build Notes,
 87/87 eligible-photo bulk AI and data persistence passed; desktop layout passed,
