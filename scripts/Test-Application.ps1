@@ -122,7 +122,7 @@ try {
         # Bulk analysis has already processed the original fixture. Use a fresh
         # valid PNG so this failure probe does not accidentally request reanalysis.
         $aiFixture=Join-Path $root 'synthetic-ai-recovery.png'
-        $aiBitmap=[Drawing.Bitmap]::new(37,29)
+        $aiBitmap=[Drawing.Bitmap]::new(64,48)
         $aiGraphics=[Drawing.Graphics]::FromImage($aiBitmap)
         try { $aiGraphics.Clear([Drawing.Color]::Blue);$aiBitmap.Save($aiFixture,[Drawing.Imaging.ImageFormat]::Png) }
         finally { $aiGraphics.Dispose();$aiBitmap.Dispose() }
@@ -138,7 +138,8 @@ try {
         Stop-Service $name;Move-Item ($aiModel+'.held') $aiModel;Start-Service $name;Login
         $null=Invoke-RestMethod "http://127.0.0.1:2283/api/assets/$aiId/analyze" -Method Post -Headers $headers -WebSession $session
         for($i=0;$i -lt 30;$i++) { $org=Invoke-RestMethod http://127.0.0.1:2283/api/organization -WebSession $session; $ai=$org.assets | Where-Object { $_.asset.id -eq $aiId }; if($ai.analysis.status -ne 'queued'){break};Start-Sleep -Seconds 1 }
-        Assert ($ai.analysis.status -eq 'ready' -and @($org.faces | Where-Object name -eq 'Test Person').Count -eq 1) 'AI provider recovery preserves manual names and retries queued work'
+        Assert ($ai.analysis.status -eq 'ready') 'AI provider recovery retries the failed fixture successfully'
+        Assert (@($org.faces | Where-Object name -eq 'Test Person').Count -eq 1) 'AI provider recovery preserves manual names'
     }
     if ($env:IMMICH_BROWSER_MODULE) { $env:IMMICH_TEST_STATE=$state;Checked node @('tests/gallery.cjs');Remove-Item Env:IMMICH_TEST_STATE }
     if ($env:IMMICH_BROWSER_MODULE) { $env:IMMICH_TEST_STATE=$state;Checked node @('tests/backup.cjs');Remove-Item Env:IMMICH_TEST_STATE }
