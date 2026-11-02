@@ -200,7 +200,7 @@ Linux race/vet tests pass for route availability, GET non-mutation, token replay
 rejection, unrelated-session preservation and cookie clearing. The focused Edge
 probe covers logout confirmation, cross-origin rejection, incorrect code, re-login
 and reload persistence. Bundle in the next broader release; do not publish a
-login-only installer. Windows/browser and final package acceptance remain gates.
+login-only installer. Final broader-release package acceptance remains a gate.
 
 ### zlib reachability follow-up
 
@@ -217,3 +217,16 @@ model/image loading. The Go wrapper verifies provider/model hashes. These are th
 current mitigation boundaries; do not expand accepted inputs without repeating
 the native review. Full transitive reachability/static-runtime servicing remains
 open. No user media, dynamic model or original storage change was introduced.
+
+
+Next-release authentication acceptance: focused Windows Server 2022/Edge run
+[41475111595](https://github.com/aataat12/immich-clone/actions/runs/41475111595),
+source e524d363dd2b42799c892309edd02f6b8ed94c3b, job 125378498262 passed HTTP tests,
+vet/build, all five pages at desktop/narrow widths and actual CSP injection guards.
+Browser flow passed non-mutating logout confirmation, foreign-Origin rejection,
+current-session revocation and replay rejection, incorrect code feedback,
+re-login, password-field clearing and reload persistence. /login can be opened
+explicitly without silently ending an already valid session. The initial browser
+run exposed generic 401 handling masking incorrect-code feedback; fixed before
+acceptance. No installer was created for these changes. Bundle into the next
+broader release per user instruction. No repeat of passed local checks requested.

@@ -16,7 +16,10 @@ Implement /login, non-mutating /logout confirmation and CSRF-protected POST
 /api/logout with server-side current-session revocation and cookie expiry.
 Expose Sign out from all five pages and show the existing Start-menu access-code
 helper in the sign-in instructions. Other sessions/data/jobs remain independent.
-Linux web race/vet tests passed. Focused Windows browser tests are next; do not
+Linux web race/vet tests passed. Focused Windows Server/Edge run
+[41475111595](https://github.com/aataat12/immich-clone/actions/runs/41475111595),
+source e524d363, job 125378498262 passed sign-out/revocation/re-login and five-page
+CSP/layout checks. Final broader-release installer acceptance remains pending; do not
 create a release solely for this work. User explicitly requested bundling these
 changes into the next broader release. No local re-test or reboot requested.
 
