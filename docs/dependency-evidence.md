@@ -693,3 +693,26 @@ import ENOSPC/recovery. Screenshots inspected. Retrieved installer SHA256 verifi
 `924ced26664cc542fdcc6fbad3bc0c1cfde3733d261fbd14f41af4149ef31ed7`.
 No new dependency or local setup. No full-library, broader AI-quality, clean
 Windows 10/reboot or large-backup acceptance implied.
+
+
+## Backup capacity/progress 0.1.23
+
+No new dependency/model/native-provider version or backup format. Existing x/sys
+Windows GetDiskFreeSpaceEx and Linux Statfs report available bytes locally; no
+capacity inventory or filesystem paths are added to support events. Context-aware
+bbolt snapshot writing, ZIP/sha256 read-back and retained/range download exercised
+actual operations, not just compilation.
+
+[41398447659](https://github.com/aataat12/immich-clone/actions/runs/41398447659),
+source `66a698d066c437219c6e1b23fe8dbd5ed01ad577`, job 125124797979 passed Windows
+Server 2022 LocalService/Edge capacity, queued cancellation during blocked upload,
+verified archive/SHA256/range/restart/discard, both downloaded archives independently
+restored with old state unavailable, names/tags/receipts/original hashes, actual
+post-preflight ENOSPC/retry on 192MiB NTFS, retained 96MiB original/import fault test,
+actual 0.1.21 upgrade/failed-upgrade rollback/reinstall and all existing regressions.
+Linux race/vet passed. Artifact retrieved and executable SHA256 verified:
+`ca713b421b963c0ef645fd8479ce5999c32b5a70e04abd0110f9266779722828`.
+ZIP SHA256 `d6982bcc3459c64123638aaad43a544c31409945fbbd566345aedc6e174b6c3b`.
+Screenshots inspected; no new setup or reboot requested. Harness-only range-session
+and undersized-volume failures before acceptance are recorded in backups.md.
+Full-library/ZIP64/throughput/disconnect and clean target acceptance remain open.

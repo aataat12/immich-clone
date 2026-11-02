@@ -90,3 +90,21 @@ Focused 0.1.17-to-0.1.19 upgrade validation reported all requested navigation,
 desktop/narrow/no-overflow, actual-version and preservation checks passed, including
 photos, face names, tags and import history. No observed problems. No raw private
 report retained and no further 0.1.19 test requested; reboot stays deferred.
+
+
+0.1.21 gallery validation reported all requested checks passed with no observed
+problems. No repeat of that completed checkpoint is requested. Backup changes
+remain a separate small-library checkpoint after cloud acceptance; final reboot
+and full-library import stay deferred.
+
+
+## Small backup-page checkpoint (0.1.23)
+
+After upgrade, confirm the actual build, then open Backups using the existing
+small test library. Check required space, create a backup, wait for ready and
+download it. Refresh the page and repeat the retained download. Once a downloaded
+copy is kept, explicitly discard the temporary application copy and confirm the
+gallery/names/tags remain available. Return only PASS/failure descriptions; keep
+the ZIP private because it contains originals and the access code. No need to
+enlarge the library to catch cancellation; cloud tests exercise it deterministically.
+No dependency installation, AI retest, full-library import or reboot requested.
