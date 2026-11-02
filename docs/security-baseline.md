@@ -462,3 +462,20 @@ aggressive for this runner. Retest uses a two-second test idle and 256-KiB recei
 buffer while pacing the eight-MiB body beyond the idle window. The separate
 stalled-reader test retains its 32-KiB buffer and short deadline. Production
 sixty-second policy is unchanged. Windows retest is the deciding evidence.
+
+
+S-008 focused Windows acceptance: [41501827158](https://github.com/aataat12/immich-clone/actions/runs/41501827158),
+source 96c9b505209e646134e01cf311d199af2501c722, job 125470970188 passed.
+Go module verification, library/web tests, cmd compilation, vet and executable
+build passed. Real-TCP admission/release/recovery controls passed. Stalled backup
+released export admission (0.92s); paced archive completed intact beyond its
+two-second test window (5.00s total test). Revised fixture passed; this does not
+prove the precise Windows TCP cause of the earlier tight-fixture failure.
+Actual Edge passed explicit login/logout confirmation, revocation/replay rejection,
+wrong code, re-login/reload, five-page desktop/narrow initialization and injected
+script/event blocking with the production listener enabled. No installer produced.
+Linux library/web/cmd tests and vet passed; selected transfer/connection race
+tests passed. Credential-signature scan: 782 text inputs, zero matches/exclusions;
+its documented coverage limits remain. Server evidence does not certify Windows
+10, native isolation or full-library endurance. Bundle with the next broader
+release and rerun installer/upgrade/restore gates for that candidate.

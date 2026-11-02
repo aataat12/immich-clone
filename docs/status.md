@@ -2,7 +2,8 @@
 
 Next-release candidate: 64 accepted TCP connection cap and rolling sixty-second
 response write-idle bound. Linux real-socket race tests/vet passed; focused Windows
-validation pending. See security-baseline.md S-008. No installer/version changed.
+validation passed on Windows Server 2022/Edge (41501827158). See
+security-baseline.md S-008. No installer/version changed.
 
 ## Current cloud-accepted prototype: 0.1.29
 
