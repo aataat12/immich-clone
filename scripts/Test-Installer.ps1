@@ -30,9 +30,9 @@ try {
     [IO.File]::WriteAllText($fixture,'synthetic installer preservation fixture')
     $asset = (Invoke-RestMethod 'http://127.0.0.1:2283/api/upload?name=synthetic.txt' -Method Post -Headers @{'X-Immich-Request'='1'} -InFile $fixture -WebSession $session).asset
     $hash = (Get-FileHash $fixture).Hash
-    Assert ((Install '0.1.13') -eq 0) 'installer upgrade succeeds'
-    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.13-prototype') 'upgrade deploys new executable version'
-    Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.13-prototype') 'installed health reports actual executable build'
+    Assert ((Install '0.1.15') -eq 0) 'installer upgrade succeeds'
+    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.15-prototype') 'upgrade deploys new executable version'
+    Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.15-prototype') 'installed health reports actual executable build'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'upgrade preserves original bytes'
     $session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
     $null = Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$code}|ConvertTo-Json) -WebSession $session
@@ -46,16 +46,31 @@ try {
         Start-Sleep -Seconds 1
     }
     Assert ($photo.preview -eq 'ready' -and $photo.width -eq 160 -and $photo.height -eq 120) 'installed restricted service executes bundled HEIC provider from a path containing spaces'
+    $aiFixture=Join-Path $root 'public-ai.png'
+    Invoke-WebRequest 'https://raw.githubusercontent.com/scikit-image/scikit-image/e8a42ba85aaf5fd9322ef9ca51bc21063b22fcae/skimage/data/astronaut.png' -OutFile $aiFixture
+    Assert ((Get-FileHash $aiFixture).Hash.ToLowerInvariant() -eq '88431cd9653ccd539741b555fb0a46b61558b301d4110412b5bc28b5e3ea6cb5') 'public AI fixture hash verified'
+    $aiHeaders=@{'X-Immich-Request'='1'}
+    $aiAsset=(Invoke-RestMethod 'http://127.0.0.1:2283/api/upload?name=public-ai.png' -Method Post -Headers $aiHeaders -InFile $aiFixture -WebSession $session).asset
+    $null=Invoke-RestMethod "http://127.0.0.1:2283/api/assets/$($aiAsset.id)/analyze" -Method Post -Headers $aiHeaders -WebSession $session
+    for($i=0;$i -lt 30;$i++){ $org=Invoke-RestMethod http://127.0.0.1:2283/api/organization -WebSession $session;$entry=$org.assets | Where-Object {$_.asset.id -eq $aiAsset.id};if($entry.analysis.status -ne 'queued'){break};Start-Sleep -Seconds 1 }
+    Assert ($entry.analysis.status -eq 'ready') 'installed service executes bundled native AI without SDK Python or GPU'
+    $face=@($org.faces | Where-Object asset_id -eq $aiAsset.id)[0]
+    $null=Invoke-RestMethod 'http://127.0.0.1:2283/api/faces/label' -Method Post -Headers $aiHeaders -Body (@{ids=@($face.id);name='Installer Person'}|ConvertTo-Json) -WebSession $session
+    $null=Invoke-RestMethod "http://127.0.0.1:2283/api/assets/$($aiAsset.id)/tags" -Method Post -Headers $aiHeaders -Body '{"tags":["Installer tag"]}' -WebSession $session
     $env:IMMICH_INSTALL_TEST_FAILURE = '1'
-    $failedCode = Install '0.1.14'
+    $failedCode = Install '0.1.16'
     Remove-Item Env:IMMICH_INSTALL_TEST_FAILURE
     $installLog = Get-Content (Join-Path $env:ProgramData 'ImmichCloneDiagnostics/installer.jsonl') -Raw
     Assert ($installLog.Contains('installer_failed') -and $installLog.Contains('rollback_complete') -and !$installLog.Contains($state)) 'installer logs failed-upgrade and rollback stages without data paths'
     Assert ($failedCode -ne 0) 'injected failed upgrade returns failure'
-    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.13-prototype') 'failed upgrade restores previous executable'
+    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.15-prototype') 'failed upgrade restores previous executable'
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'rollback restores healthy service'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'failed upgrade preserves original bytes'
     Assert ((Get-FileHash "$state/originals/$($heicAsset.id)").Hash -eq $heicHash) 'failed upgrade preserves HEIC original'
+    $session=[Microsoft.PowerShell.Commands.WebRequestSession]::new()
+    $null=Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers $aiHeaders -Body (@{code=$code}|ConvertTo-Json) -WebSession $session
+    $org=Invoke-RestMethod http://127.0.0.1:2283/api/organization -WebSession $session
+    Assert (@($org.faces | Where-Object name -eq 'Installer Person').Count -eq 1) 'failed-upgrade rollback preserves person assignments'
     $recoveryTool = Join-Path $root 'recovery-tool.exe'
     Copy-Item "$app/immichclone.exe" $recoveryTool
     $session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
@@ -72,7 +87,7 @@ try {
     $state = Join-Path $root 'restored state'
     & $recoveryTool -mode restore -data $state -archive $archive
     Assert ($LASTEXITCODE -eq 0) 'offline restoration succeeds at a different location'
-    Assert ((Install '0.1.13') -eq 0) 'installer starts a restored library without the original data folder'
+    Assert ((Install '0.1.15') -eq 0) 'installer starts a restored library without the original data folder'
     $session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
     $restoredCode = (Get-Content "$state/access-code.txt" -Raw).Trim()
     $null = Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$restoredCode}|ConvertTo-Json) -WebSession $session
@@ -86,6 +101,12 @@ try {
     }
     Assert ($photo.preview -eq 'ready' -and (Get-FileHash "$state/originals/$($heicAsset.id)").Hash -eq $heicHash) 'independent reinstall regenerates HEIC preview and preserves original'
 
+    $org=Invoke-RestMethod http://127.0.0.1:2283/api/organization -WebSession $session
+    Assert (@($org.faces | Where-Object name -eq 'Installer Person').Count -eq 1) 'restored installer retains named faces'
+    $crop=Join-Path $root 'restored-face.png'
+    Invoke-WebRequest ("http://127.0.0.1:2283/api/faces/"+$face.id+"/crop") -WebSession $session -OutFile $crop
+    $aiRestored=$org.assets | Where-Object {$_.asset.id -eq $aiAsset.id}
+    Assert ((Get-Item $crop).Length -gt 0 -and $aiRestored.tags -contains 'Installer tag') 'restored face cache regenerates and custom tags survive'
     $uninstall = Start-Process "$app/unins000.exe" -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru
     Assert ($uninstall.ExitCode -eq 0) 'restored installation uninstalls cleanly'
 } finally {

@@ -1,4 +1,4 @@
-IMMICH CLONE 0.1.13 - EARLY TEST BUILD
+IMMICH CLONE 0.1.15 - EARLY TEST BUILD
 
 This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
@@ -108,3 +108,24 @@ updates and asset updates commit together; startup rebuilds the index for older
 catalogs, restoration and recovery. Originals/export format are unchanged. This
 is a worker-efficiency improvement, not proof of bulk-ingestion endurance or a
 large-library browsing claim. Full catalog/browser paging is still pending.
+
+
+PEOPLE AND TAGS PILOT
+People & tags provides explicit local analysis of JPEG/PNG/BMP/GIF-first/TIFF-first
+photos up to 64MiB / 40MP. A bounded 960px oriented frame is analyzed by an optional
+CPU worker with a 512MiB process cap. Select detected faces to name or reassign;
+clear a name to leave unknown, undo the last name edit, or mark a missed face.
+Suggested matches require confirmation and can be wrong. Custom tags are separate
+from the 80-class COCO object suggestions and searchable with filenames/names.
+No automatic person merging/naming, face dismissal or ready-result reanalysis yet.
+HEIC/video AI and broad family/age/profile quality are unaccepted. Original bytes
+are never changed. Hidden items are excluded from this review page.
+
+Names, manual face boxes and custom tags stay separate from model-owned results
+in the private catalog; backups retain all state and restored face crops regenerate
+without the AI provider. JSON export includes organization without raw embeddings.
+Keep exports/backups private. The native OpenCV/model notices and source/build
+provenance accompany the provider. Static runtime fixes require a new worker build.
+No Python, SDK, GPU or separate runtime installation is required by the tested
+candidate. Original browsing/download remains usable if the provider is missing.
+This is a limited pilot, not full recognition accuracy or large-library acceptance.

@@ -15,6 +15,7 @@ import (
 	_ "image/jpeg"
 	"image/png"
 	"immichclone/internal/diagnostics"
+	"immichclone/internal/recognition"
 	"io"
 	"net/http"
 	"os"
@@ -45,10 +46,13 @@ type Asset struct {
 	Error           string        `json:"error,omitempty"`
 }
 type Store struct {
-	root         string
-	db           *bolt.DB
-	gate         sync.Mutex
-	mediaPreview func(context.Context, string) (image.Image, int, int, error)
+	root                 string
+	db                   *bolt.DB
+	gate                 sync.Mutex
+	analysisGate         sync.Mutex
+	mediaPreview         func(context.Context, string) (image.Image, int, int, error)
+	recognizer           func(context.Context, image.Image, string) (recognition.Result, error)
+	recognitionAvailable bool
 }
 
 func Open(root string) (*Store, error) {
@@ -89,7 +93,7 @@ func Open(root string) (*Store, error) {
 	} else {
 		return nil, e
 	}
-	for _, d := range []string{"", "originals", "staging", "previews"} {
+	for _, d := range []string{"", "originals", "staging", "previews", "faces"} {
 		if e := os.MkdirAll(filepath.Join(root, d), 0700); e != nil {
 			return nil, e
 		}
@@ -124,7 +128,7 @@ func Open(root string) (*Store, error) {
 			return e
 		}
 		assets := tx.Bucket([]byte("assets"))
-		return assets.ForEach(func(k, v []byte) error {
+		e = assets.ForEach(func(k, v []byte) error {
 			var a Asset
 			if e := json.Unmarshal(v, &a); e != nil {
 				return e
@@ -148,6 +152,10 @@ func Open(root string) (*Store, error) {
 			}
 			return nil
 		})
+		if e != nil {
+			return e
+		}
+		return initOrganization(tx)
 	})
 	if e != nil {
 		db.Close()

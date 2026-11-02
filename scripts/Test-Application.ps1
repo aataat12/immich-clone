@@ -13,7 +13,8 @@ function Login {
 }
 try {
     ./scripts/Prepare-MediaProvider.ps1 -Destination (Join-Path $root 'media/ffmpeg-8.1.3-7eb77d88e2e9')
-    Checked go @('build','-trimpath','-ldflags','-X main.version=0.1.13-prototype','-o',$binary,'./cmd/immichclone')
+    ./scripts/Prepare-AIProvider.ps1 -Destination (Join-Path $root 'ai/opencv-4.12.0-a83dcef02ebe')
+    Checked go @('build','-trimpath','-ldflags','-X main.version=0.1.15-prototype','-o',$binary,'./cmd/immichclone')
     Checked $binary @('-mode','init','-data',$state)
     Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)RX')
     Checked icacls @($state,'/grant','*S-1-5-19:(OI)(CI)M')
@@ -77,6 +78,7 @@ try {
         }
         $env:IMMICH_TEST_STATE = $state
         Checked node @('tests/browser.cjs')
+        Checked node @('tests/people.cjs')
         Remove-Item Env:IMMICH_TEST_STATE
     }
     if ($env:IMMICH_BROWSER_MODULE) {
@@ -109,6 +111,21 @@ try {
         }
         Assert ($grid.preview -eq 'ready' -and $grid.width -eq 4032 -and $grid.height -eq 3024) 'optional provider recovery retries HEIC and preserves source dimensions'
     }
+    if ($env:IMMICH_BROWSER_MODULE) {
+        Stop-Service $name
+        $aiModel=Join-Path $root 'ai/opencv-4.12.0-a83dcef02ebe/sface.onnx'
+        Move-Item $aiModel ($aiModel+'.held')
+        Start-Service $name;Login
+        $org=Invoke-RestMethod http://127.0.0.1:2283/api/organization -WebSession $session
+        Assert (!$org.available -and (Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'missing AI model leaves library and saved organization available'
+        $null=Invoke-RestMethod "http://127.0.0.1:2283/api/assets/$id/analyze" -Method Post -Headers $headers -WebSession $session
+        for($i=0;$i -lt 15;$i++) { $org=Invoke-RestMethod http://127.0.0.1:2283/api/organization -WebSession $session; $ai=$org.assets | Where-Object { $_.asset.id -eq $id }; if($ai.analysis.status -eq 'failed'){break};Start-Sleep -Seconds 1 }
+        Assert ($ai.analysis.status -eq 'failed') 'AI failure is visible and original access is retained'
+        Stop-Service $name;Move-Item ($aiModel+'.held') $aiModel;Start-Service $name;Login
+        $null=Invoke-RestMethod "http://127.0.0.1:2283/api/assets/$id/analyze" -Method Post -Headers $headers -WebSession $session
+        for($i=0;$i -lt 30;$i++) { $org=Invoke-RestMethod http://127.0.0.1:2283/api/organization -WebSession $session; $ai=$org.assets | Where-Object { $_.asset.id -eq $id }; if($ai.analysis.status -ne 'queued'){break};Start-Sleep -Seconds 1 }
+        Assert ($ai.analysis.status -eq 'ready' -and @($org.faces | Where-Object name -eq 'Test Person').Count -eq 1) 'AI provider recovery preserves manual names and retries queued work'
+    }
     $onlineLog = Join-Path $root 'online-diagnostics.log'
     Invoke-WebRequest http://127.0.0.1:2283/api/diagnostics -WebSession $session -OutFile $onlineLog
     Assert ((Get-Content $onlineLog -Raw).Contains('original_write')) 'authenticated browser diagnostic export includes upload events'
@@ -129,6 +146,14 @@ try {
         foreach ($entry in $codecOriginals.GetEnumerator()) {
             Assert ((Get-FileHash (Join-Path "$restored/originals" $entry.Key)).Hash -eq $entry.Value) 'image and video original checksum preserved through independent restore'
         }
+    }
+    if ($env:IMMICH_BROWSER_MODULE) {
+        Move-Item $state ($state+'.offline')
+        try {
+            $env:IMMICH_ORGANIZATION_RESTORE=$restored
+            Checked go @('test','./internal/library','-run','^TestOrganizationRestoredCatalogCheck$','-count=1')
+            Assert $true 'independent restored names tags and face crops work without old state or AI provider'
+        } finally { Remove-Item Env:IMMICH_ORGANIZATION_RESTORE -ErrorAction SilentlyContinue;Move-Item ($state+'.offline') $state }
     }
     # Prove inability to write rather than relying on administrator test execution.
     Checked icacls @($state,'/deny','*S-1-5-19:(OI)(CI)W')

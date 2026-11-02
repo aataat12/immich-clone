@@ -203,3 +203,18 @@
   originals/catalog. Retain build-only checkpoints separately from service
   acceptance to avoid full recompiles for harness fixes. Parser backport source
   and SHA256 remain explicit, not a silent modification of the upstream archive.
+
+- First People/tagging pilot: explicit per-photo CPU analysis of native still
+  image formats, 64MiB/40MP input guard, original-derived oriented 960px BGR frame,
+  fixed worker/model checksums and existing bounded Windows launcher. HEIC/video
+  AI remains deferred. AI jobs stay durable across cancellation and use a separate
+  processing mutex so native inference does not hold catalog/backup writes.
+- Model results, face geometry and embeddings live separately from manual names,
+  one-level name undo, custom tags and dismissed AI tags. No automatic naming or
+  merging; nearest named-reference suggestions require explicit confirmation.
+  Ready analysis is not silently rerun. Manual face marking uses the canonical
+  preview's orientation; normalized boxes survive independent crop regeneration.
+- Add People & tags navigation and bounded pilot review pages. Names/tags/face
+  crops remain usable without the provider; full private catalog backups retain
+  organization. JSON export excludes raw embeddings and uses one snapshot.
+  This is a small reviewed pilot, not broad family recognition or bulk acceptance.

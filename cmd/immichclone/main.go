@@ -8,6 +8,7 @@ import (
 	"immichclone/internal/diagnostics"
 	"immichclone/internal/library"
 	"immichclone/internal/media"
+	"immichclone/internal/recognition"
 	"immichclone/internal/web"
 	"log"
 	"net"
@@ -36,6 +37,8 @@ func start(ctx context.Context, o options) (func() error, error) {
 	}
 	if exe, err := os.Executable(); err == nil {
 		s.SetMediaPreview(media.New(filepath.Join(filepath.Dir(exe), "media", media.ProviderID)).Thumbnail)
+		provider := recognition.New(filepath.Join(filepath.Dir(exe), "ai", recognition.ProviderID))
+		s.SetRecognizer(provider.Analyze, provider.Available())
 	}
 	code, e := web.AccessCode(o.Data)
 	diagnostics.Record("startup", "access_code", e, 0, 0, 0)
@@ -62,9 +65,13 @@ func start(ctx context.Context, o options) (func() error, error) {
 			case <-child.Done():
 				return
 			case <-ticker.C:
-				if _, e := s.ProcessOneContext(child); e != nil {
+				if processed, e := s.ProcessOneContext(child); e != nil {
 					diagnostics.Record("preview", "failed", e, 0, 0, 0)
 					log.Print("Preview worker encountered a storage error; job remains persistent")
+				} else if !processed {
+					if _, err := s.ProcessAnalysis(child); err != nil {
+						log.Print("AI worker encountered a storage error; job remains persistent")
+					}
 				}
 			}
 		}

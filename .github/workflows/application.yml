@@ -7,6 +7,8 @@ on:
       - 'go.mod'
       - 'go.sum'
       - 'internal/library/**'
+      - 'internal/recognition/**'
+      - 'scripts/Prepare-AIProvider.ps1'
       - 'internal/media/**'
       - 'scripts/Prepare-MediaProvider.ps1'
       - 'internal/web/**'
@@ -20,6 +22,7 @@ on:
       - 'scripts/Test-FullDisk.ps1'
       - 'scripts/New-MediaFixture.ps1'
       - 'tests/browser.cjs'
+      - 'tests/people.cjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -30,7 +33,7 @@ concurrency:
 jobs:
   application:
     runs-on: windows-2022
-    timeout-minutes: 18
+    timeout-minutes: 22
     env:
       CGO_ENABLED: '0'
       GOAMD64: v1
@@ -46,6 +49,12 @@ jobs:
           name: experimental-media-source-and-binaries
           path: media-candidate
           run-id: 41346172469
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: experimental-native-ai-build-not-accepted
+          path: native-ai-candidate
+          run-id: 41363876953
           github-token: ${{ github.token }}
       - name: Verify dependency checksums and execute storage, recovery and HTTP tests
         shell: pwsh
@@ -85,6 +94,6 @@ jobs:
         with:
           name: prototype-server-tested
           path: |
-            dist/ImmichClone-0.1.13-prototype-x64-setup.exe
+            dist/ImmichClone-0.1.15-prototype-x64-setup.exe
             dist/SHA256SUMS.txt
           retention-days: 7

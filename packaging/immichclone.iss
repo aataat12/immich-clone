@@ -1,5 +1,5 @@
 #ifndef AppVersion
-#define AppVersion "0.1.13"
+#define AppVersion "0.1.15"
 #endif
 [Setup]
 AppId={{5DF7680B-6F42-4BAF-AD97-5A3095728DFA}
@@ -29,6 +29,7 @@ Source: "..\dist\THIRD-PARTY-LICENSES.txt"; DestDir: "{app}"; Flags: ignoreversi
 Source: "..\docs\prototype-notes.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: "..\dist\media\*"; DestDir: "{app}\media"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\dist\ai\*"; DestDir: "{app}\ai"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Registry]
 Root: HKLM; Subkey: "Software\ImmichClone"; ValueType: string; ValueName: "State"; ValueData: "{code:GetState}"; Flags: uninsdeletekey
@@ -45,6 +46,7 @@ Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}\media"
+Type: filesandordirs; Name: "{app}\ai"
 Type: files; Name: "{app}\rollback\immichclone.exe"
 Type: files; Name: "{app}\rollback\catalog.db"
 Type: files; Name: "{app}\rollback\access-code.txt"

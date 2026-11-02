@@ -20,7 +20,7 @@ import (
 	"time"
 )
 
-//go:embed index.html
+//go:embed index.html people.html
 var content embed.FS
 
 type Server struct {
@@ -170,8 +170,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if r.URL.Path == "/" && r.Method == "GET" {
-		b, _ := content.ReadFile("index.html")
+	if (r.URL.Path == "/" || r.URL.Path == "/people") && r.Method == "GET" {
+		name := "index.html"
+		if r.URL.Path == "/people" {
+			name = "people.html"
+		}
+		b, _ := content.ReadFile(name)
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write(b)
 		return
@@ -186,6 +190,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if !s.authenticated(r) {
 		http.Error(w, "sign in required", 401)
+		return
+	}
+	if s.organizationHTTP(w, r) {
 		return
 	}
 	switch {
@@ -203,13 +210,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			diagnostics.Record("logging", "failed", e, 0, 0, 0)
 		}
 	case r.URL.Path == "/api/export" && r.Method == "GET":
-		assets, e := s.Store.List()
+		exported, e := s.Store.OrganizationExport()
 		if e != nil {
 			http.Error(w, "catalog unavailable", 500)
 			return
 		}
 		w.Header().Set("Content-Disposition", `attachment; filename="catalog.json"`)
-		jsonResponse(w, map[string]any{"schema": 1, "assets": assets})
+		jsonResponse(w, exported)
 	case r.URL.Path == "/api/upload" && r.Method == "POST":
 		r.Body = http.MaxBytesReader(w, r.Body, library.MaxUpload)
 		name := r.URL.Query().Get("name")
@@ -235,6 +242,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		a, e := s.Store.Get(parts[0])
 		if e != nil {
 			http.NotFound(w, r)
+			return
+		}
+		if s.assetOrganization(w, r, a.ID, parts[1]) {
 			return
 		}
 		switch {

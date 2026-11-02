@@ -5,6 +5,21 @@ Server-first execution amendment. No new charges or parallel agents. No personal
 machine specifications, paths, media or returned logs belong in this repository.
 Historical checkpoints remain in Git history; this file supersedes their gates.
 
+## Candidate 0.1.15: first People and tags pilot (acceptance pending)
+
+Implemented optional native worker/model packaging; explicit local still-photo
+analysis with persistent jobs; detected/manual face review and naming, selected-
+face reassignment, one-level name undo and confirmed suggestions; custom searchable
+tags and dismiss/restore AI labels. Names/corrections are separate from model data.
+Hash-verified original-derived oriented 960px analysis frames; provider failures
+leave the basic library usable. Hidden media excluded; no permanent deletion yet.
+
+Linux race/vet, authorization/shape/forged-face guards, cancellation/reopen,
+concurrent backup, independent organization restore and crop rebuild checks pass.
+Windows actual Go-to-native/browser/installer/recovery acceptance is pending.
+No new installer delivered yet; current delivered build remains 0.1.13. No local
+setup or reboot requested. Bulk import and repository visibility changes deferred.
+
 ## Current priority: people and object organization
 
 User explicitly deferred further import feature development/testing to prioritize
