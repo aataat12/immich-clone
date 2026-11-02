@@ -23,7 +23,7 @@ jobs:
         run: |
           go mod verify
           if ($LASTEXITCODE -ne 0) { throw 'Module verification failed' }
-          go test -timeout=120s ./internal/library ./internal/web
+          go test -count=1 -timeout=120s ./internal/library ./internal/web
           if ($LASTEXITCODE -ne 0) { throw 'HTTP tests failed' }
           go vet ./internal/library ./internal/web
           if ($LASTEXITCODE -ne 0) { throw 'Vet failed' }
