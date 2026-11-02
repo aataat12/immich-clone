@@ -29,7 +29,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Vet failed' }
           go build -o "$env:RUNNER_TEMP/security-app.exe" ./cmd/immichclone
           if ($LASTEXITCODE -ne 0) { throw 'Build failed' }
-      - name: Actual Edge enforcement
+      - name: Actual Edge policy and session controls
         shell: pwsh
         run: |
           npm install --prefix "$env:RUNNER_TEMP/security-browser-deps" --no-audit --no-fund playwright@1.62.1
