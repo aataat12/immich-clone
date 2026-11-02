@@ -28,7 +28,7 @@ jobs:
             $sid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
             Set-PrivateDirectoryAcl -Path $fixture -ReaderSid $sid -ServiceAccess
             [IO.File]::WriteAllText((Join-Path $fixture 'fixture.bin'),'synthetic')
-            Assert-PrivateDirectoryTree -Path $fixture -ReaderSid $sid -ServiceAccess
+            Assert-PrivateDirectoryTree -Path $fixture -ReaderSid $sid -ServiceAccess -VerifyInherited
             Write-Output 'PASS: production permission audit smoke test'
           } finally { if (Test-Path -LiteralPath $fixture) { Remove-Item -LiteralPath $fixture -Recurse -Force } }
       - name: Build exact permission acceptance app
