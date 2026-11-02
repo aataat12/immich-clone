@@ -34,7 +34,7 @@ review. Neither limit is cleared by queue benchmarks or available source space.
 No new dependencies, paid resources or local setup are needed for this plan.
 Final OS reboot validation remains deferred by the user.
 
-## Candidate 0.1.17 checkpoint
+## Accepted bounded 0.1.17 checkpoint
 
 Dedicated copy page with a persisted bounded manifest and per-file SHA256 receipt.
 Original asset/preview-queue/receipt/counters commit together. Accepted bytes are
@@ -54,6 +54,13 @@ results are bounded to 250; transfer does not poll/render the gallery.
 
 Acceptance: Linux race/vet plus actual 120 mixed native-media copies, interruption
 and reopen, replay/hash conflict, cancellation, duplicate accounting, preview drain
-and independent original/receipt restore passed. Full Windows service/Edge copy
-interruption/reselect/resume, real previous-installer upgrade and receipt restore
-acceptance pending. No large real-library invitation or local test request yet.
+and independent original/receipt restore passed. Windows full service/Edge actual
+partial-body socket disconnect, browser close/reselect/resume, real hash-verified
+0.1.15 installer upgrade, rollback, receipt restore and import-specific actual NTFS
+full-disk failure/retry passed in
+[41378462423](https://github.com/aataat12/immich-clone/actions/runs/41378462423),
+source `386cbb244bdf243cf908e84fc28f67e788f1551b`. Installer checksum and artifact
+are authoritative in status.md. Desktop/narrow screenshots inspected after fixing
+a stale copying line on cancel. Milestones 1–3 are accepted within the stated
+limits; milestone 4 remains open for larger endurance, gallery paging and capacity.
+No large real-library invitation or new local test request.

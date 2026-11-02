@@ -630,3 +630,18 @@ this exact worker. Installer retrieved and SHA256 verified:
 `f99e4d68ae45aaf067886a59fa49e38c9fdea17d92b08276510c995e36e51623`.
 No native rebuild or model change; no paid infrastructure. Clean target Windows
 10, reboot, broad quality and extended reliability remain unaccepted.
+
+
+## Bulk import 0.1.17 application acceptance
+
+No dependency version, native worker or model change. Reused accepted media/AI
+artifacts without source recompilation. [41378462423](https://github.com/aataat12/immich-clone/actions/runs/41378462423),
+job 125063798577, source `386cbb244bdf243cf908e84fc28f67e788f1551b` passed Windows
+Server 2022 actual 120 mixed native-image originals/previews, partial-body socket
+disconnect/reselect/receipt replay, service restart and independent receipt restore,
+actual import ENOSPC/retry on bounded NTFS, native AI/media/browser regressions and
+actual accepted 0.1.15 installer upgrade to 0.1.17/failed-upgrade rollback/reinstall.
+Previous executable installer hash was verified before execution; old build was
+not a relabeled executable from new source. Final installer retrieved and SHA256
+verified: `1db93bc321919c51abe0205e10075d3c6ab09fbbd93d51b0d0caa460cb95c6c7`.
+Server evidence does not clear Windows 10, large-library endurance or large backups.

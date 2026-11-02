@@ -66,3 +66,14 @@ AI is limited to native JPEG/PNG/BMP, first GIF frame and first TIFF page, up to
 80 common object categories are supported. HEIC/video AI, automatic clustering,
 face dismissal and ready-result reanalysis remain deferred. A transformed public
 fixture in CI proves the suggestion controls, not independent-photo accuracy.
+
+
+## Later small bulk-import checkpoint (0.1.17)
+
+No additional local action is requested while the 0.1.15 People/tag checkpoint is
+pending. After that checkpoint, a small available-offline test folder can exercise
+Bulk import: explicitly copy, check file/byte/duplicate counts, pause or close the
+page, reselect the same folder and resume, then confirm original downloads. Cancel
+keeps all accepted copies. The page explains that resume retransfers accepted
+bytes to verify their receipts. This does not authorize importing the full source
+library; paging, larger endurance and large-backup capacity remain open gates.
