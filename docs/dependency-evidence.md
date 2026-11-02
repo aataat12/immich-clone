@@ -657,3 +657,39 @@ Installer retrieved and SHA256 verified:
 User separately reported all twelve 0.1.15 review-flow checks and 0.1.17 basic bulk
 import passed locally; original-photo comparison, not a new SHA256 test. No raw
 private report retained. Full Win10 compatibility/endurance/reboot remain open.
+
+
+## Indexed gallery scale probe (0.1.21 candidate)
+
+[41391526782](https://github.com/aataat12/immich-clone/actions/runs/41391526782),
+source `dd59c6b1261d8871b28449ba34f99431ad81fe20`, job 125103776560 passed
+on Windows Server 2022. Existing full-list baseline above was reused; this run
+measured indexed 60-row first/next pages, JSON and a separately verified real PNG.
+
+| Synthetic metadata rows | First page Go allocations (bytes) | Page plus JSON allocations (bytes) | Index rebuild (one sample, ms) |
+|---|---:|---:|---:|
+| 1,000 | 81,344 | 184,224 | 39.095 |
+| 10,000 | 85,776 | 188,656 | 142.978 |
+| 50,000 | 76,120 | 188,592 | 827.413 |
+
+Next-page allocation at 50k: 86,616 bytes; idle worker 480 bytes. Some measured
+query durations were below VM timer resolution, not zero work. Allocation figures
+are Go TotalAlloc deltas, not RSS/peak memory; rebuild is a single cold-open
+sample and has separate temporary index-construction memory/work. These rows have
+no originals and do not establish a 50k-media import or full-library acceptance.
+Actual 600 mixed-format originals and browser media operations are separate checks.
+Linux race/vet and focused cursor/index/restore/rollback guards passed. Sorted
+bulk key insertion replaced an observed local random-insertion rebuild bottleneck.
+No dependency, native model/worker or original-layout change.
+
+
+0.1.21 full application acceptance: [41391526713](https://github.com/aataat12/immich-clone/actions/runs/41391526713),
+job 125103776422, same source `dd59c6b1261d8871b28449ba34f99431ad81fe20`, passed
+600 actual mixed native-image originals/previews, interruption/replay/independent
+restore, actual 121-PNG browser paging/completeness/sort/hide/stale recovery with
+no full-list gallery reads, existing AI/media/import regressions, actual 0.1.19
+installer upgrade, failed upgrade rollback, restoration/reinstall and real NTFS
+import ENOSPC/recovery. Screenshots inspected. Retrieved installer SHA256 verified:
+`924ced26664cc542fdcc6fbad3bc0c1cfde3733d261fbd14f41af4149ef31ed7`.
+No new dependency or local setup. No full-library, broader AI-quality, clean
+Windows 10/reboot or large-backup acceptance implied.

@@ -62,11 +62,12 @@ full-disk failure/retry passed in
 source `386cbb244bdf243cf908e84fc28f67e788f1551b`. Installer checksum and artifact
 are authoritative in status.md. Desktop/narrow screenshots inspected after fixing
 a stale copying line on cancel. Milestones 1–3 are accepted within the stated
-limits; milestone 4 remains open for larger endurance, gallery paging and capacity.
+limits; milestone 4 remains open for larger endurance and capacity. Gallery paging
+is cleared by the 0.1.21 checkpoint below.
 No large real-library invitation or new local test request.
 
 
-## Next bounded gallery acceptance
+## Bounded gallery acceptance criteria
 
 Reuse the measured full-list bottleneck in dependency-evidence.md rather than
 rerunning the baseline. The gallery must request/render bounded pages with capture
@@ -83,10 +84,16 @@ media ingestion/endurance and source/original SHA256 checks. No new dependency o
 large private-library test needed to develop this next checkpoint.
 
 
-Candidate 0.1.21 implements the indexed gallery checkpoint: 60 items/page, forward/
+Accepted 0.1.21 implements the indexed gallery checkpoint: 60 items/page, forward/
 back controls, capture/upload/case-folded filename ordering, hidden filtering,
 stale-order reset and rebuild after open/restore/older writers. Sorted bulk index
 construction avoids costly random inserts in unspilled nodes. Linux race/vet,
 600 actual mixed-format originals/previews with independent restore, and bounded
-page measurements at 1k/10k/50k metadata-only rows passed; Windows acceptance is
-pending. No full-library acceptance or local test request yet.
+page measurements at 1k/10k/50k metadata-only rows passed on Linux and Windows
+Server 2022. Application run 41391526713 at source
+`dd59c6b1261d8871b28449ba34f99431ad81fe20` also passed 121 actual browser PNG
+originals across three pages, no full-list reads, all controls/stale-cursor recovery,
+actual 0.1.19 upgrade/rollback/restore and real import ENOSPC. Scale run 41391526782
+records metadata measurements separately. Exact installer/hash is in status.md.
+Small local paging checks may use an existing test library exceeding 60 files.
+Full-library acceptance remains open for backup capacity and longer endurance.
