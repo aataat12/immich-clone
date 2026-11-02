@@ -2,7 +2,8 @@
 
 People candidate: reversible false-face dismissal/restoration preserving names,
 undo history, tags, analysis and originals. Linux focused race/full tests/vet
-passed; Windows/Edge acceptance pending. Security worker source reviews are in
+passed; Windows Server 2022/Edge acceptance passed (41519696666), including
+actual dismissal/reload/restore. See face-dismissal.md. Security worker source reviews are in
 security-installer-review.md and security-worker-isolation-review.md; neither
 claims new runtime evidence or clears the outstanding security release gates.
 
