@@ -103,7 +103,7 @@ Source: https://go.dev/doc/security/vuln/ (reviewed 2026-11-02).
 | FFmpeg 8.1.3 | Upstream download page still lists 8.1.3 for the 8.1 branch. The pinned build disables network and all components except the documented decoder/demuxer/filter allowlist. HLS/TLS/TIFF paths are excluded. This narrows applicability, not a blanket security clearance. | Complete advisory-to-source applicability inventory for enabled MOV/Matroska/H264/HEVC/AAC/filter code; maintain replacement/retest procedure. |
 | OpenCV 4.12.0 | Upstream CVE-2025-53644 disclosure identifies 4.12.0 as fixed; this worker also omits imgcodecs. Fixed weights and bounded BGR input are reused. Its security page is a reporting policy, not a support SLA or clean scan. | Wider current advisory review, runtime servicing and stronger token/filesystem isolation assessment. |
 | Embedded protobuf 3.19.1 | Retain the previously verified CVE-2022-1941 parser backport. GHSA-h5g9-ghrj-76p5 says the JSON defect was introduced in 4.22.0; 3.19.1 predates it and the worker uses ONNX binary parsing. PHP/Python/Java advisories do not directly describe this C++ path. | Do not treat a single backport as comprehensive servicing; keep exact source changes and re-evaluate on provider changes. |
-| Embedded zlib 1.3.1 | Upstream 1.3.2 includes audit-related changes. This is an open review item, not silently cleared because the worker tests pass. No native binary replacement occurred in this slice. | Determine compiled/reachable affected functions and whether update/backport or removal is appropriate; rebuild/retest provider if required. |
+| Embedded zlib | Installed provider still uses 1.3.1. The isolated 1.3.2 replacement below passed static operations, native inference/service/recovery, artifact verification and Windows signature/canary scanning. | Integrate its new hash/path/notices and pass broader app/installer/restore acceptance; do not silently replace the installed provider. |
 | Go modules and native providers | Existing exact versions, checksums, redistribution notices and replacement boundaries are retained in dependency-evidence.md and preparation scripts. | Signed release arrangements and static CRT servicing remain production gates. |
 
 Primary sources reviewed 2026-11-02:
@@ -373,6 +373,16 @@ Worker 7365120 bytes SHA256
 cb35f0ccb3e38a6120a6f84fe91d17beaa719f9dcb9329c192b2c885bfb121ba
 matched its manifest. Replacement source digest, license, operation evidence,
 version report and PE-import record verified. Actual candidate archive privacy
-scan and separate Windows privacy workflow are recorded when complete.
+scan passed: 4269 scan items, 72776961 checked bytes.
 Application provider hash/path and installed build are still unchanged. Integration,
 installer/upgrade/restore and target Windows 10 checks remain separate gates.
+
+
+Windows privacy acceptance: [41485726847](https://github.com/aataat12/immich-clone/actions/runs/41485726847),
+source 5d03864d3c3a40303dfee04b78680b98bba0b733, job 125415431154 passed all six
+scanner controls on Python 3.12.10 and inspected the exact native candidate tree,
+including source archives, after checking the worker's pinned SHA256. This proves
+selected signature/canary detection and budget/redaction handling, not absence of
+all private content. No supplied user secrets/media were used. The installed-
+payload canary hook remains unexecuted until the broader installer acceptance
+run; native provider integration and target Windows 10 checks also remain open.

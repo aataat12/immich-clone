@@ -756,3 +756,33 @@ cffb19c052ac17cac30c62f845225cc6e30868f8d14389dc9e7ffd75876312ff
 retrieved and verified against manifest; package ZIP digest verified separately.
 Build Notes screenshots inspected. Unsigned prototype candidate; broader security
 milestone, target Windows 10 and extended reliability remain unaccepted.
+
+## Native compression servicing candidate — zlib 1.3.2
+
+Official source https://zlib.net/zlib-1.3.2.tar.gz, SHA256
+bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16;
+upstream zlib license retained unchanged with the archive. Static MSVC /MT build
+replaces OpenCV's bundled 1.3.1 via explicit external include/library selection;
+OpenCV 4.12.0, protobuf parser backport and the three model hashes stay unchanged.
+No new end-user DLL, interpreter, GPU or SDK requirement. CRT remains statically
+embedded and requires rebuilt/retested providers for servicing.
+
+[41483644241](https://github.com/aataat12/immich-clone/actions/runs/41483644241),
+source 30fc135bc0f6bd1d5af40ddaed17527caf91e219: build 125408169198 and
+LocalService 125411689735 passed. Real zlib version/roundtrip/inflateCopy/malformed
+operations passed on cloud Linux and Windows before downstream compilation.
+Worker reports linked zlib 1.3.2; no fallback old zlib library and PE imports only
+kernel32.dll. Native face/object inference, Python-reference minimum embedding
+cosine 0.9999996401, four malformed frames, model/cancellation recovery and restart
+under LocalService with Unicode/space paths passed. Input hashes unchanged;
+peak commitment 271380480 within the 536870912-byte job cap.
+
+Artifact 13161790873 ZIP SHA256 verified:
+6bb2cbe69687501b0323f1d40fe1419109cf083e40bae219cb03f029f5986d3c.
+7365120-byte ai-worker.exe SHA256 matched manifest:
+cb35f0ccb3e38a6120a6f84fe91d17beaa719f9dcb9329c192b2c885bfb121ba.
+Replacement source digest, notices, static import and version evidence inspected.
+Native candidate archive credential-signature scan passed (4269 scan items,
+72776961 bytes). This is isolated component acceptance, not app/installer
+integration or Windows 10 certification. Existing installed provider ID/hash
+remains unchanged until separately integrated and accepted in the broader release.

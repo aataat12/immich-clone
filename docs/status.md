@@ -7,6 +7,10 @@ Native run 41483644241 passed build/PE audit and actual LocalService
 inference/parity/recovery/restart (source 30fc135b). The app's
 existing provider/model hashes remain unchanged; no integration or installer
 acceptance claimed. See security-baseline.md for candidate hash and gating.
+Windows privacy run 41485726847 passed the scanner controls and exact candidate
+payload scan. Installer privacy-canary hook is prepared but awaits the next
+broader release acceptance run. Integrate the verified native worker only with
+updated hash/path, retained source/notices and full installer/restore validation.
 No user action or separate login-only release requested.
 
 Authoritative requirements: `../Immich_Clone_Project_Requirements.md` including the
