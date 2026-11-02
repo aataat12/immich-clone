@@ -1,0 +1,41 @@
+name: Focused security baseline
+on:
+  push:
+    paths:
+      - '.github/workflows/security-baseline.yml'
+      - 'scripts/Test-SecurityBrowser.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-browser:
+    runs-on: windows-2022
+    timeout-minutes: 12
+    steps:
+      - name: Preserve source line endings
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with:
+          go-version: '1.27.3'
+      - name: Focused tests and build
+        shell: pwsh
+        run: |
+          go mod verify
+          if ($LASTEXITCODE -ne 0) { throw 'Module verification failed' }
+          go test ./internal/web
+          if ($LASTEXITCODE -ne 0) { throw 'HTTP tests failed' }
+          go vet ./internal/web
+          if ($LASTEXITCODE -ne 0) { throw 'Vet failed' }
+          go build -o "$env:RUNNER_TEMP/security-app.exe" ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'Build failed' }
+      - name: Actual Edge enforcement
+        shell: pwsh
+        run: |
+          npm install --prefix "$env:RUNNER_TEMP/security-browser-deps" --no-audit --no-fund playwright@1.62.1
+          if ($LASTEXITCODE -ne 0) { throw 'Browser dependency failed' }
+          $env:IMMICH_BROWSER_MODULE = "$env:RUNNER_TEMP/security-browser-deps/node_modules/playwright"
+          $env:IMMICH_BROWSER_EXE = "${env:ProgramFiles(x86)}/Microsoft/Edge/Application/msedge.exe"
+          $env:IMMICH_SECURITY_APP = "$env:RUNNER_TEMP/security-app.exe"
+          node scripts/Test-SecurityBrowser.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Browser acceptance failed' }
