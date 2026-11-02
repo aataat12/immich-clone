@@ -3,6 +3,7 @@ package library
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	bolt "go.etcd.io/bbolt"
@@ -267,4 +268,56 @@ func TestAnalysisBatchMultipageCancellation(t *testing.T) {
 		t.Fatal("multipage cancellation skipped entries", b)
 	}
 	batchControl(t, r, "pause")
+}
+
+// Export is consumed as JSON over HTTP, so returning a map alone is insufficient.
+func TestAnalysisBatchExportJSON(t *testing.T) {
+	for _, state := range []string{"pending", "cancelled", "ready", "failed"} {
+		t.Run(state, func(t *testing.T) {
+			s, _ := openTest(t)
+			s.SetRecognizer(fakeAnalysis, true)
+			asset := batchPhoto(t, s, 9)
+			batchControl(t, s, "start")
+			switch state {
+			case "cancelled":
+				batchControl(t, s, "cancel")
+			case "failed":
+				s.SetRecognizer(func(context.Context, image.Image, string) (recognition.Result, error) {
+					return recognition.Result{}, errors.New("fixture")
+				}, true)
+				if _, e := s.ProcessAnalysis(context.Background()); e != nil {
+					t.Fatal(e)
+				}
+			case "ready":
+				if _, e := s.ProcessAnalysis(context.Background()); e != nil {
+					t.Fatal(e)
+				}
+			}
+			exported, e := s.OrganizationExport()
+			if e != nil {
+				t.Fatal(e)
+			}
+			data, e := json.Marshal(exported)
+			if e != nil {
+				t.Fatal("export cannot be served as JSON", e)
+			}
+			var decoded struct {
+				Organization map[string]json.RawMessage `json:"organization"`
+			}
+			if e := json.Unmarshal(data, &decoded); e != nil {
+				t.Fatal(e)
+			}
+			var members map[string]json.RawMessage
+			if e := json.Unmarshal(decoded.Organization[batchMembers], &members); e != nil {
+				t.Fatal(e)
+			}
+			var got string
+			if e := json.Unmarshal(members[asset.ID], &got); e != nil || got != state {
+				t.Fatalf("membership: %q %v", got, e)
+			}
+			if bytes.Contains(data, []byte(`"embedding":[`)) {
+				t.Fatal("export exposed embeddings")
+			}
+		})
+	}
 }

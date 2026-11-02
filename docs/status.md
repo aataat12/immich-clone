@@ -80,11 +80,34 @@ native worker/model/licensing checks are reused; no source rebuild of providers.
 
 ## Next milestones and remaining limits
 
-Current candidate (0.1.25): bulk local AI analysis, including the requested Build Notes
-page beside People & tags, top-right Home navigation and maintained Status /
-Released In columns. Full remaining milestone acceptance: [roadmap.md](roadmap.md).
-The controls and page are implemented; Windows Server acceptance is pending. Do not
-publish the candidate as an accepted installer until the workflow passes.
+0.1.25 is cloud-accepted on review branch work/bulk-ai-acceptance, source
+d558f7c35c66e3169c73af3b19b71167d16d1dd0. Full Windows Server 2022 run
+[41406051070](https://github.com/aataat12/immich-clone/actions/runs/41406051070),
+job 125148201437 passed: actual native bulk inference, durable controls and
+restart/restore bookkeeping, names/tags, JSON export, Build Notes/Home desktop
+and narrow navigation, optional-model failure/recovery, original hashes,
+independent restores, real NTFS ENOSPC, actual 0.1.23 upgrade, failed-upgrade
+rollback and uninstall/reinstall checks. Linux race/vet and membership export
+regressions passed. No new provider/model/dependency. Local 0.1.25 validation
+is pending; no full-library import or reboot requested.
+
+Installer artifact 13123837527: ImmichClone-0.1.25-prototype-x64-setup.exe,
+102605388 bytes, SHA256
+e88a3fee85da9ecc3efe574b844ab534c5254d9cb1ea455e6d78338e8763bf00.
+Retrieved ZIP SHA256 cbbccb47d52ea91b9a4b259f76bd8fcdb67b69b79288e0cf19220d0b425684fe
+and executable verified. Prior matching Build Notes desktop/narrow screenshots
+were inspected; final synthetic-browser artifact 13123443482 is retained.
+Unsigned prototype; seven-day artifact retention. Server is not Windows 10
+certification. Full remaining acceptance: roadmap.md.
+
+Acceptance found and fixed raw batch-member states incorrectly emitted as
+json.RawMessage, making /api/export empty. Regression tests cover pending,
+cancelled, ready and failed states while excluding embeddings. The missing-model
+harness then needed a fresh unprocessed fixture (bulk processing already completed
+the old one) and a height above the existing 32-pixel provider minimum. The final
+64x48 PNG verifies failure, original download hash and recovery independently.
+No failed-run installer was published. Direct main publication was blocked by
+automatic approval review; PR #1 remains pending explicit merge authorization.
 
 1. Large-container/ZIP64 size and throughput, longer actual mixed-media endurance,
    and storage-disconnect recovery remain open before full real-library import.

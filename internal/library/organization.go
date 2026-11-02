@@ -706,6 +706,13 @@ func (s *Store) OrganizationExport() (map[string]any, error) {
 						return e
 					}
 					items[string(k)] = b
+				} else if name == batchMembers {
+					// Membership values are raw internal states, not JSON records.
+					b, e := json.Marshal(string(v))
+					if e != nil {
+						return e
+					}
+					items[string(k)] = b
 				} else {
 					items[string(k)] = append([]byte(nil), v...)
 				}

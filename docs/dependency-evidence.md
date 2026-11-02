@@ -716,3 +716,22 @@ ZIP SHA256 `d6982bcc3459c64123638aaad43a544c31409945fbbd566345aedc6e174b6c3b`.
 Screenshots inspected; no new setup or reboot requested. Harness-only range-session
 and undersized-volume failures before acceptance are recorded in backups.md.
 Full-library/ZIP64/throughput/disconnect and clean target acceptance remain open.
+
+
+## Bulk local analysis and Build Notes 0.1.25
+
+No dependency/model/native-worker change. Source d558f7c35c66e3169c73af3b19b71167d16d1dd0,
+Windows Server 2022 LocalService/Edge run 41406051070, job 125148201437 passed actual
+batch inference/control/import-priority, review/JSON export, Build Notes/Home
+navigation/layouts, model failure/retry, original hashes, independent restores,
+NTFS ENOSPC and actual 0.1.23 installer upgrade/rollback/reinstall acceptance.
+Linux race/vet and pending/cancelled/ready/failed JSON export regression passed.
+Raw internal membership strings require JSON encoding in export; the failure was
+fixed before accepted packaging. Test harness uses a new 64x48 synthetic PNG to
+avoid reanalyzing a completed batch member or violating the provider minimum.
+Retrieved installer 102605388 bytes SHA256
+e88a3fee85da9ecc3efe574b844ab534c5254d9cb1ea455e6d78338e8763bf00;
+artifact ZIP SHA256 cbbccb47d52ea91b9a4b259f76bd8fcdb67b69b79288e0cf19220d0b425684fe.
+Both verified. Seven-day artifacts; unsigned prototype. Source remains in PR #1
+pending main-merge authorization. No target Windows 10/broad quality/endurance
+claim; no full-library import or reboot requested.
