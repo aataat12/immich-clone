@@ -58,11 +58,17 @@ try {
     Assert-PrivateDirectoryTree -Path $DataDir -ReaderSid $identity -ServiceAccess
     Assert-PrivateDirectoryTree -Path $logRoot -ReaderSid $identity -ServiceAccess
     Assert-PrivateDirectoryTree -Path $rollback -OwnerSid $identity
-    $pathsValidated = $true
     $logIdentity = $identity
     if (Test-Path -LiteralPath $DataDir) { Set-PrivateDirectoryAcl -Path $DataDir -ReaderSid $identity -ServiceAccess }
     if (Test-Path -LiteralPath $rollback) { Set-PrivateDirectoryAcl -Path $rollback }
     Set-PrivateDirectoryAcl -Path $logRoot -ReaderSid $logIdentity -ServiceAccess
+    # Verify actual inherited ACLs too; never assume the root change propagated.
+    # A failure here can leave safe root ACL normalization, but no service stop,
+    # diagnostics, snapshot or data-content mutation has happened.
+    Assert-PrivateDirectoryTree -Path $DataDir -ReaderSid $identity -ServiceAccess -VerifyInherited
+    Assert-PrivateDirectoryTree -Path $logRoot -ReaderSid $identity -ServiceAccess -VerifyInherited
+    Assert-PrivateDirectoryTree -Path $rollback -OwnerSid $identity -VerifyInherited
+    $pathsValidated = $true
     $diagnosticsReady = $true
     Diagnostic 'installer_begin'
     $owned = Own-Service
@@ -116,7 +122,7 @@ try {
     exit 0
 } catch {
     if (!$pathsValidated) {
-        Write-Error 'Installation storage paths or permissions could not be validated; no installation action performed.' -ErrorAction Continue
+        Write-Error 'Installation storage validation failed; service and data content were not changed.' -ErrorAction Continue
         exit 1
     }
     Diagnostic 'installer_failed' $_.Exception.HResult

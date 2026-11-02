@@ -53,7 +53,40 @@ function Get-PrivateDirectoryPolicy([string]$ReaderSid, [switch]$ServiceAccess) 
     return $policy
 }
 
-function Assert-PrivateDirectoryTree([string]$Path, [string]$ReaderSid, [switch]$ServiceAccess, [string]$OwnerSid) {
+function Assert-PrivateItemAcl([IO.FileSystemInfo]$Item, $Policy, $Owners, [switch]$VerifyInherited, [switch]$Root) {
+    $acl = Get-Acl -LiteralPath $Item.FullName -ErrorAction Stop
+    $owner = $acl.GetOwner([Security.Principal.SecurityIdentifier])
+    if ($null -eq $owner -or !$Owners.ContainsKey($owner.Value)) { throw 'Application-owned tree has an unexpected owner' }
+    $raw = [Security.AccessControl.RawSecurityDescriptor]::new($acl.GetSecurityDescriptorBinaryForm(), 0)
+    if (($raw.ControlFlags -band [Security.AccessControl.ControlFlags]::DiscretionaryAclPresent) -eq 0 -or $null -eq $raw.DiscretionaryAcl) { throw 'Application-owned tree has a null DACL' }
+    # Preflight admits root grants that replacement can fix. Verification never
+    # assumes inheritance succeeded: root and descendants use the full policy.
+    if ($Root -and !$VerifyInherited) { return }
+    if ($Root -and !$acl.AreAccessRulesProtected) { throw 'Application-owned root is not protected against parent inheritance' }
+    foreach ($ace in $raw.DiscretionaryAcl) {
+        if ($ace.AceFlags.HasFlag([Security.AccessControl.AceFlags]::Inherited) -and !$acl.AreAccessRulesProtected -and !$VerifyInherited) { continue }
+        # Higher-level GetAccessRules may omit callback/object ACE forms.
+        if (!($ace -is [Security.AccessControl.CommonAce]) -or $ace.IsCallback -or $ace.AceQualifier -ne [Security.AccessControl.AceQualifier]::AccessAllowed) { throw 'Application-owned tree has an unsupported descendant access rule' }
+    }
+    $selfRights = @{}
+    $childRights = @{}
+    foreach ($rule in $acl.GetAccessRules($true, $true, [Security.Principal.SecurityIdentifier])) {
+        if ($rule.IsInherited -and !$acl.AreAccessRulesProtected -and !$VerifyInherited) { continue }
+        $sid = $rule.IdentityReference.Value
+        $rights = [int64][int]$rule.FileSystemRights
+        if ($rule.AccessControlType -ne [Security.AccessControl.AccessControlType]::Allow -or !$Policy.ContainsKey($sid) -or $rights -lt 0 -or ($rights -band (-bnot $Policy[$sid])) -ne 0) { throw 'Application-owned tree has an unsafe descendant access rule' }
+        if (($rule.PropagationFlags -band [Security.AccessControl.PropagationFlags]::InheritOnly) -eq 0) { $selfRights[$sid] = [int64]$selfRights[$sid] -bor $rights }
+        if ($rule.PropagationFlags -eq [Security.AccessControl.PropagationFlags]::None -and ($rule.InheritanceFlags -band [Security.AccessControl.InheritanceFlags]'ContainerInherit,ObjectInherit') -eq [Security.AccessControl.InheritanceFlags]'ContainerInherit,ObjectInherit') { $childRights[$sid] = [int64]$childRights[$sid] -bor $rights }
+    }
+    if ($acl.AreAccessRulesProtected -or $VerifyInherited) {
+        foreach ($sid in $Policy.Keys) {
+            if (([int64]$selfRights[$sid] -band $Policy[$sid]) -ne $Policy[$sid]) { throw 'Application-owned descendant lacks required access' }
+            if ($Item -is [IO.DirectoryInfo] -and ([int64]$childRights[$sid] -band $Policy[$sid]) -ne $Policy[$sid]) { throw 'Application-owned directory lacks required inheritance' }
+        }
+    }
+}
+
+function Assert-PrivateDirectoryTree([string]$Path, [string]$ReaderSid, [switch]$ServiceAccess, [string]$OwnerSid, [switch]$VerifyInherited) {
     # Read-only stationary-tree audit. Enumeration never recurses through a link;
     # every child is inspected before it may be pushed onto the directory stack.
     # Concurrent path substitution is a distinct, unresolved handle/identity gate.
@@ -67,11 +100,7 @@ function Assert-PrivateDirectoryTree([string]$Path, [string]$ReaderSid, [switch]
     foreach ($sid in $policy.Keys) { $owners[$sid] = $true }
     if (!$OwnerSid) { $OwnerSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value }
     $owners[$OwnerSid] = $true
-    $rootAcl = Get-Acl -LiteralPath $root.FullName -ErrorAction Stop
-    $rootRaw = [Security.AccessControl.RawSecurityDescriptor]::new($rootAcl.GetSecurityDescriptorBinaryForm(), 0)
-    if (($rootRaw.ControlFlags -band [Security.AccessControl.ControlFlags]::DiscretionaryAclPresent) -eq 0 -or $null -eq $rootRaw.DiscretionaryAcl) { throw 'Application-owned tree has a null DACL' }
-    $rootOwner = $rootAcl.GetOwner([Security.Principal.SecurityIdentifier])
-    if ($null -eq $rootOwner -or !$owners.ContainsKey($rootOwner.Value)) { throw 'Application-owned tree has an unexpected owner' }
+    Assert-PrivateItemAcl -Item $root -Policy $policy -Owners $owners -VerifyInherited:$VerifyInherited -Root
     $pending = New-Object 'Collections.Generic.Stack[string]'
     $pending.Push($root.FullName)
     while ($pending.Count -gt 0) {
@@ -79,37 +108,7 @@ function Assert-PrivateDirectoryTree([string]$Path, [string]$ReaderSid, [switch]
         foreach ($path in [IO.Directory]::EnumerateFileSystemEntries($directory)) {
             $item = Get-Item -LiteralPath $path -Force -ErrorAction Stop
             if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'Application-owned tree contains a reparse point' }
-            $acl = Get-Acl -LiteralPath $path -ErrorAction Stop
-            $owner = $acl.GetOwner([Security.Principal.SecurityIdentifier])
-            if ($null -eq $owner -or !$owners.ContainsKey($owner.Value)) { throw 'Application-owned tree has an unexpected owner' }
-            $raw = [Security.AccessControl.RawSecurityDescriptor]::new($acl.GetSecurityDescriptorBinaryForm(), 0)
-            if (($raw.ControlFlags -band [Security.AccessControl.ControlFlags]::DiscretionaryAclPresent) -eq 0 -or $null -eq $raw.DiscretionaryAcl) { throw 'Application-owned tree has a null DACL' }
-            # GetAccessRules can omit callback/object ACE forms. Fail closed on
-            # such noncanonical explicit/protected DACL entries rather than
-            # accidentally treating an unrepresented allow as safe.
-            foreach ($ace in $raw.DiscretionaryAcl) {
-                if ($ace.AceFlags.HasFlag([Security.AccessControl.AceFlags]::Inherited) -and !$acl.AreAccessRulesProtected) { continue }
-                if (!($ace -is [Security.AccessControl.CommonAce]) -or $ace.IsCallback -or $ace.AceQualifier -ne [Security.AccessControl.AceQualifier]::AccessAllowed) { throw 'Application-owned tree has an unsupported descendant access rule' }
-            }
-            $selfRights = @{}
-            $childRights = @{}
-            foreach ($rule in $acl.GetAccessRules($true, $true, [Security.Principal.SecurityIdentifier])) {
-                # For inheriting descendants, old inherited rights disappear when
-                # the root is replaced. Explicit rules on intermediate ancestors
-                # are audited separately. Protected DACLs receive no root repair.
-                if ($rule.IsInherited -and !$acl.AreAccessRulesProtected) { continue }
-                $sid = $rule.IdentityReference.Value
-                $rights = [int64][int]$rule.FileSystemRights
-                if ($rule.AccessControlType -ne [Security.AccessControl.AccessControlType]::Allow -or !$policy.ContainsKey($sid) -or $rights -lt 0 -or ($rights -band (-bnot $policy[$sid])) -ne 0) { throw 'Application-owned tree has an unsafe descendant access rule' }
-                if (($rule.PropagationFlags -band [Security.AccessControl.PropagationFlags]::InheritOnly) -eq 0) { $selfRights[$sid] = [int64]$selfRights[$sid] -bor $rights }
-                if ($rule.PropagationFlags -eq [Security.AccessControl.PropagationFlags]::None -and ($rule.InheritanceFlags -band [Security.AccessControl.InheritanceFlags]'ContainerInherit,ObjectInherit') -eq [Security.AccessControl.InheritanceFlags]'ContainerInherit,ObjectInherit') { $childRights[$sid] = [int64]$childRights[$sid] -bor $rights }
-            }
-            if ($acl.AreAccessRulesProtected) {
-                foreach ($sid in $policy.Keys) {
-                    if (([int64]$selfRights[$sid] -band $policy[$sid]) -ne $policy[$sid]) { throw 'Application-owned protected descendant lacks required access' }
-                    if ($item.PSIsContainer -and ([int64]$childRights[$sid] -band $policy[$sid]) -ne $policy[$sid]) { throw 'Application-owned protected directory lacks required inheritance' }
-                }
-            }
+            Assert-PrivateItemAcl -Item $item -Policy $policy -Owners $owners -VerifyInherited:$VerifyInherited
             if ($item.PSIsContainer) { $pending.Push($item.FullName) }
         }
     }

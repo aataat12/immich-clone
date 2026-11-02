@@ -13,12 +13,20 @@ Windows acceptance is required before marking this item complete.
 rollback directory. It validates state placement and refuses unrelated nonempty
 state before these audits. Audits run before root ACL changes, diagnostics,
 service lookup/stop, snapshots, initialization or error-path writes. The failure
-handler keeps `$pathsValidated` false and `$diagnosticsReady` false until all
-three audits pass; rejection emits one fixed generic failure, without diagnostics,
-rollback, ownership changes or service actions.
+handler keeps `$pathsValidated` false and `$diagnosticsReady` false through all
+preflight and final verification passes. Preflight rejection emits one fixed generic
+failure without ACL/ownership changes, diagnostics, rollback or service actions.
 
-After all read-only audits pass, existing roots receive their intended DACLs;
+After all read-only preflights pass, existing roots receive their intended DACLs;
 root inheritance then removes old inherited broad grants from inheriting children.
+A second complete read-only audit with `-VerifyInherited` checks the actual final
+root and descendant ACLs, including every inherited ACE and required self/directory
+propagation right. Roots must also have inheritance protection enabled. All three
+final audits must pass before diagnostics, service actions or data-content changes.
+This verifies propagation rather than assuming it worked. A failure in final
+verification can leave safe root ACL normalization already performed; the helper
+does not claim transactional ACL rollback. It still changes no service state or
+data content and emits no diagnostic file on that rejection.
 There is no explicit-child rewrite, original deletion or arbitrary new library-
 size limit. Iterative enumeration covers every descendant and stops on errors.
 An unrecognized, unreadable or disappearing entry fails closed rather than being
@@ -57,6 +65,11 @@ owners are checked too.
   both ObjectInherit and ContainerInherit without NoPropagate/InheritOnly blocking
   the chain. This admits a correctly configured protected subtree while refusing
   a private-looking ACL that would break service/admin/reader access below it.
+- Final `-VerifyInherited` applies these ceilings and completeness requirements to
+  every root and child regardless of inheritance status; protected roots are
+  required. It rejects an unnormalized broad inherited grant or a missing inherited
+  service/admin/reader right even if preflight correctly admitted that repairable
+  tree. The preflight and final verification modes use the same ACL evaluator.
 
 No decision is made by matching account display names; access rules are retrieved
 as SecurityIdentifier values. Raw DACL ACE inspection prevents callback/object ACEs
@@ -80,7 +93,9 @@ The test worker owns `scripts/Test-StorageSecurity.ps1` and
    revoke an existing unsafe grant; an administrator must correct that configuration
    before retrying. Do not label refusal as automatic ACL repair.
 4. Root-inherited broad grants that the existing root replacement can fix are
-   accepted and normalized, then verified denied using the ordinary-user token.
+   accepted by preflight but rejected by final verification before normalization;
+   after normalization final verification passes and the actual ordinary-user token
+   is denied. Verify correct protected root status and missing inheritance refusal.
 5. Child junction and junction-ancestor fixtures reject without touching outside
    bytes/ACLs; unreadable descendant ACL/enumeration executes under a real restricted
    token and cannot become an accepted partial audit.

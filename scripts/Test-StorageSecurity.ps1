@@ -54,7 +54,12 @@ try {
  Assert ([StorageAccessProbe]::Access($user,$password,$secret,$false)) 'previous grant command reproduces retained explicit Everyone access'
  Assert-PrivateDirectoryTree -Path $fixture -ReaderSid $identity -ServiceAccess
  Assert $true 'normal inherited grants pass read-only descendant audit before root normalization'
+ $inheritedUnsafe=$false
+ try {Assert-PrivateDirectoryTree -Path $fixture -ReaderSid $identity -ServiceAccess -VerifyInherited} catch {$inheritedUnsafe=$true}
+ Assert $inheritedUnsafe 'final-state verification rejects inherited Everyone before normalization'
  Set-PrivateDirectoryAcl -Path $fixture -ReaderSid $identity -ServiceAccess
+ Assert-PrivateDirectoryTree -Path $fixture -ReaderSid $identity -ServiceAccess -VerifyInherited
+ Assert $true 'final-state verification accepts complete normalized root and descendants'
  Assert (![StorageAccessProbe]::Access($user,$password,$secret,$false)) 'replacement DACL denies ordinary-user secret read'
  Assert (![StorageAccessProbe]::Access($user,$password,(Join-Path $fixture 'forbidden.txt'),$true)) 'replacement DACL denies ordinary-user write'
  $acl=Get-Acl -LiteralPath $fixture
@@ -137,10 +142,20 @@ try {
   $beforeService=Get-CimInstance Win32_Service -Filter "Name='ImmichClone'"
   $watch=@($Candidate,$rollback,$rollbackGuard,$installerLog,$installDiagnostic)+$Watched
   $before=Snapshot $watch
-  & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $app 'Manage-Service.ps1') -Action Prepare -AppDir $app -DataDir $Candidate *> $null
-  $exit=$LASTEXITCODE
+  $stdout=Join-Path $root ('rejection-'+[guid]::NewGuid().ToString('N')+'.stdout')
+  $stderr=Join-Path $root ('rejection-'+[guid]::NewGuid().ToString('N')+'.stderr')
+  try {
+   # Windows PowerShell can turn expected native stderr into RemoteException
+   # under ErrorActionPreference=Stop even with stream redirection. Capture only
+   # the child exit status; never emit its disposable output files.
+   $arguments='-NoProfile -NonInteractive -ExecutionPolicy Bypass -File "'+(Join-Path $app 'Manage-Service.ps1')+'" -Action Prepare -AppDir "'+$app+'" -DataDir "'+$Candidate+'"'
+   $process=Start-Process -FilePath (Join-Path $env:SystemRoot 'System32/WindowsPowerShell/v1.0/powershell.exe') -ArgumentList $arguments -Wait -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+   $exit=$process.ExitCode
+  } finally {
+   Remove-Item -LiteralPath $stdout,$stderr -Force -ErrorAction SilentlyContinue
+  }
   $afterService=Get-CimInstance Win32_Service -Filter "Name='ImmichClone'"
-  Assert ($exit -ne 0) ($Label+' rejected by production management preflight')
+  Assert ($exit -is [int] -and $exit -ne 0) ($Label+' rejected by production management preflight')
   Assert ($beforeService.State -eq 'Running' -and $afterService.State -eq 'Running' -and $beforeService.ProcessId -eq $afterService.ProcessId) ($Label+' rejected before service stop/restart')
   Assert ((Snapshot $watch) -eq $before) ($Label+' preserves watched bytes ACLs diagnostics and rollback')
  }
@@ -220,6 +235,7 @@ try {
  $a.AddAccessRule((New-Object Security.AccessControl.FileSystemAccessRule((New-Object Security.Principal.SecurityIdentifier($identity)),[Security.AccessControl.FileSystemRights]::ReadAndExecute,[Security.AccessControl.AccessControlType]::Allow)))
  Set-Acl -LiteralPath $normal -AclObject $a
  Assert-PrivateDirectoryTree -Path $candidate -ReaderSid $identity -ServiceAccess
+ Assert-PrivateDirectoryTree -Path $candidate -ReaderSid $identity -ServiceAccess -VerifyInherited
  Assert $true 'intended explicit rights and complete protected descendants accepted'
  foreach($entry in @('nested/state.bin','originals/original.bin','catalog.db','access-code.txt','backups/backup.zip','protected/safe.bin')) {
   $safe=Join-Path $candidate $entry
