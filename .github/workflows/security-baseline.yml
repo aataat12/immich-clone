@@ -29,6 +29,11 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Vet failed' }
           go build -o "$env:RUNNER_TEMP/security-app.exe" ./cmd/immichclone
           if ($LASTEXITCODE -ne 0) { throw 'Build failed' }
+      - name: Actual Windows ACL and reparse controls
+        shell: powershell
+        run: |
+          ./scripts/Test-StorageSecurity.ps1 -Binary "$env:RUNNER_TEMP/security-app.exe"
+          if ($LASTEXITCODE -ne 0) { throw 'Windows storage security acceptance failed' }
       - name: Actual Edge policy and session controls
         shell: pwsh
         run: |
