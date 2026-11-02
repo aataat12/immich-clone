@@ -15,3 +15,7 @@ Never commit user-returned support logs. Keep private diagnostic files out of
 GitHub, CI inputs and public issue attachments; only sanitized, generic findings
 may enter project records. For tool-based source uploads, verify each blob SHA
 against the local Git object hash before moving a branch ref.
+
+Security changes: if a mitigation conflicts with the agreed project plan, explain
+the conflict and ask the user before implementing that conflicting change.
+Continue independent work that does not depend on the decision.

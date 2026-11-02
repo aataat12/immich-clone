@@ -5,6 +5,17 @@ Server-first amendment. No new charges, parallel agents or publication of person
 machine reports, private paths/media/inventories or raw support logs. Synthetic/
 public licensed fixtures only. CI timestamps are UTC.
 
+## Security baseline checkpoint (candidate, not released)
+
+Security review now leads the next milestone. See security-baseline.md for the
+first candidate mitigation: exact bundled-script CSP hashes, focused Linux
+race/vet results, browser-environment limitation and remaining review gates.
+Ask the user before implementing a mitigation conflicting with the agreed plan.
+No new installer or local action. User reported 0.1.25 backups, Build Notes,
+87/87 eligible-photo bulk AI and data persistence passed; desktop layout passed,
+new-import follow-up and repeated narrow layout were not tested. Preserve this
+limited functional evidence without requesting repeat checks.
+
 ## Current prototype: 0.1.23 backup capacity/progress
 
 [Source 66a698d](https://github.com/aataat12/immich-clone/commit/66a698d066c437219c6e1b23fe8dbd5ed01ad577),

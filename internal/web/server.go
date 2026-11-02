@@ -2,8 +2,10 @@ package web
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/subtle"
 	"embed"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -23,6 +25,35 @@ import (
 
 //go:embed index.html people.html import.html backups.html build-notes.html
 var content embed.FS
+
+// Authorize only the exact bundled inline scripts, never arbitrary injected code.
+// HTML is immutable embedded content; user-controlled values are rendered as text.
+var browserPolicy = bundledBrowserPolicy()
+
+func bundledBrowserPolicy() string {
+	policy := "default-src 'self'; script-src"
+	for _, name := range []string{"index.html", "people.html", "import.html", "backups.html", "build-notes.html"} {
+		body, err := content.ReadFile(name)
+		if err != nil {
+			panic(err)
+		}
+		rest := string(body)
+		for {
+			_, after, found := strings.Cut(rest, "<script>")
+			if !found {
+				break
+			}
+			script, tail, closed := strings.Cut(after, "</script>")
+			if !closed {
+				panic("unclosed bundled script")
+			}
+			digest := scriptDigest(script)
+			policy += " 'sha256-" + base64.StdEncoding.EncodeToString(digest[:]) + "'"
+			rest = tail
+		}
+	}
+	return policy + "; object-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+}
 
 type Server struct {
 	backups  *backupJobs
@@ -152,7 +183,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("X-Frame-Options", "DENY")
 	w.Header().Set("Cache-Control", "no-store")
-	w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'")
+	w.Header().Set("Content-Security-Policy", browserPolicy)
 	host, _, e := net.SplitHostPort(r.Host)
 	if e != nil {
 		host = r.Host
@@ -370,4 +401,9 @@ func (s *Server) backup(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/zip")
 	w.Header().Set("Content-Disposition", `attachment; filename="immich-backup.zip"`)
 	http.ServeFile(w, r, name)
+}
+
+// HTML parsing normalizes CRLF and CR, including Windows checkout line endings.
+func scriptDigest(script string) [32]byte {
+	return sha256.Sum256([]byte(strings.ReplaceAll(strings.ReplaceAll(script, "\r\n", "\n"), "\r", "\n")))
 }

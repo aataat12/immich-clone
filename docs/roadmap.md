@@ -5,7 +5,7 @@ baseline. No future release number is assigned before delivery.
 
 | Order | Milestone | Completion criteria | Status | Released In |
 |---|---|---|---|---|
-| 1 | Bulk local AI analysis | Analyze all unprocessed eligible photos; counts/progress, pause/cancel, restart recovery, no duplicate jobs, preserve names/corrections. Include the Build Notes page and navigation specified below. | Cloud accepted — local validation pending | 0.1.25-prototype |
+| 1 | Bulk local AI analysis | Analyze all unprocessed eligible photos; counts/progress, pause/cancel, restart recovery, no duplicate jobs, preserve names/corrections. Include the Build Notes page and navigation specified below. | Cloud accepted — local functional checks passed | 0.1.25-prototype |
 | 2 | Security baseline and People & Tags improvements | Complete the security review and mitigation acceptance below before delivering this milestone; false-face dismissal, safe reanalysis preserving corrections, larger-library review/search performance, broader recognition-quality evaluation. | Planned — security review first | — |
 | 3 | Hidden Media management | Managed-file location, restore, confirmed permanent managed-copy deletion, durable recovery and job/backup coordination; external sources untouched. | Planned | — |
 | 4 | Large-library import reliability | Longer mixed-media imports, interruption/retry/duplicate/disconnected-storage tests, safe resume improvements and resolution of large-file limits. | Planned | — |
@@ -35,13 +35,14 @@ baseline. No future release number is assigned before delivery.
 
 ## Boundaries
 
-Small local 0.1.23 backup validation is pending independently of milestone 1.
+User reported 0.1.25 backup and bulk AI functional checks passed; new-import
+follow-up and repeated narrow-width checks were not performed.
 Previously passed local checks need no routine repetition. Reboot remains deferred
 to final acceptance. Windows Server evidence does not certify Windows 10.
 HEIC/video AI, RAW/HDR expansion and incremental/scheduled backups remain deferred
 possibilities, not promised additions. Mobile is excluded.
 
-Milestone 1 evidence: Windows Server 2022 run [41406051070](https://github.com/aataat12/immich-clone/actions/runs/41406051070), source d558f7c. Tested branch awaits main merge authorization in PR #1.
+Milestone 1 evidence: Windows Server 2022 run [41406051070](https://github.com/aataat12/immich-clone/actions/runs/41406051070), source d558f7c. PR #1 merged into main.
 
 
 ## Required in the next milestone: security baseline and mitigations
