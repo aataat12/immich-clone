@@ -17,7 +17,7 @@ $imageDir = & go list -m -f '{{.Dir}}' golang.org/x/image
 $licenses = @('Go 1.27.3', (Get-Content (Join-Path $goRoot 'LICENSE') -Raw), 'bbolt 1.4.3', (Get-Content (Join-Path $boltDir 'LICENSE') -Raw), 'golang.org/x/sys 0.49.0', (Get-Content (Join-Path $sysDir 'LICENSE') -Raw))
 $licenses += @('golang.org/x/image 0.47.0', (Get-Content (Join-Path $imageDir 'LICENSE') -Raw))
 $licenses -join "`r`n`r`n" | Set-Content dist/THIRD-PARTY-LICENSES.txt
-foreach ($version in @('0.1.0','0.1.15','0.1.16')) {
+foreach ($version in @('0.1.17','0.1.18')) {
     Checked go @('build','-trimpath','-ldflags',('-s -w -X main.version='+$version+'-prototype'),'-o','dist/immichclone.exe','./cmd/immichclone')
     Checked "$compilerDir/ISCC.exe" @(('/DAppVersion='+$version),'packaging/immichclone.iss')
 }

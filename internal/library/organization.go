@@ -200,6 +200,10 @@ func (s *Store) ProcessAnalysis(ctx context.Context) (bool, error) {
 	s.analysisGate.Lock()
 	defer s.analysisGate.Unlock()
 	s.gate.Lock()
+	if s.ImportsRunning() {
+		s.gate.Unlock()
+		return false, nil
+	}
 	recognizer := s.recognizer
 	s.gate.Unlock()
 	var id string

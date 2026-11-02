@@ -218,3 +218,18 @@
   crops remain usable without the provider; full private catalog backups retain
   organization. JSON export excludes raw embeddings and uses one snapshot.
   This is a small reviewed pilot, not broad family recognition or bulk acceptance.
+
+- User resumed postponed import work while privately validating 0.1.15 AI. Keep
+  those gates independent. Add a dedicated managed-copy page and additive import
+  receipt buckets using the accepted blob/preview transaction, without changing
+  original storage or introducing dependencies. Copy progress is durable only
+  after catalog+receipt commit; network byte progress is explicitly provisional.
+- Copy-first scheduling uses one renewable in-memory 60-second lease, cleared by
+  process restart and released by expiry/pause/cancel/completion. Start no new
+  previews/AI during the lease; do not forcibly cancel already running inference.
+  Durable session history survives while runtime pauses cannot strand work.
+- Initial resume reselects the full manifest and retransfers accepted bytes for
+  SHA256 receipt comparison. Avoid metadata-only skips, false receipt counts and
+  claims of partial-file resume. This conservative checkpoint precedes optimization
+  and full-library scale acceptance. Test upgrade from the actual accepted 0.1.15
+  installer, not a relabeled build of the new source.

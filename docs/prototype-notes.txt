@@ -1,4 +1,4 @@
-IMMICH CLONE 0.1.15 - EARLY TEST BUILD
+IMMICH CLONE 0.1.17 - EARLY TEST BUILD
 
 This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
@@ -9,7 +9,7 @@ MP4 browser playback, persistent preview
 jobs, browsing, exact original download,
 JSON catalog export, and consistent backup/verified restore. Image previews
 are limited to 40 megapixels. Uploads are limited to 4 GiB per file. Other formats
-are preserved/downloadable but preview failure is shown explicitly. JPEG EXIF orientation, capture date and camera make/model are supported. No advanced camera metadata, server-side folder scanning, AI,
+are preserved/downloadable but preview failure is shown explicitly. JPEG EXIF orientation, capture date and camera make/model are supported. No advanced camera metadata, server-side folder scanning,
 mobile clients, remote sharing or LAN access in this build.
 
 The installer needs administrator permission and uses Windows LocalService.
@@ -129,3 +129,15 @@ provenance accompany the provider. Static runtime fixes require a new worker bui
 No Python, SDK, GPU or separate runtime installation is required by the tested
 candidate. Original browsing/download remains usable if the provider is missing.
 This is a limited pilot, not full recognition accuracy or large-library acceptance.
+
+BULK IMPORT PILOT
+Use Bulk import for an explicit managed copy, with saved per-file receipts,
+accepted byte/file counts, duplicate counts, pause/cancel and browser-reselect
+resume. New previews/AI work wait during active copying; a 60-second lease and
+service restart release abandoned pauses. Accepted originals are retained on
+cancel. One active copy session, up to 50,000 files per selection, 4 GiB per file.
+Empty files are rejected. Resume retransfers accepted files and verifies their
+SHA256 receipts; it does not skip on filenames/sizes or resume partial bytes.
+Changed content requires a new import. The gallery does not poll during copying.
+History is capped at 128 sessions in this checkpoint. Large-library endurance,
+paged gallery and large-backup capacity remain unaccepted; start with small tests.

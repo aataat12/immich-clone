@@ -23,6 +23,7 @@ on:
       - 'scripts/New-MediaFixture.ps1'
       - 'tests/browser.cjs'
       - 'tests/people.cjs'
+      - 'tests/import.cjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -55,6 +56,12 @@ jobs:
           name: experimental-native-ai-build-not-accepted
           path: native-ai-candidate
           run-id: 41363876953
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: prototype-server-tested
+          path: previous-installer
+          run-id: 41374756786
           github-token: ${{ github.token }}
       - name: Verify dependency checksums and execute storage, recovery and HTTP tests
         shell: pwsh
@@ -94,6 +101,6 @@ jobs:
         with:
           name: prototype-server-tested
           path: |
-            dist/ImmichClone-0.1.15-prototype-x64-setup.exe
+            dist/ImmichClone-0.1.17-prototype-x64-setup.exe
             dist/SHA256SUMS.txt
           retention-days: 7

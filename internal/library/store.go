@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -49,6 +50,8 @@ type Store struct {
 	root                 string
 	db                   *bolt.DB
 	gate                 sync.Mutex
+	importMu             sync.Mutex
+	importLease          atomic.Pointer[importLease]
 	analysisGate         sync.Mutex
 	mediaPreview         func(context.Context, string) (image.Image, int, int, error)
 	recognizer           func(context.Context, image.Image, string) (recognition.Result, error)
@@ -155,7 +158,10 @@ func Open(root string) (*Store, error) {
 		if e != nil {
 			return e
 		}
-		return initOrganization(tx)
+		if e := initOrganization(tx); e != nil {
+			return e
+		}
+		return initImports(tx)
 	})
 	if e != nil {
 		db.Close()
@@ -215,26 +221,27 @@ func (s *Store) List() ([]Asset, error) {
 	return assets, e
 }
 func (s *Store) save(a Asset) error {
+	return s.db.Update(func(tx *bolt.Tx) error { return saveAsset(tx, a) })
+}
+func saveAsset(tx *bolt.Tx, a Asset) error {
 	b, e := json.Marshal(a)
 	if e != nil {
 		return e
 	}
-	return s.db.Update(func(tx *bolt.Tx) error {
-		if !validID(a.ID) {
-			return errors.New("invalid catalog record")
-		}
-		queue := tx.Bucket([]byte(queueBucket))
-		if queue == nil {
-			return errors.New("preview queue index unavailable")
-		}
-		if e := tx.Bucket([]byte("assets")).Put([]byte(a.ID), b); e != nil {
-			return e
-		}
-		if a.Preview == "queued" {
-			return queue.Put([]byte(a.ID), []byte{1})
-		}
-		return queue.Delete([]byte(a.ID))
-	})
+	if !validID(a.ID) {
+		return errors.New("invalid catalog record")
+	}
+	queue := tx.Bucket([]byte(queueBucket))
+	if queue == nil {
+		return errors.New("preview queue index unavailable")
+	}
+	if e = tx.Bucket([]byte("assets")).Put([]byte(a.ID), b); e != nil {
+		return e
+	}
+	if a.Preview == "queued" {
+		return queue.Put([]byte(a.ID), []byte{1})
+	}
+	return queue.Delete([]byte(a.ID))
 }
 func fileHash(path string) (string, error) {
 	f, e := os.Open(path)
@@ -249,7 +256,10 @@ func fileHash(path string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 func (s *Store) Put(name string, r io.Reader) (Asset, bool, error) { return s.PutWithPath(name, "", r) }
-func (s *Store) PutWithPath(name, relative string, r io.Reader) (result Asset, duplicate bool, returnErr error) {
+func (s *Store) PutWithPath(name, relative string, r io.Reader) (Asset, bool, error) {
+	return s.putWithPath(name, relative, r, -1, "", nil)
+}
+func (s *Store) putWithPath(name, relative string, r io.Reader, size int64, expected string, receipt func(*bolt.Tx, Asset, bool) error) (result Asset, duplicate bool, returnErr error) {
 	if relative != "" {
 		clean, e := cleanRelative(relative)
 		if e != nil {
@@ -287,6 +297,20 @@ func (s *Store) PutWithPath(name, relative string, r io.Reader) (result Asset, d
 		return a, false, errors.New("empty files are not accepted")
 	}
 	id := hex.EncodeToString(h.Sum(nil))
+	if (size >= 0 && n != size) || (expected != "" && id != expected) {
+		return a, false, ErrImportConflict
+	}
+	commit := func(a Asset, duplicate bool) error {
+		return s.db.Update(func(tx *bolt.Tx) error {
+			if e := saveAsset(tx, a); e != nil {
+				return e
+			}
+			if receipt != nil {
+				return receipt(tx, a, duplicate)
+			}
+			return nil
+		})
+	}
 	if existing, e := s.Get(id); e == nil {
 		actual, e := fileHash(s.Original(id))
 		if e != nil || actual != id {
@@ -305,10 +329,11 @@ func (s *Store) PutWithPath(name, relative string, r io.Reader) (result Asset, d
 					return a, false, errors.New("too many source aliases")
 				}
 				existing.Sources = append(existing.Sources, relative)
-				if e = s.save(existing); e != nil {
-					return a, false, e
-				}
+
 			}
+		}
+		if e = commit(existing, true); e != nil {
+			return a, false, e
 		}
 		return existing, true, nil
 	} else if !errors.Is(e, os.ErrNotExist) {
@@ -340,7 +365,7 @@ func (s *Store) PutWithPath(name, relative string, r io.Reader) (result Asset, d
 	if relative != "" {
 		a.Sources = []string{relative}
 	}
-	if e = s.save(a); e != nil {
+	if e = commit(a, false); e != nil {
 		return a, false, e
 	}
 	return a, false, nil
@@ -355,6 +380,9 @@ func (s *Store) ProcessOneContext(ctx context.Context) (bool, error) {
 	}
 	s.gate.Lock()
 	defer s.gate.Unlock()
+	if s.ImportsRunning() {
+		return false, nil
+	}
 	var id string
 	e := s.db.View(func(tx *bolt.Tx) error {
 		queue := tx.Bucket([]byte(queueBucket))

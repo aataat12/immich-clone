@@ -20,7 +20,7 @@ import (
 	"time"
 )
 
-//go:embed index.html people.html
+//go:embed index.html people.html import.html
 var content embed.FS
 
 type Server struct {
@@ -170,10 +170,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if (r.URL.Path == "/" || r.URL.Path == "/people") && r.Method == "GET" {
+	if (r.URL.Path == "/" || r.URL.Path == "/people" || r.URL.Path == "/import") && r.Method == "GET" {
 		name := "index.html"
 		if r.URL.Path == "/people" {
 			name = "people.html"
+		}
+		if r.URL.Path == "/import" {
+			name = "import.html"
 		}
 		b, _ := content.ReadFile(name)
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -190,6 +193,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if !s.authenticated(r) {
 		http.Error(w, "sign in required", 401)
+		return
+	}
+	if s.importHTTP(w, r) {
 		return
 	}
 	if s.organizationHTTP(w, r) {

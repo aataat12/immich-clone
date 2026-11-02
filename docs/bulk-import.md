@@ -1,7 +1,7 @@
 # Managed-copy bulk import acceptance
 
-Deferred by user: people/object identification and organization feasibility now
-takes priority. Retain this plan for later; no additional import runs scheduled.
+User resumed import development while the private 0.1.15 People/tag validation is
+pending. Reuse the verified queue and native providers; do not infer AI acceptance.
 
 Primary storage remains application-owned immutable copies. Sources are never
 moved, rewritten or deleted. Identical SHA256 content reuses a managed original;
@@ -33,3 +33,27 @@ review. Neither limit is cleared by queue benchmarks or available source space.
 
 No new dependencies, paid resources or local setup are needed for this plan.
 Final OS reboot validation remains deferred by the user.
+
+## Candidate 0.1.17 checkpoint
+
+Dedicated copy page with a persisted bounded manifest and per-file SHA256 receipt.
+Original asset/preview-queue/receipt/counters commit together. Accepted bytes are
+separate from in-flight XHR byte progress. Duplicate aliases reuse originals. One
+active import holds a renewable 60-second in-memory processing lease; startup
+marks previously running sessions paused. Expiry releases processing, and only
+explicit resume may reacquire it. Existing work may finish; no new preview or AI
+job starts under the lease. Cancel keeps accepted originals and receipt history.
+
+Reselect/resume validates the manifest and retransfers all selected bytes, checking
+accepted entries against their saved SHA256. This deliberately avoids claiming
+that matching path/size/timestamp proves unchanged content. Lost acknowledgements
+are reconciled without double counting. Partial-file continuation and avoiding
+accepted-byte retransfers remain later work. Limits: 50,000 entries/selection,
+16MiB HTTP manifest, 4GiB/file, no empty files, 128 saved sessions. Page receipt
+results are bounded to 250; transfer does not poll/render the gallery.
+
+Acceptance: Linux race/vet plus actual 120 mixed native-media copies, interruption
+and reopen, replay/hash conflict, cancellation, duplicate accounting, preview drain
+and independent original/receipt restore passed. Full Windows service/Edge copy
+interruption/reselect/resume, real previous-installer upgrade and receipt restore
+acceptance pending. No large real-library invitation or local test request yet.

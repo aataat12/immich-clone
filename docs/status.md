@@ -5,6 +5,17 @@ Server-first execution amendment. No new charges or parallel agents. No personal
 machine specifications, paths, media or returned logs belong in this repository.
 Historical checkpoints remain in Git history; this file supersedes their gates.
 
+## Candidate 0.1.17: bulk managed-copy checkpoint
+
+User resumed import work while private 0.1.15 People/tag validation remains
+pending. Dedicated Bulk import page, durable per-file SHA256 receipts and
+accepted byte/file/duplicate progress, interruption/reselect/replay, pause/cancel
+retention and import-first preview/AI scheduling implemented. Linux race/vet and
+actual 120 mixed-image ingestion/restart/preview-drain/independent-restore passed.
+Windows full service/Edge/actual-0.1.15-upgrade/receipt restore checks pending.
+No installer delivered yet. Limits and next scale gates: bulk-import.md.
+No local action or dependency setup requested for this checkpoint.
+
 ## Delivered 0.1.15: first People and tags pilot
 
 [Source 98a6688](https://github.com/aataat12/immich-clone/commit/98a6688d502e8ce3ca696487a5554027cd02b735),
@@ -42,8 +53,9 @@ Media permanent deletion and bulk import remain queued. Visibility changes defer
 Earlier feasibility sections below record prior gates; this delivered checkpoint
 supersedes their statements that app/installer integration is still pending.
 
-## Current priority: people and object organization
+## Earlier priority: people and object organization
 
+Historical priority (superseded for import scheduling by the checkpoint above):
 User explicitly deferred further import feature development/testing to prioritize
 AI feasibility. Successful people/object identification and organization is now
 the project value gate. Retain the accepted managed-copy/service/storage work;

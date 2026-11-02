@@ -14,7 +14,7 @@ function Login {
 try {
     ./scripts/Prepare-MediaProvider.ps1 -Destination (Join-Path $root 'media/ffmpeg-8.1.3-7eb77d88e2e9')
     ./scripts/Prepare-AIProvider.ps1 -Destination (Join-Path $root 'ai/opencv-4.12.0-a83dcef02ebe')
-    Checked go @('build','-trimpath','-ldflags','-X main.version=0.1.15-prototype','-o',$binary,'./cmd/immichclone')
+    Checked go @('build','-trimpath','-ldflags','-X main.version=0.1.17-prototype','-o',$binary,'./cmd/immichclone')
     Checked $binary @('-mode','init','-data',$state)
     Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)RX')
     Checked icacls @($state,'/grant','*S-1-5-19:(OI)(CI)M')
@@ -79,6 +79,7 @@ try {
         $env:IMMICH_TEST_STATE = $state
         Checked node @('tests/browser.cjs')
         Checked node @('tests/people.cjs')
+        Checked node @('tests/import.cjs')
         Remove-Item Env:IMMICH_TEST_STATE
     }
     if ($env:IMMICH_BROWSER_MODULE) {
@@ -135,6 +136,10 @@ try {
     $download = Join-Path $root 'download.png'
     Invoke-WebRequest "http://127.0.0.1:2283/api/assets/$id/original" -WebSession $session -OutFile $download
     Assert ((Get-FileHash $download).Hash -eq (Get-FileHash $fixture).Hash) 'original download preserved across service restart'
+    if ($env:IMMICH_BROWSER_MODULE) {
+        $imports=Invoke-RestMethod http://127.0.0.1:2283/api/imports -WebSession $session
+        Assert (@($imports | Where-Object { $_.status -eq 'completed' -and $_.accepted_files -eq 4 }).Count -eq 1 -and @($imports | Where-Object { $_.status -eq 'cancelled' -and $_.accepted_files -eq 1 }).Count -eq 1) 'service restarts retain completed and cancelled import receipts'
+    }
     $backup = Join-Path $root 'backup.zip'
     Invoke-WebRequest http://127.0.0.1:2283/api/backup -WebSession $session -OutFile $backup
     Stop-Service $name
@@ -151,7 +156,7 @@ try {
         Move-Item $state ($state+'.offline')
         try {
             $env:IMMICH_ORGANIZATION_RESTORE=$restored
-            Checked go @('test','./internal/library','-run','^TestOrganizationRestoredCatalogCheck$','-count=1')
+            Checked go @('test','./internal/library','-run','^Test(Organization|Import)RestoredCatalogCheck$','-count=1')
             Assert $true 'independent restored names tags and face crops work without old state or AI provider'
         } finally { Remove-Item Env:IMMICH_ORGANIZATION_RESTORE -ErrorAction SilentlyContinue;Move-Item ($state+'.offline') $state }
     }
