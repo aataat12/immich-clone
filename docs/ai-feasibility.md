@@ -211,3 +211,27 @@ photo comparison passed; no new SHA256 evidence reported. No failures reported.
 This closes the small review-flow checkpoint; broad family/age/profile accuracy,
 large-library quality and extended reliability remain open. No raw private report
 or personal media/identity details retained. No repeat or reboot requested.
+
+## Bulk analysis checkpoint (0.1.25 candidate)
+
+`/people` offers Analyze all unprocessed photos, backed by additive catalog batch
+metadata/membership and the existing serial inference queue. Start atomically
+selects currently visible native still images with no analysis record, <=64MiB
+and <=40MP when dimensions are known; decode still enforces the pixel limit.
+Ready, failed, queued, hidden and unsupported assets are excluded. It selects the
+whole catalog, not just a review/search page. Later imports need another start.
+No automatic retry, reanalysis, face naming or change to manual corrections.
+
+Pause/resume/cancel are durable. Paused members are skipped while individual jobs
+continue; import's active copy lease retains priority. Cancellation removes only
+pending batch-owned queue/analysis records (returning them to not_requested).
+Already active inference may finish. A cancelled batch drains before another can
+start. Restart/restore reconciles counters with authoritative results; cancelled
+interrupted work is cleared, running work resumes, paused work stays paused.
+No new model/provider/dependency. Missing AI prevents new batch start/resume and
+leaves pending batch work waiting; basic media operations remain available.
+
+The initial snapshot uses a single catalog transaction and status uses the store
+consistency gate: a bulk start/backup can delay controls. This is not a throughput
+or full-library AI quality/scale certification. Controls never terminate an active
+inference; the existing provider deadline and service cancellation remain in force.

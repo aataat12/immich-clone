@@ -270,3 +270,10 @@
   entry beside People & tags and Home at the page top right. Track all eight
   remaining milestones with status and actual delivered release; keep shipped
   content aligned with docs/roadmap.md without forecasting release numbers.
+
+- Bulk analysis owns only its atomically selected not_requested visible native
+  still-image jobs, using additive batch buckets and the existing inference queue.
+  Persistent pause affects batch members only; cancel returns pending members to
+  not_requested, allowing active inference to finish. Skip failed/ready/queued work
+  and preserve manual corrections; no automatic retry or naming. Missing provider
+  leaves batch work waiting. Build Notes ships offline with the actual release.

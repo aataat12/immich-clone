@@ -53,6 +53,7 @@ type Store struct {
 	importMu             sync.Mutex
 	importLease          atomic.Pointer[importLease]
 	analysisGate         sync.Mutex
+	activeAnalysis       string
 	mediaPreview         func(context.Context, string) (image.Image, int, int, error)
 	recognizer           func(context.Context, image.Image, string) (recognition.Result, error)
 	recognitionAvailable bool
@@ -159,6 +160,9 @@ func Open(root string) (*Store, error) {
 			return e
 		}
 		if e := initOrganization(tx); e != nil {
+			return e
+		}
+		if e := recoverAnalysisBatch(tx); e != nil {
 			return e
 		}
 		if e := initImports(tx); e != nil {

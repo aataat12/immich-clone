@@ -25,6 +25,31 @@ func organizationInput(w http.ResponseWriter, r *http.Request, out any) bool {
 	return true
 }
 func (s *Server) organizationHTTP(w http.ResponseWriter, r *http.Request) bool {
+	if r.URL.Path == "/api/analysis-batch" {
+		if r.Method == "POST" {
+			var input struct {
+				Action string `json:"action"`
+			}
+			if !organizationInput(w, r, &input) {
+				return true
+			}
+			if e := s.Store.ControlAnalysisBatch(r.Context(), input.Action); e != nil {
+				http.Error(w, "batch action unavailable; refresh status and check local AI availability", 409)
+				return true
+			}
+		} else if r.Method != "GET" {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return true
+		}
+		b, e := s.Store.AnalysisBatch()
+		if e != nil {
+			http.Error(w, "batch status unavailable", 500)
+		} else {
+			jsonResponse(w, b)
+		}
+		return true
+	}
+
 	if r.URL.Path == "/api/organization" && r.Method == "GET" {
 		result, e := s.Store.OrganizationPage(r.URL.Query().Get("after"), r.URL.Query().Get("face_after"), r.URL.Query().Get("q"))
 		if e != nil {

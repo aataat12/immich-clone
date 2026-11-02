@@ -21,7 +21,7 @@ import (
 	"time"
 )
 
-//go:embed index.html people.html import.html backups.html
+//go:embed index.html people.html import.html backups.html build-notes.html
 var content embed.FS
 
 type Server struct {
@@ -172,7 +172,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if (r.URL.Path == "/" || r.URL.Path == "/people" || r.URL.Path == "/import" || r.URL.Path == "/backups") && r.Method == "GET" {
+	if (r.URL.Path == "/" || r.URL.Path == "/people" || r.URL.Path == "/import" || r.URL.Path == "/backups" || r.URL.Path == "/build-notes") && r.Method == "GET" {
 		name := "index.html"
 		if r.URL.Path == "/people" {
 			name = "people.html"
@@ -182,6 +182,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		if r.URL.Path == "/backups" {
 			name = "backups.html"
+		}
+		if r.URL.Path == "/build-notes" {
+			name = "build-notes.html"
 		}
 		b, _ := content.ReadFile(name)
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")

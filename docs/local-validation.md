@@ -108,3 +108,20 @@ gallery/names/tags remain available. Return only PASS/failure descriptions; keep
 the ZIP private because it contains originals and the access code. No need to
 enlarge the library to catch cancellation; cloud tests exercise it deterministically.
 No dependency installation, AI retest, full-library import or reboot requested.
+
+
+## 0.1.25 bulk local analysis and Build Notes (after cloud acceptance)
+
+Use the existing small private test library; no full-library import or reboot.
+1. Upgrade and confirm Version 0.1.25-prototype. From Home, open Build Notes beside
+   People & tags; check eight milestones, Status / Released In, the first release
+   entry and the top-right Home link. Try a narrow window; no horizontal overflow.
+2. Import a few supported photos not already analyzed. In People & tags, click
+   Analyze all unprocessed photos. Confirm the batch finishes and results appear;
+   existing names/tags remain. Search/paging does not limit batch selection.
+3. Close/reopen the page during work if convenient; progress belongs to the service.
+   If the small batch is too quick for pause/cancel, do not enlarge the library
+   merely to catch it: deterministic automated tests cover those controls.
+4. Report PASS/failure descriptions only. Do not transmit photos, names, private
+   paths, credentials or raw logs. The separate small 0.1.23 Backups check can
+   also be performed in this build if still pending.

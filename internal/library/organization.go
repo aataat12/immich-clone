@@ -72,7 +72,7 @@ type Organization struct {
 }
 
 func initOrganization(tx *bolt.Tx) error {
-	for _, name := range []string{analysisBucket, facesBucket, labelsBucket, tagsBucket, "dismissed_ai_tags_v1"} {
+	for _, name := range []string{analysisBucket, facesBucket, labelsBucket, tagsBucket, "dismissed_ai_tags_v1", batchMembers, batchMeta} {
 		if _, e := tx.CreateBucketIfNotExists([]byte(name)); e != nil {
 			return e
 		}
@@ -205,18 +205,29 @@ func (s *Store) ProcessAnalysis(ctx context.Context) (bool, error) {
 		return false, nil
 	}
 	recognizer := s.recognizer
-	s.gate.Unlock()
 	var id string
-	if e := s.db.View(func(tx *bolt.Tx) error {
-		k, _ := tx.Bucket([]byte(analysisQueue)).Cursor().First()
-		id = string(k)
+	e := s.db.View(func(tx *bolt.Tx) error {
+		batch, e := readBatch(tx)
+		if e != nil {
+			return e
+		}
+		c := tx.Bucket([]byte(analysisQueue)).Cursor()
+		for k, _ := c.First(); k != nil; k, _ = c.Next() {
+			if string(tx.Bucket([]byte(batchMembers)).Get(k)) == "pending" && (batch.Status != "running" || !s.recognitionAvailable) {
+				continue
+			}
+			id = string(k)
+			break
+		}
 		return nil
-	}); e != nil {
+	})
+	if e != nil || id == "" {
+		s.gate.Unlock()
 		return false, e
 	}
-	if id == "" {
-		return false, nil
-	}
+	s.activeAnalysis = id
+	s.gate.Unlock()
+	defer func() { s.gate.Lock(); s.activeAnalysis = ""; s.gate.Unlock() }()
 	var a Analysis
 	if e := s.db.View(func(tx *bolt.Tx) error { return readJSON(tx.Bucket([]byte(analysisBucket)), id, &a) }); e != nil {
 		return true, e
@@ -309,6 +320,9 @@ func (s *Store) ProcessAnalysis(ctx context.Context) (bool, error) {
 			}
 		}
 		if e := writeJSON(tx.Bucket([]byte(analysisBucket)), id, a); e != nil {
+			return e
+		}
+		if e := finishBatchMember(tx, id, a.Status); e != nil {
 			return e
 		}
 		return tx.Bucket([]byte(analysisQueue)).Delete([]byte(id))
@@ -678,7 +692,7 @@ func (s *Store) OrganizationExport() (map[string]any, error) {
 	out := map[string]any{"schema": 1}
 	organization := map[string]any{"version": 1}
 	e := s.db.View(func(tx *bolt.Tx) error {
-		for _, name := range []string{analysisBucket, facesBucket, labelsBucket, tagsBucket, "dismissed_ai_tags_v1"} {
+		for _, name := range []string{analysisBucket, facesBucket, labelsBucket, tagsBucket, "dismissed_ai_tags_v1", batchMembers, batchMeta} {
 			items := map[string]json.RawMessage{}
 			e := tx.Bucket([]byte(name)).ForEach(func(k, v []byte) error {
 				if name == facesBucket {

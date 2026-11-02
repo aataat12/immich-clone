@@ -63,7 +63,7 @@ jobs:
         with:
           name: prototype-server-tested
           path: previous-installer
-          run-id: 41391526713
+          run-id: 41398447659
           github-token: ${{ github.token }}
       - name: Verify dependency checksums and execute storage, recovery and HTTP tests
         shell: pwsh
@@ -103,6 +103,6 @@ jobs:
         with:
           name: prototype-server-tested
           path: |
-            dist/ImmichClone-0.1.23-prototype-x64-setup.exe
+            dist/ImmichClone-0.1.25-prototype-x64-setup.exe
             dist/SHA256SUMS.txt
           retention-days: 7

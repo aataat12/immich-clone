@@ -68,3 +68,39 @@ func TestProtectedOrganizationAndManualCorrections(t *testing.T) {
 		t.Fatal(e)
 	}
 }
+
+func TestAnalysisBatchProtectionAndBuildNotes(t *testing.T) {
+	s, c := setup(t)
+	for _, method := range []string{"GET", "POST"} {
+		if w := request(s, method, "/api/analysis-batch", `{"action":"start"}`, nil); w.Code != 401 {
+			t.Fatal("unprotected batch", w.Code)
+		}
+	}
+	r := httptest.NewRequest("POST", "http://127.0.0.1:2283/api/analysis-batch", bytes.NewBufferString(`{"action":"start"}`))
+	r.AddCookie(c)
+	r.Header.Set("X-Immich-Request", "1")
+	r.Header.Set("Origin", "http://evil.example")
+	w := httptest.NewRecorder()
+	s.ServeHTTP(w, r)
+	if w.Code != 403 {
+		t.Fatal("cross-origin batch")
+	}
+	if w := request(s, "POST", "/api/analysis-batch", `{"action":"invalid"}`, c); w.Code != 409 {
+		t.Fatal(w.Code)
+	}
+	if w := request(s, "POST", "/api/analysis-batch", `{"action":"start","unexpected":true}`, c); w.Code != 400 {
+		t.Fatal("unknown field")
+	}
+	w = request(s, "GET", "/build-notes", "", c)
+	if w.Code != 200 {
+		t.Fatal(w.Code)
+	}
+	for _, term := range []string{"Build Notes", "Photos &amp; videos Home", "Status", "Released In", "0.1.25-prototype", "Bulk local AI analysis", "Final Windows 10 acceptance"} {
+		if !bytes.Contains(w.Body.Bytes(), []byte(term)) {
+			t.Fatal("missing notes", term)
+		}
+	}
+	if bytes.Count(w.Body.Bytes(), []byte("<tr>")) != 9 {
+		t.Fatal("milestone row count")
+	}
+}
