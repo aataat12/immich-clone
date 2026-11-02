@@ -291,3 +291,8 @@
   own staged-upgrade preparation and a native-child access canary experiment.
   Primary People work applies unnamed/search filters before pagination; reference
   candidates remain independent of the displayed face filter. No release bypass.
+
+- 2026-11-02 user requires complete original security items, not partial probes.
+  Keep the original eight stable IDs in security-worklist.md. Two authorized
+  workers jointly own SEC-01 implementation and independent Windows negative/
+  normal controls; only reviewed passing completion evidence closes the item.

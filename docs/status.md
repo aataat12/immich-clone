@@ -1,5 +1,11 @@
 # Current status
 
+Authoritative security progress: security-worklist.md retains the original eight
+items and stable SEC-01..SEC-08 IDs. SEC-01 is assigned to implementation plus
+independent adversarial testing; no closure claimed before Windows evidence.
+People candidate adds photo context from active/dismissed face review without
+mutating data. See people-photo-context.md; Windows acceptance pending.
+
 People filtering candidate: server-side unnamed filtering and accurate search/
 face continuation. Linux race/full tests/vet and Windows Server 2022/Edge acceptance passed
 (41525562509). See people-review-paging.md. User-authorized workers completed

@@ -47,8 +47,21 @@ try {
     Assert-NoReparsePath $AppDir
     Assert-NoReparsePath $DataDir
     Assert-NoReparsePath $logRoot
+    $stage = 'audit storage permissions'
+    if ([IO.Path]::GetFullPath($AppDir).TrimEnd('\') -eq [IO.Path]::GetFullPath($DataDir).TrimEnd('\')) { throw 'State and installation directories must differ' }
+    foreach ($component in ($DataDir -split '[\\/]')) { if ($component -ieq 'Dropbox') { throw 'Application state cannot be inside a sync folder' } }
+    if ((Test-Path -LiteralPath $DataDir) -and !(Test-Path -LiteralPath (Join-Path $DataDir 'state-format.txt')) -and @(Get-ChildItem -LiteralPath $DataDir -Force -ErrorAction Stop).Count -gt 0) { throw 'Refusing an unrelated nonempty data directory' }
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+    # Audit every existing application-owned descendant before log/ACL writes,
+    # service stop, rollback snapshot or failure-path mutation. Root inherited
+    # grants are normalized only after all three read-only audits succeed.
+    Assert-PrivateDirectoryTree -Path $DataDir -ReaderSid $identity -ServiceAccess
+    Assert-PrivateDirectoryTree -Path $logRoot -ReaderSid $identity -ServiceAccess
+    Assert-PrivateDirectoryTree -Path $rollback -OwnerSid $identity
     $pathsValidated = $true
-    $logIdentity = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+    $logIdentity = $identity
+    if (Test-Path -LiteralPath $DataDir) { Set-PrivateDirectoryAcl -Path $DataDir -ReaderSid $identity -ServiceAccess }
+    if (Test-Path -LiteralPath $rollback) { Set-PrivateDirectoryAcl -Path $rollback }
     Set-PrivateDirectoryAcl -Path $logRoot -ReaderSid $logIdentity -ServiceAccess
     $diagnosticsReady = $true
     Diagnostic 'installer_begin'
@@ -103,7 +116,7 @@ try {
     exit 0
 } catch {
     if (!$pathsValidated) {
-        Write-Error 'Installation paths could not be validated; no installation action performed.' -ErrorAction Continue
+        Write-Error 'Installation storage paths or permissions could not be validated; no installation action performed.' -ErrorAction Continue
         exit 1
     }
     Diagnostic 'installer_failed' $_.Exception.HResult
