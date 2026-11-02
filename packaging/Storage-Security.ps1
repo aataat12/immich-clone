@@ -88,7 +88,7 @@ function Assert-PrivateDirectoryTree([string]$Path, [string]$ReaderSid, [switch]
             # such noncanonical explicit/protected DACL entries rather than
             # accidentally treating an unrepresented allow as safe.
             foreach ($ace in $raw.DiscretionaryAcl) {
-                if (($ace.AceFlags -band [Security.AccessControl.AceFlags]::Inherited) -ne 0 -and !$acl.AreAccessRulesProtected) { continue }
+                if ($ace.AceFlags.HasFlag([Security.AccessControl.AceFlags]::Inherited) -and !$acl.AreAccessRulesProtected) { continue }
                 if (!($ace -is [Security.AccessControl.CommonAce]) -or $ace.IsCallback -or $ace.AceQualifier -ne [Security.AccessControl.AceQualifier]::AccessAllowed) { throw 'Application-owned tree has an unsupported descendant access rule' }
             }
             $selfRights = @{}
