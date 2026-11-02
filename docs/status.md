@@ -5,12 +5,25 @@ Server-first execution amendment. No new charges, parallel agents or publication
 of personal machine reports, source inventories, private paths/media or raw logs.
 Use synthetic/public licensed fixtures only. CI timestamps are UTC.
 
-## Candidate 0.1.19: clear Home navigation (cloud acceptance pending)
+## Current prototype: 0.1.19 clear Home navigation
 
-Both Bulk import and People & tags now expose a prominent Photos & videos Home
-control. Browser acceptance exercises returning to the authenticated gallery from
-each page. No dependency or storage change; gallery paging remains next. Current
-delivered installer remains 0.1.17 until candidate acceptance/checksum verification.
+Both Bulk import and People & tags expose a prominent Photos & videos Home
+control. Edge clicked each control and returned to the authenticated gallery;
+no horizontal overflow at the narrow viewport. Screenshots downloaded and
+visually inspected. No dependency or storage change; gallery paging remains next.
+
+[Source 387e976](https://github.com/aataat12/immich-clone/commit/387e9763b90f6596c83f3b7c9ed43c857485f15e),
+[acceptance run 41386973401](https://github.com/aataat12/immich-clone/actions/runs/41386973401),
+job 125089842083 passed on Windows Server 2022: navigation, media/AI/import
+regressions, actual hash-verified 0.1.17 installer upgrade, failed-upgrade rollback,
+independent backup restore/reinstall and real NTFS full-disk import recovery.
+[Installer artifact](https://github.com/aataat12/immich-clone/actions/runs/41386973401/artifacts/13116330642):
+`ImmichClone-0.1.19-prototype-x64-setup.exe`, 102579749 bytes, SHA256
+`dc1b8b760521b02f03a8b3dae5c0dcd9961d44f96f7db31e65d5859ec2ab5a7d`.
+Retrieved ZIP SHA256 `e02e411e92e2bc7063b72273211fda9e577c19465594269835b81b76b7d015f5`
+and executable verified against included checksums. Browser artifact 13116295690
+ZIP verified. Unsigned prototype, 7-day artifact retention; Server evidence does
+not certify complete Windows 10 compatibility. No repeat AI test/reboot requested.
 
 ## Accepted 0.1.17 bulk managed-copy checkpoint
 

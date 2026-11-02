@@ -645,3 +645,15 @@ Previous executable installer hash was verified before execution; old build was
 not a relabeled executable from new source. Final installer retrieved and SHA256
 verified: `1db93bc321919c51abe0205e10075d3c6ab09fbbd93d51b0d0caa460cb95c6c7`.
 Server evidence does not clear Windows 10, large-library endurance or large backups.
+
+
+0.1.19 navigation-only release: no dependency/storage change. Server 2022 run
+[41386973401](https://github.com/aataat12/immich-clone/actions/runs/41386973401),
+source `387e9763b90f6596c83f3b7c9ed43c857485f15e`, job 125089842083 passed Home
+navigation from both pages plus the complete existing installer/media/AI/import/
+independent-restore/real-ENOSPC chain, upgrading the actual accepted 0.1.17 package.
+Installer retrieved and SHA256 verified:
+`dc1b8b760521b02f03a8b3dae5c0dcd9961d44f96f7db31e65d5859ec2ab5a7d`.
+User separately reported all twelve 0.1.15 review-flow checks and 0.1.17 basic bulk
+import passed locally; original-photo comparison, not a new SHA256 test. No raw
+private report retained. Full Win10 compatibility/endurance/reboot remain open.

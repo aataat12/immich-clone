@@ -1,7 +1,7 @@
 # Managed-copy bulk import acceptance
 
-User resumed import development while the private 0.1.15 People/tag validation is
-pending. Reuse the verified queue and native providers; do not infer AI acceptance.
+User reported the small 0.1.15 People/tag and 0.1.17 bulk-import functional
+checkpoints passed. Reuse verified work; broad accuracy/endurance remain open.
 
 Primary storage remains application-owned immutable copies. Sources are never
 moved, rewritten or deleted. Identical SHA256 content reuses a managed original;
@@ -64,3 +64,20 @@ are authoritative in status.md. Desktop/narrow screenshots inspected after fixin
 a stale copying line on cancel. Milestones 1–3 are accepted within the stated
 limits; milestone 4 remains open for larger endurance, gallery paging and capacity.
 No large real-library invitation or new local test request.
+
+
+## Next bounded gallery acceptance
+
+Reuse the measured full-list bottleneck in dependency-evidence.md rather than
+rerunning the baseline. The gallery must request/render bounded pages with capture
+date, upload date and filename ordering plus hidden/visible filtering. A derived
+transactional ordering index must rebuild from authoritative assets on open;
+import, preview metadata changes, hide/restore and rollback/restore must keep it
+consistent. Avoid a full List+sort behind a superficially paginated response.
+
+Acceptance: bounded page/JSON allocations at metadata scale, deterministic ties
+and validated cursors, no silently skipped/duplicated records across stable pages,
+stale-page recovery during catalog changes, browser navigation and preserved media
+operations. Metadata-only measurements remain separate from larger actual mixed-
+media ingestion/endurance and source/original SHA256 checks. No new dependency or
+large private-library test needed to develop this next checkpoint.
