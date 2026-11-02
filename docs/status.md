@@ -21,8 +21,8 @@ LocalService/restart: YuNet/SFace faces/embeddings and YOLOX person/cat/cup.
 commit `8475b90e88bd4a85f4c9eed2b568f1d8509d39dd`. Models, wheels and public
 fixtures are hash-pinned; originals unchanged. Peak job commitment about 480MB
 under 512MiB cap. Tiny fixture separation includes transformed copies, not broad
-cross-photo accuracy. Next: held-out multi-photo quality, then shipping-runtime
-and small People/object organization slice. No AI installer or local action yet.
+cross-photo accuracy. Cross-photo and native worker results follow below; broader quality and
+application integration remain separate. No AI installer or local action yet.
 No additional import/app regression workflow was run; app remains unchanged.
 
 Cross-photo Linux screen completed on 400 distinct public research photographs:
@@ -33,14 +33,24 @@ is not accepted. Frozen protocol/rights/limitations and approved review UI are i
 comparison [41361882205](https://github.com/aataat12/immich-clone/actions/runs/41361882205)
 passed execution and reproduced the same query/pair counts. Peak commitment
 266977280 bytes, 18.36 seconds, input hashes unchanged; four metric tests passed.
-No broad clustering/quality acceptance. Next: self-contained native worker proof,
-then reviewed People/tagging slice and private broader quality evaluation. No new
+No broad clustering/quality acceptance. Next: reviewed People/tagging slice,
+final dependency packaging review and private broader quality evaluation. No new
 installer, import tests or local action. Packaging and broader quality remain open.
 
-Native worker source/CI candidate is now prepared in `experiments/native-ai`:
-static C/C++ runtime/OpenCV, SSE2, task-specific CPU models, bounded BGR8 frames.
-Windows build/PE audit and actual LocalService parity/recovery are pending. No
-AI code/runtime has entered the application; imports and Hidden Media stay deferred.
+Native worker feasibility passed on Windows Server 2022 LocalService/restart:
+[41364545372](https://github.com/aataat12/immich-clone/actions/runs/41364545372),
+service source `003a2f71c44723f2994bcc9ee830c9c18371dc9d`. Source-built static
+OpenCV 4.12.0 + pinned parser backport; SSE2, one thread, only kernel32.dll
+imports. Python-free native face/object inference, embedding parity, four malformed
+frame rejections, missing-model/cancellation recovery and Unicode path passed.
+Minimum reference-vector cosine 0.99999964; peak commitment 271413248 bytes under
+512MiB; input hashes unchanged. Worker SHA256 verified on retrieved artifact:
+`a83dcef02ebef33beccea8a3b21b88ed2bc18b298040f592be31ee9e72191ec6`.
+Build job in 41363876953 passed; its original service stage failed in Unicode
+Python fixture preparation, corrected without rebuilding the native binary.
+No installer or app integration yet. Next: shipping dependency/notice review and
+optional worker integration into the reviewed People/tagging slice. Wider quality,
+clean Windows 10 and full product security remain open; no local action needed.
 
 ## Queued feature: Hidden Media and deliberate deletion
 

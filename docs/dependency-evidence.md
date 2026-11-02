@@ -533,3 +533,53 @@ unknown false accepts, ambiguous ranking and collapsed calibration embeddings).
 This is a narrow mostly-frontal grayscale screen, not broad-library accuracy,
 safe blind clustering, Windows 10 or standalone native packaging acceptance.
 Application/installer unchanged; no import regression run or local action needed.
+
+
+## Self-contained native AI worker feasibility
+
+OpenCV 4.12.0 commit `49486f61fb25722cbcf586b7f4320921d46fb38e`, exact upstream
+ZIP SHA256 `a7382f4e2fd33b987f09f89866c50416a7b3647a95bab207e0dc271bab607999`.
+Three bundled protobuf 3.19.1 parser files receive official upstream backport
+`0299c03005fbfe086d8394fb7a873a8a21fe327f` (CVE-2022-1941), patch SHA256
+`5747ab6cf1dcdefc649fbfc6b8db1fdce546683c2ebad84519d3887944fd582e`.
+Unmodified archive identity and source alteration are recorded separately.
+OpenCV Apache-2.0, protobuf BSD, zlib 1.3.1 zlib license; embedded
+BSD/SoftFloat/FDLIBM/FLANN notices are retained via complete compiled module
+sources. Required notice files and patch digest were verified after retrieval.
+
+Build job `125019815669` in [41363876953](https://github.com/aataat12/immich-clone/actions/runs/41363876953)
+passed on Server 2022 with MSVC 19.44.35229.0 / v143 14.44.35207. Static /MT
+runtime/OpenCV, baseline SSE/SSE2, no dispatched instructions, IPP/OpenCL/GPU or
+compressed-image codecs. Built modules: core/imgproc/dnn/objdetect and internal
+calib3d/features2d/flann dependencies; bundled zlib/libprotobuf. PE audit found
+only kernel32.dll, no OpenCV/VC runtime/Python DLLs. Static import/Server evidence
+is not a clean Windows 10 API/prerequisite certification. CRT fixes require
+provider rebuilds; no assumption of automatic redistributable servicing.
+
+Original run failed overall in its service step: Python filename APIs could not
+read Unicode fixture paths, before native inference. Corrected the reference
+helper to use byte-buffer APIs; no C++ rebuild or model change. Retest
+[41364545372](https://github.com/aataat12/immich-clone/actions/runs/41364545372),
+service source `003a2f71c44723f2994bcc9ee830c9c18371dc9d`, job `125021810477`,
+passed actual native LocalService and restart. Minimum Python-reference embedding
+cosine 0.9999996401; native same/different scores 0.9414400/0.1518818, expected
+person/cat/cup outputs, four malformed frames, missing model and cancellation
+recovery, Unicode/space paths and input SHA256 preservation passed. Peak committed
+bytes 271413248 under 536870912 cap. No raw embeddings/test media in artifacts.
+
+Artifact `13106531939` retrieved; ZIP SHA256 matched GitHub digest:
+`57f801e48e619bfb6779d5eec4901ab349fbcaa5734a4e928b2cee35a632cb5e`.
+`ai-worker.exe` SHA256 matched its manifest:
+`a83dcef02ebef33beccea8a3b21b88ed2bc18b298040f592be31ee9e72191ec6`
+(7364096 bytes). Artifact remains labelled build-not-accepted; service evidence
+above clears native feasibility only, not a product installer. Prior 41363072339
+was cancelled for notice packaging; 41363375078 compiled but failed copying the
+redirected output path, now fixed. Neither establishes runtime acceptance.
+
+No new application dependency or installer yet. Current patch/model distribution
+review, source-to-analysis-frame integration, persistent AI/user correction data,
+broader quality, clean Windows 10 and independent AI restore remain gates. Models
+remain exact pinned candidates in ai-probe; no arbitrary user-supplied model input.
+Replaceable provider and independent originals/catalog remain the migration path.
+Sources: OpenCV source/configuration/license links in native-ai/README and
+https://learn.microsoft.com/en-us/cpp/windows/deployment-in-visual-cpp .

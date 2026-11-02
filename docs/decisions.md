@@ -196,3 +196,10 @@
   original decoding. Per-task model loading reduces combined memory pressure.
   Actual service operations/PE audit, exact third-party notices, current security
   review and target packaging gate integration; no shipping dependency selected.
+
+- Native worker uses /MT static runtime linkage for the experiment. Runtime/CRT
+  fixes require a newly built/tested worker; Windows redistributable servicing does
+  not update embedded static code. Keep provider replacement independent of
+  originals/catalog. Retain build-only checkpoints separately from service
+  acceptance to avoid full recompiles for harness fixes. Parser backport source
+  and SHA256 remain explicit, not a silent modification of the upstream archive.

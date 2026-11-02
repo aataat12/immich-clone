@@ -141,3 +141,41 @@ specific model loading; the prior combined face/object Python probe approached i
 512MiB cap. No local SDK/Python installation request. Then build the review-first
 People/tagging slice and privately assess broader library quality; import remains
 deferred. No new installer was generated for the cross-photo screen.
+
+
+Native packaging work now lives in `../experiments/native-ai`. The initial native
+code compiled on Server; a packaging output-directory mismatch prevented service
+execution. Corrected candidate includes explicit executable output location,
+retained embedded module notices, the official checksum-pinned CVE-2022-1941
+parser backport and separate build/service jobs. No native inference acceptance
+until the actual service job succeeds. No app/installer dependencies changed.
+Static CRT linkage requires provider rebuilds for runtime security updates; no
+promise of Windows Update servicing the embedded runtime. Reference:
+https://learn.microsoft.com/en-us/cpp/windows/deployment-in-visual-cpp
+
+
+## Native worker operation gate passed
+
+[41364545372](https://github.com/aataat12/immich-clone/actions/runs/41364545372),
+commit `003a2f71c44723f2994bcc9ee830c9c18371dc9d`, job `125021810477` passed
+Server 2022 LocalService and restart with the same pinned YuNet/SFace/YOLOX models.
+Actual native face inference matched independent Python embeddings with minimum
+cosine 0.9999996401. Same-portrait/different-people scores 0.9414400/0.1518818;
+expected person/cat/cup detections passed. Four malformed frame types rejected;
+missing-model and cancellation recovery passed. Inputs unchanged, Unicode/space
+path passed, peak job commitment 271413248 bytes below 536870912 limit.
+The native process environment has no interpreter/package path; PE imports only
+kernel32.dll. Build provenance/notices/artifact checksums are in dependency-evidence.
+
+Build 41363876953 succeeded; its first service stage failed before invoking the
+native worker because Python cv.imread/model filename APIs could not use the
+Unicode fixture path. Reference preparation now uses Python file bytes plus
+OpenCV buffer APIs; retest reused exactly the original native executable hash.
+No model threshold was retuned. Existing 400-photo quality results remain from
+Python and do not become a 400-photo native evaluation by implication.
+
+This clears native worker feasibility, not shipping/latest-version/security or
+broad recognition acceptance. Next: finish packaging review, optional app worker
+integration, and the review-first People/custom-tag UI with persistent corrections
+and restore tests. Basic originals access must survive absent/failed AI. Import
+and Hidden Media remain queued; no new installer or local setup requested.

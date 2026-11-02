@@ -44,7 +44,14 @@ This is not a clean Windows 10 or full security/filesystem sandbox claim.
 
 References: https://docs.opencv.org/4.13.0/db/d05/tutorial_config_reference.html
 and https://github.com/opencv/opencv/wiki/CPU-optimizations-build-options .
-Native build and actual operations are pending until linked evidence is recorded.
+Native build passed in job 125019815669 of run 41363876953. Its first fixture
+preparation failed before native inference; actual LocalService/restart operations
+passed in run 41364545372, job 125021810477, using the exact same native binary.
+Worker SHA256 a83dcef02ebef33beccea8a3b21b88ed2bc18b298040f592be31ee9e72191ec6.
+Only kernel32.dll imports; minimum Python embedding cosine 0.99999964; three
+object fixtures, four malformed frames, absent-model and cancellation recovery,
+Unicode path and unchanged inputs passed. Peak commitment 271413248 bytes under
+512MiB. This is native feasibility, not a new installer or Windows 10 acceptance.
 Build checkpoint artifacts are explicitly not accepted; only a passed separate
 service job can establish operation evidence. Retain builds to avoid recompiling
 unchanged dependencies for a service-harness-only correction.
