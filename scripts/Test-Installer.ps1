@@ -27,13 +27,21 @@ try {
     $code = (Get-Content "$state/access-code.txt" -Raw).Trim()
     $null = Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$code}|ConvertTo-Json) -WebSession $session
     $fixture = Join-Path $root 'synthetic.txt'
-    [IO.File]::WriteAllText($fixture,'synthetic installer preservation fixture')
+    $privateMarker = 'private-package-canary-'+[guid]::NewGuid().ToString('N')
+    [IO.File]::WriteAllText($fixture,$privateMarker)
     $asset = (Invoke-RestMethod 'http://127.0.0.1:2283/api/upload?name=synthetic.txt' -Method Post -Headers @{'X-Immich-Request'='1'} -InFile $fixture -WebSession $session).asset
     $hash = (Get-FileHash $fixture).Hash
     Assert ((Install '0.1.27') -eq 0) 'installer upgrade succeeds'
     Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.27-prototype') 'upgrade deploys new executable version'
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.27-prototype') 'installed health reports actual executable build'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'upgrade preserves original bytes'
+    # Scan installed distribution payloads, never the protected runtime rollback
+    # snapshot (which intentionally preserves the catalog and access code).
+    $forbidden = Join-Path $root 'private-package-canaries.txt'
+    [IO.File]::WriteAllText($forbidden,($code+"`n"+$privateMarker+"`n"),[Text.UTF8Encoding]::new($false))
+    & python scripts/Check-ArtifactPrivacy.py --forbidden-file $forbidden "$app/immichclone.exe" "$app/Export-Diagnostics.ps1" "$app/Manage-Service.ps1" "$app/THIRD-PARTY-LICENSES.txt" "$app/prototype-notes.txt" "$app/media" "$app/ai"
+    Assert ($LASTEXITCODE -eq 0) 'installed payload omits runtime access code and private media canary'
+
     $session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
     $null = Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$code}|ConvertTo-Json) -WebSession $session
     $heic = Join-Path $root 'synthetic.heic'

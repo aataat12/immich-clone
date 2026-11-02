@@ -331,3 +331,48 @@ Installed app/provider hashes remain unchanged. Do not update application provid
 IDs, model definitions or installer inputs until execution/packaging evidence
 passes. Static CRT fixes require this kind of rebuild/retest; no automatic runtime
 servicing claim. No end-user dependency installation or new installer requested.
+
+## Package privacy checking (candidate tooling)
+
+Add bounded credential-signature and supplied-canary checks over distribution
+payloads, including nested ZIP and TAR source archives, without extracting them.
+Limits: 128MiB per entry, 512MiB total scan bytes, 50000 scanned items and three archive
+levels. Missing, corrupt, over-budget or linked physical inputs fail closed.
+The scanner prints only counters and fixed reason codes, not paths, matched
+credentials or supplied canaries. Unknown secret formats, images containing text,
+semantic private content and encryption remain outside its coverage.
+
+Six Linux test cases (including binary/ZIP/TAR canaries, nested credentials,
+invalid input, budget/depth and CLI-redaction controls) passed. Actual retained ai-worker.exe and its module-
+source ZIP passed: 3650 inputs/members, 54130158 checked bytes, no selected
+credential signatures. Reachable source/history signature check: 736 text inputs,
+zero matches. These counts are bounded scan evidence, not privacy certification.
+
+Next installer acceptance creates a unique synthetic private media marker, scans
+installed program/provider/source payloads for that marker and its runtime access
+code, and fails on a match. The installer-generated uninstaller and ACL-protected
+runtime rollback snapshot are deliberately outside distribution-payload scope;
+rollback legitimately retains the catalog/access code and must not be deleted or
+uploaded as a mitigation. Existing diagnostic canary checks remain required.
+The new installed-payload check is not accepted until that broader release run
+executes it. No standalone installer requested or built for scanner tooling.
+
+
+Native replacement isolated acceptance: [41483644241](https://github.com/aataat12/immich-clone/actions/runs/41483644241),
+source 30fc135bc0f6bd1d5af40ddaed17527caf91e219. Build job 125408169198 and
+LocalService job 125411689735 passed. Exact external zlib 1.3.2 was found, static
+roundtrip/inflateCopy/malformed tests passed, and worker version reports 1.3.2.
+PE audit imports only kernel32.dll. Actual face/object inference, embedding parity
+(minimum cosine 0.9999996401), malformed frames, missing-model/cancellation recovery
+and Unicode/space-path restart passed. Peak commitment 271380480 bytes below the
+512MiB job limit; input hashes unchanged. No raw embeddings/media in build output.
+
+Artifact 13161790873 retrieved: ZIP SHA256
+6bb2cbe69687501b0323f1d40fe1419109cf083e40bae219cb03f029f5986d3c.
+Worker 7365120 bytes SHA256
+cb35f0ccb3e38a6120a6f84fe91d17beaa719f9dcb9329c192b2c885bfb121ba
+matched its manifest. Replacement source digest, license, operation evidence,
+version report and PE-import record verified. Actual candidate archive privacy
+scan and separate Windows privacy workflow are recorded when complete.
+Application provider hash/path and installed build are still unchanged. Integration,
+installer/upgrade/restore and target Windows 10 checks remain separate gates.

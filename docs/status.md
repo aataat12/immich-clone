@@ -1,9 +1,10 @@
 # Current status
 
-## Native servicing experiment underway (not installed)
+## Native servicing candidate accepted in isolation (not installed)
 
-A pinned zlib 1.3.2 static operation test passed in cloud Linux. Bounded Windows
-native build and actual LocalService parity/recovery checks are next. The app's
+A pinned zlib 1.3.2 static operation test passed in cloud Linux and Windows.
+Native run 41483644241 passed build/PE audit and actual LocalService
+inference/parity/recovery/restart (source 30fc135b). The app's
 existing provider/model hashes remain unchanged; no integration or installer
 acceptance claimed. See security-baseline.md for candidate hash and gating.
 No user action or separate login-only release requested.
