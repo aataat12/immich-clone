@@ -56,16 +56,18 @@ func bundledBrowserPolicy() string {
 }
 
 type Server struct {
-	backups    *backupJobs
-	Store      *library.Store
-	Version    string
-	Code       string
-	Root       string
-	mu         sync.Mutex
-	uploadSlot chan struct{}
-	sessions   map[string]time.Time
-	attempts   int
-	window     time.Time
+	backups      *backupJobs
+	Store        *library.Store
+	Version      string
+	Code         string
+	Root         string
+	mu           sync.Mutex
+	copyIdle     time.Duration
+	uploadSlot   chan struct{}
+	snapshotSlot chan struct{}
+	sessions     map[string]time.Time
+	attempts     int
+	window       time.Time
 }
 
 func AccessCode(root string) (string, error) {
@@ -111,7 +113,7 @@ func New(store *library.Store, root, code string, builds ...string) *Server {
 	if len(builds) > 0 {
 		build = builds[0]
 	}
-	return &Server{Store: store, Root: root, Code: code, Version: build, sessions: map[string]time.Time{}, uploadSlot: make(chan struct{}, 1), backups: newBackupJobs(root, store)}
+	return &Server{Store: store, Root: root, Code: code, Version: build, sessions: map[string]time.Time{}, uploadSlot: make(chan struct{}, 1), snapshotSlot: make(chan struct{}, 1), copyIdle: 60 * time.Second, backups: newBackupJobs(root, store)}
 }
 func jsonResponse(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
@@ -258,6 +260,16 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	if r.Method == http.MethodGet && (r.URL.Path == "/api/assets" || r.URL.Path == "/api/export" || r.URL.Path == "/api/backup") {
+		select {
+		case s.snapshotSlot <- struct{}{}:
+			defer func() { <-s.snapshotSlot }()
+		default:
+			w.Header().Set("Retry-After", "1")
+			http.Error(w, "Another large catalog request or legacy backup is already active. Retry when it finishes.", http.StatusTooManyRequests)
+			return
+		}
+	}
 	if s.backupHTTP(w, r) {
 		return
 	}
@@ -312,16 +324,23 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case r.URL.Path == "/api/upload" && r.Method == "POST":
 		r.Body = http.MaxBytesReader(w, r.Body, library.MaxUpload)
 		name := r.URL.Query().Get("name")
-		a, duplicate, e := s.Store.PutWithPath(name, r.URL.Query().Get("relative"), r.Body)
+		controller := http.NewResponseController(w)
+		a, duplicate, e := s.Store.PutWithPath(name, r.URL.Query().Get("relative"), deadlineReader{r.Body, controller, s.copyIdle})
 		if e != nil {
 			status := 500
 			var max *http.MaxBytesError
 			if errors.Is(e, library.ErrTooLarge) || errors.As(e, &max) {
 				status = 413
 			}
+			var timeout net.Error
+			if errors.As(e, &timeout) && timeout.Timeout() {
+				status = http.StatusRequestTimeout
+			}
+			w.Header().Set("Connection", "close")
 			http.Error(w, "upload failed; no success recorded", status)
 			return
 		}
+		_ = controller.SetReadDeadline(time.Time{})
 		jsonResponse(w, map[string]any{"asset": a, "duplicate": duplicate})
 	case r.URL.Path == "/api/backup" && r.Method == "GET":
 		s.backup(w, r)

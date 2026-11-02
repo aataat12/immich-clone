@@ -5,6 +5,16 @@ Server-first amendment. No new charges, parallel agents or publication of person
 machine reports, private paths/media/inventories or raw support logs. Synthetic/
 public licensed fixtures only. CI timestamps are UTC.
 
+## Next-release transfer/export bounds (not separately released)
+
+Added rolling original-copy read-idle deadlines and safe failed-connection cleanup
+for ordinary/bulk transfers, plus fail-fast overlap limits for legacy full-list,
+JSON export and legacy complete-backup requests. Managed backup controls/downloads
+and paged browsing retain their separate paths. Focused Linux race/vet checks
+passed: actual stalled/progressing connections, bulk receipts/retry/replay and
+backpressured export admission. Package-wide Linux web race/vet checks also passed; focused Windows acceptance
+is next. No separate installer requested or created. See S-007.
+
 ## Next-release resource controls (not separately released)
 
 Added fail-fast HTTP original-copy admission across ordinary and bulk uploads,

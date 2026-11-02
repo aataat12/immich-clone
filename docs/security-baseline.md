@@ -251,9 +251,9 @@ Cloud Linux focused web race tests and batch/organization race tests passed.
 Actual socket test rejects a second partial-body upload promptly while the first
 copy is held. Gallery and AI batch status remain responsive; failure releases the
 slot and a subsequent real original commits once with integrity verification.
-This is not a complete resource-abuse audit. Active transfer idle handling,
-expensive export/list/legacy-backup concurrency and global connection bounds
-remain separate review items. No dependency/schema/provider change. No conflict
+This is not a complete resource-abuse audit. S-007 below subsequently addresses rolling transfer read-idle handling and
+export/list/legacy-backup overlap. Global connection bounds, slow-response writes
+and other expensive routes remain separate review items. No dependency/schema/provider change. No conflict
 with the existing single-copy plan identified. Ship with a broader release,
 including the already-tested login controls, not a separate control-only installer.
 
@@ -268,3 +268,29 @@ a follow-up bounded its status assertion so regressions fail promptly rather
 than waiting for the package timeout (Linux focused rerun passed). No application
 code changed after the Windows run. No new installer was built. Final broader-
 release upgrade/restore/import acceptance remains required before shipping.
+
+## S-007: idle transfer and heavy-request bounds (next-release candidate)
+
+Ordinary uploads now use the same rolling 60-second read-idle window as bulk
+copies. Each read renews it; a progressing long transfer is not limited to a
+60-second total duration. Both paths keep the failed read deadline and close the
+connection on failure instead of clearing the deadline before response cleanup.
+Successful copies clear it for connection reuse. Read-idle timeouts return 408;
+failed/partial bytes never create an accepted original/receipt. The internal
+short-window test setting is not an end-user configuration or a new total-size
+limit. Existing 4GiB-per-file and bulk manifest bounds remain unchanged.
+
+One shared admission slot covers legacy full-catalog listing, JSON export and
+legacy complete-backup download. Overlap gets 429/Retry-After: 1 instead of
+accumulating full snapshots/waiting tasks. The slot covers response writing and
+releases on handler exit. Paged gallery, thumbnails, originals, managed backup
+progress/control/range downloads and AI status are not included in that class.
+This does not cap the memory/size of one export or every open HTTP connection.
+
+Focused Linux race/vet tests passed for actual idle socket closure, a progressing
+copy exceeding the short idle window, retry and original checksum validation.
+Bulk socket timeout retains an earlier receipt, records no success for partial
+input, and permits retry plus receipt replay without double counting. A held
+export writer rejects overlapping heavy requests while gallery and job-status
+reads remain available. Package-wide Linux web race/vet checks also passed; Windows focused checks are next.
+No dependency/schema/model changes, separate installer or project-plan conflict.
