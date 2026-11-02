@@ -12,8 +12,12 @@ for ordinary/bulk transfers, plus fail-fast overlap limits for legacy full-list,
 JSON export and legacy complete-backup requests. Managed backup controls/downloads
 and paged browsing retain their separate paths. Focused Linux race/vet checks
 passed: actual stalled/progressing connections, bulk receipts/retry/replay and
-backpressured export admission. Package-wide Linux web race/vet checks also passed; focused Windows acceptance
-is next. No separate installer requested or created. See S-007.
+backpressured export admission. Package-wide Linux web race/vet checks also passed. Windows Server 2022 focused
+run [41481008162](https://github.com/aataat12/immich-clone/actions/runs/41481008162),
+source 97b6e1b2, job 125398974000 passed library/web tests, vet, build and Edge
+session/CSP/desktop/narrow checks. No separate installer requested or created. Before broader-release
+packaging, advance the candidate version and test upgrade from the real accepted
+0.1.27 installer; do not rebuild/relabel these held changes as 0.1.27. See S-007.
 
 ## Next-release resource controls (not separately released)
 

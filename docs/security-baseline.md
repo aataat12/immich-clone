@@ -292,5 +292,19 @@ copy exceeding the short idle window, retry and original checksum validation.
 Bulk socket timeout retains an earlier receipt, records no success for partial
 input, and permits retry plus receipt replay without double counting. A held
 export writer rejects overlapping heavy requests while gallery and job-status
-reads remain available. Package-wide Linux web race/vet checks also passed; Windows focused checks are next.
+reads remain available. Package-wide Linux web race/vet checks also passed. Windows acceptance is recorded below.
 No dependency/schema/model changes, separate installer or project-plan conflict.
+
+
+S-007 focused Windows acceptance: [41481008162](https://github.com/aataat12/immich-clone/actions/runs/41481008162),
+source 97b6e1b2762dde297a56a8625462c91c98ae965a, job 125398974000 passed fresh
+library/web package tests, vet and executable build, including real short-idle
+socket rejection/recovery, a progressing transfer longer than its idle window,
+bulk receipt timeout/retry/replay accounting and held-export overlap rejection.
+Actual Edge session, replay rejection, incorrect-code feedback and all five-page
+CSP/desktop/narrow checks also passed. The short windows exercise the same reader
+and production route; the default stays 60 seconds. No installer was created.
+Bundle with the held login/resource work; final broader-release install/upgrade,
+restore and browser import acceptance remains required. Full security, global
+connection/write-time limits, native servicing and full-library acceptance remain
+open. No project-plan conflict found or local action requested.

@@ -6,7 +6,7 @@ baseline. No future release number is assigned before delivery.
 | Order | Milestone | Completion criteria | Status | Released In |
 |---|---|---|---|---|
 | 1 | Bulk local AI analysis | Analyze all unprocessed eligible photos; counts/progress, pause/cancel, restart recovery, no duplicate jobs, preserve names/corrections. Include the Build Notes page and navigation specified below. | Cloud accepted — local functional checks passed | 0.1.25-prototype |
-| 2 | Security baseline and People & Tags improvements | Complete the security review and mitigation acceptance below before delivering this milestone; false-face dismissal, safe reanalysis preserving corrections, larger-library review/search performance, broader recognition-quality evaluation. | Planned — security review first | — |
+| 2 | Security baseline and People & Tags improvements | Complete the security review and mitigation acceptance below before delivering this milestone; false-face dismissal, safe reanalysis preserving corrections, larger-library review/search performance, broader recognition-quality evaluation. | In progress — security checks and mitigations | — |
 | 3 | Hidden Media management | Managed-file location, restore, confirmed permanent managed-copy deletion, durable recovery and job/backup coordination; external sources untouched. | Planned | — |
 | 4 | Large-library import reliability | Longer mixed-media imports, interruption/retry/duplicate/disconnected-storage tests, safe resume improvements and resolution of large-file limits. | Planned | — |
 | 5 | Large-library backup and recovery | Large ZIP/ZIP64, capacity and throughput, interruption handling, independent restoration and practical full-library backup workflow. | Planned | — |
