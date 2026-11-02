@@ -84,3 +84,9 @@ passed, with original-photo comparison rather than newly reported SHA256 results
 0.1.17 Bulk import also reported working well. No repeat of these completed small
 checks is requested. These reports do not establish broad recognition accuracy,
 large-library/endurance or a clean-machine/reboot acceptance. Reboot stays deferred.
+
+
+Focused 0.1.17-to-0.1.19 upgrade validation reported all requested navigation,
+desktop/narrow/no-overflow, actual-version and preservation checks passed, including
+photos, face names, tags and import history. No observed problems. No raw private
+report retained and no further 0.1.19 test requested; reboot stays deferred.

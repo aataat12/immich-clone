@@ -81,3 +81,12 @@ stale-page recovery during catalog changes, browser navigation and preserved med
 operations. Metadata-only measurements remain separate from larger actual mixed-
 media ingestion/endurance and source/original SHA256 checks. No new dependency or
 large private-library test needed to develop this next checkpoint.
+
+
+Candidate 0.1.21 implements the indexed gallery checkpoint: 60 items/page, forward/
+back controls, capture/upload/case-folded filename ordering, hidden filtering,
+stale-order reset and rebuild after open/restore/older writers. Sorted bulk index
+construction avoids costly random inserts in unspilled nodes. Linux race/vet,
+600 actual mixed-format originals/previews with independent restore, and bounded
+page measurements at 1k/10k/50k metadata-only rows passed; Windows acceptance is
+pending. No full-library acceptance or local test request yet.

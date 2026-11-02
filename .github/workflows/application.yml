@@ -24,6 +24,7 @@ on:
       - 'tests/browser.cjs'
       - 'tests/people.cjs'
       - 'tests/import.cjs'
+      - 'tests/gallery.cjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -61,7 +62,7 @@ jobs:
         with:
           name: prototype-server-tested
           path: previous-installer
-          run-id: 41378462423
+          run-id: 41386973401
           github-token: ${{ github.token }}
       - name: Verify dependency checksums and execute storage, recovery and HTTP tests
         shell: pwsh
@@ -101,6 +102,6 @@ jobs:
         with:
           name: prototype-server-tested
           path: |
-            dist/ImmichClone-0.1.19-prototype-x64-setup.exe
+            dist/ImmichClone-0.1.21-prototype-x64-setup.exe
             dist/SHA256SUMS.txt
           retention-days: 7

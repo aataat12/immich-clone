@@ -5,7 +5,19 @@ Server-first execution amendment. No new charges, parallel agents or publication
 of personal machine reports, source inventories, private paths/media or raw logs.
 Use synthetic/public licensed fixtures only. CI timestamps are UTC.
 
-## Current prototype: 0.1.19 clear Home navigation
+## Candidate 0.1.21: indexed gallery paging (acceptance pending)
+
+Implemented derived transactional capture/upload/name ordering and visibility
+indexes, bounded 60-item gallery requests/DOM, Next/Previous, validated cursors
+and stale-order recovery. Source/original layout and dependencies unchanged.
+Linux race/vet, 600 actual mixed-image originals/previews and independent restore
+passed. Windows browser/scale/installer checks pending. Current delivered build remains 0.1.19.
+
+User reports focused actual 0.1.17-to-0.1.19 upgrade, both Home controls, desktop/
+narrow layout, actual version and preservation of photos/names/tags/import history
+all passed, with no observed problems. No repeat local check or reboot requested.
+
+## Accepted 0.1.19 clear Home navigation
 
 Both Bulk import and People & tags expose a prominent Photos & videos Home
 control. Edge clicked each control and returned to the authenticated gallery;

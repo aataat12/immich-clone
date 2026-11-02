@@ -14,7 +14,7 @@ function Login {
 try {
     ./scripts/Prepare-MediaProvider.ps1 -Destination (Join-Path $root 'media/ffmpeg-8.1.3-7eb77d88e2e9')
     ./scripts/Prepare-AIProvider.ps1 -Destination (Join-Path $root 'ai/opencv-4.12.0-a83dcef02ebe')
-    Checked go @('build','-trimpath','-ldflags','-X main.version=0.1.19-prototype','-o',$binary,'./cmd/immichclone')
+    Checked go @('build','-trimpath','-ldflags','-X main.version=0.1.21-prototype','-o',$binary,'./cmd/immichclone')
     Checked $binary @('-mode','init','-data',$state)
     Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)RX')
     Checked icacls @($state,'/grant','*S-1-5-19:(OI)(CI)M')
@@ -127,6 +127,7 @@ try {
         for($i=0;$i -lt 30;$i++) { $org=Invoke-RestMethod http://127.0.0.1:2283/api/organization -WebSession $session; $ai=$org.assets | Where-Object { $_.asset.id -eq $id }; if($ai.analysis.status -ne 'queued'){break};Start-Sleep -Seconds 1 }
         Assert ($ai.analysis.status -eq 'ready' -and @($org.faces | Where-Object name -eq 'Test Person').Count -eq 1) 'AI provider recovery preserves manual names and retries queued work'
     }
+    if ($env:IMMICH_BROWSER_MODULE) { $env:IMMICH_TEST_STATE=$state;Checked node @('tests/gallery.cjs');Remove-Item Env:IMMICH_TEST_STATE }
     $onlineLog = Join-Path $root 'online-diagnostics.log'
     Invoke-WebRequest http://127.0.0.1:2283/api/diagnostics -WebSession $session -OutFile $onlineLog
     Assert ((Get-Content $onlineLog -Raw).Contains('original_write')) 'authenticated browser diagnostic export includes upload events'

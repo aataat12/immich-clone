@@ -1,4 +1,4 @@
-IMMICH CLONE 0.1.19 - EARLY TEST BUILD
+IMMICH CLONE 0.1.21 - EARLY TEST BUILD
 
 This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
@@ -144,3 +144,13 @@ paged gallery and large-backup capacity remain unaccepted; start with small test
 
 NAVIGATION
 People & tags and Bulk import have a prominent Photos & videos Home control.
+
+GALLERY PAGING
+The main gallery requests/renders at most 60 items per page. Next/Previous controls
+preserve deterministic capture-date, upload-date or case-insensitive filename
+ordering, with content-ID ties. Ordering/filter indexes rebuild from the catalog
+on open and commit with original/preview/import records. An expired ordering
+cursor resets to page one with a notice after a catalog ordering change or service
+restart. Later pages are not automatically refreshed; Refresh returns to page one.
+The legacy full-list endpoint remains for explicit older/test callers; gallery
+polling no longer uses it. People/tag review scalability remains a separate gate.

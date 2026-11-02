@@ -86,16 +86,29 @@ func run(n int) []metric {
 		panic(e)
 	}
 	db.Close()
+	rebuildStarted := time.Now()
 	s, e = library.Open(root)
 	if e != nil {
 		panic(e)
 	}
 	defer s.Close()
 	var results []metric
-	results = append(results, measure("catalog_list", n, func() error {
-		a, e := s.List()
-		if e == nil && len(a) != n {
-			panic("catalog count")
+	results = append(results, metric{"gallery_index_rebuild_one_sample", n, time.Since(rebuildStarted).Microseconds(), 0, 1})
+	first, e := s.GalleryPage("capture", "library", "", 60)
+	if e != nil || len(first.Assets) != 60 || first.Next == "" {
+		panic("gallery page")
+	}
+	results = append(results, measure("gallery_first_page_60", n, func() error {
+		p, e := s.GalleryPage("capture", "library", "", 60)
+		if len(p.Assets) != 60 {
+			panic("page count")
+		}
+		return e
+	}))
+	results = append(results, measure("gallery_next_page_60", n, func() error {
+		p, e := s.GalleryPage("capture", "library", first.Next, 60)
+		if len(p.Assets) != 60 {
+			panic("page count")
 		}
 		return e
 	}))
@@ -106,12 +119,15 @@ func run(n int) []metric {
 		}
 		return e
 	}))
-	results = append(results, measure("list_plus_json", n, func() error {
-		a, e := s.List()
+	results = append(results, measure("gallery_page_plus_json_60", n, func() error {
+		p, e := s.GalleryPage("capture", "library", "", 60)
 		if e != nil {
 			return e
 		}
-		_, e = json.Marshal(a)
+		b, e := json.Marshal(p)
+		if len(b) > 128<<10 {
+			panic("unbounded page response")
+		}
 		return e
 	}))
 	// Independently execute a real native PNG job amongst the metadata-only rows.

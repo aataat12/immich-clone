@@ -22,7 +22,7 @@ func TestActualMixedMediaImportRestartDrainAndRestore(t *testing.T) {
 	s, root := openTest(t)
 	var files []ImportFile
 	var payloads [][]byte
-	for i := 0; i < 120; i++ {
+	for i := 0; i < 600; i++ {
 		img := image.NewRGBA(image.Rect(0, 0, 64, 48))
 		for y := 0; y < 48; y++ {
 			for x := 0; x < 64; x++ {
@@ -93,7 +93,7 @@ func TestActualMixedMediaImportRestartDrainAndRestore(t *testing.T) {
 		t.Fatal(e)
 	}
 	p, _ = s.ImportPage(m.ID, 0)
-	if p.Session.AcceptedFiles != 120 || p.Session.NewFiles != 120 || p.Session.Duplicates != 0 {
+	if p.Session.AcceptedFiles != 600 || p.Session.NewFiles != 600 || p.Session.Duplicates != 0 {
 		t.Fatal(p.Session)
 	}
 	jobs := 0
@@ -107,7 +107,7 @@ func TestActualMixedMediaImportRestartDrainAndRestore(t *testing.T) {
 		}
 		jobs++
 	}
-	if jobs != 120 {
+	if jobs != 600 {
 		t.Fatal("missing preview jobs", jobs)
 	}
 	assets, _ := s.List()
@@ -136,11 +136,11 @@ func TestActualMixedMediaImportRestartDrainAndRestore(t *testing.T) {
 	}
 	defer restored.Close()
 	p, e = restored.ImportPage(m.ID, 0)
-	if e != nil || p.Session.AcceptedFiles != 120 || p.Session.Status != "completed" {
+	if e != nil || p.Session.AcceptedFiles != 600 || p.Session.Status != "completed" {
 		t.Fatal("restored import receipts", e)
 	}
 	if e = restored.Verify(); e != nil {
 		t.Fatal(e)
 	}
-	t.Log("120 actual JPEG/PNG/BMP/GIF/TIFF originals accepted, interruption/replay reconciled, 120 native previews drained, receipts and original hashes independently restored")
+	t.Log("600 actual JPEG/PNG/BMP/GIF/TIFF originals accepted, interruption/replay reconciled, 600 native previews drained, receipts and original hashes independently restored")
 }

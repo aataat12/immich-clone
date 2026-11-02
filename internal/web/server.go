@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -202,6 +203,26 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	switch {
+	case r.URL.Path == "/api/gallery" && r.Method == "GET":
+		limit := 60
+		if text := r.URL.Query().Get("limit"); text != "" {
+			var e error
+			limit, e = strconv.Atoi(text)
+			if e != nil {
+				http.Error(w, "invalid page size", 400)
+				return
+			}
+		}
+		page, e := s.Store.GalleryPage(r.URL.Query().Get("sort"), r.URL.Query().Get("visibility"), r.URL.Query().Get("after"), limit)
+		if errors.Is(e, library.ErrGalleryChanged) {
+			http.Error(w, "Library ordering changed. Refresh from the first page.", 409)
+			return
+		}
+		if e != nil {
+			http.Error(w, "gallery unavailable or invalid page", 400)
+			return
+		}
+		jsonResponse(w, page)
 	case r.URL.Path == "/api/assets" && r.Method == "GET":
 		assets, e := s.Store.List()
 		if e != nil {

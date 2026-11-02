@@ -7,7 +7,7 @@ const path = require('path');
   const errors = [];
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto('http://127.0.0.1:2283');
-  await page.waitForFunction(()=>document.querySelector('#version').textContent==='Version 0.1.19-prototype');
+  await page.waitForFunction(()=>document.querySelector('#version').textContent==='Version 0.1.21-prototype');
   await page.fill('#code',fs.readFileSync(path.join(process.env.IMMICH_TEST_STATE,'access-code.txt'),'utf8').trim());
   await page.click('#loginForm button');
   await page.waitForSelector('#library:not(.hidden)');
@@ -71,9 +71,9 @@ const path = require('path');
   let releaseOlder,signalOlder;
   const olderGate=new Promise(r=>releaseOlder=r),olderSeen=new Promise(r=>signalOlder=r);
   let intercepted=0;
-  await page.route('**/api/assets',async route=>{
+  await page.route('**/api/gallery?*',async route=>{
     const response=await route.fetch();const json=await response.json();
-    if(++intercepted===1){signalOlder();await olderGate;await route.fulfill({response,json:json.filter(a=>a.name!=='rotated.mov')})}
+    if(++intercepted===1){signalOlder();await olderGate;await route.fulfill({response,json:{...json,assets:json.assets.filter(a=>a.name!=='rotated.mov')}})}
     else await route.fulfill({response,json});
   });
   const olderLoad=page.evaluate(()=>load());
@@ -81,7 +81,7 @@ const path = require('path');
   await page.evaluate(()=>load());
   releaseOlder();await olderLoad;
   if(await page.locator('.card').filter({hasText:'rotated.mov'}).count()!==1)throw Error('Stale refresh hid an existing card');
-  await page.unroute('**/api/assets');
+  await page.unroute('**/api/gallery?*');
   const metadata=await page.evaluate(async()=>await(await fetch('/api/assets')).json());
   if(!metadata.some(a=>a.sources?.some(p=>p.endsWith('/folder-test.txt'))))throw Error('Relative folder path lost');
   await page.screenshot({path:path.join(process.env.IMMICH_BROWSER_OUTPUT,'desktop.png'),fullPage:true});

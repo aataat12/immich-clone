@@ -161,7 +161,10 @@ func Open(root string) (*Store, error) {
 		if e := initOrganization(tx); e != nil {
 			return e
 		}
-		return initImports(tx)
+		if e := initImports(tx); e != nil {
+			return e
+		}
+		return initGallery(tx)
 	})
 	if e != nil {
 		db.Close()
@@ -234,6 +237,9 @@ func saveAsset(tx *bolt.Tx, a Asset) error {
 	queue := tx.Bucket([]byte(queueBucket))
 	if queue == nil {
 		return errors.New("preview queue index unavailable")
+	}
+	if e = updateGallery(tx, a); e != nil {
+		return e
 	}
 	if e = tx.Bucket([]byte("assets")).Put([]byte(a.ID), b); e != nil {
 		return e

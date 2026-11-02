@@ -233,3 +233,20 @@
   claims of partial-file resume. This conservative checkpoint precedes optimization
   and full-library scale acceptance. Test upgrade from the actual accepted 0.1.15
   installer, not a relabeled build of the new source.
+
+- Gallery uses additive derived bbolt ordering/filter indexes, rebuilt from assets
+  at open for older-writer/restore recovery. Update indexes/counts/order revision
+  in the asset transaction, including import receipts. Reads seek directly to
+  bounded pages; no full List+sort hidden behind the paginated response.
+- Opaque validated cursors bind sort/filter, runtime index epoch and order revision.
+  Ordering changes/restart invalidate old cursors; UI resets to page one with a
+  notice. Preview-only status changes retain cursors. Later pages refresh on user
+  action rather than automatic polling. Date ties use content ID, filename order
+  is UTF-8 case folded (first 1024 bytes for nonstandard overlong API names), then
+  content ID. No timezone is invented for camera capture dates.
+
+- Startup rebuild sorts each derived index's keys before bulk insertion. A local
+  50k metadata experiment exposed random-insertion startup cost; sorted insertion
+  reduced the observed rebuild while retaining the same authoritative source and
+  bounded runtime page reads. One-time rebuild memory/work is separate from page
+  allocation measurements. No claim of a 50k media import or full-library safety.

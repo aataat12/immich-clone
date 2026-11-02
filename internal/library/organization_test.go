@@ -232,8 +232,12 @@ func TestOrganizationRestoredCatalogCheck(t *testing.T) {
 	if !names["Test Person"] || !names["Manual Label"] {
 		t.Fatal("restored names missing")
 	}
+	tagPage, e := s.OrganizationPage("", "", "Birthday")
+	if e != nil {
+		t.Fatal(e)
+	}
 	found := false
-	for _, a := range page.Assets {
+	for _, a := range tagPage.Assets {
 		for _, tag := range a.Tags {
 			if tag == "Birthday" {
 				found = true
