@@ -56,15 +56,16 @@ func bundledBrowserPolicy() string {
 }
 
 type Server struct {
-	backups  *backupJobs
-	Store    *library.Store
-	Version  string
-	Code     string
-	Root     string
-	mu       sync.Mutex
-	sessions map[string]time.Time
-	attempts int
-	window   time.Time
+	backups    *backupJobs
+	Store      *library.Store
+	Version    string
+	Code       string
+	Root       string
+	mu         sync.Mutex
+	uploadSlot chan struct{}
+	sessions   map[string]time.Time
+	attempts   int
+	window     time.Time
 }
 
 func AccessCode(root string) (string, error) {
@@ -110,7 +111,7 @@ func New(store *library.Store, root, code string, builds ...string) *Server {
 	if len(builds) > 0 {
 		build = builds[0]
 	}
-	return &Server{Store: store, Root: root, Code: code, Version: build, sessions: map[string]time.Time{}, backups: newBackupJobs(root, store)}
+	return &Server{Store: store, Root: root, Code: code, Version: build, sessions: map[string]time.Time{}, uploadSlot: make(chan struct{}, 1), backups: newBackupJobs(root, store)}
 }
 func jsonResponse(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
@@ -243,6 +244,19 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !s.authenticated(r) {
 		http.Error(w, "sign in required", 401)
 		return
+	}
+	// Copying is already serialized by the store. Do not accumulate waiting
+	// requests (and their bodies) behind that writer, including bulk receipts.
+	if originalCopyRequest(r) {
+		select {
+		case s.uploadSlot <- struct{}{}:
+			defer func() { <-s.uploadSlot }()
+		default:
+			w.Header().Set("Retry-After", "1")
+			w.Header().Set("Connection", "close")
+			http.Error(w, "An original copy is already active. Retry when it finishes; accepted files are retained.", http.StatusTooManyRequests)
+			return
+		}
 	}
 	if s.backupHTTP(w, r) {
 		return
@@ -435,4 +449,15 @@ func (s *Server) backup(w http.ResponseWriter, r *http.Request) {
 // HTML parsing normalizes CRLF and CR, including Windows checkout line endings.
 func scriptDigest(script string) [32]byte {
 	return sha256.Sum256([]byte(strings.ReplaceAll(strings.ReplaceAll(script, "\r\n", "\n"), "\r", "\n")))
+}
+
+func originalCopyRequest(r *http.Request) bool {
+	if r.Method != http.MethodPost {
+		return false
+	}
+	if r.URL.Path == "/api/upload" {
+		return true
+	}
+	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/imports/"), "/")
+	return strings.HasPrefix(r.URL.Path, "/api/imports/") && len(parts) == 3 && parts[1] == "files"
 }

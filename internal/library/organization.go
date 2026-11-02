@@ -118,7 +118,7 @@ func (s *Store) SetRecognizer(fn func(context.Context, image.Image, string) (rec
 	s.gate.Lock()
 	defer s.gate.Unlock()
 	s.recognizer = fn
-	s.recognitionAvailable = available
+	s.recognitionAvailable.Store(available)
 }
 func (s *Store) QueueAnalysis(id string) error {
 	s.gate.Lock()
@@ -213,7 +213,7 @@ func (s *Store) ProcessAnalysis(ctx context.Context) (bool, error) {
 		}
 		c := tx.Bucket([]byte(analysisQueue)).Cursor()
 		for k, _ := c.First(); k != nil; k, _ = c.Next() {
-			if string(tx.Bucket([]byte(batchMembers)).Get(k)) == "pending" && (batch.Status != "running" || !s.recognitionAvailable) {
+			if string(tx.Bucket([]byte(batchMembers)).Get(k)) == "pending" && (batch.Status != "running" || !s.recognitionAvailable.Load()) {
 				continue
 			}
 			id = string(k)
@@ -527,7 +527,7 @@ func (s *Store) OrganizationPage(after, faceAfter, query string) (Organization, 
 	}
 	s.gate.Lock()
 	defer s.gate.Unlock()
-	out.Available = s.recognitionAvailable
+	out.Available = s.recognitionAvailable.Load()
 	e := s.db.View(func(tx *bolt.Tx) error {
 		assets := map[string]Asset{}
 		if e := tx.Bucket([]byte("assets")).ForEach(func(k, v []byte) error {

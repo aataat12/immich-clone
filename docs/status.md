@@ -5,6 +5,17 @@ Server-first amendment. No new charges, parallel agents or publication of person
 machine reports, private paths/media/inventories or raw support logs. Synthetic/
 public licensed fixtures only. CI timestamps are UTC.
 
+## Next-release resource controls (not separately released)
+
+Added fail-fast HTTP original-copy admission across ordinary and bulk uploads,
+matching the existing serialized writer. A held-copy/real-socket test verifies
+429/retry feedback for overlap, responsive gallery/AI status and recovery after
+failure. Removed the read-only AI batch-status dependency on the copy gate using
+atomic runtime availability flags and an existing database read snapshot.
+Linux focused web and library batch/organization race checks passed; Windows
+focused acceptance is next. No new installer/version or user action requested.
+See security-baseline.md S-006 for bounds and remaining resource review items.
+
 ## Next-release authentication controls (not separately released)
 
 User-reported 0.1.27 upgrade/data preservation, five-page browser/CSP behavior,

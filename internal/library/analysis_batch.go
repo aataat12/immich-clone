@@ -32,12 +32,12 @@ func readBatch(tx *bolt.Tx) (AnalysisBatch, error) {
 	}
 	return b, e
 }
+
+// Status uses a database read snapshot and atomic runtime flags, not the copy gate.
 func (s *Store) AnalysisBatch() (AnalysisBatch, error) {
-	s.gate.Lock()
-	defer s.gate.Unlock()
 	var b AnalysisBatch
 	e := s.db.View(func(tx *bolt.Tx) error { var e error; b, e = readBatch(tx); return e })
-	b.Available = s.recognitionAvailable
+	b.Available = s.recognitionAvailable.Load()
 	b.ImportWaiting = s.ImportsRunning()
 	return b, e
 }
@@ -60,7 +60,7 @@ func (s *Store) ControlAnalysisBatch(ctx context.Context, action string) error {
 		queue := tx.Bucket([]byte(analysisQueue))
 		switch action {
 		case "start":
-			if !s.recognitionAvailable {
+			if !s.recognitionAvailable.Load() {
 				return recognition.ErrUnavailable
 			}
 			if b.Status == "running" || b.Status == "paused" || b.Pending > 0 {
@@ -111,7 +111,7 @@ func (s *Store) ControlAnalysisBatch(ctx context.Context, action string) error {
 			}
 			b.Status = "paused"
 		case "resume":
-			if !s.recognitionAvailable {
+			if !s.recognitionAvailable.Load() {
 				return recognition.ErrUnavailable
 			}
 			if b.Status != "paused" {

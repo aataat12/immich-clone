@@ -56,7 +56,7 @@ type Store struct {
 	activeAnalysis       string
 	mediaPreview         func(context.Context, string) (image.Image, int, int, error)
 	recognizer           func(context.Context, image.Image, string) (recognition.Result, error)
-	recognitionAvailable bool
+	recognitionAvailable atomic.Bool
 }
 
 func Open(root string) (*Store, error) {

@@ -230,3 +230,29 @@ explicitly without silently ending an already valid session. The initial browser
 run exposed generic 401 handling masking incorrect-code feedback; fixed before
 acceptance. No installer was created for these changes. Bundle into the next
 broader release per user instruction. No repeat of passed local checks requested.
+
+## S-006: bounded original-copy admission (next-release candidate)
+
+The store already serializes managed original copying. Concurrent authenticated
+HTTP uploads could nevertheless accumulate behind that writer, holding requests
+and sockets. Admit one original-copy request at a time across /api/upload and
+bulk receipt uploads; reject overlap immediately with HTTP 429, Retry-After: 1
+and Connection: close without consuming the rejected body. No waiting HTTP queue,
+per-file size change, total library limit or throughput promise is introduced.
+Normal sequential bulk import is unchanged; retry/reselect follows its existing
+receipt verification. Accepted files are retained. Authentication runs first.
+
+The blocked-copy test also found AI batch status waiting on the copy gate.
+AnalysisBatch now uses its existing bbolt read snapshot plus atomic runtime
+availability/import flags, without taking the copy gate. Mutating analysis
+operations and provider replacement retain their existing synchronization.
+
+Cloud Linux focused web race tests and batch/organization race tests passed.
+Actual socket test rejects a second partial-body upload promptly while the first
+copy is held. Gallery and AI batch status remain responsive; failure releases the
+slot and a subsequent real original commits once with integrity verification.
+This is not a complete resource-abuse audit. Active transfer idle handling,
+expensive export/list/legacy-backup concurrency and global connection bounds
+remain separate review items. No dependency/schema/provider change. No conflict
+with the existing single-copy plan identified. Ship with a broader release,
+including the already-tested login controls, not a separate control-only installer.
