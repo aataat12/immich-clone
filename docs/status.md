@@ -86,6 +86,16 @@ Released In columns. Full remaining milestone acceptance: [roadmap.md](roadmap.m
 The controls and page are implemented; Windows Server acceptance is pending. Do not
 publish the candidate as an accepted installer until the workflow passes.
 
+Acceptance follow-up: run 41404100718 on review branch work/bulk-ai-acceptance
+passed storage/HTTP and real NTFS ENOSPC, then failed JSON export after bulk AI
+browser controls. Batch membership stores raw state strings; exporting them as
+json.RawMessage made /api/export return an empty HTTP 200. The branch fixes string
+encoding and tests pending/cancelled/ready/failed exports, preserving embedding
+exclusion. Full Linux race/vet passed before the fix; focused regression and
+Windows rerun results are tracked in PR #1. No accepted 0.1.25 installer yet.
+Direct main publication was blocked by automatic approval review; changes remain
+on the review branch pending explicit merge authorization.
+
 1. Large-container/ZIP64 size and throughput, longer actual mixed-media endurance,
    and storage-disconnect recovery remain open before full real-library import.
    Web backups still stage a complete archive plus catalog/reserve in application
