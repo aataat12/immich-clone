@@ -7,7 +7,9 @@ security-baseline.md S-008. No installer/version changed.
 
 Next-release restore candidate: validate the complete manifest/ZIP integrity and
 reject noncanonical or special-file archive entries before extraction. Linux
-negative/valid-restore tests and vet passed; Windows validation pending (S-009).
+negative/valid-restore tests and vet passed; Windows Server 2022/Edge validation
+passed (41510214737, S-009). Next security review: parent-folder/reparse and ACL
+boundaries, aggregate archive/catalog work and native isolation.
 
 ## Current cloud-accepted prototype: 0.1.29
 

@@ -486,7 +486,9 @@ release and rerun installer/upgrade/restore gates for that candidate.
 Reproduced on the previous parser: a schema-1 manifest followed by another JSON
 value, and a manifest with a bad ZIP CRC, were accepted. JSON Decode returned on
 the first value without requiring the ZIP reader's final integrity result. This
-is an archive-integrity validation gap, not demonstrated code execution. Link,
+is an archive-integrity validation gap, not demonstrated code execution. Severity:
+low for these observed acceptance gaps; restore consumes an explicitly selected
+archive, with no network-triggered automatic restore demonstrated. Link,
 directory and device entry modes were also accepted but written as regular files;
 no archive-created link/path escape was demonstrated.
 
@@ -514,3 +516,18 @@ reparse races, Windows ACL attacks, bbolt input robustness and native containmen
 remain separate review gates. Do not treat this as full untrusted-backup isolation
 or target Windows 10 certification. No conflict with the agreed plan identified;
 hold for the next broader release and repeat its installer/restore acceptance.
+
+
+S-009 Windows acceptance: [41510214737](https://github.com/aataat12/immich-clone/actions/runs/41510214737),
+source d7bff4046e97f70026c08d5ea9ea73f0b296341c, job 125499818428 passed.
+All seventeen hostile archive cases rejected without publication/outside-sentinel
+change/staging retention. Actual valid independent backup restore and tamper tests
+passed. Module verification, library/web tests, cmd compilation, vet and app build
+passed on Windows Server 2022. Edge passed explicit login/logout, revocation and
+replay rejection, incorrect code, re-login/reload and all five desktop/narrow pages
+with bundled-script execution and injected script/event blocking. No installer or
+new provider was built; next broader candidate still needs full installed-service
+upgrade/restore acceptance. Linux credential-signature baseline: 788 text inputs,
+zero matches/exclusions; arbitrary passwords and other stated exclusions remain.
+Windows 10, parent-folder reparse races, aggregate archive/catalog resource abuse
+and worker isolation are not cleared by these results.
