@@ -34,6 +34,16 @@ jobs:
         run: |
           ./scripts/Test-StorageSecurity.ps1 -Binary "$env:RUNNER_TEMP/security-app.exe"
           if ($LASTEXITCODE -ne 0) { throw 'Windows storage security acceptance failed' }
+      - name: Native child authority and resource canaries
+        shell: powershell
+        run: |
+          ./scripts/Test-WorkerAccessCanary.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Worker authority probe failed' }
+      - name: Bundled upgrade preparation execution
+        shell: powershell
+        run: |
+          ./scripts/Test-UpgradePreparation.ps1 -Binary "$env:RUNNER_TEMP/security-app.exe"
+          if ($LASTEXITCODE -ne 0) { throw 'Upgrade preparation probe failed' }
       - name: Actual Edge policy and session controls
         shell: pwsh
         run: |
