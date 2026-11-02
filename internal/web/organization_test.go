@@ -154,3 +154,29 @@ func TestFaceDismissalAuthorizationAndRestore(t *testing.T) {
 		t.Fatal("restore lost name")
 	}
 }
+
+func TestUnnamedPeopleFilterIsServerSide(t *testing.T) {
+	s, c := setup(t)
+	var b bytes.Buffer
+	if e := png.Encode(&b, image.NewRGBA(image.Rect(0, 0, 100, 100))); e != nil {
+		t.Fatal(e)
+	}
+	a, _, e := s.Store.Put("review.png", bytes.NewReader(b.Bytes()))
+	if e != nil {
+		t.Fatal(e)
+	}
+	for _, name := range []string{"Named", ""} {
+		if e = s.Store.ManualFace(context.Background(), a.ID, []float64{.1, .1, .2, .2}, name); e != nil {
+			t.Fatal(e)
+		}
+	}
+	w := request(s, "GET", "/api/organization?unnamed=1", "", c)
+	var page struct {
+		Faces []struct {
+			Name string `json:"name"`
+		}
+	}
+	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &page) != nil || len(page.Faces) != 1 || page.Faces[0].Name != "" {
+		t.Fatal("server did not filter unnamed faces")
+	}
+}

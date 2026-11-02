@@ -51,7 +51,7 @@ func (s *Server) organizationHTTP(w http.ResponseWriter, r *http.Request) bool {
 	}
 
 	if r.URL.Path == "/api/organization" && r.Method == "GET" {
-		result, e := s.Store.OrganizationReviewPage(r.URL.Query().Get("after"), r.URL.Query().Get("face_after"), r.URL.Query().Get("q"), r.URL.Query().Get("dismissed") == "1")
+		result, e := s.Store.OrganizationFilteredPage(r.URL.Query().Get("after"), r.URL.Query().Get("face_after"), r.URL.Query().Get("q"), r.URL.Query().Get("dismissed") == "1", r.URL.Query().Get("unnamed") == "1")
 		if e != nil {
 			http.Error(w, "review catalog unavailable", 400)
 		} else {

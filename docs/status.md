@@ -1,5 +1,10 @@
 # Current status
 
+People filtering candidate: server-side unnamed filtering and accurate search/
+face continuation. Linux race/full tests/vet passed; Windows/Edge pending. See
+people-review-paging.md. User-authorized workers are implementing focused staged-
+upgrade and native-child canary probes, not clearing broader security gates.
+
 People candidate: reversible false-face dismissal/restoration preserving names,
 undo history, tags, analysis and originals. Linux focused race/full tests/vet
 passed; Windows Server 2022/Edge acceptance passed (41519696666), including

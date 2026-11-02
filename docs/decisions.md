@@ -286,3 +286,8 @@
   deletion. Exclude dismissed faces from active review and name suggestions, retain
   names/undo history, and provide a separate restore view. Existing full-catalog
   backups/JSON export retain the correction. No provider rerun or new dependency.
+
+- 2026-11-02 continued user-authorized parallel work: separate security workers
+  own staged-upgrade preparation and a native-child access canary experiment.
+  Primary People work applies unnamed/search filters before pagination; reference
+  candidates remain independent of the displayed face filter. No release bypass.

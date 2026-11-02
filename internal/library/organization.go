@@ -528,6 +528,11 @@ func (s *Store) OrganizationPage(after, faceAfter, query string) (Organization, 
 
 // OrganizationReviewPage separates dismissed corrections from active references.
 func (s *Store) OrganizationReviewPage(after, faceAfter, query string, dismissed bool) (Organization, error) {
+	return s.OrganizationFilteredPage(after, faceAfter, query, dismissed, false)
+}
+
+// OrganizationFilteredPage applies review filters before taking a bounded page.
+func (s *Store) OrganizationFilteredPage(after, faceAfter, query string, dismissed, unnamed bool) (Organization, error) {
 	out := Organization{Faces: []FaceView{}, Assets: []OrganizationAsset{}, Names: []string{}}
 	if (after != "" && !validID(after)) || (faceAfter != "" && !validID(faceAfter)) {
 		return out, ErrOrganizationInput
@@ -594,13 +599,16 @@ func (s *Store) OrganizationReviewPage(after, faceAfter, query string, dismissed
 			if r.f.ID <= faceAfter {
 				continue
 			}
-			if len(out.Faces) >= 100 {
-				out.FaceAfter = out.Faces[len(out.Faces)-1].ID
-				break
+			if unnamed && r.l.Name != "" {
+				continue
 			}
 			view := FaceView{Dismissed: r.l.Dismissed, ID: r.f.ID, AssetID: r.f.AssetID, AssetName: assets[r.f.AssetID].Name, Box: r.f.Box, Name: r.l.Name, CanUndo: r.l.CanUndo}
 			if query != "" && !strings.Contains(strings.ToLower(view.Name), strings.ToLower(query)) && !strings.Contains(strings.ToLower(view.AssetName), strings.ToLower(query)) {
 				continue
+			}
+			if len(out.Faces) >= 100 {
+				out.FaceAfter = out.Faces[len(out.Faces)-1].ID
+				break
 			}
 			if view.Name == "" && !view.Dismissed {
 				scores := map[string]float64{}
