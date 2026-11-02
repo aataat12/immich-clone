@@ -63,7 +63,7 @@ jobs:
         with:
           name: prototype-server-tested
           path: previous-installer
-          run-id: 41398447659
+          run-id: 41406051070
           github-token: ${{ github.token }}
       - name: Verify dependency checksums and execute storage, recovery and HTTP tests
         shell: pwsh
@@ -74,6 +74,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Tests failed' }
           go vet ./internal/... ./cmd/immichclone
           if ($LASTEXITCODE -ne 0) { throw 'Vet failed' }
+      - name: Check Windows Go dependency vulnerabilities
+        shell: pwsh
+        run: ./scripts/Test-GoSecurity.ps1
       - name: Execute ENOSPC recovery on bounded disposable NTFS volumes
         shell: pwsh
         run: ./scripts/Test-FullDisk.ps1
@@ -103,6 +106,6 @@ jobs:
         with:
           name: prototype-server-tested
           path: |
-            dist/ImmichClone-0.1.25-prototype-x64-setup.exe
+            dist/ImmichClone-0.1.27-prototype-x64-setup.exe
             dist/SHA256SUMS.txt
           retention-days: 7

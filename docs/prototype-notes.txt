@@ -1,4 +1,4 @@
-IMMICH CLONE 0.1.23 - EARLY TEST BUILD
+IMMICH CLONE 0.1.27 - EARLY TEST BUILD
 
 This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
@@ -167,3 +167,6 @@ Archive creation serializes library writes; browsing/status/cancel remain usable
 A complete archive plus snapshot/reserve must fit in application storage, and the
 browser download destination needs additional space. No external-destination
 picker, incremental backup, automatic retention or full-library acceptance yet.
+
+Security hardening candidate: exact embedded-script policy and access guard
+regressions. Wider security review remains open; no LAN/Internet exposure.
