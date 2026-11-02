@@ -1,10 +1,22 @@
 # Child-folder and file permissions — stationary-tree implementation
 
+
+Current final acceptance: [41535508518](https://github.com/aataat12/immich-clone/actions/runs/41535508518),
+source 77d1f1b87411b0ed51834bd054ef2603c616ea0f, job 125586209991, passed **all** steps on Windows
+Server 2022. The exact stationary permissions implementation passed its full matrix
+again, with 21 unsafe production configurations rejected and all ordinary-user,
+normal service, Setup, original-preservation and browser controls passing. Original
+SEC-01 is complete; seven other original items and delivery gate SEC-08 stay open.
+Earlier failure qualifications below describe earlier runs, not the final result.
+
 Scope: original security item 1, application-owned state, diagnostics and rollback
 roots and **all existing descendants**, not only a selected canary. This is a
 fail-closed permission audit plus the existing root-inheritance normalization,
-not a recursive ACL/ownership migration. Source implementation is ready; actual
-Windows acceptance is required before marking this item complete.
+not a recursive ACL/ownership migration. **Original item 1 is complete for the
+implemented stationary-tree policy** at source
+`81b0f96a51548926c46e4098cbc5ec518c0bdb65`, with the actual Windows Server 2022
+acceptance below. This is an implementation/test checkpoint, not a new installer
+or a claim that the user's installed 0.1.29 already contains these changes.
 
 ## Production entry point and ordering
 
@@ -103,12 +115,57 @@ The test worker owns `scripts/Test-StorageSecurity.ps1` and
    hash preservation, restart, bundled preparation and browser regression remain
    usable under the audited permission policy.
 
+## Actual Windows acceptance and item closure
+
+[Run 41534740456](https://github.com/aataat12/immich-clone/actions/runs/41534740456),
+source `81b0f96a51548926c46e4098cbc5ec518c0bdb65`, job `125583595153` executed
+the complete SEC-01 matrix on Windows Server 2022 using the production policy and
+management entry point. The primary agent inspected the actual job logs. Passed:
+
+- Correct stationary state, catalog, access-code, original, backup, diagnostics and
+  rollback permissions denied the real ordinary-user token read/write access,
+  including complete protected descendants. Intended installer-reader,
+  LocalService and administrator controls remained usable.
+- Actual unsafe read/write positive controls preceded exact production rejection
+  for arbitrary explicit/protected SID grants, excess intended-reader rights,
+  deny rules, incomplete protected access, null DACLs and untrusted owners. Rejection
+  preserved the running service PID and state, bytes, owner/ACL values, diagnostics
+  and rollback snapshots; unsafe preflight configurations were not silently repaired.
+- Inherited root grants were admitted by preflight but rejected by final verification
+  before normalization. After root normalization, complete inherited verification
+  passed and the actual ordinary-user token was denied. Protected-root and correct
+  protected-child controls passed; denied descendant audit did not become a partial
+  success. Junction fixtures left outside target ACLs and bytes unchanged.
+- Production initialization, authenticated upload/catalog commit, original hash
+  preservation and service restart passed. The actual staged Inno Setup probe
+  passed its junction/retained-preparer controls, normal existing LocalService
+  transition, rollback snapshots, exact helper bytes, preserved state and uninstall
+  retention. Go library/web tests, vet and application build also passed.
+
+The overall job at this checkpoint was **not green**: after these security,
+service and Setup assertions passed, a later photo-dialog browser assertion failed
+while waiting for asynchronous dialog closure. The primary agent is correcting
+that test wait separately. This document does not reinterpret that UI failure as
+a successful complete browser run, nor does item closure depend on an unexecuted
+security fix. The SEC-01 production source and full policy matrix above passed.
+
+Earlier failed checkpoints are retained: run `41532763067` stopped on the initial
+PowerShell InvalidCast; early smoke in `41533454482` isolated the byte-backed
+AceFlags bitwise operation, corrected using exact-typed `Enum.HasFlag`. Run
+`41533819218` passed production smoke/normal service controls but exposed an
+expected-rejection test harness treating native stderr as a terminating exception.
+The harness now captures the actual nonzero process exit status privately. Neither
+failure was waived or counted as permission acceptance; final verification above
+uses the corrected production flag handling and complete rejection matrix, without
+weakening policy.
+
 ## Boundary of completion
 
-Once these actual Windows checks pass, original item 1 can be marked complete for
-stationary application-owned tree configuration and the implemented fail-closed
-policy. It is not a promise that an unsafe existing library was automatically
-repaired, nor authorization to modify external source permissions.
+Original item 1 is closed for stationary application-owned tree configuration and
+the implemented fail-closed policy. This is not a promise that an unsafe existing
+library was automatically repaired, nor authorization to modify external source
+permissions. A refused unsafe configuration still requires deliberate administrator
+correction before installation can continue.
 
 Concurrent filesystem replacement/reparse swaps remain original item 3: string-
 path inspection plus later ACL/file operations is not an atomic handle-relative

@@ -13,4 +13,14 @@ The image has no newly inferred face overlay or invented source location.
 
 JavaScript syntax and existing CSP/full-image HTTP controls are checked locally.
 Actual Edge desktop/narrow open/load/close/Escape, dismissed-view and failed-image
-fallback checks are pending. Hold for the next broader release with security gates.
+fallback checks passed. Hold for the next broader release with security gates.
+
+
+Accepted Windows Server 2022/Edge run [41535508518](https://github.com/aataat12/immich-clone/actions/runs/41535508518),
+source 77d1f1b87411b0ed51834bd054ef2603c616ea0f, job 125586209991. Actual desktop/narrow photo load,
+filename/original link, Escape cleanup, failed-request fallback and dismissed-face
+context passed. Existing unnamed/dismissal/session/CSP, Go/vet, full SEC-01 and
+actual Setup/service checks passed. The previous run 41534740456 passed security
+and Setup but the new UI test asserted before the asynchronous close event; the
+retest waits for actual event cleanup instead of weakening the assertion. No
+application data/decoder change, installer release or Windows 10 claim.

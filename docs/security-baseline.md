@@ -604,3 +604,32 @@ release gate; no production token/launcher change was made by this experiment.
 No disposable probe package is a delivered installer. Primary Linux tests/race/vet
 and focused Windows Go/browser/ACL regressions passed; broader security acceptance
 and target Windows 10 remain separate gates. No private inputs or paid resources.
+
+
+## Original item SEC-01 closed — full descendant permission enforcement
+
+The fixed original eight-item worklist is security-worklist.md: 1 closed, 7 open.
+Two workers completed SEC-01 implementation plus independent verification.
+Actual all-green acceptance [41535508518](https://github.com/aataat12/immich-clone/actions/runs/41535508518),
+source 77d1f1b87411b0ed51834bd054ef2603c616ea0f, job 125586209991, passed on Windows Server 2022.
+Production audits every state/log/rollback descendant and owner before changes,
+normalizes roots, then verifies all final inherited rights before service/content
+actions. Unknown/excessive/protected grants, null DACLs, untrusted owners,
+unsupported ACE forms, unreadable trees and static child reparse points fail closed.
+No broad explicit-child/ownership rewrite or original-byte changes.
+
+Twenty-one unsafe production configurations were rejected with running PID,
+watched ACLs/hashes/diagnostics/rollback unchanged on preflight refusal. Real
+ordinary-user positive controls, safe-tree read/write denial, final inheritance
+checks, root/child junction preservation and actual read-error controls passed.
+Normal LocalService upload/restart, real bundled Setup and uninstall retention,
+Go tests/vet and full desktop/narrow browser checks passed. Detailed evidence:
+security-permissions-completion.md and security-permissions-tests.md.
+
+Earlier PS enum and expected-native-stderr harness failures were corrected and
+retested, never counted as passes. A later unrelated UI-close timing assertion
+was also corrected and the complete final run passed. This closes original #1,
+not original #3 concurrent filesystem swaps or #5 same-token worker authority.
+Rejected old unsafe grants are not silently repaired; administrator correction
+is required before configuration is accepted. Overall release/Windows 10 gates
+remain open. No new product installer or main merge.

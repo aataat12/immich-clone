@@ -1,10 +1,12 @@
 # Current status
 
 Authoritative security progress: security-worklist.md retains the original eight
-items and stable SEC-01..SEC-08 IDs. SEC-01 is assigned to implementation plus
-independent adversarial testing; no closure claimed before Windows evidence.
+items and stable SEC-01..SEC-08 IDs. SEC-01 is closed after complete implementation and independent Windows
+permission/normal-service/Setup acceptance (full all-green run 41535508518); SEC-02..SEC-08 stay open.
+Progress is 1 closed / 7 open, with original item names unchanged. See security-permissions-completion.md and security-permissions-tests.md.
 People candidate adds photo context from active/dismissed face review without
-mutating data. See people-photo-context.md; Windows acceptance pending.
+mutating data. See people-photo-context.md; Windows Server 2022/Edge acceptance
+passed (41535508518), including desktop/narrow and error/close behavior.
 
 People filtering candidate: server-side unnamed filtering and accurate search/
 face continuation. Linux race/full tests/vet and Windows Server 2022/Edge acceptance passed
@@ -37,8 +39,8 @@ explicit grants and preflights reparse components. Disposable Windows acceptance
 passed on Windows Server 2022 (41513726020, S-010): ordinary-user access checks,
 junction preservation, actual production helper/LocalService upload and restart.
 Bundled new preparation now passes actual Setup/junction/current-runtime
-LocalService execution (41525562509). Child explicit ACLs, writable custom AppDir,
-concurrent races, staging-token access and actual old-package full upgrade/rollback
+LocalService execution (41525562509). Child ACL/owner/inheritance auditing is now implemented and tested as SEC-01.
+Writable custom AppDir, concurrent races, staging-token access and actual old-package full upgrade/rollback
 remain gates before packaging. No release installer/version changed.
 
 ## Current cloud-accepted prototype: 0.1.29
@@ -134,8 +136,8 @@ native worker/model/licensing checks are reused; no source rebuild of providers.
    128 sessions and one active copy lease. Resume retransfers accepted bytes for
    SHA256 receipts; no metadata-only skip or partial-file continuation. See bulk-import.md.
 3. People/tag scalability and wider family/age/profile quality remain separate
-   gates. Native still-image AI only; HEIC/video AI, face dismissal and ready
-   reanalysis remain deferred. See ai-feasibility.md.
+   gates. Native still-image AI only; HEIC/video AI and ready reanalysis remain deferred. Face dismissal and
+   photo context have accepted next-release candidates; they are not shipped. See ai-feasibility.md.
 4. Hidden Media local-location GUI and deliberate permanent managed-copy deletion
    with recovery remain queued: hidden-media.md. No deletion implemented.
 5. Clean Windows 10 prerequisites, final reboot/startup, security/signing remain
