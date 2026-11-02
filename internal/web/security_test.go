@@ -29,7 +29,9 @@ func TestBundledScriptsOnlyPolicy(t *testing.T) {
 				if !closed {
 					t.Fatal("unclosed script")
 				}
-				digest := sha256.Sum256([]byte(script))
+				// A browser normalizes HTML CRLF/CR before checking CSP hashes.
+				normalized := strings.ReplaceAll(strings.ReplaceAll(script, "\r\n", "\n"), "\r", "\n")
+				digest := sha256.Sum256([]byte(normalized))
 				if !strings.Contains(scriptPolicy, "'sha256-"+base64.StdEncoding.EncodeToString(digest[:])+"'") {
 					t.Fatal("bundled script blocked")
 				}
