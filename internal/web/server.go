@@ -21,10 +21,11 @@ import (
 	"time"
 )
 
-//go:embed index.html people.html import.html
+//go:embed index.html people.html import.html backups.html
 var content embed.FS
 
 type Server struct {
+	backups  *backupJobs
 	Store    *library.Store
 	Version  string
 	Code     string
@@ -78,7 +79,7 @@ func New(store *library.Store, root, code string, builds ...string) *Server {
 	if len(builds) > 0 {
 		build = builds[0]
 	}
-	return &Server{Store: store, Root: root, Code: code, Version: build, sessions: map[string]time.Time{}}
+	return &Server{Store: store, Root: root, Code: code, Version: build, sessions: map[string]time.Time{}, backups: newBackupJobs(root, store)}
 }
 func jsonResponse(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
@@ -171,13 +172,16 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if (r.URL.Path == "/" || r.URL.Path == "/people" || r.URL.Path == "/import") && r.Method == "GET" {
+	if (r.URL.Path == "/" || r.URL.Path == "/people" || r.URL.Path == "/import" || r.URL.Path == "/backups") && r.Method == "GET" {
 		name := "index.html"
 		if r.URL.Path == "/people" {
 			name = "people.html"
 		}
 		if r.URL.Path == "/import" {
 			name = "import.html"
+		}
+		if r.URL.Path == "/backups" {
+			name = "backups.html"
 		}
 		b, _ := content.ReadFile(name)
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -194,6 +198,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if !s.authenticated(r) {
 		http.Error(w, "sign in required", 401)
+		return
+	}
+	if s.backupHTTP(w, r) {
 		return
 	}
 	if s.importHTTP(w, r) {
@@ -351,23 +358,10 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, map[string]string{"status": "ok"})
 }
 func (s *Server) backup(w http.ResponseWriter, r *http.Request) {
-	f, e := os.CreateTemp(s.Root, "download-backup-*.zip")
-	if e != nil {
-		http.Error(w, "backup staging unavailable", 500)
-		return
-	}
-	name := f.Name()
+	name := filepath.Join(s.Root, "backups", random()+".part")
 	defer os.Remove(name)
-	e = s.Store.Backup(f)
-	if e == nil {
-		e = f.Sync()
-	}
-	ce := f.Close()
-	if e == nil {
-		e = ce
-	}
-	if e != nil {
-		http.Error(w, "backup failed; no archive delivered", 500)
+	if e := s.Store.StagedBackup(r.Context(), name, nil); e != nil {
+		http.Error(w, "Backup failed or application-storage capacity is insufficient; no archive delivered.", 507)
 		return
 	}
 	w.Header().Set("Content-Type", "application/zip")

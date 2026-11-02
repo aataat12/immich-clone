@@ -3,6 +3,8 @@ package library
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"errors"
 	bolt "go.etcd.io/bbolt"
 	"immichclone/internal/diagnostics"
 	"os"
@@ -164,4 +166,93 @@ func TestRefusesUnrelatedFolderAndUnknownSchema(t *testing.T) {
 		reopened.Close()
 		t.Fatal("unknown schema accepted")
 	}
+}
+
+func TestActualBackupDiskFull(t *testing.T) {
+	volume := os.Getenv("IMMICH_SMALL_VOLUME")
+	if volume == "" {
+		t.Skip("requires isolated bounded CI volume")
+	}
+	root, e := os.MkdirTemp(volume, "backup-disk-full-")
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer os.RemoveAll(root)
+	s, e := Open(filepath.Join(root, "state"))
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer s.Close()
+	data := make([]byte, 1<<20)
+	if _, e = rand.Read(data); e != nil {
+		t.Fatal(e)
+	}
+	_, _, e = s.Put("synthetic-random.bin", bytes.NewReader(data))
+	if e != nil {
+		t.Fatal(e)
+	}
+	os.MkdirAll(filepath.Join(s.root, "backups"), 0700)
+	path := filepath.Join(s.root, "backups", "fault.part")
+	plan, e := s.BackupPlan(context.Background())
+	if e != nil || !plan.Fits {
+		t.Fatal("disposable volume lacks initial backup reserve", e)
+	}
+	filler := filepath.Join(root, "filler.bin")
+	filled := false
+	fillErr := error(nil)
+	e = s.StagedBackup(context.Background(), path, func(p BackupProgress) {
+		if filled || p.Phase != "copying" || p.Bytes == 0 {
+			return
+		}
+		filled = true
+		f, err := os.Create(filler)
+		if err != nil {
+			fillErr = err
+			return
+		}
+		defer f.Close()
+		block := make([]byte, 64<<10)
+		full := false
+		for total := 0; total < 128<<20; total += len(block) {
+			if _, err = f.Write(block); err != nil {
+				full = true
+				break
+			}
+		}
+		if !full {
+			fillErr = errors.New("bounded volume did not fill")
+		}
+	})
+	if fillErr != nil {
+		t.Fatal(fillErr)
+	}
+	if !filled || e == nil {
+		t.Fatal("space disappearing after preflight falsely succeeded")
+	}
+	if _, e = os.Stat(path); !os.IsNotExist(e) {
+		t.Fatal("failed backup partial retained")
+	}
+	if e = s.Verify(); e != nil {
+		t.Fatal(e)
+	}
+	plan, e = s.BackupPlan(context.Background())
+	if e != nil || plan.Fits {
+		t.Fatal("full volume preflight accepted", e)
+	}
+	if e = s.StagedBackup(context.Background(), path, nil); !errors.Is(e, ErrBackupCapacity) {
+		t.Fatal("capacity rejection", e)
+	}
+	if e = os.Remove(filler); e != nil {
+		t.Fatal(e)
+	}
+	if e = s.StagedBackup(context.Background(), path, nil); e != nil {
+		t.Fatal("space recovery", e)
+	}
+	if e = VerifyBackup(context.Background(), path, nil); e != nil {
+		t.Fatal(e)
+	}
+	if e = s.Verify(); e != nil {
+		t.Fatal(e)
+	}
+	t.Log("actual post-preflight ENOSPC, partial cleanup, insufficient-space rejection, retry and archive read-back passed")
 }

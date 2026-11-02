@@ -53,7 +53,8 @@ func start(ctx context.Context, o options) (func() error, error) {
 		return nil, e
 	}
 	diagnostics.Record("startup", "ready", nil, 0, 0, 0)
-	server := &http.Server{Handler: web.New(s, o.Data, code, version), ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	handler := web.New(s, o.Data, code, version)
+	server := &http.Server{Handler: handler, ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	child, cancel := context.WithCancel(ctx)
 	workerDone := make(chan struct{})
 	go func() {
@@ -89,6 +90,7 @@ func start(ctx context.Context, o options) (func() error, error) {
 	return func() error {
 		diagnostics.Record("shutdown", "begin", nil, 0, 0, 0)
 		cancel()
+		handler.Close()
 		shutdown, c := context.WithTimeout(context.Background(), 15*time.Second)
 		defer c()
 		e := server.Shutdown(shutdown)

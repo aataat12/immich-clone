@@ -12,7 +12,7 @@ try {
     $volume = Get-Volume -DriveLetter $letter
     if ($volume.Size -gt 100MB -or $volume.FileSystem -ne 'NTFS') { throw 'Unexpected test volume; refusing fill' }
     $env:IMMICH_SMALL_VOLUME = $letter+':\'
-    go test -mod=readonly -v ./internal/library -run '^TestActualDiskFull$'
+    go test -mod=readonly -v ./internal/library -run '^TestActual(Backup)?DiskFull$'
     if ($LASTEXITCODE -ne 0) { throw 'Actual full-disk recovery test failed' }
 } finally {
     Remove-Item Env:IMMICH_SMALL_VOLUME -ErrorAction SilentlyContinue

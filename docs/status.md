@@ -5,7 +5,19 @@ Server-first amendment. No new charges, parallel agents or publication of person
 machine reports, private paths/media/inventories or raw support logs. Synthetic/
 public licensed fixtures only. CI timestamps are UTC.
 
-## Current prototype: 0.1.21 indexed gallery paging
+## Candidate 0.1.23: staged backup capacity/progress (acceptance pending)
+
+New Backups page and same-volume conservative preflight, progress/cancel,
+checksum read-back, archive SHA256, retained repeated/range download and explicit
+temporary-copy discard. Active service jobs mark interrupted on shutdown/restart;
+partial archives never publish. ZIP format/original layout and dependencies stay
+unchanged. Linux race/vet checks passed; actual Windows/service/disk-full/browser/
+installer/independent-restore acceptance pending. Delivered build remains 0.1.21.
+
+User reports all requested 0.1.21 gallery checks passed, no observed problems.
+No repeat local test, dependency setup or reboot requested during this milestone.
+
+## Accepted 0.1.21 indexed gallery paging
 
 [Source dd59c6b](https://github.com/aataat12/immich-clone/commit/dd59c6b1261d8871b28449ba34f99431ad81fe20),
 [application acceptance 41391526713](https://github.com/aataat12/immich-clone/actions/runs/41391526713),

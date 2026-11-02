@@ -2,6 +2,7 @@ package library
 
 import (
 	"archive/zip"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -22,23 +23,51 @@ type Manifest struct {
 
 // Backup blocks writes while copying a consistent database snapshot and immutable originals.
 // Callers must discard output if an error occurs; HTTP callers stage before sending.
-func (s *Store) Backup(w io.Writer) (result error) {
+func (s *Store) Backup(w io.Writer) error { return s.BackupContext(context.Background(), w, nil) }
+func (s *Store) BackupContext(ctx context.Context, w io.Writer, report func(BackupProgress)) (result error) {
 	started := time.Now()
 	defer func() { diagnostics.Record("backup", "archive_write", result, 0, 0, time.Since(started)) }()
-	s.gate.Lock()
+	if e := s.backupLock(ctx); e != nil {
+		return e
+	}
 	defer s.gate.Unlock()
+	return s.backupLocked(ctx, w, report)
+}
+func (s *Store) backupLocked(ctx context.Context, w io.Writer, report func(BackupProgress)) (result error) {
+	plan, e := s.backupPlanLocked()
+	if e != nil {
+		return e
+	}
+	progress := BackupProgress{Phase: "snapshot", TotalBytes: plan.PayloadBytes, TotalFiles: plan.Files}
+	if report != nil {
+		report(progress)
+	}
 	tmp, e := os.CreateTemp(filepath.Join(s.root, "staging"), "snapshot-*.db")
 	if e != nil {
 		return e
 	}
 	name := tmp.Name()
-	if e = tmp.Close(); e != nil {
-		return e
-	}
+	defer tmp.Close()
 	defer os.Remove(name)
-	e = s.db.View(func(tx *bolt.Tx) error { return tx.CopyFile(name, 0600) })
+	e = s.db.View(func(tx *bolt.Tx) error { _, e := tx.WriteTo(backupContextWriter{ctx: ctx, w: tmp}); return e })
+	if e == nil {
+		e = tmp.Sync()
+	}
+	ce := tmp.Close()
+	if e == nil {
+		e = ce
+	}
 	if e != nil {
 		return e
+	}
+	info, e := os.Stat(name)
+	if e != nil {
+		return e
+	}
+	progress.Phase = "copying"
+	progress.TotalBytes = plan.PayloadBytes - plan.CatalogBytes + uint64(info.Size())
+	if report != nil {
+		report(progress)
 	}
 	assets, e := s.List()
 	if e != nil {
@@ -57,7 +86,12 @@ func (s *Store) Backup(w io.Writer) (result error) {
 		if e != nil {
 			return e
 		}
-		if _, e = io.Copy(io.MultiWriter(out, h), f); e != nil {
+		if _, e = io.Copy(io.MultiWriter(out, h), backupReader{ctx: ctx, r: f, add: func(n int) {
+			progress.Bytes += uint64(n)
+			if report != nil {
+				report(progress)
+			}
+		}}); e != nil {
 			return e
 		}
 		hash := hex.EncodeToString(h.Sum(nil))
@@ -65,6 +99,10 @@ func (s *Store) Backup(w io.Writer) (result error) {
 			return errors.New("backup original integrity failure")
 		}
 		manifest.Files[entry] = hash
+		progress.Files++
+		if report != nil {
+			report(progress)
+		}
 		return nil
 	}
 	if e = add("catalog.db", name, ""); e != nil {
@@ -90,6 +128,9 @@ func (s *Store) Backup(w io.Writer) (result error) {
 		return e
 	}
 	if e = json.NewEncoder(out).Encode(manifest); e != nil {
+		return e
+	}
+	if e = ctx.Err(); e != nil {
 		return e
 	}
 	return zw.Close()

@@ -14,7 +14,7 @@ function Login {
 try {
     ./scripts/Prepare-MediaProvider.ps1 -Destination (Join-Path $root 'media/ffmpeg-8.1.3-7eb77d88e2e9')
     ./scripts/Prepare-AIProvider.ps1 -Destination (Join-Path $root 'ai/opencv-4.12.0-a83dcef02ebe')
-    Checked go @('build','-trimpath','-ldflags','-X main.version=0.1.21-prototype','-o',$binary,'./cmd/immichclone')
+    Checked go @('build','-trimpath','-ldflags','-X main.version=0.1.23-prototype','-o',$binary,'./cmd/immichclone')
     Checked $binary @('-mode','init','-data',$state)
     Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)RX')
     Checked icacls @($state,'/grant','*S-1-5-19:(OI)(CI)M')
@@ -128,6 +128,7 @@ try {
         Assert ($ai.analysis.status -eq 'ready' -and @($org.faces | Where-Object name -eq 'Test Person').Count -eq 1) 'AI provider recovery preserves manual names and retries queued work'
     }
     if ($env:IMMICH_BROWSER_MODULE) { $env:IMMICH_TEST_STATE=$state;Checked node @('tests/gallery.cjs');Remove-Item Env:IMMICH_TEST_STATE }
+    if ($env:IMMICH_BROWSER_MODULE) { $env:IMMICH_TEST_STATE=$state;Checked node @('tests/backup.cjs');Remove-Item Env:IMMICH_TEST_STATE }
     $onlineLog = Join-Path $root 'online-diagnostics.log'
     Invoke-WebRequest http://127.0.0.1:2283/api/diagnostics -WebSession $session -OutFile $onlineLog
     Assert ((Get-Content $onlineLog -Raw).Contains('original_write')) 'authenticated browser diagnostic export includes upload events'
@@ -141,12 +142,22 @@ try {
         $imports=Invoke-RestMethod http://127.0.0.1:2283/api/imports -WebSession $session
         Assert (@($imports | Where-Object { $_.status -eq 'completed' -and $_.accepted_files -eq 4 }).Count -eq 1 -and @($imports | Where-Object { $_.status -eq 'cancelled' -and $_.accepted_files -eq 1 }).Count -eq 1) 'service restarts retain completed and cancelled import receipts'
     }
+    if ($env:IMMICH_BROWSER_MODULE) {
+        $backupJob=Invoke-RestMethod http://127.0.0.1:2283/api/backup-job -WebSession $session
+        $managedArchive=Join-Path $env:IMMICH_BROWSER_OUTPUT 'managed-backup.zip'
+        Assert ($backupJob.status -eq 'ready' -and $backupJob.sha256 -eq (Get-FileHash $managedArchive).Hash.ToLowerInvariant()) 'completed verified backup remains downloadable after service restart'
+        $retainedPrefix=Join-Path $root 'retained-backup-prefix.bin'
+        $rangeResult=Invoke-WebRequest ("http://127.0.0.1:2283/api/backup-job/download?id="+$backupJob.id) -Headers @{Range='bytes=0-15'} -WebSession $session -OutFile $retainedPrefix -PassThru
+        Assert ($rangeResult.StatusCode -eq 206 -and (Get-Item $retainedPrefix).Length -eq 16) 'retained backup supports real range download after restart'
+        $env:IMMICH_TEST_STATE=$state;Checked node @('tests/backup.cjs','--discard');Remove-Item Env:IMMICH_TEST_STATE
+    }
     $backup = Join-Path $root 'backup.zip'
     Invoke-WebRequest http://127.0.0.1:2283/api/backup -WebSession $session -OutFile $backup
     Stop-Service $name
     $restored = Join-Path $root 'restored'
     Checked $binary @('-mode','restore','-data',$restored,'-archive',$backup)
     Checked $binary @('-mode','verify','-data',$restored)
+    if ($env:IMMICH_BROWSER_MODULE) { $managedRestored=Join-Path $root 'managed-restored';Checked $binary @('-mode','restore','-data',$managedRestored,'-archive',$managedArchive);Checked $binary @('-mode','verify','-data',$managedRestored) }
     Assert ((Get-FileHash "$restored/originals/$id").Hash -eq (Get-FileHash $fixture).Hash) 'independent backup restoration verifies original bytes'
     if ($env:IMMICH_BROWSER_MODULE) {
         foreach ($entry in $codecOriginals.GetEnumerator()) {
@@ -156,8 +167,11 @@ try {
     if ($env:IMMICH_BROWSER_MODULE) {
         Move-Item $state ($state+'.offline')
         try {
-            $env:IMMICH_ORGANIZATION_RESTORE=$restored
-            Checked go @('test','./internal/library','-run','^Test(Organization|Import)RestoredCatalogCheck$','-count=1')
+            foreach ($restoreRoot in @($restored,$managedRestored)) {
+                $env:IMMICH_ORGANIZATION_RESTORE=$restoreRoot
+                Checked go @('test','./internal/library','-run','^Test(Organization|Import)RestoredCatalogCheck$','-count=1')
+            }
+
             Assert $true 'independent restored names tags and face crops work without old state or AI provider'
         } finally { Remove-Item Env:IMMICH_ORGANIZATION_RESTORE -ErrorAction SilentlyContinue;Move-Item ($state+'.offline') $state }
     }

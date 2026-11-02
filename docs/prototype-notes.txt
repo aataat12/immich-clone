@@ -1,4 +1,4 @@
-IMMICH CLONE 0.1.21 - EARLY TEST BUILD
+IMMICH CLONE 0.1.23 - EARLY TEST BUILD
 
 This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
@@ -154,3 +154,16 @@ cursor resets to page one with a notice after a catalog ordering change or servi
 restart. Later pages are not automatically refreshed; Refresh returns to page one.
 The legacy full-list endpoint remains for explicit older/test callers; gallery
 polling no longer uses it. People/tag review scalability remains a separate gate.
+
+BACKUP CAPACITY AND PROGRESS
+Backups opens a dedicated page with conservative application-storage capacity
+planning, background progress/cancel, archive checksum read-back and SHA256.
+Completed temporary archives remain for repeated/range downloads until explicit
+discard; originals and downloaded copies are not removed. One retained job at a
+time. Closing the page does not stop the service job; service restart interrupts
+an active job safely. No partial download is published; retry begins anew.
+The ZIP format is unchanged and independently restored in acceptance tests.
+Archive creation serializes library writes; browsing/status/cancel remain usable.
+A complete archive plus snapshot/reserve must fit in application storage, and the
+browser download destination needs additional space. No external-destination
+picker, incremental backup, automatic retention or full-library acceptance yet.

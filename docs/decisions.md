@@ -250,3 +250,18 @@
   reduced the observed rebuild while retaining the same authoritative source and
   bounded runtime page reads. One-time rebuild memory/work is separate from page
   allocation measurements. No claim of a 50k media import or full-library safety.
+
+- Backup checkpoint retains the existing schema-1 restorable ZIP. Managed web
+  jobs preflight application-storage free bytes against a conservative archive
+  bound plus catalog snapshot and 64MiB reserve under the same consistency lock.
+  Actual failures still clean partials; no free-space promise despite other apps.
+- Persist one service-owned backup job outside catalog snapshots. Status/plan
+  values stay local; logs omit paths, free-space inventories, IDs and checksums.
+  Context cancellation covers lock wait, snapshot/archive/read-back/hash steps.
+  Catalog writes wait during archive creation; browsing and job controls do not.
+- Read back all archive checksums and compute archive SHA256 before publishing a
+  download. Keep one verified temporary archive until explicit discard, supporting
+  repeated/range download without regeneration. Never auto-delete completed user
+  downloads or managed originals. Restart exposes an interrupted job and removes
+  generated incomplete files; unknown/corrupt job state fails closed for backups.
+  No external destination, incremental/deduplicated backup or automatic retention.
