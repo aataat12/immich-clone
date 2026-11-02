@@ -77,3 +77,10 @@ page, reselect the same folder and resume, then confirm original downloads. Canc
 keeps all accepted copies. The page explains that resume retransfers accepted
 bytes to verify their receipts. This does not authorize importing the full source
 library; paging, larger endurance and large-backup capacity remain open gates.
+
+
+User-reported checkpoint update: all twelve 0.1.15 People/tag functional checks
+passed, with original-photo comparison rather than newly reported SHA256 results.
+0.1.17 Bulk import also reported working well. No repeat of these completed small
+checks is requested. These reports do not establish broad recognition accuracy,
+large-library/endurance or a clean-machine/reboot acceptance. Reboot stays deferred.

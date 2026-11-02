@@ -1,4 +1,4 @@
-IMMICH CLONE 0.1.17 - EARLY TEST BUILD
+IMMICH CLONE 0.1.19 - EARLY TEST BUILD
 
 This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
@@ -141,3 +141,6 @@ SHA256 receipts; it does not skip on filenames/sizes or resume partial bytes.
 Changed content requires a new import. The gallery does not poll during copying.
 History is capped at 128 sessions in this checkpoint. Large-library endurance,
 paged gallery and large-backup capacity remain unaccepted; start with small tests.
+
+NAVIGATION
+People & tags and Bulk import have a prominent Photos & videos Home control.

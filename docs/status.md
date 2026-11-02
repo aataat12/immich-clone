@@ -5,7 +5,14 @@ Server-first execution amendment. No new charges, parallel agents or publication
 of personal machine reports, source inventories, private paths/media or raw logs.
 Use synthetic/public licensed fixtures only. CI timestamps are UTC.
 
-## Current prototype: 0.1.17 bulk managed-copy checkpoint
+## Candidate 0.1.19: clear Home navigation (cloud acceptance pending)
+
+Both Bulk import and People & tags now expose a prominent Photos & videos Home
+control. Browser acceptance exercises returning to the authenticated gallery from
+each page. No dependency or storage change; gallery paging remains next. Current
+delivered installer remains 0.1.17 until candidate acceptance/checksum verification.
+
+## Accepted 0.1.17 bulk managed-copy checkpoint
 
 User resumed postponed import work while privately validating 0.1.15 People/tags.
 [Source 386cbb2](https://github.com/aataat12/immich-clone/commit/386cbb244bdf243cf908e84fc28f67e788f1551b),
@@ -51,18 +58,17 @@ hashes accepted files against receipts; no metadata-only skip or partial-file
 continuation. Large-library endurance, gallery paging and large-backup capacity
 remain open. Do not invite a full real-library import. See `bulk-import.md`.
 
-## Private 0.1.15 AI checkpoint remains pending
+## User-reported Windows 10 checkpoints passed
 
-Keep the user's requested small People/tag validation independent of import work;
-no new local action or dependency installation requested. 0.1.17 retains the same
-AI provider and review behavior. 0.1.15 remains available from
-[41374756786](https://github.com/aataat12/immich-clone/actions/runs/41374756786),
-artifact 13111240610, executable SHA256
-`f99e4d68ae45aaf067886a59fa49e38c9fdea17d92b08276510c995e36e51623`.
-That Server run passed actual local CPU inference, naming/confirmed suggestion/
-undo/manual marking, tags/dismissal, missing-model recovery and independent restore.
-Broader cross-photo family/age/profile quality remains unaccepted. Never auto-name
-or merge people using a pair threshold. See `ai-feasibility.md` and `local-validation.md`.
+User reports all twelve 0.1.15 People/tag checks passed: local analysis, face
+crops, individual/batch naming, clearing names, suggestions, undo, missed-face
+marking, custom tags/search and AI tag dismiss/restore. Original photograph
+comparison passed; new byte-for-byte SHA256 confirmation was not reported.
+User also reports 0.1.17 Bulk import worked well. These are limited functional
+reports, not full Windows 10/recognition/endurance certification. No raw report,
+private identity, path, inventory or machine specification retained.
+No further 0.1.15 testing requested; final reboot remains deferred. Broader
+cross-photo family/age/profile quality remains open. See ai-feasibility.md.
 
 ## Next milestones and remaining acceptance
 

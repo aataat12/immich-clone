@@ -202,3 +202,12 @@ open. Prior historical notes above about no app integration are superseded.
 Next value gate: a small private target-PC test with different photographs,
 including unrelated identities, age/profile variation and missed-face corrections.
 No personal media/identity names or raw support logs belong in public records.
+
+
+Private target-PC functional checkpoint reported passed for 0.1.15: actual local
+analysis/crops, individual/batch naming/clear, confirmed suggestions/undo, manual
+missed-face marking, custom tags/search and AI-tag dismissal/restoration. Original
+photo comparison passed; no new SHA256 evidence reported. No failures reported.
+This closes the small review-flow checkpoint; broad family/age/profile accuracy,
+large-library quality and extended reliability remain open. No raw private report
+or personal media/identity details retained. No repeat or reboot requested.
