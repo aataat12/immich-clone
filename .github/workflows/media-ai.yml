@@ -119,6 +119,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Navigation application build failed' }
           node tests/hidden-navigation.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Hidden Media return navigation failed' }
+          node tests/hidden-batch.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Hidden Media batch actions failed' }
 
   source-loss:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[source-loss]')
