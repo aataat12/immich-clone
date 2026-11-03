@@ -15,6 +15,6 @@ jobs:
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
         with:
           go-version: '1.27.3'
-      - name: Exhaust mapped reserve and execute full-volume recovery
+      - name: Execute bounded full-volume recovery without fixture read locks
         shell: pwsh
         run: ./scripts/Test-FullDisk.ps1
