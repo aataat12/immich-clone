@@ -17,4 +17,7 @@ jobs:
           go-version: '1.27.3'
       - name: Verify exhausted-storage refusal preserves catalog and retry
         shell: pwsh
-        run: ./scripts/Test-FullDisk.ps1
+        run: |
+          go test -mod=readonly -v -count=1 -timeout=120s ./internal/library -run '^TestDeletionTransactionRollback$'
+          if ($LASTEXITCODE -ne 0) { throw 'Deletion transaction rollback failed' }
+          ./scripts/Test-FullDisk.ps1
