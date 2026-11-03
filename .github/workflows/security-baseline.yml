@@ -77,7 +77,7 @@ jobs:
         run: |
           ./scripts/Test-UpgradePreparation.ps1 -Binary "$env:RUNNER_TEMP/security-app.exe"
           if ($LASTEXITCODE -ne 0) { throw 'Upgrade preparation probe failed' }
-      - name: Actual Edge policy and session controls
+      - name: Actual Edge policy, sessions and planned HEIC/video milestone
         shell: pwsh
         run: |
           npm install --prefix "$env:RUNNER_TEMP/security-browser-deps" --no-audit --no-fund playwright@1.62.1
