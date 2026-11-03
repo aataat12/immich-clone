@@ -14,7 +14,7 @@ function Test-BoundedVolume([int]$sizeMiB,[string]$pattern) {
         $volume=Get-Volume -DriveLetter $letter
         if ($volume.Size -gt (($sizeMiB+1)*1MB) -or $volume.FileSystem -ne 'NTFS' -or $volume.FileSystemLabel -ne 'ImmichProbe') { throw 'Unexpected volume; refusing fill' }
         $env:IMMICH_SMALL_VOLUME=$letter+':\'
-        go test -mod=readonly -v ./internal/library -run $pattern -count=1
+        go test -mod=readonly -v -timeout=120s ./internal/library -run $pattern -count=1
         if ($LASTEXITCODE -ne 0) { throw 'Actual full-disk recovery test failed' }
     } finally {
         Remove-Item Env:IMMICH_SMALL_VOLUME -ErrorAction SilentlyContinue

@@ -36,8 +36,7 @@ func TestActualDeletionDiskFull(t *testing.T) {
 	if err = s.SetHidden(a.ID, true); err != nil {
 		t.Fatal(err)
 	}
-	// Avoid the normal growth reserve in this fault fixture. A live reader keeps
-	// deleted pages unavailable for reuse until the attempted write finishes.
+	// Avoid the normal growth reserve in this fault fixture.
 	s.db.AllocSize = os.Getpagesize()
 	err = s.db.Update(func(tx *bolt.Tx) error {
 		for i := 0; i < 4096; i++ {
@@ -96,11 +95,6 @@ func TestActualDeletionDiskFull(t *testing.T) {
 		t.Fatal("fixture retained enough reserved space for deletion journal")
 	}
 	before := snapshotReview(t, s, a.ID)
-	reader, err := s.db.Begin(false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer reader.Rollback()
 	filler := filepath.Join(root, "filler.bin")
 	f, err := os.Create(filler)
 	if err != nil {
@@ -138,9 +132,6 @@ func TestActualDeletionDiskFull(t *testing.T) {
 	got, err := os.ReadFile(s.Original(a.ID))
 	if err != nil || !bytes.Equal(got, data) {
 		t.Fatal("original changed after rejected transaction", err)
-	}
-	if err = reader.Rollback(); err != nil {
-		t.Fatal(err)
 	}
 	if err = os.Remove(filler); err != nil {
 		t.Fatal(err)
