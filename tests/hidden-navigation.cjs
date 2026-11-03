@@ -3,8 +3,8 @@ const fs=require('fs'),os=require('os'),path=require('path'),assert=require('ass
 const {spawn}=require('child_process');
 const {chromium}=require(process.env.IMMICH_BROWSER_MODULE);
 (async()=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'immich-navigation-')),state=path.join(root,'state');
- const app=spawn(process.env.IMMICH_NAV_BINARY,['-mode','serve','-data',state,'-logs',path.join(root,'logs')],{stdio:'ignore'});
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'immich-navigation-')),state=process.env.IMMICH_NAV_ATTACH?process.env.IMMICH_TEST_STATE:path.join(root,'state');
+ const app=process.env.IMMICH_NAV_ATTACH?null:spawn(process.env.IMMICH_NAV_BINARY,['-mode','serve','-data',state,'-logs',path.join(root,'logs')],{stdio:'ignore'});
  let browser;
  try{
   for(let i=0;i<100;i++){try{if((await fetch('http://127.0.0.1:2283/health')).ok)break}catch{}await new Promise(r=>setTimeout(r,100))}
@@ -27,5 +27,5 @@ const {chromium}=require(process.env.IMMICH_BROWSER_MODULE);
   const assets=await(await page.request.get('http://127.0.0.1:2283/api/assets')).json();assert(assets.some(a=>a.id===id&&a.hidden),'Navigation must not unhide or delete the item');
   const original=await page.request.get('http://127.0.0.1:2283/api/assets/'+id+'/original');assert(original.ok());assert.deepEqual(await original.body(),data);assert.deepEqual(errors,[]);
   console.log('PASS: empty/populated Hidden Media Home, toggle-off, selector sync, narrow layout and original preservation');
- }finally{if(browser)await browser.close();app.kill();await new Promise(r=>app.exitCode!==null?r():app.once('exit',r));fs.rmSync(root,{recursive:true,force:true})}
+ }finally{if(browser)await browser.close();if(app){app.kill();await new Promise(r=>app.exitCode!==null?r():app.once('exit',r))}fs.rmSync(root,{recursive:true,force:true})}
 })().catch(e=>{console.error(e);process.exit(1)});

@@ -1,4 +1,4 @@
-IMMICH CLONE 0.1.34 - EARLY TEST BUILD
+IMMICH CLONE 0.1.35 - EARLY TEST BUILD
 
 This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
@@ -179,4 +179,6 @@ regressions. Wider security review remains open; no LAN/Internet exposure.
 
 0.1.33: explicit review-first additive reanalysis for completed supported photos and sampled videos. Prepare separately, then Apply or Discard. Existing detections, names, tags and dismissals remain; overlapping detections are skipped. Pause/resume and proposals persist across restart and backup. No automatic rerun, renaming, detection replacement or Full Scan.
 
-0.1.34 candidate: Hidden Media managed location/copy, reversible restore, explicitly confirmed permanent managed-copy deletion with durable cleanup retry and conflict preservation. New deletion refuses storage below a 16 MiB free-space floor. Earlier backups and external sources remain untouched. The 4 GiB upload limit remains; oversized interrupted requests now report HTTP 413. Installer acceptance is required before publication.
+0.1.34: Hidden Media managed location/copy, reversible restore, explicitly confirmed permanent managed-copy deletion with durable cleanup retry and conflict preservation. New deletion refuses storage below a 16 MiB free-space floor. Earlier backups and external sources remain untouched. The 4 GiB upload limit remains; oversized interrupted requests now report HTTP 413. Installer acceptance passed before publication.
+
+0.1.35: Hidden Media has an explicit Home button, toggle-off behavior and matching heading. Bulk import explains unavailable sources and saved receipt conflicts and clears stale messages on retry. A 240-file mixed PNG/HEIC/MP4/MOV crash/resume and independent restore checkpoint passed in cloud tests; milestone 4 remains in progress. No format, provider or file-size limit changed.
