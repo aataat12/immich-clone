@@ -3,6 +3,14 @@ $ErrorActionPreference='Stop'
 $root=Join-Path $env:RUNNER_TEMP ('immich-6a-app-'+[guid]::NewGuid().ToString('N'))
 $name='ImmichClone6AApp'
 function Checked([string]$exe,[string[]]$argsToUse) { & $exe @argsToUse; if($LASTEXITCODE -ne 0){throw '6A application command failed'} }
+function LocalServiceDenyMask([string]$path) {
+ $mask=0
+ foreach($rule in (Get-Acl -LiteralPath $path).GetAccessRules($true,$false,[Security.Principal.SecurityIdentifier])) {
+   if($rule.IdentityReference.Value -eq 'S-1-5-19' -and $rule.AccessControlType -eq [Security.AccessControl.AccessControlType]::Deny){$mask=$mask -bor [int]$rule.FileSystemRights}
+ }
+ return $mask
+}
+
 try {
  New-Item -ItemType Directory $root | Out-Null
  ./scripts/Prepare-MediaProvider.ps1 -Destination "$root/media/ffmpeg-8.1.3-7eb77d88e2e9"
@@ -20,8 +28,16 @@ try {
  Checked node @('tests/deletion.cjs','prepare-denied')
  $deletionID=(Get-Content (Join-Path $Fixtures 'deletion-receipt.json') -Raw | ConvertFrom-Json).id
  try {
+   # Record the shorthand's actual mask, then replace it with exact DELETE only.
    Checked icacls @("$root/state/originals/$deletionID",'/deny','*S-1-5-19:D')
+   Write-Output ('Disposable basic-D deny mask: '+(LocalServiceDenyMask "$root/state/originals/$deletionID"))
+   Checked icacls @("$root/state/originals/$deletionID",'/remove:d','*S-1-5-19')
+   Checked icacls @("$root/state/originals/$deletionID",'/deny','*S-1-5-19:(DE)')
    Checked icacls @("$root/state/originals",'/deny','*S-1-5-19:(DC)')
+   if((LocalServiceDenyMask "$root/state/originals/$deletionID") -ne 65536){throw 'Deletion fixture file mask is not exact DELETE'}
+   if((LocalServiceDenyMask "$root/state/originals") -ne 64){throw 'Deletion fixture parent mask is not exact DELETE_CHILD'}
+   Write-Output 'PASS: disposable delete-denial masks are exact DELETE and DELETE_CHILD'
+
    Checked node @('tests/deletion.cjs','denied')
    $deletionServicePid=(Get-CimInstance Win32_Service -Filter "Name='$name'").ProcessId
    Stop-Process -Id $deletionServicePid -Force
