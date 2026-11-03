@@ -16,7 +16,7 @@ Restore to library uses the existing durable visibility update. No original, fac
 
 The deletion implementation below is a candidate. Remaining acceptance gates:
 
-1. Focused Windows LocalService/browser deletion, permission-failure, crash/retry and real pre-delete archive restoration.
+1. Focused Windows LocalService/browser deletion, permission-failure, crash/retry and real pre-delete archive restoration: PASS in run 41697638495 (details below).
 2. Deletion-specific full-disk/transaction failure checks on disposable NTFS storage.
 3. Combined actual old-installer upgrade/failed-upgrade rollback, including pending intents, followed by installed deletion/restore/uninstall checks.
 4. Final target Windows acceptance before marking milestone 3 delivered.
@@ -57,3 +57,12 @@ The user unpaused development. The test now records the basic `D` deny mask, rem
 
 
 - Run [41693853717](https://github.com/aataat12/immich-clone/actions/runs/41693853717), source `84389ff59f587098cc0dbbf900f741bc932d4dd0`, job `126119082605`: exact-mask probe recorded basic `D` as 1114112 (DELETE plus SYNCHRONIZE), while advanced `(DE)` and `(DC)` were exactly 65536 and 64. Actual original read/hash access passed; accepted-pending deletion and pending-state recovery after forced service death passed. The workflow then reached its 20-minute limit waiting on Playwright `response.text` in the cleanup-retry test. Do not claim retry completion or restored-archive acceptance from this cancelled run. The test now reads diagnostic bodies only on error for Retry, checks the actual pending list/file disappearance after the UI action, bounds diagnostic body reads at five seconds, and bounds each deletion browser phase at 180 seconds. Production deletion code and acceptance assertions are unchanged.
+
+
+## Current outcome after unpause
+
+[Run 41697638495](https://github.com/aataat12/immich-clone/actions/runs/41697638495), source `d0aaf0b4233fcdb18156b8a110a3b6ba1a367d23`, job `126132262444`: PASS on Windows Server 2022, Go 1.27.3, actual LocalService and Edge/Playwright 1.62.1. The exact `(DE)`/`(DC)` masks preserved original read/hash access; deletion returned accepted-pending with managed bytes retained, and the pending intent survived forced service termination/restart. After restoring the disposable permissions, UI Retry returned HTTP 200, removed the pending record and original, and re-enabled backup planning. Independent restoration of the actual pre-deletion archive recovered the hidden original, named face, custom tag and paused proposal; crop regeneration/integrity checks passed.
+
+The same run passed normal confirmation/cancel/busy/narrow/reimport checks, focused Windows units/guards, HEIC/video inference and failure/crash recovery, reanalysis controls, hidden location/clipboard/restart restoration and final independent restored-frame regeneration. No production ACL, deletion implementation, provider, limit or acceptance assertion was weakened to get this result. The prior timeout was addressed by bounding the browser observation and avoiding an unnecessary body read on a successful Retry; actual state/file/backup assertions established completion. The earlier failed/cancelled run history remains above.
+
+The unrelated 4 GiB job was intentionally skipped and reuses its successful Windows proof in run 41683468062. Remaining gates 2–4 above remain open: deletion-specific disk-full/transaction-failure execution, actual old-installer upgrade/rollback and installed deletion/recovery, then target Windows acceptance. No installer/version was published; use installed 0.1.33. Work is unpaused, with this focused recovery checkpoint complete; milestone 3 is not delivered.
