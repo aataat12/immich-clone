@@ -5,6 +5,8 @@ New-Item -ItemType Directory $root | Out-Null
 $binary = Join-Path $root 'immichclone.exe'
 $state = Join-Path $root 'state'
 $name = 'ImmichClone'
+$priorExpectedBuild=$env:IMMICH_EXPECTED_BUILD
+$env:IMMICH_EXPECTED_BUILD=$Version
 function Checked([string]$exe,[string[]]$arguments) { & $exe @arguments; if ($LASTEXITCODE -ne 0) { throw "$exe failed: $LASTEXITCODE" } }
 function Assert([bool]$condition,[string]$message) { if (!$condition) { throw $message }; Write-Output "PASS: $message" }
 function Login {
@@ -207,6 +209,7 @@ try {
     Assert (!$diagnostic.Contains($root) -and !$diagnostic.Contains('synthetic.png') -and !$diagnostic.Contains((Get-Content "$state/access-code.txt" -Raw).Trim())) 'support log omits state paths media names and access code'
     Write-Output 'Application slice complete on Server 2022; Windows 10 remains untested.'
 } finally {
+    $env:IMMICH_EXPECTED_BUILD=$priorExpectedBuild
     if (Get-Service $name -ErrorAction SilentlyContinue) { Stop-Service $name -Force -ErrorAction Continue; Checked sc.exe @('delete',$name) }
     Remove-Item $root -Recurse -Force -ErrorAction Continue
 }
