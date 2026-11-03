@@ -19,6 +19,12 @@ const {chromium}=require(process.env.IMMICH_BROWSER_MODULE);
  await page.goto('http://127.0.0.1:2283/people');await page.waitForSelector('.assetCard');
  for(const id of ['prevFaces','prevPhotos']){const b=page.locator('#'+id);if(!await b.isVisible()||!await b.isDisabled())throw Error('First-page Previous control must be visible and disabled')}
  const help=await page.locator('.notice').first().textContent();if(help.includes('HEIC and video AI, automatic grouping'))throw Error('Obsolete HEIC/video help');
+ const checkPaint=async name=>{
+  const file=path.join(process.env.IMMICH_6A_FIXTURES,'paint-'+name+'.png');await page.screenshot({path:file});
+  require('child_process').execFileSync('python',['-c',"from PIL import Image;import sys;im=Image.open(sys.argv[1]).convert('RGB');assert all(im.getpixel(p)==(16,19,24) for p in [(4,4),(4,400)]),'page background changed'",file]);
+ };
+ await checkPaint('before');
+ for(let i=0;i<2;i++){await Promise.all([page.waitForResponse(r=>r.url().includes('/api/organization?')&&r.url().includes('unnamed=1')),page.locator('#unnamed').check()]);await checkPaint('on'+i);await Promise.all([page.waitForResponse(r=>r.url().includes('/api/organization?')&&r.url().includes('unnamed=0')),page.locator('#unnamed').uncheck()]);await checkPaint('off'+i)}
  const card=name=>page.locator('.assetCard').filter({hasText:name});
  if(phase==='start'){
   for(const name of ['face.heic','face-grid.heic']){

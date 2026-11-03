@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	bolt "go.etcd.io/bbolt"
 	"image"
 	"immichclone/internal/media"
 	"immichclone/internal/recognition"
@@ -415,5 +416,85 @@ func TestVideoFirstInferenceFailureKeepsKnownPlanForRetry(t *testing.T) {
 	o, e = s.OrganizationPage("", "", "")
 	if e != nil || o.Assets[0].Analysis.Video.Next != 1 || len(o.Faces) != 1 {
 		t.Fatal("failed sample retry", e)
+	}
+}
+
+func TestVideoSuggestionsAcrossServicedProvidersPreserveProvenance(t *testing.T) {
+	for _, tc := range []struct {
+		provider   string
+		compatible bool
+	}{
+		{"opencv-4.12.0-a83dcef02ebe-bgr960-v1", true},
+		{"opencv-4.12.0-zlib-1.3.2-cb35f0ccb3e3-bgr960-v1", true},
+		{"unknown-model-bgr960-v1", false},
+	} {
+		t.Run(tc.provider, func(t *testing.T) {
+			s, _ := openTest(t)
+			mockAnalysisMedia(s)
+			s.SetRecognizer(fakeAnalysis, true)
+			still, _, e := s.Put("reference.png", bytes.NewReader(fixture(t)))
+			if e != nil {
+				t.Fatal(e)
+			}
+			if e = s.QueueAnalysis(still.ID); e != nil {
+				t.Fatal(e)
+			}
+			if _, e = s.ProcessAnalysis(context.Background()); e != nil {
+				t.Fatal(e)
+			}
+			o, _ := s.OrganizationPage("", "", "")
+			id := o.Faces[0].ID
+			if e = s.db.Update(func(tx *bolt.Tx) error {
+				var f StoredFace
+				if e := readJSON(tx.Bucket([]byte(facesBucket)), id, &f); e != nil {
+					return e
+				}
+				f.Provider = tc.provider
+				return writeJSON(tx.Bucket([]byte(facesBucket)), id, f)
+			}); e != nil {
+				t.Fatal(e)
+			}
+			if e = s.LabelFaces([]string{id}, "Reference Person"); e != nil {
+				t.Fatal(e)
+			}
+			clip, _, e := s.Put("clip.mp4", bytes.NewReader(mediaFixture(t, "hevc.mp4")))
+			if e != nil {
+				t.Fatal(e)
+			}
+			if e = s.QueueAnalysis(clip.ID); e != nil {
+				t.Fatal(e)
+			}
+			if _, e = s.ProcessAnalysis(context.Background()); e != nil {
+				t.Fatal(e)
+			}
+			o, e = s.OrganizationFilteredPage("", "", "", false, true)
+			if e != nil {
+				t.Fatal(e)
+			}
+			found := false
+			for _, f := range o.Faces {
+				if f.AssetID == clip.ID {
+					found = true
+					if f.Name != "" || (f.Suggestion == "Reference Person") != tc.compatible {
+						t.Fatal("wrong compatibility or automatic name", f.Name, f.Suggestion)
+					}
+				}
+			}
+			if !found {
+				t.Fatal("sampled face missing")
+			}
+			if e = s.db.View(func(tx *bolt.Tx) error {
+				var f StoredFace
+				if e := readJSON(tx.Bucket([]byte(facesBucket)), id, &f); e != nil {
+					return e
+				}
+				if f.Provider != tc.provider {
+					t.Fatal("reference provenance rewritten")
+				}
+				return nil
+			}); e != nil {
+				t.Fatal(e)
+			}
+		})
 	}
 }

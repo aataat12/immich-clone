@@ -638,7 +638,7 @@ func (s *Store) OrganizationFilteredPage(after, faceAfter, query string, dismiss
 			if view.Name == "" && !view.Dismissed {
 				scores := map[string]float64{}
 				for _, ref := range all {
-					if ref.l.Dismissed || ref.l.Name == "" || ref.f.Provider != r.f.Provider || len(ref.f.Embedding) != 128 || len(r.f.Embedding) != 128 {
+					if ref.l.Dismissed || ref.l.Name == "" || !recognition.CompatibleEmbeddings(ref.f.Provider, r.f.Provider) || len(ref.f.Embedding) != 128 || len(r.f.Embedding) != 128 {
 						continue
 					}
 					score := 0.
