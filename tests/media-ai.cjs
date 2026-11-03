@@ -17,6 +17,8 @@ const {chromium}=require(process.env.IMMICH_BROWSER_MODULE);
   fs.writeFileSync(receiptPath,JSON.stringify(receipt));
  }else receipt=JSON.parse(fs.readFileSync(receiptPath));
  await page.goto('http://127.0.0.1:2283/people');await page.waitForSelector('.assetCard');
+ for(const id of ['prevFaces','prevPhotos']){const b=page.locator('#'+id);if(!await b.isVisible()||!await b.isDisabled())throw Error('First-page Previous control must be visible and disabled')}
+ const help=await page.locator('.notice').first().textContent();if(help.includes('HEIC and video AI, automatic grouping'))throw Error('Obsolete HEIC/video help');
  const card=name=>page.locator('.assetCard').filter({hasText:name});
  if(phase==='start'){
   for(const name of ['face.heic','face-grid.heic']){

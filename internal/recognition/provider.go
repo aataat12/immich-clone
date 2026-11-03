@@ -222,17 +222,20 @@ func (p *Provider) Analyze(ctx context.Context, img image.Image, staging string)
 		child, cancel := context.WithTimeout(ctx, 30*time.Second)
 		r, err := media.Run(child, filepath.Join(p.dir, "ai-worker.exe"), []string{task, p.dir, f.Name()}, nil)
 		cancel()
-		diagnostics.Record("recognition", "ai_"+task, err, 0, 0, time.Since(startedTask))
 		if ctx.Err() != nil {
 			return Result{}, ctx.Err()
 		}
 		if err != nil {
+			diagnostics.Record("recognition", "ai_"+task, err, 0, 0, time.Since(startedTask))
 			return Result{}, fmt.Errorf("local AI %s task failed; check diagnostics before retrying", task)
 		}
 		var part Result
 		if json.Unmarshal(r.Output, &part) != nil || Validate(part, img.Bounds().Dx(), img.Bounds().Dy()) != nil {
-			return Result{}, errors.New("local AI response rejected")
+			rejected := errors.New("local AI response rejected")
+			diagnostics.Record("recognition", "ai_"+task, rejected, 0, 0, time.Since(startedTask))
+			return Result{}, fmt.Errorf("local AI %s response rejected", task)
 		}
+		diagnostics.Record("recognition", "ai_"+task, nil, 0, 0, time.Since(startedTask))
 		if task == "faces" {
 			result.Faces = part.Faces
 		} else {
