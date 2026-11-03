@@ -9,7 +9,7 @@ permissions:
   actions: read
 jobs:
   execution:
-    if: ${{ !contains(github.event.head_commit.message, '[hidden-navigation]') }}
+    if: ${{ !contains(github.event.head_commit.message, '[hidden-navigation]') && !contains(github.event.head_commit.message, '[source-loss]') }}
     runs-on: windows-2022
     timeout-minutes: 20
     steps:
@@ -119,3 +119,20 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Navigation application build failed' }
           node tests/hidden-navigation.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Hidden Media return navigation failed' }
+
+  source-loss:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[source-loss]')
+    runs-on: windows-2022
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with:
+          go-version: '1.27.3'
+      - name: Prove actual browser source loss and receipt reconciliation as LocalService
+        shell: pwsh
+        run: |
+          npm install --prefix "$env:RUNNER_TEMP/source-loss-deps" --no-audit --no-fund playwright@1.62.1
+          if ($LASTEXITCODE -ne 0) { throw 'Browser tooling unavailable' }
+          $env:IMMICH_BROWSER_MODULE="$env:RUNNER_TEMP/source-loss-deps/node_modules/playwright"
+          ./scripts/Test-ImportSourceLoss.ps1
