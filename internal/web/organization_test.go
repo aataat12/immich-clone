@@ -25,7 +25,7 @@ func TestProtectedOrganizationAndManualCorrections(t *testing.T) {
 		return recognition.Result{Protocol: 1, Faces: []recognition.Face{{Box: []float64{.1, .1, .4, .4}, Confidence: .99, Embedding: v}}}, nil
 	}, true)
 	path := "/api/assets/" + a.ID
-	for _, action := range []string{"analyze", "tags", "manual-face"} {
+	for _, action := range []string{"analyze", "tags", "manual-face", "video-analysis"} {
 		if w := request(s, "POST", path+"/"+action, `{}`, nil); w.Code != 401 {
 			t.Fatal("unprotected write")
 		}

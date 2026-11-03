@@ -36,7 +36,9 @@ func start(ctx context.Context, o options) (func() error, error) {
 		return nil, e
 	}
 	if exe, err := os.Executable(); err == nil {
-		s.SetMediaPreview(media.New(filepath.Join(filepath.Dir(exe), "media", media.ProviderID)).Thumbnail)
+		decoder := media.New(filepath.Join(filepath.Dir(exe), "media", media.ProviderID))
+		s.SetMediaPreview(decoder.Thumbnail)
+		s.SetAnalysisMedia(decoder.AnalysisFrame, decoder.VideoInfo, decoder.FrameAt, decoder.Available())
 		provider := recognition.New(filepath.Join(filepath.Dir(exe), "ai", recognition.ProviderID))
 		s.SetRecognizer(provider.Analyze, provider.Available())
 	}

@@ -54,6 +54,8 @@ func New(dir string) *Provider {
 	return p
 }
 
+func (p *Provider) Available() bool { return p.available }
+
 type stream struct {
 	Index         int
 	CodecType     string `json:"codec_type"`

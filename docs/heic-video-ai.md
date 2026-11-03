@@ -1,6 +1,6 @@
 # Milestone 6A — HEIC and video AI
 
-User requested this milestone on 2026-11-03. Planned, not implemented or released.
+User requested this milestone on 2026-11-03. Implementation candidate in progress; not released.
 Keep original milestones 1..8 unchanged; 6A adds explicit acceptance rather than
 silently widening still-image AI. Group 1 mitigation proceeds alongside this milestone; Group 2 mitigation is paused per security-priority-groups.md.
 No new model/runtime, mobile feature, GPU, cloud inference or local SDK required.
@@ -63,3 +63,21 @@ storage failure, corrections, browser filtering and independent recovery.
    provider execution. No user-library enlargement solely for testing, no new
    paid infrastructure or prerequisite installation. Build Notes must show
    Planned until acceptance, and Released In only for the actual delivery.
+
+## Execution checkpoint
+
+Dependency proof passed on Windows Server 2022 under LocalService and after
+restart in [41559260341](https://github.com/aataat12/immich-clone/actions/runs/41559260341),
+source e95958bc9f24a1e56cdd5e47cce2248f80440d2a, job125665621103.
+Single/grid 12MP HEIC face references passed geometry and cosine tolerances
+(minimum cosine0.9966728075891548). H264 known-position/content, HEVC, rotated,
+VFR and short clips executed with actual inference. Unsupported/no-video inputs,
+cancellation and unchanged original checks passed. Analysis edge is960px;
+video uses up to12 evenly spaced targets, storing actual decoded timestamps and
+skipping duplicate timestamps. These are sampled observations, not tracking.
+
+Candidate backend/UI now persist per-clip pause/cancel/resume and individual
+frame observations, names/tags and reproducible crops/context. Local full Go
+suite/vet and focused race checks passed. Real application/browser/restart and
+independent-restore acceptance is pending the focused media-ai workflow.
+No installer/version/main update or Windows10 certification is claimed.

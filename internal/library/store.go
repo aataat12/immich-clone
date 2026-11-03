@@ -15,6 +15,7 @@ import (
 	_ "image/jpeg"
 	"image/png"
 	"immichclone/internal/diagnostics"
+	"immichclone/internal/media"
 	"immichclone/internal/recognition"
 	"io"
 	"net/http"
@@ -47,6 +48,12 @@ type Asset struct {
 	Error           string        `json:"error,omitempty"`
 }
 type Store struct {
+	analysisStill          func(context.Context, string) (image.Image, int, int, error)
+	videoInfo              func(context.Context, string) (media.Clip, error)
+	videoFrame             func(context.Context, string, int64) (image.Image, media.Sample, error)
+	mediaAnalysisAvailable atomic.Bool
+	mediaAnalysisGate      chan struct{}
+
 	root                 string
 	db                   *bolt.DB
 	gate                 sync.Mutex
@@ -106,7 +113,7 @@ func Open(root string) (*Store, error) {
 	if e != nil {
 		return nil, e
 	}
-	s := &Store{root: root, db: db}
+	s := &Store{root: root, db: db, mediaAnalysisGate: make(chan struct{}, 1)}
 	e = db.Update(func(tx *bolt.Tx) error {
 		for _, n := range []string{"meta", "assets"} {
 			if _, e := tx.CreateBucketIfNotExists([]byte(n)); e != nil {

@@ -9,6 +9,7 @@ import (
 	bolt "go.etcd.io/bbolt"
 	"image"
 	"image/png"
+	"immichclone/internal/media"
 	"immichclone/internal/recognition"
 	"math"
 	"os"
@@ -28,13 +29,15 @@ const tagsBucket = "custom_tags_v1"
 var ErrOrganizationInput = errors.New("invalid organization request")
 
 type Analysis struct {
-	AssetID  string   `json:"asset_id"`
-	Status   string   `json:"status"`
-	Error    string   `json:"error,omitempty"`
-	Provider string   `json:"provider"`
-	Objects  []string `json:"objects"`
+	Video    *VideoProgress `json:"video,omitempty"`
+	AssetID  string         `json:"asset_id"`
+	Status   string         `json:"status"`
+	Error    string         `json:"error,omitempty"`
+	Provider string         `json:"provider"`
+	Objects  []string       `json:"objects"`
 }
 type StoredFace struct {
+	SampleUS  *int64    `json:"sample_us,omitempty"`
 	ID        string    `json:"id"`
 	AssetID   string    `json:"asset_id"`
 	Box       []float64 `json:"box"`
@@ -48,6 +51,7 @@ type FaceLabel struct {
 	CanUndo   bool   `json:"can_undo"`
 }
 type FaceView struct {
+	SampleUS   *int64    `json:"sample_us,omitempty"`
 	Dismissed  bool      `json:"dismissed"`
 	ID         string    `json:"id"`
 	AssetID    string    `json:"asset_id"`
@@ -65,12 +69,13 @@ type OrganizationAsset struct {
 	Dismissed []string `json:"dismissed"`
 }
 type Organization struct {
-	Faces     []FaceView          `json:"faces"`
-	Names     []string            `json:"names"`
-	Assets    []OrganizationAsset `json:"assets"`
-	After     string              `json:"after,omitempty"`
-	FaceAfter string              `json:"face_after,omitempty"`
-	Available bool                `json:"available"`
+	MediaAvailable bool                `json:"media_available"`
+	Faces          []FaceView          `json:"faces"`
+	Names          []string            `json:"names"`
+	Assets         []OrganizationAsset `json:"assets"`
+	After          string              `json:"after,omitempty"`
+	FaceAfter      string              `json:"face_after,omitempty"`
+	Available      bool                `json:"available"`
 }
 
 func initOrganization(tx *bolt.Tx) error {
@@ -129,8 +134,14 @@ func (s *Store) QueueAnalysis(id string) error {
 	if e != nil {
 		return e
 	}
-	if !supportsImagePreview(a.MIME) || a.Size > 64<<20 {
-		return errors.New("AI currently supports native still images up to 64 MiB and 40 megapixels")
+	if isVideo(a.MIME) {
+		return s.queueVideoLocked(a)
+	}
+	if !supportsStillAI(a.MIME) || a.Size > 64<<20 {
+		return errors.New("AI still image format or 64 MiB size limit unsupported")
+	}
+	if isHEIC(a.MIME) && !s.mediaAnalysisAvailable.Load() {
+		return media.ErrUnavailable
 	}
 	return s.db.Update(func(tx *bolt.Tx) error {
 		var current Analysis
@@ -156,7 +167,7 @@ func (s *Store) analysisImage(ctx context.Context, id string) (image.Image, erro
 	if e != nil {
 		return nil, e
 	}
-	if !supportsImagePreview(a.MIME) || a.Size > 64<<20 {
+	if !supportsStillAI(a.MIME) || a.Size > 64<<20 {
 		return nil, errors.New("AI image format or encoded size unsupported")
 	}
 	hash, e := fileHashContext(ctx, s.Original(id))
@@ -165,6 +176,9 @@ func (s *Store) analysisImage(ctx context.Context, id string) (image.Image, erro
 	}
 	if e != nil || hash != id {
 		return nil, errors.New("original integrity check failed")
+	}
+	if isHEIC(a.MIME) {
+		return s.stillMediaImage(ctx, s.Original(id))
 	}
 	f, e := os.Open(s.Original(id))
 	if e != nil {
@@ -236,6 +250,13 @@ func (s *Store) ProcessAnalysis(ctx context.Context) (bool, error) {
 	}
 	if a.Status != "queued" || a.AssetID != id {
 		return true, errors.New("analysis queue inconsistent")
+	}
+	asset, err := s.Get(id)
+	if err != nil {
+		return true, err
+	}
+	if isVideo(asset.MIME) {
+		return true, s.processVideoAnalysis(ctx, asset, a, recognizer)
 	}
 	parent := ctx
 	opCtx, cancel := context.WithTimeout(ctx, 75*time.Second)
@@ -396,8 +417,6 @@ func (s *Store) FaceCrop(id string) (string, error) {
 	if !validID(id) {
 		return "", os.ErrNotExist
 	}
-	s.gate.Lock()
-	defer s.gate.Unlock()
 	var f StoredFace
 	if e := s.db.View(func(tx *bolt.Tx) error { return readJSON(tx.Bucket([]byte(facesBucket)), id, &f) }); e != nil {
 		return "", e
@@ -409,15 +428,20 @@ func (s *Store) FaceCrop(id string) (string, error) {
 	if _, e := os.Stat(path); e == nil {
 		return path, nil
 	}
-	img, e := s.analysisImage(context.Background(), f.AssetID)
+	ctx, cancel := context.WithTimeout(context.Background(), 75*time.Second)
+	defer cancel()
+	img, e := s.faceSource(ctx, f)
 	if e != nil {
 		return "", e
 	}
+	s.gate.Lock()
+	defer s.gate.Unlock()
 	if e = s.publishFaceCrop(f, img); e != nil {
 		return "", e
 	}
 	return path, nil
 }
+
 func textOK(s string, max int) bool {
 	if !utf8.ValidString(s) || len(s) > max {
 		return false
@@ -543,6 +567,7 @@ func (s *Store) OrganizationFilteredPage(after, faceAfter, query string, dismiss
 	s.gate.Lock()
 	defer s.gate.Unlock()
 	out.Available = s.recognitionAvailable.Load()
+	out.MediaAvailable = s.mediaAnalysisAvailable.Load()
 	e := s.db.View(func(tx *bolt.Tx) error {
 		assets := map[string]Asset{}
 		if e := tx.Bucket([]byte("assets")).ForEach(func(k, v []byte) error {
@@ -602,7 +627,7 @@ func (s *Store) OrganizationFilteredPage(after, faceAfter, query string, dismiss
 			if unnamed && r.l.Name != "" {
 				continue
 			}
-			view := FaceView{Dismissed: r.l.Dismissed, ID: r.f.ID, AssetID: r.f.AssetID, AssetName: assets[r.f.AssetID].Name, Box: r.f.Box, Name: r.l.Name, CanUndo: r.l.CanUndo}
+			view := FaceView{SampleUS: r.f.SampleUS, Dismissed: r.l.Dismissed, ID: r.f.ID, AssetID: r.f.AssetID, AssetName: assets[r.f.AssetID].Name, Box: r.f.Box, Name: r.l.Name, CanUndo: r.l.CanUndo}
 			if query != "" && !strings.Contains(strings.ToLower(view.Name), strings.ToLower(query)) && !strings.Contains(strings.ToLower(view.AssetName), strings.ToLower(query)) {
 				continue
 			}
@@ -775,12 +800,12 @@ func (s *Store) ManualFace(ctx context.Context, id string, box []float64, name s
 	if box[2] <= 0 || box[3] <= 0 || box[0]+box[2] > 1 || box[1]+box[3] > 1 {
 		return ErrOrganizationInput
 	}
-	s.gate.Lock()
-	defer s.gate.Unlock()
 	img, e := s.analysisImage(ctx, id)
 	if e != nil {
 		return e
 	}
+	s.gate.Lock()
+	defer s.gate.Unlock()
 	key, e := newFaceID()
 	if e != nil {
 		return e
@@ -836,6 +861,9 @@ func (s *Store) DismissTag(id, tag string, restore bool) error {
 }
 
 func validFace(f StoredFace, key string) bool {
+	if f.SampleUS != nil && (*f.SampleUS < 0 || *f.SampleUS >= 86400*1e6) {
+		return false
+	}
 	if !validID(f.ID) || f.ID != key || !validID(f.AssetID) || len(f.Box) != 4 || !textOK(f.Provider, 128) {
 		return false
 	}

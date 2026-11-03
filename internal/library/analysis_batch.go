@@ -42,7 +42,7 @@ func (s *Store) AnalysisBatch() (AnalysisBatch, error) {
 	return b, e
 }
 func eligibleAnalysis(a Asset) bool {
-	return !a.Hidden && supportsImagePreview(a.MIME) && a.Size <= 64<<20 && (a.Width <= 0 || a.Height <= 0 || int64(a.Width)*int64(a.Height) <= 40_000_000)
+	return !a.Hidden && supportsStillAI(a.MIME) && a.Size <= 64<<20 && (a.Width <= 0 || a.Height <= 0 || int64(a.Width)*int64(a.Height) <= 40_000_000)
 }
 
 // ControlAnalysisBatch changes only this batch's pending work. An in-flight
@@ -82,7 +82,7 @@ func (s *Store) ControlAnalysisBatch(ctx context.Context, action string) error {
 				if e := json.Unmarshal(v, &a); e != nil {
 					return e
 				}
-				if !eligibleAnalysis(a) || analyses.Get(k) != nil {
+				if !eligibleAnalysis(a) || (isHEIC(a.MIME) && !s.mediaAnalysisAvailable.Load()) || analyses.Get(k) != nil {
 					return nil
 				}
 				current := Analysis{AssetID: a.ID, Status: "queued", Provider: recognition.AnalysisID, Objects: []string{}}

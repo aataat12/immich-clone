@@ -3,6 +3,7 @@ package web
 import (
 	"encoding/json"
 	"errors"
+	"image/png"
 	"immichclone/internal/library"
 	"io"
 	"net/http"
@@ -80,6 +81,16 @@ func (s *Server) organizationHTTP(w http.ResponseWriter, r *http.Request) bool {
 			http.NotFound(w, r)
 			return true
 		}
+		if parts[1] == "context" && r.Method == "GET" {
+			img, e := s.Store.FaceContext(r.Context(), parts[0])
+			if e != nil {
+				http.Error(w, "Saved video frame unavailable; original remains downloadable", 409)
+			} else {
+				w.Header().Set("Content-Type", "image/png")
+				_ = png.Encode(w, img)
+			}
+			return true
+		}
 		if parts[1] == "crop" && r.Method == "GET" {
 			path, e := s.Store.FaceCrop(parts[0])
 			if e != nil {
@@ -125,6 +136,14 @@ func (s *Server) assetOrganization(w http.ResponseWriter, r *http.Request, id, a
 	switch action {
 	case "analyze":
 		e = s.Store.QueueAnalysis(id)
+	case "video-analysis":
+		var input struct {
+			Action string `json:"action"`
+		}
+		if !organizationInput(w, r, &input) {
+			return true
+		}
+		e = s.Store.ControlVideoAnalysis(id, input.Action)
 	case "tags":
 		var input struct {
 			Tags []string `json:"tags"`
