@@ -118,3 +118,13 @@ Report blockers promptly and identify the smallest action needed to unblock prog
 Do not promise unattended continuation or later notification unless an actual mechanism has been established. Background workers report through this conversation unless a separate communication mechanism is explicitly available.
 
 Do not drift into unrelated features, local setup requests, or cosmetic polishing while core compatibility and reliability blockers remain unresolved.
+
+## User priority amendment — November 2, 2026 (America/Chicago)
+
+Proceed with milestone 6A HEIC/video AI implementation alongside Group 1 security
+mitigation: Internet-exploitable attack surfaces created on the user's machine
+by the app or its installed supporting components. Pause other Group 2 security
+mitigation for later; retain findings and implemented controls. This supersedes
+prior ordering requiring the entire security backlog before feature development.
+Normal original preservation, recovery, representative dependency execution and
+truthful release/Windows 10 acceptance remain. See docs/security-priority-groups.md.

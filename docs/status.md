@@ -1,5 +1,13 @@
 # Current status
 
+Current user direction (November 2, America/Chicago): active security work is
+Group 1 remote Internet reachability introduced by this app/components. Other
+Group 2 mitigation is paused, with findings retained; security-priority-groups.md
+is authoritative. No confirmed open Group 1 exploit is demonstrated in current
+records. Milestone 6A implementation proceeds: bounded full HEIC analysis frames
+and actual-PTS video extraction are being executed before job/UI integration.
+
+
 2026-11-03: NR-01 technical remediation is implemented and accepted in the held
 application candidate: six pinned upstream OpenCV fixes plus a separately recorded
 single-plane mean correction. Actual native/API/model/LocalService/restart evidence

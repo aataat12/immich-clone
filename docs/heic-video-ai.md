@@ -2,7 +2,7 @@
 
 User requested this milestone on 2026-11-03. Planned, not implemented or released.
 Keep original milestones 1..8 unchanged; 6A adds explicit acceptance rather than
-silently widening still-image AI. Security remediation is the immediate priority.
+silently widening still-image AI. Group 1 mitigation proceeds alongside this milestone; Group 2 mitigation is paused per security-priority-groups.md.
 No new model/runtime, mobile feature, GPU, cloud inference or local SDK required.
 
 ## HEIC still-image analysis
@@ -53,8 +53,8 @@ storage failure, corrections, browser filtering and independent recovery.
 
 1. Build and execute the NR-01 OpenCV backports, API regressions, native model
    parity and LocalService recovery before selecting a new immutable provider.
-2. Resolve native isolation/remaining input and combined release gates; this
-   milestone does not waive any original SEC item or vulnerable-provider blocker.
+2. Retain Group 1 controls and test new routes. Group 2 mitigation is deferred,
+   not claimed fixed; normal data-preservation/recovery acceptance still applies.
 3. Execute a small HEIC/video analysis feasibility slice with existing providers;
    record exact sample/codec/model identities and results before substantial
    schema/browser/job implementation. Add a dependency only if the existing

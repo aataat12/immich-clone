@@ -323,3 +323,9 @@
   run, cause unconfirmed despite 50 Windows repetitions/full app restores then
   passing. Keep fixed IDs and explicit evidence; no policy/test weakening or
   unsupported claim of a root-cause fix. No user PC action needed.
+
+- November 2, 2026 America/Chicago user priority amendment: mitigate Group 1
+  Internet-reachable app/component attack surfaces alongside 6A; pause other
+  Group 2 mitigation. Retain controls/findings without falsely closing them.
+  This supersedes all-backlog-before-6A ordering. Normal immutable originals,
+  recovery and honest compatibility/dependency execution gates remain.
