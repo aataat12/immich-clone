@@ -18,6 +18,8 @@ try {
     ./scripts/Prepare-MediaProvider.ps1 -Destination (Join-Path $root 'media/ffmpeg-8.1.3-7eb77d88e2e9')
     ./scripts/Prepare-AIProvider.ps1 -Destination (Join-Path $root 'ai/opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3')
     Checked go @('build','-trimpath','-ldflags',("-X main.version=$Version"),'-o',$binary,'./cmd/immichclone')
+    $env:IMMICH_NAV_BINARY=$binary
+    try { Checked node @('tests/hidden-navigation.cjs') } finally { Remove-Item Env:IMMICH_NAV_BINARY -ErrorAction SilentlyContinue }
     Checked $binary @('-mode','init','-data',$state)
     Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)RX')
     Checked icacls @($state,'/grant','*S-1-5-19:(OI)(CI)M')
