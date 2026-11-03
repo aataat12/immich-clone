@@ -34,5 +34,10 @@
     "file": "opencv-29447.patch",
     "sha256": "075f86c60e43d6c3c3088af7f0419148bec3cb5218cdfc4fd993b9c41219b791",
     "url": "https://github.com/opencv/opencv/pull/29447.patch"
+  },
+  {
+    "file": "opencv-nary-mean.patch",
+    "sha256": "de99301e22316c115153b72a995a2837472b1b92617dcb7bf9a681859730cf8e",
+    "origin": "Project fix: single-plane mean must scale each contribution once, matching the existing multi-plane branch; required by the unchanged numeric oracle."
   }
 ]

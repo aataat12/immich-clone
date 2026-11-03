@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <vector>
 
+static std::string stage = "start";
 static void require(bool value) { if (!value) throw std::runtime_error("regression"); }
 static void nary(int count, bool planes, bool scalar, const char* operation) {
     std::vector<cv::Mat> inputs;
@@ -51,21 +52,26 @@ int main() {
         int cases = 0;
         // 32/160 inputs exceed the old byte buffer's stack/heap pointer capacity.
         // Mixed row/scalar broadcasting also exercises both plane/stride branches.
-        for (int count : {3,32,160}) for (bool planes : {false,true})
+        for (int count : {3,4,32,160}) for (bool planes : {false,true})
             for (bool scalar : {false,true}) for (auto op : {"sum","mean","max","min"}) {
+                stage = "nary-" + std::to_string(count) + "-planes-" + std::to_string(int(planes)) + "-scalar-" + std::to_string(int(scalar)) + "-" + op;
                 nary(count, planes, scalar, op); ++cases;
             }
+        stage = "u16-saturation";
         uint16_t values[] = {5000,60000,5000,60000,5000,60000};
         cv::Mat m(1,6,CV_16U,values), product = m.mul(m);
         for (int i=0;i<6;++i) require(product.at<uint16_t>(0,i)==65535);
         for (int depth : {CV_8U,CV_16U,CV_32S,CV_32F,CV_64F}) {
+            stage = "count-depth-" + std::to_string(depth);
             cv::Mat c(3,257,depth,cv::Scalar(2)); c.row(1).setTo(0);
             require(cv::countNonZero(c)==514);
         }
+        stage = "point-dot-overflow";
         require(cv::Point(INT_MIN,INT_MIN).dot(cv::Point(INT_MIN,INT_MIN))==INT_MAX);
         require(cv::Point(INT_MAX,INT_MIN).dot(cv::Point(INT_MAX,INT_MAX))==-2147483647);
         require(cv::Point3i(INT_MIN,INT_MIN,INT_MIN).dot(cv::Point3i(INT_MIN,INT_MIN,INT_MIN))==INT_MAX);
         require(cv::Point3i(INT_MIN,INT_MAX,0).dot(cv::Point3i(INT_MAX,INT_MAX,0))==-2147483647);
+        stage = "scalar-lifetime";
         cv::Mat base(2,3,CV_32F,cv::Scalar(3));
         cv::MatExpr (*volatile expression)(const cv::Mat&,double)=scalarExpression;
         void (*volatile overwrite)()=overwriteStack;
@@ -73,5 +79,6 @@ int main() {
         require(cv::norm(result,cv::Mat(2,3,CV_32F,cv::Scalar(21)),cv::NORM_INF)==0);
         std::cout << "{\"passed\":true,\"nary_cases\":" << cases << ",\"u16_saturation\":true,\"count_depths\":5,\"dot_overflow\":true,\"scalar_lifetime\":true}\n";
         return 0;
-    } catch (...) { std::cerr << "Native security regression failed\n"; return 1; }
+    } catch (const cv::Exception& e) { std::cerr << "Native security regression failed: " << stage << " opencv-code=" << e.code << "\n"; return 1; }
+    catch (...) { std::cerr << "Native security regression failed: " << stage << "\n"; return 1; }
 }

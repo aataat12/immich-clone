@@ -28,7 +28,7 @@ $patchArgs = @('-C',"$source/3rdparty/protobuf",'apply','--include=src/google/pr
 Checked git ($patchArgs + @('--check',$patch))
 Checked git ($patchArgs + @($patch))
 'Bundled protobuf source modified by the checksum-pinned upstream CVE-2022-1941 backport in protobuf-upstream-0299c030.patch; three parser files only. Not a general security clearance.' | Set-Content "$out/SOURCE-PATCHES.txt"
-'OpenCV security revision nr01-v1: upstream PRs 28272,28446,28579,28581,28959,29447; full pinned patches retained, production hunks applied, upstream test hunks excluded. Exact altered source digests in opencv-patched-source-SHA256.txt. Dedicated regression executable links the same selected modules.' | Add-Content "$out/SOURCE-PATCHES.txt"
+'OpenCV security revision nr01-v1: upstream PRs 28272,28446,28579,28581,28959,29447; plus the project single-plane mean correction, full pinned patches retained, production hunks applied, upstream test hunks excluded. Exact altered source digests in opencv-patched-source-SHA256.txt. Dedicated regression executable links the same selected modules.' | Add-Content "$out/SOURCE-PATCHES.txt"
 # Prove the replacement compression library before compiling the worker.
 $zlibArchive = Join-Path $out 'zlib-1.3.2-source.tar.gz'
 Invoke-WebRequest 'https://zlib.net/zlib-1.3.2.tar.gz' -OutFile $zlibArchive

@@ -26,8 +26,8 @@ source hashes, retain source/notices/patches, run actual API regressions and lin
 zlib operations, and audit PE imports. Worker reports security_backports=nr01-v1;
 its new SHA256 and immutable provider ID must be selected only after actual
 face/object model parity, malformed/model failure, cancellation, resource limits,
-Unicode paths and LocalService restart pass. API regressions include 48 actual
-NaryEltwise sum/mean/min/max cases with 3/32/160 inputs, mixed scalar/row broadcast,
+Unicode paths and LocalService restart pass. API regressions include 64 actual
+NaryEltwise sum/mean/min/max cases with 3/4/32/160 inputs, mixed scalar/row broadcast,
 U16 saturation, five count depths, point-dot overflow and delayed scalar lifetime.
 These are regressions, not sanitizer/fuzz proof; error-termination patch is
 source-reviewed, not exercised as an exploitable worker path.
@@ -36,3 +36,11 @@ Application integration must retain existing ready results, names/tags/undo and
 original hashes, validate new inference, and preserve old immutable provider for
 rollback. Independent restore and final combined actual installer/Windows 10
 checks remain SEC-08. Existing binary identity is not silently relabeled.
+
+The first compiled candidate was rejected by the new numeric regressions. Source
+inspection identified repeated mean scaling in the single-plane multi-input path:
+for more than three inputs, prior partial results were divided again. A separate
+project patch now scales each contribution once, matching the existing multi-plane
+branch. It is explicitly not represented as an upstream security patch. The
+original expected-value assertions remain, with four-input coverage added and
+fixed synthetic case labels for diagnosis. Actual rerun remains required.
