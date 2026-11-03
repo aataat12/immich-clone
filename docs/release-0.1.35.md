@@ -11,3 +11,7 @@ Publication is gated on actual 0.1.34 installer upgrade, failed-upgrade recovery
 Create and download a backup before upgrading with the existing application/data locations. No separate dependencies are required. Target-PC steps: [validation-0.1.35.md](https://github.com/aataat12/immich-clone/blob/work/security-baseline/docs/validation-0.1.35.md).
 
 Unsigned early prototype. Windows Server 2022 results do not certify Windows 10. Clean-machine/reboot and extended reliability validation remain separate. Known intermittent restore progress-read:32 remains unexplained; a passing run does not establish a fix. Security Group 2/3 work and every-frame Full Scan remain paused/deferred.
+
+Combined installer acceptance: [run 41722938850](https://github.com/aataat12/immich-clone/actions/runs/41722938850), source `734046903d88a0036b64243a4c6f2ee3a9173a75`, job `126220153707`: PASS, first attempt. Actual 0.1.34 upgrade and initial rollback, installed Home/toggle/selector and real source-loss checks, pending-intent retention through failed 0.1.36 upgrade, actual prior-aware-writer refusal, cleanup Retry, media/AI/reanalysis, uninstall and independent restored reinstall passed.
+
+Published installer: 104212262 bytes; SHA256 `2b6ba59fa6f31eb3f2edd2e73d8ad003143a2306d0a2317dbea23e7d9e65e604`.
