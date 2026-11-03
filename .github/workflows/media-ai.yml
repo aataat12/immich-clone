@@ -9,6 +9,7 @@ permissions:
   actions: read
 jobs:
   execution:
+    if: ${{ !contains(github.event.head_commit.message, '[hidden-navigation]') }}
     runs-on: windows-2022
     timeout-minutes: 20
     steps:
@@ -97,3 +98,24 @@ jobs:
       - name: Prove exact 4 GiB HTTP import and readback on disposable storage
         shell: pwsh
         run: ./scripts/Test-ImportBoundary.ps1 -TemporaryParent $env:RUNNER_TEMP
+
+  hidden-navigation:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[hidden-navigation]')
+    runs-on: windows-2022
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with:
+          go-version: '1.27.3'
+      - name: Prove Hidden Media return navigation in actual Edge
+        shell: pwsh
+        run: |
+          npm install --prefix "$env:RUNNER_TEMP/navigation-deps" --no-audit --no-fund playwright@1.62.1
+          if ($LASTEXITCODE -ne 0) { throw 'Browser tooling unavailable' }
+          $env:IMMICH_BROWSER_MODULE="$env:RUNNER_TEMP/navigation-deps/node_modules/playwright"
+          $env:IMMICH_NAV_BINARY=Join-Path $env:RUNNER_TEMP 'navigation-app.exe'
+          go build -o $env:IMMICH_NAV_BINARY ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'Navigation application build failed' }
+          node tests/hidden-navigation.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Hidden Media return navigation failed' }
