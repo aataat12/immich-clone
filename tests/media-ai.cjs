@@ -7,6 +7,7 @@ const {chromium}=require(process.env.IMMICH_BROWSER_MODULE);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://127.0.0.1:2283/');await page.fill('#code',fs.readFileSync(path.join(process.env.IMMICH_TEST_STATE,'access-code.txt'),'utf8').trim());await page.click('#loginForm button');await page.waitForSelector('#library:not(.hidden)');
  const api=async(u,b)=>page.evaluate(async({u,b})=>{const r=await fetch(u,b===undefined?{}:{method:'POST',headers:{'X-Immich-Request':'1'},body:JSON.stringify(b)});if(!r.ok)throw Error('6A request '+u+' HTTP '+r.status);return r.json()},{u,b});
+ const waitReady=async id=>{const end=Date.now()+90000;while(Date.now()<end){const o=await api('/api/organization');const a=o.assets.find(x=>x.asset.id===id)?.analysis;if(a?.status==='ready')return o;if(a?.status==='failed')throw Error('6A analysis failed: '+a.error);await new Promise(r=>setTimeout(r,250))}throw Error('6A analysis completion timeout')};
  const phase=process.argv[2];const receiptPath=path.join(process.env.IMMICH_6A_FIXTURES,'app-receipt.json');let receipt;
  if(phase==='start'){
   receipt={};for(const name of ['face.heic','face-grid.heic','video.mp4']){
@@ -20,7 +21,7 @@ const {chromium}=require(process.env.IMMICH_BROWSER_MODULE);
  if(phase==='start'){
   for(const name of ['face.heic','face-grid.heic']){
    await card(name).getByRole('button',{name:'Analyze photo locally',exact:true}).click();
-   await page.waitForFunction(async id=>{const o=await(await fetch('/api/organization')).json();return o.assets.find(x=>x.asset.id===id)?.analysis.status==='ready'},receipt[name]);
+   await waitReady(receipt[name]);
    const o=await api('/api/organization');if(!o.faces.some(f=>f.asset_id===receipt[name]))throw Error('HEIC face missing: '+JSON.stringify({name,faceCount:o.faces.length,faceAssets:o.faces.map(f=>f.asset_id),record:o.assets.find(x=>x.asset.id===receipt[name])}));await page.click('#refresh');
   }
   // Import priority holds the worker so pause is deterministic, including fast machines.
@@ -34,7 +35,7 @@ const {chromium}=require(process.env.IMMICH_BROWSER_MODULE);
   o=await api('/api/organization');if(o.assets.find(x=>x.asset.id===receipt['video.mp4']).analysis.status!=='cancelled')throw Error('Cancel missing');
   await api('/api/imports/'+receipt.lease+'/cancel',{});
   await card('video.mp4').getByRole('button',{name:'Resume video analysis',exact:true}).click();
-  await page.waitForFunction(async id=>{const o=await(await fetch('/api/organization')).json();return o.assets.find(x=>x.asset.id===id)?.analysis.status==='ready'},receipt['video.mp4']);
+  await waitReady(receipt['video.mp4']);
   o=await api('/api/organization');const a=o.assets.find(x=>x.asset.id===receipt['video.mp4']).analysis;const v=a.video;
   if(v.next!==12||v.targets.length!==12||new Set(v.samples.map(s=>s.position_us)).size!==v.samples.length||!a.objects.includes('cup'))throw Error('Sampled coverage/object results missing');
   const faces=o.faces.filter(f=>f.asset_id===receipt['video.mp4']);if(!faces.length||!faces.every(f=>Number.isSafeInteger(f.sample_us)))throw Error('Frame provenance missing');
