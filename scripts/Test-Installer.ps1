@@ -118,7 +118,7 @@ try {
     Restart-Service ImmichClone
     BrowserPhase 'tests/hidden-media.cjs' 'finish'
     $env:IMMICH_NAV_ATTACH='1'
-    try { & node tests/hidden-navigation.cjs;Assert ($LASTEXITCODE -eq 0) 'installed Hidden Media Home toggle and selector navigation pass' } finally { Remove-Item Env:IMMICH_NAV_ATTACH -ErrorAction SilentlyContinue }
+    try { & node tests/hidden-navigation.cjs;Assert ($LASTEXITCODE -eq 0) 'installed Show/Hide Hidden Media toggle and selector navigation pass'; & node tests/hidden-batch.cjs;Assert ($LASTEXITCODE -eq 0) 'installed multi-page Hidden Media batch actions pass' } finally { Remove-Item Env:IMMICH_NAV_ATTACH -ErrorAction SilentlyContinue }
     $env:IMMICH_IMPORT_SOURCE_FIXTURES=Join-Path $root 'import source'
     & node tests/import-source-loss.cjs
     Assert ($LASTEXITCODE -eq 0) 'installed import survives real source loss and rejects changed receipt replay'
