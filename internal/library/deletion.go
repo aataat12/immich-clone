@@ -15,6 +15,7 @@ var ErrDeletionBusy = errors.New("deletion busy; pause imports and retry after p
 var ErrDeletionOriginal = errors.New("original integrity check failed; nothing was deleted")
 var ErrDeletionPending = errors.New("managed deletion cleanup is pending; retry cleanup in Hidden Media")
 var ErrDeletionConflict = errors.New("cleanup stopped because a catalog item reappeared; keep the current copy to resolve")
+var ErrDeletionSpace = errors.New("deletion needs at least 16 MiB free application-storage space to record recovery safely; free space and retry; nothing was deleted")
 
 type Deletion struct {
 	Version int    `json:"version"`
@@ -141,6 +142,16 @@ func (s *Store) DeleteHidden(ctx context.Context, id, confirmation string, added
 	}
 	if !a.Hidden || !a.Added.Equal(added) {
 		return false, ErrOrganizationInput
+	}
+	// Deletion must durably journal before removing any bytes. On Windows a
+	// failed database mapping growth can also invalidate the open handle, so
+	// refuse already exhausted storage before beginning that transaction.
+	free, e := AvailableBytes(s.root)
+	if e != nil {
+		return false, e
+	}
+	if free < 16<<20 {
+		return false, ErrDeletionSpace
 	}
 	if e = checkDeletionOriginal(ctx, s.Original(id), id); e != nil {
 		return false, ErrDeletionOriginal

@@ -63,6 +63,9 @@ func (s *Server) deletionHTTP(w http.ResponseWriter, r *http.Request) bool {
 		status := 500
 		message := "Deletion failed; refresh Hidden Media to inspect recovery status"
 		switch {
+		case errors.Is(e, library.ErrDeletionSpace):
+			status = http.StatusInsufficientStorage
+			message = e.Error()
 		case errors.Is(e, library.ErrDeletionOriginal):
 			status = 409
 			message = e.Error()

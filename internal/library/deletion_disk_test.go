@@ -3,6 +3,7 @@ package library
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -115,10 +116,10 @@ func TestActualDeletionDiskFull(t *testing.T) {
 		t.Fatal("volume did not fill within bounded fixture limit")
 	}
 	pending, err := deleteForTest(s, context.Background(), a.ID, a.ID)
-	if err == nil || pending {
+	if !errors.Is(err, ErrDeletionSpace) || pending {
 		t.Fatalf("expected uncommitted deletion failure, pending=%v err=%v", pending, err)
 	}
-	t.Logf("Actual full-volume deletion transaction rejected: %v", err)
+	t.Logf("Actual full-volume deletion refused before transaction: %v", err)
 	if s.deletionPending(a.ID) {
 		t.Fatal("failed transaction published an intent")
 	}
