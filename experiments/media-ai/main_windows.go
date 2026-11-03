@@ -10,6 +10,7 @@ import (
 	"flag"
 	"golang.org/x/sys/windows/svc"
 	"image"
+	"image/color"
 	_ "image/png"
 	"immichclone/internal/media"
 	"immichclone/internal/recognition"
@@ -112,6 +113,19 @@ func run(root string) ([]byte, error) {
 	if e != nil || clip.DurationUS < 3999000 || len(media.SampleTargets(clip.DurationUS)) != 12 {
 		return nil, fail("video sampling plan failed")
 	}
+	cupReference, e := reference("coffee.png")
+	if e != nil {
+		return nil, fail("video cup reference failed")
+	}
+	expectedCup := false
+	for _, o := range cupReference.Objects {
+		if o.Class == 41 {
+			expectedCup = true
+		}
+	}
+	if !expectedCup {
+		return nil, fail("video reference cup not detected")
+	}
 	for _, tc := range []struct {
 		at, expect int64
 		face       bool
@@ -122,6 +136,35 @@ func run(root string) ([]byte, error) {
 		}
 		if s.PositionUS != tc.expect {
 			return nil, fail("actual video PTS mismatch")
+		}
+		refName := "coffee.png"
+		if tc.face {
+			refName = "video-face-reference.png"
+		}
+		f, readErr := os.Open(filepath.Join(root, refName))
+		if readErr != nil {
+			return nil, fail("video pixel reference missing")
+		}
+		ref, _, readErr := image.Decode(f)
+		f.Close()
+		if readErr != nil || ref.Bounds().Dx() != img.Bounds().Dx() || ref.Bounds().Dy() != img.Bounds().Dy() {
+			return nil, fail("video pixel dimensions mismatch")
+		}
+		delta := int64(0)
+		for y := 0; y < img.Bounds().Dy(); y++ {
+			for x := 0; x < img.Bounds().Dx(); x++ {
+				a := color.RGBAModel.Convert(img.At(x, y)).(color.RGBA)
+				b := color.RGBAModel.Convert(ref.At(x, y)).(color.RGBA)
+				for _, v := range []int{int(a.R) - int(b.R), int(a.G) - int(b.G), int(a.B) - int(b.B)} {
+					if v < 0 {
+						v = -v
+					}
+					delta += int64(v)
+				}
+			}
+		}
+		if float64(delta)/float64(3*img.Bounds().Dx()*img.Bounds().Dy()) > 12 {
+			return nil, fail("video content does not match requested source frame")
 		}
 		result, e := analyze(img)
 		if e != nil {

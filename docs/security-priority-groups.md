@@ -5,6 +5,11 @@ security mitigation; retain its findings and existing protections, without marki
 it fixed or accepting unknown risk. This supersedes the former requirement that
 all security backlog work finish before 6A development.
 
+Groups 1 and 2 classify ONLY original SEC-01..SEC-08. Any newly identified
+issue goes in Group 3 for recording only, with no investigation or mitigation
+time. Security work time is authorized only for Group 1; milestone 6A functional
+implementation and its normal correctness/data-preservation tests continue.
+
 Group 1: an attack surface created by the installed/running app or its installed
 support components which a remote Internet attacker can exploit by reaching the
 machine. Include a malicious website reaching the loopback service through the
@@ -21,16 +26,29 @@ No open Group 1 exploit is demonstrated by the existing worklist. This is scoped
 source/disposable-runner evidence, not a scan of the user's router/PC or a guarantee
 against unknown vulnerabilities. No configuration/exposure expansion is authorized.
 
-| Original item | Current group / action |
+| Original item | Classification | Action |
+|---|---|---|
+| SEC-01 Child-folder and file permissions | Group 2 | Existing completed protection retained; no further mitigation work. |
+| SEC-02 Safe upgrades | Group 2 | Paused. Local installer/staging/upgrade trust paths. |
+| SEC-03 Filesystem boundaries | Group 2 | Paused. Local junction/reparse replacement paths. |
+| SEC-04 Hostile backup limits | Group 2 | Existing validated resource protections retained; no further mitigation work. |
+| SEC-05 Native worker isolation | Group 2 | Paused. Local/imported-media worker authority. |
+| SEC-06 Remaining input review | Group 2 | Paused under current authenticated local-import/catalog deployment. No demonstrated remote bypass. |
+| SEC-07 Review closeout | Group 2 | Existing completed review retained; no broad new review. |
+| SEC-08 Release validation | Group 2 | Extra security mitigation/attack experiments paused. Normal feature delivery correctness tests remain. |
+
+**Group 1 currently has no demonstrated open item from the original eight.**
+This is a reachability classification for the current deployment, not a claim
+that the app is invulnerable or that these items are all complete. Do not
+invent or broaden an attack path merely to keep security work active.
+
+## Group 3 — record only, no further work
+
+| Previously identified additional issue | Recorded disposition |
 |---|---|
-| SEC-01 permissions | Group 2; existing tested protections retained. |
-| SEC-02 safe upgrades | Group 2; mitigation paused, findings retained. |
-| SEC-03 filesystem races | Group 2; mitigation paused, findings retained. |
-| SEC-04 hostile backups | Group 2 under authenticated local restore; mitigation paused, not closed. R-RESTORE-01 is unexplained reliability behavior, not evidence of an Internet exploit. |
-| SEC-05 native isolation | Group 2 under fixed models/local media import; paused. Reclassify if a remote input route is demonstrated. |
-| SEC-06 remaining input review | Local imported media findings Group 2. Any unauthenticated/browser-origin bypass reaching parsers is Group 1 and remains active. NR-01 patch already validated is retained. |
-| SEC-07 review closeout | Completed scoped review retained; no repeated broad audit as substitute for functionality. |
-| SEC-08 release validation | Test Group 1 controls and normal installer/data/restore/functionality when delivering. Broader Group 2 attack experiments paused. |
+| R-RESTORE-01 unexplained normal restore refusal | Separate reliability observation, not evidence that original SEC-04 security limits failed. Subsequent tests passed; cause unconfirmed. Deferred; no investigation now. |
+| NR-01 OpenCV defects and accompanying mean correction | Already patched and native/application-validated in the held candidate. Retain existing work/evidence; no new mitigation work. |
+| GitHub Actions embedded Node 24 exact patch version | Not established by existing evidence. Browser-test CLI22.23.4 was recorded. Defer further platform-runtime investigation. |
 
 New 6A routes must retain common authorization, exact-origin mutation protection,
 loopback binding and safe browser output; rerun applicable negative checks. Normal

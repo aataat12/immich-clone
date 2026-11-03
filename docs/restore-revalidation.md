@@ -1,6 +1,9 @@
 # R-RESTORE-01 — unexplained normal restore refusal
 
-Status: open, under original SEC-04; also blocks SEC-08 delivery. No risk acceptance.
+Status: unconfirmed, deferred Group 3 per the user classification clarification.
+No investigation/mitigation time authorized now. Not evidence that original
+SEC-04 security limits failed. Prior proposed investigation below is historical
+and paused; no root-cause fix is claimed.
 
 [41553917677](https://github.com/aataat12/immich-clone/actions/runs/41553917677),
 source 34412d5a181718523d0c730d4c4381deb1d907f1, job 125648002160 observed

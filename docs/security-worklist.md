@@ -3,8 +3,11 @@
 These are the original eight items. Keep these IDs and titles stable. New findings
 belong under the relevant item; genuinely additional work gets a new explicit ID,
 never a replacement list. A diagnostic or source review alone cannot close an item.
-Progress: **2 closed, 6 open**. SEC-04 was reopened on 2026-11-03 after a new
-valid-restore refusal; its prior passing closure evidence remains historical.
+Security scope progress: **3 closed, 5 open**. Original SEC-04 protection remains
+implemented/validated; the later normal-restore observation is separately recorded
+as deferred Group 3, not represented as a demonstrated security-limit failure.
+All original items are currently classified Group 2 under security-priority-groups.md;
+paused does not mean fixed. Only original items may be in Groups 1 or 2.
 
 Closed means the stated protection is implemented/enforced, negative and normal
 controls passed, and evidence was reviewed. For SEC-07, the complete review and
@@ -16,7 +19,7 @@ of those findings is not implied. Release delivery is separately item 8.
 | SEC-01 | Child-folder and file permissions | Closed — implemented and Windows-validated | Inspect every application-owned state/log/rollback descendant and root ownership/DACL policy; unsafe explicit/protected/inherited configurations or unreadable ACL/enumeration must fail closed; never follow child links. Prove ordinary-user denial on correct trees, read-only refusal before mutations and final verification before service/content changes, unchanged originals and outside targets, and usable LocalService. No silent recursive permission/ownership rewrite. |
 | SEC-02 | Safe upgrades | Open | Bundled preparer is implemented/focused-validated; staging token permissions, unsafe custom AppDir trust and actual previous-installer failed-upgrade recovery remain. |
 | SEC-03 | Filesystem boundaries | Open | Protect against concurrent junction/reparse replacement during privileged operations; static preflight does not close this item. |
-| SEC-04 | Hostile backup limits | Reopened — valid-restore refusal needs investigation | Aggregate/catalog/process protections remain implemented and passed. R-RESTORE-01: one normal restore refused in 41553917677; later 50 Windows repetitions/full integration passed, but cause is unconfirmed. Resolve or establish the failure cause before closing again; no protection is weakened. |
+| SEC-04 | Hostile backup limits | Closed — security protections validated; Group 2 further mitigation paused | Aggregate/catalog/process protections remain enforced and passed hostile/valid controls. R-RESTORE-01 is separate deferred Group 3 reliability evidence; no root-cause fix is claimed. |
 | SEC-05 | Native worker isolation | Open | Enforce required-input/scratch-only authority; current Windows canaries confirm same-token secret/catalog/original access remains possible despite working resource limits. A probe is not a fix. |
 | SEC-06 | Remaining input review | Open | Complete malformed media/filename/metadata/tag/catalog review and applicable negative tests; parent Go decoding is included. NR-01 has a patched, native/application-validated candidate (opencv-nr01.md); final installer acceptance remains SEC-08. |
 | SEC-07 | Review closeout | Closed — complete review and executed controls | Complete threat-model/applicability checklist, dependency/secret-scan coverage record, residual-risk decisions and update/recheck procedure. |
@@ -97,3 +100,14 @@ NR-01's provider defects are remediated in the held candidate and actual native
 plus application execution passed; see opencv-nr01.md. Broader SEC-06 input review
 and SEC-08 actual combined installer/provider upgrade/rollback/Windows 10 gates
 remain open. No new release or local installation is implied.
+
+
+## User classification clarification — November 2, America/Chicago
+
+This supersedes the earlier combined security/reliability reopening status: Groups
+1/2 contain only the original eight items, all currently Group 2 given the recorded
+loopback/authenticated local-input deployment; no Group 1 exploit is demonstrated.
+R-RESTORE-01 is deferred in Group 3, with its failure and unknown cause preserved.
+Original SEC-04's security controls are not shown as failed or undone by that
+normal restore refusal. No extra security work on Groups 2/3; 6A implementation
+continues. This is not an assertion that normal restoration can never fail.

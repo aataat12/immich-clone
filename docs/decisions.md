@@ -329,3 +329,9 @@
   Group 2 mitigation. Retain controls/findings without falsely closing them.
   This supersedes all-backlog-before-6A ordering. Normal immutable originals,
   recovery and honest compatibility/dependency execution gates remain.
+
+- User clarification: Groups 1/2 classify only the original eight; newly found
+  issues go in passive Group 3 with no investigation time. Current evidence
+  establishes no open Group 1 exploit among the eight; all eight Group 2.
+  Continue 6A functional implementation. Separate R-RESTORE-01 reliability from
+  proven SEC-04 bounds; no claim to have explained or fixed the refusal.

@@ -1,5 +1,15 @@
 # Current status
 
+Latest classification clarification: only original SEC-01..08 belong in Groups
+1/2; all are currently Group 2 under the recorded loopback-only deployment.
+No demonstrated open Group 1 item; no further Group 2 mitigation work. Additional
+R-RESTORE-01/NR-01/Node platform observations are recorded in Group 3 without new
+work. Original SEC-04 security protection remains validated; the unrelated normal
+restore observation is not claimed fixed. Current security count3 closed/5 open;
+prior combined reopening statements below are superseded by this classification.
+Milestone 6A implementation continues; see security-priority-groups.md.
+
+
 Current user direction (November 2, America/Chicago): active security work is
 Group 1 remote Internet reachability introduced by this app/components. Other
 Group 2 mitigation is paused, with findings retained; security-priority-groups.md

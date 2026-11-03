@@ -15,7 +15,8 @@ large.save(r/'face-grid-reference.png');large.save(r/'face-grid.heic',quality=90
 for name,size in [('face.heic',(512,512)),('face-grid.heic',(4032,3024))]:
  with Image.open(r/name) as check:assert check.size==size;check.load()
 frames=r/'frames';frames.mkdir(exist_ok=True)
-c=Image.open(r/'coffee.png').convert('RGB').resize((512,512))
-for i in range(32):(a if i<16 else c).save(frames/('%03d.png'%i))
+c=Image.open(r/'coffee.png').convert('RGB')
+av=Image.new('RGB',(600,400));av.paste(a.resize((400,400)),(100,0));av.save(r/'video-face-reference.png')
+for i in range(32):(av if i<16 else c).save(frames/('%03d.png'%i))
 (r/'bad.heic').write_bytes(b'not a HEIC image')
 print('PASS: pinned public face inputs and single/grid HEIC fixtures encoded and read back')

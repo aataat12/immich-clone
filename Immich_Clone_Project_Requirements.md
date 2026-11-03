@@ -128,3 +128,7 @@ mitigation for later; retain findings and implemented controls. This supersedes
 prior ordering requiring the entire security backlog before feature development.
 Normal original preservation, recovery, representative dependency execution and
 truthful release/Windows 10 acceptance remain. See docs/security-priority-groups.md.
+
+Clarification: Groups 1 and 2 classify only original SEC-01..SEC-08. Newly
+identified issues are Group 3, recorded without investigation or mitigation time.
+Only Group 1 receives security work time; 6A functional implementation continues.
