@@ -10,7 +10,7 @@ permissions:
 jobs:
   execution:
     runs-on: windows-2022
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
@@ -76,5 +76,16 @@ jobs:
           } finally {
             if (Test-Path "$root/failed.txt") { Get-Content "$root/failed.txt" }
             if (Get-Service $name -ErrorAction SilentlyContinue) { Stop-Service $name -ErrorAction Continue;sc.exe delete $name }
+          }
+      - name: Actual 6A application browser jobs and independent recovery
+        shell: pwsh
+        run: |
+          $root = Join-Path $env:ProgramData 'Immich 6A 試験'
+          try {
+            npm install --prefix "$env:RUNNER_TEMP/6a-browser-deps" --no-audit --no-fund playwright@1.62.1
+            if ($LASTEXITCODE -ne 0) { throw 'Browser test dependency failed' }
+            $env:IMMICH_BROWSER_MODULE = "$env:RUNNER_TEMP/6a-browser-deps/node_modules/playwright"
+            ./scripts/Test-MediaAIApplication.ps1 -Fixtures $root
+          } finally {
             Remove-Item $root -Recurse -Force -ErrorAction SilentlyContinue
           }
