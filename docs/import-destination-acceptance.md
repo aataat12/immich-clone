@@ -19,6 +19,6 @@ The dedicated workflow `.github/workflows/import-destination.yml` provisions pin
 
 ## Scope and remaining limits
 
-This is a real directory-availability outage on NTFS, not physical disk/volume detachment, a network-share outage, loss of the catalog volume or proof of restart while destination storage is still absent. Reconnection explicitly precedes restart. It is not Windows 10, a packaged installer, a 4 GiB browser file-picker test, mixed-media endurance, native AI or large-backup acceptance. Existing separate proofs retain their original scopes.
+This is a real directory-availability outage on the Windows filesystem, not physical disk/volume detachment, a network-share outage, loss of the catalog volume or proof of restart while destination storage is still absent. Reconnection explicitly precedes restart. It is not Windows 10, a packaged installer, a 4 GiB browser file-picker test, mixed-media endurance, native AI or large-backup acceptance. Existing separate proofs retain their original scopes.
 
 There were no failing cloud attempts or production fixes in this bounded slice. Security Group 2/3 work and the known restore progress-read:32 issue were not investigated. Every-frame Full Scan remains deferred. These tests do not complete milestone 4 or expand its accepted file-size limit.
