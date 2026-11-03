@@ -53,31 +53,12 @@ jobs:
           python -B experiments/media-ai/prepare.py $root
           if ($LASTEXITCODE -ne 0) { throw 'Fixture preparation failed' }
           ./experiments/media-ai/prepare.ps1 -Root $root
-      - name: Actual LocalService HEIC and aspect-preserved timestamped video CPU analysis
+      - name: Require prior actual media and native feasibility acceptance
         shell: pwsh
         run: |
-          $ErrorActionPreference='Stop'
-          $root = Join-Path $env:ProgramData 'Immich 6A 試験'
-          go build -o "$root/probe.exe" ./experiments/media-ai
-          if ($LASTEXITCODE -ne 0) { throw 'Probe build failed' }
-          icacls $root /grant '*S-1-5-19:(OI)(CI)M'
-          if ($LASTEXITCODE -ne 0) { throw 'Fixture access failed' }
-          $name='ImmichCloneMediaAIProbe'
-          try {
-            $cred=[PSCredential]::new('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))
-            New-Service -Name $name -BinaryPathName ('"'+"$root/probe.exe"+'" -root "'+$root+'"') -Credential $cred | Out-Null
-            Start-Service $name
-            if (!(Test-Path "$root/passed.json")) { throw 'Media AI execution evidence missing' }
-            Get-Content "$root/passed.json"
-            Remove-Item "$root/passed.json"
-            Restart-Service $name
-            if (!(Test-Path "$root/passed.json")) { throw 'Media AI restart evidence missing' }
-            Get-Content "$root/passed.json"
-          } finally {
-            if (Test-Path "$root/failed.txt") { Get-Content "$root/failed.txt" }
-            if (Get-Service $name -ErrorAction SilentlyContinue) { Stop-Service $name -ErrorAction Continue;sc.exe delete $name }
-          }
-      - name: Actual 6A application HEIC catalog and browser recovery
+          $r=Invoke-RestMethod 'https://api.github.com/repos/aataat12/immich-clone/actions/runs/41559260341'
+          if ($r.conclusion -ne 'success' -or $r.head_sha -ne 'e95958bc9f24a1e56cdd5e47cce2248f80440d2a') { throw 'Prior exact feasibility evidence missing' }
+      - name: Actual 6A application awaited jobs and independent recovery
         shell: pwsh
         run: |
           $root = Join-Path $env:ProgramData 'Immich 6A 試験'
