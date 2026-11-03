@@ -15,6 +15,10 @@ baseline. No future release number is assigned before delivery.
 | 7 | Installer, security, and update hardening | Dependency/security and diagnostic-privacy review, upgrade/rollback coverage and signing arrangements; obtain approval before new charges. | Planned | — |
 | 8 | Final Windows 10 acceptance and release candidate | Clean install without development prerequisites, final reboot/service startup, upgrade/uninstall preservation, extended operation, final restore drill and documented limits/recovery. | Planned | — |
 
+Current requested focus: remediate NR-01 first, then milestone 6A HEIC/video AI
+feasibility. The added label preserves existing milestone IDs; it does not require
+finishing every other planned feature before starting that feasibility work.
+
 ## Required in milestone 1: Build Notes
 
 - Add a **Build Notes** button immediately next to **People & tags** on the

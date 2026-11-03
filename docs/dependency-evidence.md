@@ -805,3 +805,29 @@ package ZIP SHA256 458c02d6b316f8054d068565a5815159e20a197472d3e6161812f1e535416
 Screenshots inspected. No new end-user prerequisite, model update or schema change.
 Clean Windows 10, new-worker target inference, wider security and long endurance
 remain distinct gates; this is an unsigned cloud-accepted prototype.
+
+
+## NR-01 OpenCV servicing — 2026-11-03
+
+Retain OpenCV 4.12.0 base, models and preprocessing; apply six hash-pinned official
+production backports (28272/28446/28579/28581/28959/29447), plus the separately
+recorded project single-plane mean correction required by unchanged numeric
+oracles. Exact patches/source provenance, hash and execution are opencv-nr01.md.
+Native run41551816976/build125641002773/service125643646910 passed 64 API cases,
+core controls, actual model parity/malformed/model loss/cancellation/restart under
+LocalService. Compiler MSVC19.44.35229/v14314.44.35207; static /MT, CPU SSE2,
+only kernel32 import. Static runtime servicing remains a provider rebuild gate.
+
+New worker SHA256 15d1c2ca7ef3f526b34ac4823f9337c51280ad171ddf43df4f3af5d8128a7c58,
+7365120 bytes; provider opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3.
+Artifact13192746922 ZIP SHA256
+2d420cb78acd8d9d170eeac9952f0c669d34cac6a8e071228ee8af4ee3d7c3ea verified.
+Actual signature scan:4291 inputs/members,61531095 bytes; not complete privacy
+or unknown-vulnerability proof. Regression executable excluded from app packaging.
+
+Application [41554459739](https://github.com/aataat12/immich-clone/actions/runs/41554459739), source
+ae1fbc3011de33df9a1c25594b6f9864f535bdb8, job125649834966 passed actual selected-worker
+service/browser/inference/model recovery and independent original/organization
+restoration. No installer/version/main merge, no Windows10 or broad accuracy
+certification. R-RESTORE-01 remains unexplained and original SEC-04 is reopened;
+other full release/upgrade/rollback/input/isolation gates remain unchanged.

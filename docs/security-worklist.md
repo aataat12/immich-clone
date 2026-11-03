@@ -3,7 +3,8 @@
 These are the original eight items. Keep these IDs and titles stable. New findings
 belong under the relevant item; genuinely additional work gets a new explicit ID,
 never a replacement list. A diagnostic or source review alone cannot close an item.
-Progress: **3 closed, 5 open**.
+Progress: **2 closed, 6 open**. SEC-04 was reopened on 2026-11-03 after a new
+valid-restore refusal; its prior passing closure evidence remains historical.
 
 Closed means the stated protection is implemented/enforced, negative and normal
 controls passed, and evidence was reviewed. For SEC-07, the complete review and
@@ -15,9 +16,9 @@ of those findings is not implied. Release delivery is separately item 8.
 | SEC-01 | Child-folder and file permissions | Closed — implemented and Windows-validated | Inspect every application-owned state/log/rollback descendant and root ownership/DACL policy; unsafe explicit/protected/inherited configurations or unreadable ACL/enumeration must fail closed; never follow child links. Prove ordinary-user denial on correct trees, read-only refusal before mutations and final verification before service/content changes, unchanged originals and outside targets, and usable LocalService. No silent recursive permission/ownership rewrite. |
 | SEC-02 | Safe upgrades | Open | Bundled preparer is implemented/focused-validated; staging token permissions, unsafe custom AppDir trust and actual previous-installer failed-upgrade recovery remain. |
 | SEC-03 | Filesystem boundaries | Open | Protect against concurrent junction/reparse replacement during privileged operations; static preflight does not close this item. |
-| SEC-04 | Hostile backup limits | Closed — implemented and Windows-validated | Bound aggregate extraction and hostile catalog-processing work beyond per-file limits, with failure cleanup and valid independent restore. |
+| SEC-04 | Hostile backup limits | Reopened — valid-restore refusal needs investigation | Aggregate/catalog/process protections remain implemented and passed. R-RESTORE-01: one normal restore refused in 41553917677; later 50 Windows repetitions/full integration passed, but cause is unconfirmed. Resolve or establish the failure cause before closing again; no protection is weakened. |
 | SEC-05 | Native worker isolation | Open | Enforce required-input/scratch-only authority; current Windows canaries confirm same-token secret/catalog/original access remains possible despite working resource limits. A probe is not a fix. |
-| SEC-06 | Remaining input review | Open | Complete malformed media/filename/metadata/tag/catalog review and applicable negative tests; parent Go decoding and NR-01 present OpenCV NaryEltwise/compiled core-safety remediation are included. |
+| SEC-06 | Remaining input review | Open | Complete malformed media/filename/metadata/tag/catalog review and applicable negative tests; parent Go decoding is included. NR-01 has a patched, native/application-validated candidate (opencv-nr01.md); final installer acceptance remains SEC-08. |
 | SEC-07 | Review closeout | Closed — complete review and executed controls | Complete threat-model/applicability checklist, dependency/secret-scan coverage record, residual-risk decisions and update/recheck procedure. |
 | SEC-08 | Release validation | Open | Validate the combined real installer against actual prior package, injected failure/rollback, full providers, backup/restore/browser and applicable Windows 10 gates. |
 
@@ -82,3 +83,17 @@ an explicit SEC-06/08 release stop, not accepted risk or unfinished review moved
 out to obtain closure. Known filesystem races, upgrade trust/recovery, native
 authority and broad input/release gates remain open under their original IDs.
 Only SEC-01/04/07 are closed. No new installer or Windows 10 compatibility claim.
+
+
+## 2026-11-03 superseding status
+
+SEC-04 is reopened because 41553917677 observed a valid-restore refusal, with no
+explained cause. The original item/title has not moved. Bounded extraction and
+processing controls are still enforced, and later repeated/full tests passed;
+neither fact is presented as a root-cause fix. restore-revalidation.md records
+R-RESTORE-01 and its closure gate. Only SEC-01/07 currently remain closed.
+
+NR-01's provider defects are remediated in the held candidate and actual native
+plus application execution passed; see opencv-nr01.md. Broader SEC-06 input review
+and SEC-08 actual combined installer/provider upgrade/rollback/Windows 10 gates
+remain open. No new release or local installation is implied.

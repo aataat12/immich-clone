@@ -1,16 +1,32 @@
 # Current status
 
-2026-11-03 current work: NR-01 exact-source six-patch candidate and actual native
-Windows regression/model/service validation (opencv-nr01.md). Existing application
-provider remains unchanged until accepted. HEIC/video AI is explicitly planned
-as milestone 6A with acceptance in heic-video-ai.md; not implemented or released.
+2026-11-03: NR-01 technical remediation is implemented and accepted in the held
+application candidate: six pinned upstream OpenCV fixes plus a separately recorded
+single-plane mean correction. Actual native/API/model/LocalService/restart evidence
+is opencv-nr01.md. Application [41554459739](https://github.com/aataat12/immich-clone/actions/runs/41554459739), source
+ae1fbc3011de33df9a1c25594b6f9864f535bdb8, job 125649834966 passed real model/browser,
+missing-provider/model recovery, names/tags/original preservation and independent
+restores. The old installed build is unchanged; no installer/version/main merge.
 
+HEIC/video AI is explicitly planned as milestone 6A in both roadmap and Build Notes,
+with heic-video-ai.md acceptance. Existing 320px HEIC thumbnails are not an AI
+analysis-frame implementation. No HEIC/video AI feature is claimed delivered.
+Next functionality focus after this servicing is bounded analysis-frame feasibility.
+
+R-RESTORE-01: original SEC-04 is reopened for one observed valid-restore refusal
+in 41553917677 (media cancellation/restart/restore test). Cause is unconfirmed.
+Fixed private-safe stage/OS-code diagnostics were added without weakening limits;
+20 focused Linux repetitions, 50 Windows repetitions, the full suite and actual
+application CLI independent restores subsequently passed. That is revalidation,
+not a root-cause fix. Investigate before release; see restore-revalidation.md.
+Current fixed list: **2 closed / 6 open**, SEC-01/07 closed. Earlier closure
+statements below are historical checkpoints, not the current SEC-04 disposition.
 
 Four authorized workers completed original SEC-04 hostile backup limits and
 SEC-07 review closeout, each with implementation and independent verification.
 Combined Windows Server 2022/Edge acceptance [41547447887](https://github.com/aataat12/immich-clone/actions/runs/41547447887),
 source 1f1cdb912b223634dec0350e58e9ae86b11893b0, job 125626387613, passed in full.
-The fixed original list now has **3 closed / 5 open**: SEC-01, SEC-04, SEC-07 closed;
+At that historical checkpoint the fixed original list had **3 closed / 5 open**: SEC-01, SEC-04, SEC-07 closed;
 SEC-02, SEC-03, SEC-05, SEC-06, SEC-08 open. No item renaming or partial-probe closure.
 See security-worklist.md, security-restore-limits.md and security-review-closeout.md.
 
@@ -163,7 +179,7 @@ native worker/model/licensing checks are reused; no source rebuild of providers.
    128 sessions and one active copy lease. Resume retransfers accepted bytes for
    SHA256 receipts; no metadata-only skip or partial-file continuation. See bulk-import.md.
 3. People/tag scalability and wider family/age/profile quality remain separate
-   gates. Native still-image AI only; HEIC/video AI and ready reanalysis remain deferred. Face dismissal and
+   gates. Native still-image AI only; HEIC/video AI is planned in milestone 6A; ready reanalysis remains deferred. Face dismissal and
    photo context have accepted next-release candidates; they are not shipped. See ai-feasibility.md.
 4. Hidden Media local-location GUI and deliberate permanent managed-copy deletion
    with recovery remain queued: hidden-media.md. No deletion implemented.

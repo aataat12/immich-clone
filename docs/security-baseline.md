@@ -1,7 +1,7 @@
 # Security baseline — work in progress
 
-Current authoritative closure: original SEC-01/04/07 are complete, 3 closed /
-5 open; see security-worklist.md. Complete review/scan/advisory/servicing coverage
+Current authoritative closure: original SEC-01/07 are complete, 2 closed /
+6 open; SEC-04 was reopened for R-RESTORE-01 on 2026-11-03. See restore-revalidation.md; see security-worklist.md. Complete review/scan/advisory/servicing coverage
 is security-review-closeout.md, which records NR-01 as an unresolved native
 provider release blocker. Historical sections below retain their original scope.
 Latest combined Windows acceptance: 41547447887 (source

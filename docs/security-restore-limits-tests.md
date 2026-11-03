@@ -60,3 +60,9 @@ Independent reviewer fetched and inspected the actual decoded job logs for [run 
 | Full library and web suites | PASS, 58.140 s and 24.745 s respectively |
 
 **Independent disposition: original SEC-04 is ready to close.** Aggregate extraction and catalog-processing work have implemented controls and actual Windows adversarial/positive acceptance. The 20 ms catalog-growth monitor remains a bounded-latency check, not an atomic disk quota; unrelated applications can consume available disk space. Windows 10 compatibility is unchanged and is not established by this Windows Server run. Closure does not extend to the separately tracked filesystem race or native AI worker isolation items.
+
+
+2026-11-03: later R-RESTORE-01 reopens SEC-04 despite the historical protection
+matrix passing. 50 Windows repetitions and complete app restores passed in
+41554459739, but the one earlier normal refusal remains unexplained. Current
+status/closure gate is restore-revalidation.md; no test or limit was weakened.

@@ -315,3 +315,11 @@
   Add HEIC/video AI as milestone 6A without renumbering original milestones.
   Initial video scope is explicitly bounded sampled frames, not all-frame or
   automatic identity merging; feasibility must establish policy before shipping.
+
+- NR-01 native and actual application acceptance passed with new immutable
+  provider 15d1c2ca7ef3. Preserve prior ready provenance and user corrections;
+  no automatic rerun or installer/version/main publication.
+- Reopen original SEC-04 for R-RESTORE-01: one valid restore refused in a later
+  run, cause unconfirmed despite 50 Windows repetitions/full app restores then
+  passing. Keep fixed IDs and explicit evidence; no policy/test weakening or
+  unsupported claim of a root-cause fix. No user PC action needed.

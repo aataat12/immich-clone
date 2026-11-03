@@ -50,7 +50,7 @@ int main() {
     cv::setNumThreads(1); cv::ocl::setUseOpenCL(false);
     try {
         int cases = 0;
-        // 32/160 inputs exceed the old byte buffer's stack/heap pointer capacity.
+        // Larger operand counts exercise the pointer-allocation regression.
         // Mixed row/scalar broadcasting also exercises both plane/stride branches.
         for (int count : {3,4,32,160}) for (bool planes : {false,true})
             for (bool scalar : {false,true}) for (auto op : {"sum","mean","max","min"}) {

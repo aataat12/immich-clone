@@ -162,3 +162,12 @@ Go/web/vet, permission/LocalService, Setup and desktop/narrow Edge controls pass
 Independent acceptance is security-restore-limits-tests.md. Root closes SEC-04
 for these stated controls and limits; overall installer/Windows 10 and other
 original security items retain their separate gates.
+
+
+## Reopened operational acceptance — 2026-11-03
+
+Later validation observed R-RESTORE-01, one unexplained normal restore refusal.
+Subsequent 50 Windows repetitions/full app restores passed, but no root-cause fix
+is claimed. SEC-04 is reopened without changing its implemented protection or
+original scope; restore-revalidation.md is the current investigation/closure gate.
+Historical acceptance above remains actual evidence of the stated controls.

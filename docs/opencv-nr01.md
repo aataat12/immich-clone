@@ -67,3 +67,35 @@ retrieved and verified; six patched source files match the retained manifest.
 Actual checkpoint signature scan passed: 4291 inputs/members, 61531095 bytes.
 This checkpoint is not a new installer and its test executable is excluded from
 application packaging. All original remaining security/release gates remain.
+
+
+## Accepted application integration
+
+All-green [41554459739](https://github.com/aataat12/immich-clone/actions/runs/41554459739), source
+ae1fbc3011de33df9a1c25594b6f9864f535bdb8, job 125649834966 executed the exact selected
+new worker through the real app under LocalService. Real CPU analysis, bulk AI,
+face naming/undo/manual correction, custom/dismissed tags, provider/model loss
+and recovery, restart, SHA256-preserved originals and independent legacy/managed
+backup restoration passed, with old state/provider unavailable for metadata
+verification. A synthetic old-provider ready-result fixture retains its original
+provenance through queue/reopen/restore; ready results are not automatically rerun.
+Go tests/vet, current Go advisory scan and actual checkpoint signature scan passed.
+Desktop/narrow browser, HEIC/video previews and milestone 6A Planned row passed.
+No installer was produced or relabeled; test build is nr01-candidate-prototype.
+
+The prior app run 41553159224 hit a fixed-version browser fixture assertion;
+expected build is now explicitly passed and compared exactly. A separate later
+run 41553917677 observed R-RESTORE-01, an unexplained normal restore refusal.
+The final 50 Windows repetitions/full suite/app restores passed, but this does
+not fix or explain that failure. SEC-04 is reopened in restore-revalidation.md;
+release remains blocked by it and the other original gates. NR-01 remediation
+is validated in candidate code, not claimed delivered to the existing installation.
+
+Independent base-plus-seven-patch reconstruction matches retained production source
+after explicit Windows CRLF normalization. Artifact file bytes match their raw
+source-hash manifest; downloaded patch bytes themselves remain exact. A later
+regression-source comment was clarified without changing executable code.
+
+Browser-test CLI Node identity was actually recorded as 22.23.4, which contains
+the October Brotli fix. This does not record GitHub Actions' separately managed
+embedded Node 24 patch version. Neither runtime is an app prerequisite.

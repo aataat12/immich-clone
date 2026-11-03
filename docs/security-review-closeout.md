@@ -271,3 +271,15 @@ SEC-04's independent Windows implementation acceptance also passed in this run;
 its controls are closed by their separate evidence, not merely by this review.
 NR-01 remediation remains an explicit SEC-06/08 release blocker. No new payload
 was built/scanned or provider updated, and no Windows 10 certification is implied.
+
+
+## 2026-11-03 servicing update
+
+The reviewed NR-01 finding now has a patched, actual native/application-validated
+candidate: opencv-nr01.md. This supersedes the earlier selected-binary identity
+for future packaging only; the installed 0.1.29 worker is not silently changed.
+Broader input/isolation and actual installer gates remain. R-RESTORE-01 was found
+in later validation and SEC-04 is explicitly reopened (restore-revalidation.md).
+Node CLI22.23.4 was recorded in app acceptance; GitHub Actions embedded runtime's
+exact Node24 patch version remains separately unverified. Review coverage does
+not imply these pending mitigations/release checks are complete.
