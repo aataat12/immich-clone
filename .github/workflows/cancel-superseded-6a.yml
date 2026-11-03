@@ -15,5 +15,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           for run in 41561426149 41561426157 41561426175; do
-            gh api -X POST repos/aataat12/immich-clone/actions/runs/$run/cancel || exit 1
+            status=$(gh api repos/aataat12/immich-clone/actions/runs/$run --jq .status)
+            if [ "$status" != completed ]; then
+              gh api -X POST repos/aataat12/immich-clone/actions/runs/$run/cancel || exit 1
+            fi
           done
