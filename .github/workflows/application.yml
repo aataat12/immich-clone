@@ -28,7 +28,7 @@ on:
       - 'tests/backup.cjs'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
   actions: read
 concurrency:
   group: application-${{ github.ref }}
@@ -63,7 +63,7 @@ jobs:
         with:
           name: prototype-server-tested
           path: previous-installer
-          run-id: 41469530044
+          run-id: 41487369408
           github-token: ${{ github.token }}
       - name: Verify dependency checksums and execute storage, recovery and HTTP tests
         shell: pwsh
@@ -86,9 +86,25 @@ jobs:
           npm install --prefix "$env:RUNNER_TEMP/browser-deps" --no-audit --no-fund playwright@1.62.1
           if ($LASTEXITCODE -ne 0) { throw 'Browser test dependency acquisition failed' }
           $env:IMMICH_BROWSER_MODULE = "$env:RUNNER_TEMP/browser-deps/node_modules/playwright"
+          "IMMICH_BROWSER_MODULE=$env:IMMICH_BROWSER_MODULE" >> $env:GITHUB_ENV
           $env:IMMICH_BROWSER_OUTPUT = "$env:GITHUB_WORKSPACE/browser-evidence"
           New-Item -ItemType Directory $env:IMMICH_BROWSER_OUTPUT | Out-Null
           ./scripts/Test-Application.ps1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12.10'
+          architecture: x64
+      - name: Prepare public installed6A acceptance fixtures
+        shell: pwsh
+        run: |
+          $root=Join-Path $env:RUNNER_TEMP 'installed6A'
+          New-Item -ItemType Directory $root -Force | Out-Null
+          python -m pip install --only-binary=:all: --require-hashes --no-deps -r experiments/media-ai/requirements.txt --disable-pip-version-check
+          if ($LASTEXITCODE -ne 0) { throw 'Fixture tooling failed' }
+          python -B experiments/media-ai/prepare.py $root
+          if ($LASTEXITCODE -ne 0) { throw 'Fixture generation failed' }
+          ./experiments/media-ai/prepare.ps1 -Root $root
+          "IMMICH_6A_FIXTURES=$root" >> $env:GITHUB_ENV
       - name: Build pinned installer and test install upgrade rollback and uninstall
         shell: pwsh
         run: |
@@ -106,6 +122,13 @@ jobs:
         with:
           name: prototype-server-tested
           path: |
-            dist/ImmichClone-0.1.29-prototype-x64-setup.exe
+            dist/ImmichClone-0.1.30-prototype-x64-setup.exe
             dist/SHA256SUMS.txt
           retention-days: 7
+      - name: Publish checked unsigned0.1.30 prototype
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v0.1.30-prototype dist/ImmichClone-0.1.30-prototype-x64-setup.exe dist/SHA256SUMS.txt --repo aataat12/immich-clone --target $env:GITHUB_SHA --prerelease --title 'Immich Clone0.1.30 prototype' --notes-file docs/release-0.1.30.md
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed' }
