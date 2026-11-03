@@ -1,5 +1,11 @@
 # Current status
 
+2026-11-03 current work: NR-01 exact-source six-patch candidate and actual native
+Windows regression/model/service validation (opencv-nr01.md). Existing application
+provider remains unchanged until accepted. HEIC/video AI is explicitly planned
+as milestone 6A with acceptance in heic-video-ai.md; not implemented or released.
+
+
 Four authorized workers completed original SEC-04 hostile backup limits and
 SEC-07 review closeout, each with implementation and independent verification.
 Combined Windows Server 2022/Edge acceptance [41547447887](https://github.com/aataat12/immich-clone/actions/runs/41547447887),

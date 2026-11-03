@@ -11,6 +11,7 @@ baseline. No future release number is assigned before delivery.
 | 4 | Large-library import reliability | Longer mixed-media imports, interruption/retry/duplicate/disconnected-storage tests, safe resume improvements and resolution of large-file limits. | Planned | — |
 | 5 | Large-library backup and recovery | Large ZIP/ZIP64, capacity and throughput, interruption handling, independent restoration and practical full-library backup workflow. | Planned | — |
 | 6 | Media compatibility and resource limits | Representative camera/video and metadata checks, malformed media and CPU/memory limits; prove actual operations/inference before adding providers or formats. | Planned | — |
+| 6A | HEIC and video AI | HEIC still-image face/object analysis; bounded timestamped video-frame analysis, durable progress/cancel/restart, correction preservation and independent restore. Actual patched-provider/decoder execution before integration; detailed acceptance in heic-video-ai.md. | Planned — dependency/security gate first | — |
 | 7 | Installer, security, and update hardening | Dependency/security and diagnostic-privacy review, upgrade/rollback coverage and signing arrangements; obtain approval before new charges. | Planned | — |
 | 8 | Final Windows 10 acceptance and release candidate | Clean install without development prerequisites, final reboot/service startup, upgrade/uninstall preservation, extended operation, final restore drill and documented limits/recovery. | Planned | — |
 
@@ -29,7 +30,7 @@ baseline. No future release number is assigned before delivery.
 - Keep the shipped page and this roadmap aligned at release preparation. The page
   describes its installed build and does not require network access or expose
   private machine information.
-- Verify navigation, headings, all eight rows, status/release rendering and narrow
+- Verify navigation, headings, all nine rows, status/release rendering and narrow
   layout in browser acceptance. Confirm the delivered milestone-1 row identifies
   its actual release and the remaining rows do not claim completion.
 
@@ -39,8 +40,9 @@ User reported 0.1.25 backup and bulk AI functional checks passed; new-import
 follow-up and repeated narrow-width checks were not performed.
 Previously passed local checks need no routine repetition. Reboot remains deferred
 to final acceptance. Windows Server evidence does not certify Windows 10.
-HEIC/video AI, RAW/HDR expansion and incremental/scheduled backups remain deferred
-possibilities, not promised additions. Mobile is excluded.
+HEIC/video AI is now explicitly planned as milestone 6A, with feasibility/security
+gates in heic-video-ai.md. RAW/HDR expansion and incremental/scheduled backups
+remain deferred possibilities. Mobile is excluded.
 
 Milestone 1 evidence: Windows Server 2022 run [41406051070](https://github.com/aataat12/immich-clone/actions/runs/41406051070), source d558f7c. PR #1 merged into main.
 

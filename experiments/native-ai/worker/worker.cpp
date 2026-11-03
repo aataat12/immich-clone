@@ -113,7 +113,7 @@ int wmain(int argc,wchar_t** argv) {
     cv::redirectError(quietError);cv::setNumThreads(1);cv::ocl::setUseOpenCL(false);
     std::cout << std::setprecision(9);
     try {
-        if (argc==2 && std::wstring(argv[1])==L"--version") {std::cout << "{\"protocol\":1,\"opencv\":\"" << CV_VERSION << "\",\"zlib\":\"" << zlibVersion() << "\",\"runtime\":\"static-native\",\"cpu_baseline\":\"SSE2\"}\n";return 0;}
+        if (argc==2 && std::wstring(argv[1])==L"--version") {std::cout << "{\"protocol\":1,\"opencv\":\"" << CV_VERSION << "\",\"zlib\":\"" << zlibVersion() << "\",\"security_backports\":\"nr01-v1\",\"runtime\":\"static-native\",\"cpu_baseline\":\"SSE2\"}\n";return 0;}
         if (argc!=4) return 2;
         auto image=frame(fs::path(argv[3]));std::wstring task(argv[1]);
         if (task==L"faces") faces(fs::path(argv[2]),image);

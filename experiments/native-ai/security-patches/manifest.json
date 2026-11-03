@@ -1,0 +1,38 @@
+[
+  {
+    "pr": 28272,
+    "file": "opencv-28272.patch",
+    "sha256": "11a845234e7ff07bcbb8057a3c9cd4e0b3453ae951e164b46837a94bc0b31e9b",
+    "url": "https://github.com/opencv/opencv/pull/28272.patch"
+  },
+  {
+    "pr": 28446,
+    "file": "opencv-28446.patch",
+    "sha256": "d1c300384799d6b2fe0ab2da8871ff81f844f1460cedd48890e998105bb2319a",
+    "url": "https://github.com/opencv/opencv/pull/28446.patch"
+  },
+  {
+    "pr": 28579,
+    "file": "opencv-28579.patch",
+    "sha256": "acbb309bcf784bc08c2d7ca0d8ed04ae94e6f370a0d1a072a88f89870e983c0a",
+    "url": "https://github.com/opencv/opencv/pull/28579.patch"
+  },
+  {
+    "pr": 28581,
+    "file": "opencv-28581.patch",
+    "sha256": "f101e5645a073d227d10cc207a7dba806dc4b3e09d05868de1cc4ced3ea0cf23",
+    "url": "https://github.com/opencv/opencv/pull/28581.patch"
+  },
+  {
+    "pr": 28959,
+    "file": "opencv-28959.patch",
+    "sha256": "c20b6fb4c8dbaf93ce32b951222595d8d90fcbe04b880759193176675a48328c",
+    "url": "https://github.com/opencv/opencv/pull/28959.patch"
+  },
+  {
+    "pr": 29447,
+    "file": "opencv-29447.patch",
+    "sha256": "075f86c60e43d6c3c3088af7f0419148bec3cb5218cdfc4fd993b9c41219b791",
+    "url": "https://github.com/opencv/opencv/pull/29447.patch"
+  }
+]

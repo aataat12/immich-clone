@@ -1,0 +1,140 @@
+From a9e13a5e8c9336ce21b3377990e0224729b169a5 Mon Sep 17 00:00:00 2001
+From: JoyBoy900908 <jeter20010908@gmail.com>
+Date: Sat, 28 Feb 2026 20:50:54 +0800
+Subject: [PATCH 1/2] core: fix UBSan function pointer type mismatch in
+ countNonZero
+
+---
+ modules/core/src/count_non_zero.simd.hpp | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/modules/core/src/count_non_zero.simd.hpp b/modules/core/src/count_non_zero.simd.hpp
+index 9de616fe8ae5..26af0a8d7123 100644
+--- a/modules/core/src/count_non_zero.simd.hpp
++++ b/modules/core/src/count_non_zero.simd.hpp
+@@ -66,8 +66,9 @@ static int countNonZero8u( const uchar* src, int len )
+     return nz;
+ }
+ 
+-static int countNonZero16u( const ushort* src, int len )
++static int countNonZero16u( const uchar* src_ptr, int len )
+ {
++    const ushort* src = reinterpret_cast<const ushort*>(src_ptr);
+     int i = 0, nz = 0;
+ #if (CV_SIMD || CV_SIMD_SCALABLE)
+     int len0 = len & -VTraits<v_int8>::vlanes();
+@@ -101,8 +102,9 @@ static int countNonZero16u( const ushort* src, int len )
+     return nz + countNonZero_(src + i, len - i);
+ }
+ 
+-static int countNonZero32s( const int* src, int len )
++static int countNonZero32s( const uchar* src_ptr, int len )
+ {
++    const int* src = reinterpret_cast<const int*>(src_ptr);
+     int i = 0, nz = 0;
+ #if (CV_SIMD || CV_SIMD_SCALABLE)
+     int len0 = len & -VTraits<v_int8>::vlanes();
+@@ -136,8 +138,9 @@ static int countNonZero32s( const int* src, int len )
+     return nz + countNonZero_(src + i, len - i);
+ }
+ 
+-static int countNonZero32f( const float* src, int len )
++static int countNonZero32f( const uchar* src_ptr, int len )
+ {
++    const float* src = reinterpret_cast<const float*>(src_ptr);
+     int i = 0, nz = 0;
+ #if (CV_SIMD || CV_SIMD_SCALABLE)
+     int len0 = len & -VTraits<v_int8>::vlanes();
+@@ -171,8 +174,9 @@ static int countNonZero32f( const float* src, int len )
+     return nz + countNonZero_(src + i, len - i);
+ }
+ 
+-static int countNonZero64f( const double* src, int len )
++static int countNonZero64f( const uchar* src_ptr, int len )
+ {
++    const double* src = reinterpret_cast<const double*>(src_ptr);
+     int nz = 0, i = 0;
+ #if (CV_SIMD_64F || CV_SIMD_SCALABLE_64F)
+     v_int64 sum1 = vx_setzero_s64();
+
+From 7286212ce658c8000f29797e691357ef5df2bf23 Mon Sep 17 00:00:00 2001
+From: JoyBoy900908 <jeter20010908@gmail.com>
+Date: Mon, 9 Mar 2026 14:20:43 +0800
+Subject: [PATCH 2/2] core: use void* in countNonZero signature per team review
+
+---
+ modules/core/src/count_non_zero.simd.hpp | 21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
+
+diff --git a/modules/core/src/count_non_zero.simd.hpp b/modules/core/src/count_non_zero.simd.hpp
+index 26af0a8d7123..c93f31cce6dd 100644
+--- a/modules/core/src/count_non_zero.simd.hpp
++++ b/modules/core/src/count_non_zero.simd.hpp
+@@ -6,7 +6,7 @@
+ 
+ namespace cv {
+ 
+-typedef int (*CountNonZeroFunc)(const uchar*, int);
++typedef int (*CountNonZeroFunc)(const void*, int);
+ 
+ 
+ CV_CPU_OPTIMIZATION_NAMESPACE_BEGIN
+@@ -29,8 +29,9 @@ static int countNonZero_(const T* src, int len )
+     return nz;
+ }
+ 
+-static int countNonZero8u( const uchar* src, int len )
++static int countNonZero8u( const void* src_ptr, int len )
+ {
++    const uchar* src = static_cast<const uchar*>(src_ptr);
+     int i=0, nz = 0;
+ #if (CV_SIMD || CV_SIMD_SCALABLE)
+     int len0 = len & -VTraits<v_uint8>::vlanes();
+@@ -66,9 +67,9 @@ static int countNonZero8u( const uchar* src, int len )
+     return nz;
+ }
+ 
+-static int countNonZero16u( const uchar* src_ptr, int len )
++static int countNonZero16u( const void* src_ptr, int len )
+ {
+-    const ushort* src = reinterpret_cast<const ushort*>(src_ptr);
++    const ushort* src = static_cast<const ushort*>(src_ptr);
+     int i = 0, nz = 0;
+ #if (CV_SIMD || CV_SIMD_SCALABLE)
+     int len0 = len & -VTraits<v_int8>::vlanes();
+@@ -102,9 +103,9 @@ static int countNonZero16u( const uchar* src_ptr, int len )
+     return nz + countNonZero_(src + i, len - i);
+ }
+ 
+-static int countNonZero32s( const uchar* src_ptr, int len )
++static int countNonZero32s( const void* src_ptr, int len )
+ {
+-    const int* src = reinterpret_cast<const int*>(src_ptr);
++    const int* src = static_cast<const int*>(src_ptr);
+     int i = 0, nz = 0;
+ #if (CV_SIMD || CV_SIMD_SCALABLE)
+     int len0 = len & -VTraits<v_int8>::vlanes();
+@@ -138,9 +139,9 @@ static int countNonZero32s( const uchar* src_ptr, int len )
+     return nz + countNonZero_(src + i, len - i);
+ }
+ 
+-static int countNonZero32f( const uchar* src_ptr, int len )
++static int countNonZero32f( const void* src_ptr, int len )
+ {
+-    const float* src = reinterpret_cast<const float*>(src_ptr);
++    const float* src = static_cast<const float*>(src_ptr);
+     int i = 0, nz = 0;
+ #if (CV_SIMD || CV_SIMD_SCALABLE)
+     int len0 = len & -VTraits<v_int8>::vlanes();
+@@ -174,9 +175,9 @@ static int countNonZero32f( const uchar* src_ptr, int len )
+     return nz + countNonZero_(src + i, len - i);
+ }
+ 
+-static int countNonZero64f( const uchar* src_ptr, int len )
++static int countNonZero64f( const void* src_ptr, int len )
+ {
+-    const double* src = reinterpret_cast<const double*>(src_ptr);
++    const double* src = static_cast<const double*>(src_ptr);
+     int nz = 0, i = 0;
+ #if (CV_SIMD_64F || CV_SIMD_SCALABLE_64F)
+     v_int64 sum1 = vx_setzero_s64();

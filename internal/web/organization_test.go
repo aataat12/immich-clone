@@ -95,12 +95,12 @@ func TestAnalysisBatchProtectionAndBuildNotes(t *testing.T) {
 	if w.Code != 200 {
 		t.Fatal(w.Code)
 	}
-	for _, term := range []string{"Build Notes", "Photos &amp; videos Home", "Status", "Released In", "0.1.25-prototype", "Bulk local AI analysis", "Final Windows 10 acceptance"} {
+	for _, term := range []string{"Build Notes", "Photos &amp; videos Home", "Status", "Released In", "0.1.25-prototype", "Bulk local AI analysis", "Final Windows 10 acceptance", "HEIC and video AI", "6A"} {
 		if !bytes.Contains(w.Body.Bytes(), []byte(term)) {
 			t.Fatal("missing notes", term)
 		}
 	}
-	if bytes.Count(w.Body.Bytes(), []byte("<tr>")) != 9 {
+	if bytes.Count(w.Body.Bytes(), []byte("<tr>")) != 10 {
 		t.Fatal("milestone row count")
 	}
 }

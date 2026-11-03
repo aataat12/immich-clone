@@ -308,3 +308,10 @@
   patched/replaced and actual parity/hostile/integration checks pass; no risk
   acceptance or silent codec/model removal. People Previous navigation remains
   held for the combined release, with no installer/version/main change.
+
+- 2026-11-03: prioritize NR-01 with hash-pinned upstream backports to the exact
+  retained 4.12.0 source; six reviewed production fixes apply cleanly locally.
+  Require actual API/model/LocalService execution before provider selection.
+  Add HEIC/video AI as milestone 6A without renumbering original milestones.
+  Initial video scope is explicitly bounded sampled frames, not all-frame or
+  automatic identity merging; feasibility must establish policy before shipping.

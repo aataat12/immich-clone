@@ -70,6 +70,21 @@ func run(root string) (summary []byte, err error) {
 	}
 	exe := filepath.Join(root, "ai-worker.exe")
 	peak := uint64(0)
+	securityCtx, securityCancel := context.WithTimeout(context.Background(), 20*time.Second)
+	securityResult, securityErr := media.Run(securityCtx, filepath.Join(root, "native-security-check.exe"), nil, nil)
+	securityCancel()
+	if securityErr != nil {
+		return nil, errors.New("native security regressions failed under LocalService")
+	}
+	var securityReport struct {
+		Passed bool `json:"passed"`
+	}
+	if json.Unmarshal(securityResult.Output, &securityReport) != nil || !securityReport.Passed {
+		return nil, errors.New("native security evidence invalid")
+	}
+	if uint64(securityResult.Peak) > peak {
+		peak = uint64(securityResult.Peak)
+	}
 	call := func(task, name string) (response, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
@@ -171,7 +186,7 @@ func run(root string) (summary []byte, err error) {
 	if e = verify(); e != nil {
 		return nil, e
 	}
-	return json.Marshal(map[string]any{"native_inference": true, "minimum_python_embedding_cosine": minimum, "same_photo_cosine": same, "different_people_cosine": different, "object_fixtures": 3, "frame_rejections": 4, "model_failure_recovery": true, "cancellation_recovery": true, "peak_job_committed_bytes": peak, "job_limit_bytes": media.MemoryLimit, "originals_unchanged": true})
+	return json.Marshal(map[string]any{"security_backport_regressions": true, "native_inference": true, "minimum_python_embedding_cosine": minimum, "same_photo_cosine": same, "different_people_cosine": different, "object_fixtures": 3, "frame_rejections": 4, "model_failure_recovery": true, "cancellation_recovery": true, "peak_job_committed_bytes": peak, "job_limit_bytes": media.MemoryLimit, "originals_unchanged": true})
 }
 
 type service struct{ root string }

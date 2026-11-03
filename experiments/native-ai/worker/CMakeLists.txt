@@ -28,3 +28,10 @@ set_target_properties(ai-worker PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE "${C
 target_compile_features(ai-worker PRIVATE cxx_std_17)
 target_include_directories(ai-worker PRIVATE "${OPENCV_SOURCE}/modules/core/include" "${OPENCV_SOURCE}/modules/imgproc/include" "${OPENCV_SOURCE}/modules/dnn/include" "${OPENCV_SOURCE}/modules/objdetect/include" "${CMAKE_BINARY_DIR}" "${ZLIB_INCLUDE_DIR}")
 target_link_libraries(ai-worker PRIVATE opencv_objdetect opencv_dnn opencv_imgproc opencv_core ZLIB::ZLIB)
+
+# Not shipped. Run actual patched API regressions against the exact worker libraries.
+add_executable(native-security-check security-check.cpp)
+set_target_properties(native-security-check PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/Release")
+target_compile_features(native-security-check PRIVATE cxx_std_17)
+target_include_directories(native-security-check PRIVATE "${OPENCV_SOURCE}/modules/core/include" "${OPENCV_SOURCE}/modules/dnn/include" "${OPENCV_SOURCE}/modules/imgproc/include" "${CMAKE_BINARY_DIR}")
+target_link_libraries(native-security-check PRIVATE opencv_dnn opencv_imgproc opencv_core)
