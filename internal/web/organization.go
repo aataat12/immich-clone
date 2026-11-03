@@ -134,6 +134,18 @@ func (s *Server) assetOrganization(w http.ResponseWriter, r *http.Request, id, a
 	}
 	var e error
 	switch action {
+	case "reanalysis":
+		var input struct {
+			Action string `json:"action"`
+		}
+		if !organizationInput(w, r, &input) {
+			return true
+		}
+		if input.Action == "apply" {
+			e = s.Store.ApplyReanalysis(r.Context(), id)
+		} else {
+			e = s.Store.ControlReanalysis(id, input.Action)
+		}
 	case "analyze":
 		e = s.Store.QueueAnalysis(id)
 	case "video-analysis":

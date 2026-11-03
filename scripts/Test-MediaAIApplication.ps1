@@ -40,7 +40,7 @@ try {
  finally { Checked icacls @("$root/state/faces",'/remove:d','*S-1-5-19') }
  $model="$root/ai/opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3/sface.onnx"
  Move-Item $model ($model+'.held')
- try { Checked node @('tests/media-ai-recovery.cjs','model-failure') }
+ try { Checked node @('tests/media-ai-recovery.cjs','model-failure');Checked node @('tests/reanalysis.cjs','model-failure') }
  finally { Move-Item ($model+'.held') $model }
  Restart-Service $name
  Checked node @('tests/media-ai-recovery.cjs','resume-crash')
@@ -61,6 +61,9 @@ try {
  if(Get-CimInstance Win32_Process -Filter "Name='ai-worker.exe' AND ParentProcessId=$servicePid"){throw 'Native child survived service crash'}
  Start-Service $name
  Checked node @('tests/media-ai-recovery.cjs','recovered')
+ Checked node @('tests/reanalysis.cjs','prepare')
+ Restart-Service $name
+ Checked node @('tests/reanalysis.cjs','finish')
  # Capture an application-consistent archive, then remove access to the old state.
  $session=[Microsoft.PowerShell.Commands.WebRequestSession]::new()
  $code=(Get-Content "$root/state/access-code.txt" -Raw).Trim()

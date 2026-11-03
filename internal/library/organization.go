@@ -63,10 +63,11 @@ type FaceView struct {
 	Score      float64   `json:"score,omitempty"`
 }
 type OrganizationAsset struct {
-	Asset     Asset    `json:"asset"`
-	Analysis  Analysis `json:"analysis"`
-	Tags      []string `json:"tags"`
-	Dismissed []string `json:"dismissed"`
+	Reanalysis *ReanalysisView `json:"reanalysis,omitempty"`
+	Asset      Asset           `json:"asset"`
+	Analysis   Analysis        `json:"analysis"`
+	Tags       []string        `json:"tags"`
+	Dismissed  []string        `json:"dismissed"`
 }
 type Organization struct {
 	MediaAvailable bool                `json:"media_available"`
@@ -79,6 +80,9 @@ type Organization struct {
 }
 
 func initOrganization(tx *bolt.Tx) error {
+	if e := initReanalysis(tx); e != nil {
+		return e
+	}
 	for _, name := range []string{analysisBucket, facesBucket, labelsBucket, tagsBucket, "dismissed_ai_tags_v1", batchMembers, batchMeta} {
 		if _, e := tx.CreateBucketIfNotExists([]byte(name)); e != nil {
 			return e
@@ -239,6 +243,9 @@ func (s *Store) ProcessAnalysis(ctx context.Context) (bool, error) {
 	})
 	if e != nil || id == "" {
 		s.gate.Unlock()
+		if e == nil {
+			return s.processReanalysis(ctx)
+		}
 		return false, e
 	}
 	s.activeAnalysis = id
@@ -684,6 +691,11 @@ func (s *Store) OrganizationFilteredPage(after, faceAfter, query string, dismiss
 				continue
 			}
 			record := OrganizationAsset{Asset: a, Analysis: Analysis{AssetID: a.ID, Status: "not_requested", Objects: []string{}}, Tags: []string{}}
+			var jobErr error
+			record.Reanalysis, jobErr = reanalysisView(tx, a.ID)
+			if jobErr != nil {
+				return jobErr
+			}
 			if e := readJSON(tx.Bucket([]byte(analysisBucket)), a.ID, &record.Analysis); e != nil && !errors.Is(e, os.ErrNotExist) {
 				return e
 			}
@@ -738,7 +750,7 @@ func (s *Store) OrganizationExport() (map[string]any, error) {
 	out := map[string]any{"schema": 1}
 	organization := map[string]any{"version": 1}
 	e := s.db.View(func(tx *bolt.Tx) error {
-		for _, name := range []string{analysisBucket, facesBucket, labelsBucket, tagsBucket, "dismissed_ai_tags_v1", batchMembers, batchMeta} {
+		for _, name := range []string{analysisBucket, facesBucket, labelsBucket, tagsBucket, "dismissed_ai_tags_v1", batchMembers, batchMeta, reanalysisBucket} {
 			items := map[string]json.RawMessage{}
 			e := tx.Bucket([]byte(name)).ForEach(func(k, v []byte) error {
 				if name == facesBucket {
@@ -752,6 +764,19 @@ func (s *Store) OrganizationExport() (map[string]any, error) {
 						return e
 					}
 					items[string(k)] = b
+				} else if name == reanalysisBucket {
+					var job reanalysisJob
+					if e := json.Unmarshal(v, &job); e != nil {
+						return e
+					}
+					for i := range job.Faces {
+						job.Faces[i].Embedding = nil
+					}
+					data, e := json.Marshal(job)
+					if e != nil {
+						return e
+					}
+					items[string(k)] = data
 				} else if name == batchMembers {
 					// Membership values are raw internal states, not JSON records.
 					b, e := json.Marshal(string(v))
@@ -839,7 +864,7 @@ func (s *Store) DismissTag(id, tag string, restore bool) error {
 				found = true
 			}
 		}
-		if !found {
+		if !found && !restore {
 			return ErrOrganizationInput
 		}
 		var tags []string
