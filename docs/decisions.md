@@ -335,3 +335,11 @@
   establishes no open Group 1 exploit among the eight; all eight Group 2.
   Continue 6A functional implementation. Separate R-RESTORE-01 reliability from
   proven SEC-04 bounds; no claim to have explained or fixed the refusal.
+
+- Milestone6A candidate freezes initial sampled coverage at up to12 evenly spaced
+  source-relative targets, excludes the end, stores actual decoded timestamps and
+  skips duplicate timestamps. Each frame commits one checkpoint; pause/cancel
+  preserves completed observations and finishes an in-flight frame. Existing
+  model identity remains shared with supported still photos; sampling policy
+  has its own versioned field, allowing compatible review-only name suggestions
+  without automatic naming/tracking. Full-frame coverage remains out of scope.

@@ -831,3 +831,24 @@ service/browser/inference/model recovery and independent original/organization
 restoration. No installer/version/main merge, no Windows10 or broad accuracy
 certification. R-RESTORE-01 remains unexplained and original SEC-04 is reopened;
 other full release/upgrade/rollback/input/isolation gates remain unchanged.
+
+
+## Milestone6A existing-provider execution
+
+No new product dependency. FFmpeg8.1.3 provider7eb77d88e2e9 and accepted patched
+OpenCV provider15d1c2ca7ef3 supply bounded960px still/video analysis frames.
+Actual LocalService/restart feasibility41559260341 (sourcee95958bc9f24a1e56cdd5e47cce2248f80440d2a,
+job125665621103) passed single/grid12MP HEIC reference comparisons (minimum
+embedding cosine0.9966728075891548), known video PTS/content, H264/HEVC,
+rotation/VFR/short clips, cancellation, malformed/no-video refusal and immutable
+fixture checks. Tolerances preceded execution; no empty-grid substitute.
+
+Actual application/Edge acceptance41564920558, source9c15c56dba52481f98d8b255e98303f6ce29af7b,
+job125684028344 passed HEIC inference, sampled H264 frame observations and browser
+controls, service restart, original downloads and independent restored derived
+crop/context regeneration. Exact scope and remaining delivery gates are
+heic-video-ai.md. Server2022 evidence does not establish Windows10 compatibility.
+Python/Pillow/pillow-heif and the fixture encoder are cloud test tooling only;
+none is packaged as a new user dependency. Native models/binaries unchanged.
+The earlier SEC04 reopening statement above is superseded by the original-eight
+classification in security-priority-groups.md; no Group2/3 investigation here.

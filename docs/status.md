@@ -1,5 +1,20 @@
 # Current status
 
+Milestone6A functional candidate passed focused Windows Server2022 LocalService/
+Edge acceptance [41564920558](https://github.com/aataat12/immich-clone/actions/runs/41564920558),
+source9c15c56dba52481f98d8b255e98303f6ce29af7b, job125684028344.
+Actual single/grid12MP HEIC face inference, persistent video pause/restart/cancel/
+resume, 12 sampled positions with timestamped face/cup observations, saved frame
+viewing, desktop/narrow overflow, original SHA256 downloads and independent
+restore/crop/context regeneration passed. New mock job regressions also passed on
+Windows; local full Go suite/vet and focused race tests passed. Shared model
+identity retains review-only still/video suggestions; policy is stored separately.
+No runtime dependency was added and no native rebuild was required.
+No installer/version/main publication or Windows10 certification. Remaining6A
+feature/release gates are heic-video-ai.md; older planned-only statements below
+are historical. Group2/3 security work remains paused.
+
+
 Latest classification clarification: only original SEC-01..08 belong in Groups
 1/2; all are currently Group 2 under the recorded loopback-only deployment.
 No demonstrated open Group 1 item; no further Group 2 mitigation work. Additional

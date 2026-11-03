@@ -78,6 +78,40 @@ skipping duplicate timestamps. These are sampled observations, not tracking.
 
 Candidate backend/UI now persist per-clip pause/cancel/resume and individual
 frame observations, names/tags and reproducible crops/context. Local full Go
-suite/vet and focused race checks passed. Real application/browser/restart and
-independent-restore acceptance is pending the focused media-ai workflow.
+suite/vet and focused race checks passed. Actual application acceptance passed
+in the focused run below.
 No installer/version/main update or Windows10 certification is claimed.
+
+## Application checkpoint — November 2, 2026 (America/Chicago)
+
+[41564920558](https://github.com/aataat12/immich-clone/actions/runs/41564920558),
+source9c15c56dba52481f98d8b255e98303f6ce29af7b, job125684028344, passed on
+Windows Server2022 with the actual app as LocalService and Edge:
+
+- Both public face-bearing HEICs analyzed through the full analysis decoder.
+- Explicit sampled-video start, persisted pause across service restart, cancel,
+  resume to12 targets; unique actual timestamps, face observations and cup tags.
+- Name/custom-tag edits, saved sampled-frame context, desktop/narrow overflow,
+  no page errors and original-download SHA256 checks.
+- Application-consistent archive restored independently; old state moved offline;
+  saved coverage and video name retained, all face crops rebuilt, saved sampled
+  context regenerated with the media provider and no AI model/provider configured.
+- Windows mock regressions cover duplicate timestamps, in-flight pause, cancellation,
+  resume/restart, independent restore and compatible still/video suggestions.
+  Same model ID permits suggestions, never automatic naming; sampling policy is
+  separately versioned. Existing ready still observations are not rerun.
+
+Earlier application attempts41561426161/41561870989 checked face results while
+still queued; explicit persisted-status polling corrected the test.
+41562254568 then passed actual inference/frame viewing before its test-only
+relative download URL error. Both were corrected without lowering assertions.
+The source push also started broad workflows; scale/media completed successfully,
+and application41561426175 was canceled. Temporary cancellation workflow removed.
+Only focused workflow ran for the final source.
+
+Remaining before full6A delivery: feature-specific provider-loss/retry and storage/
+interruption coverage, combined existing-feature/installed upgrade and rollback
+acceptance, and applicable target Windows10 validation. Existing broad provider
+and malformed-codec evidence is reused; exhaustive paused Group2 security review
+is not reopened. No user-library enlargement or new dependency installation is
+needed for this checkpoint. Build Notes stays Planned until actual delivery.
