@@ -62,7 +62,7 @@ jobs:
         run: |
           $r=Invoke-RestMethod 'https://api.github.com/repos/aataat12/immich-clone/actions/runs/41559260341'
           if ($r.conclusion -ne 'success' -or $r.head_sha -ne 'e95958bc9f24a1e56cdd5e47cce2248f80440d2a') { throw 'Prior exact feasibility evidence missing' }
-      - name: Actual deletion recovery with explicit NTFS delete-child denial
+      - name: Validate deletion recovery before media regression execution
         shell: pwsh
         run: |
           $root = Join-Path $env:ProgramData 'Immich 6A 試験'
@@ -74,3 +74,24 @@ jobs:
           } finally {
             Remove-Item $root -Recurse -Force -ErrorAction SilentlyContinue
           }
+
+  import-boundary:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with:
+          go-version: '1.27.3'
+      - name: Classify oversized import bodies without altering saved receipts
+        shell: pwsh
+        run: |
+          go test -mod=readonly -count=1 ./internal/web -run '^TestImportBodySizeErrorReturns413WithoutAcceptingPartial$'
+          if ($LASTEXITCODE -ne 0) { throw 'Import size response regression failed' }
+      - name: Prove exact 4 GiB HTTP import and readback on disposable storage
+        shell: pwsh
+        run: ./scripts/Test-ImportBoundary.ps1 -TemporaryParent $env:RUNNER_TEMP
