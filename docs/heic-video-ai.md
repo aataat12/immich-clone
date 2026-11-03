@@ -163,3 +163,16 @@ stays deferred. No installer/version/main change; target Windows10 and combined
 release acceptance remain unverified for6A. The installer harness still starts
 from0.1.27; the next normal release validation must use the actual installed0.1.29
 prototype as its upgrade baseline and verify the combined candidate and rollback.
+
+## Combined prototype release0.1.30
+
+Released at https://github.com/aataat12/immich-clone/releases/tag/v0.1.30-prototype
+after combined acceptance41569614980, source042547e877f0c8957b7029ff6aa6d4ad4da9f8b0,
+job125699201968 passed on Windows Server2022/Edge. Actual0.1.29 Setup baseline,
+failed/successful cross-provider upgrade, installed HEIC/sample-video inference,
+failed0.1.31 rollback preserving6A samples/names, uninstall retention and restored
+reinstall/frame regeneration passed. Installer SHA256:
+ec78e9d62b4d462f3b1448310dad1cbda30cf278509af20426bbdcd49018a007,104160014 bytes.
+Full Scan stays deferred. Target Windows10 acceptance remains separate; this is
+an unsigned cloud-accepted prototype, not final compatibility certification.
+The earlier combined-installer pending statements are superseded by this checkpoint.

@@ -1,5 +1,21 @@
 # Current status
 
+**Released0.1.30-prototype**: [installer/release](https://github.com/aataat12/immich-clone/releases/tag/v0.1.30-prototype).
+Combined acceptance [41569614980](https://github.com/aataat12/immich-clone/actions/runs/41569614980),
+source042547e877f0c8957b7029ff6aa6d4ad4da9f8b0, job125699201968, passed on
+Windows Server2022/Edge. Actual original0.1.29 Setup was hash-verified and installed;
+failed cross-provider upgrade recovered0.1.29, successful upgrade deployed0.1.30,
+installed6A HEIC/video execution passed, injected0.1.31 failure recovered0.1.30
+including sampled observations/corrections, and independent restore/reinstall
+regenerated HEIC/face/frame context. Full suite/vet/dependency, real NTFS full-disk,
+normal browser/session/CSP and payload-canary checks passed. Full Scan deferred.
+Installer104160014 bytes; SHA256 ec78e9d62b4d462f3b1448310dad1cbda30cf278509af20426bbdcd49018a007.
+Public release is an unsigned prerelease. Windows10 local acceptance is next;
+no clean-machine/reboot/endurance or full compatibility certification. Existing
+Group2/3 mitigation remains paused, original security counts unchanged. Older
+held-candidate/next-installer statements below are historical.
+
+
 6A failure-recovery checkpoint passed [41567782811](https://github.com/aataat12/immich-clone/actions/runs/41567782811),
 source718eab96aa5ef281524de492498757d8b74469b3, job125693367010. Actual
 LocalService/Edge checks covered unavailable-decoder startup, runtime decoder loss/
