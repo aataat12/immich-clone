@@ -77,7 +77,7 @@ jobs:
             if (Test-Path "$root/failed.txt") { Get-Content "$root/failed.txt" }
             if (Get-Service $name -ErrorAction SilentlyContinue) { Stop-Service $name -ErrorAction Continue;sc.exe delete $name }
           }
-      - name: Actual 6A application browser jobs and independent recovery
+      - name: Actual 6A application HEIC catalog and browser recovery
         shell: pwsh
         run: |
           $root = Join-Path $env:ProgramData 'Immich 6A 試験'
