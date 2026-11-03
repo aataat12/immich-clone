@@ -1,0 +1,27 @@
+name: Managed originals directory outage acceptance
+on:
+  push:
+    paths:
+      - '.github/workflows/import-destination.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  destination-recovery:
+    runs-on: windows-2022
+    timeout-minutes: 7
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with:
+          go-version: '1.27.3'
+      - name: Prove real destination directory outage and reconnect under LocalService
+        shell: pwsh
+        run: |
+          npm install --prefix "$env:RUNNER_TEMP/destination-deps" --no-audit --no-fund playwright@1.62.1
+          if ($LASTEXITCODE -ne 0) { throw 'Browser tooling unavailable' }
+          $env:IMMICH_BROWSER_MODULE="$env:RUNNER_TEMP/destination-deps/node_modules/playwright"
+          ./scripts/Test-ImportDestinationLoss.ps1
