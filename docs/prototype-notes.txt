@@ -1,4 +1,4 @@
-IMMICH CLONE 0.1.29 - EARLY TEST BUILD
+IMMICH CLONE 0.1.30 - EARLY TEST BUILD
 
 This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
@@ -170,3 +170,5 @@ picker, incremental backup, automatic retention or full-library acceptance yet.
 
 Security hardening candidate: exact embedded-script policy and access guard
 regressions. Wider security review remains open; no LAN/Internet exposure.
+
+6A: supported8-bit single/grid HEIC local AI; explicit per-video analysis of up to12 evenly spaced sample positions with actual timestamps, pause/cancel/resume and saved corrections. Every-frame Full Scan remains deferred. Existing ready results are preserved.
