@@ -18,7 +18,7 @@ The deletion implementation below is a candidate. Remaining acceptance gates:
 
 1. Focused Windows LocalService/browser deletion, permission-failure, crash/retry and real pre-delete archive restoration: PASS in run 41697638495 (details below).
 2. Deletion-specific full-volume refusal/retry and transaction rollback checks: PASS in run 41702306375, within the scope documented below.
-3. Combined actual old-installer upgrade/failed-upgrade rollback, including pending intents, followed by installed deletion/restore/uninstall checks.
+3. Combined actual old-installer upgrade/failed-upgrade rollback, including pending intents, followed by installed deletion/restore/uninstall checks: PASS in run 41704978730 (details below).
 4. Final target Windows acceptance before marking milestone 3 delivered.
 
 No security Group 2/3 investigation or mitigation, every-frame Full Scan, new dependency or user-PC action is included. Windows Server testing does not certify Windows 10 compatibility.
@@ -81,3 +81,16 @@ Earlier attempts are retained as evidence:
 - [41701950792](https://github.com/aataat12/immich-clone/actions/runs/41701950792), source `a39b2cac61d1be92035b73833aa7b3948ad9862a`: full-volume refusal, unchanged catalog/original/review, retry, and existing upload/backup recovery passed before adding the separate transaction-rollback case.
 
 The free-space floor is a preflight check, not an exclusive reservation against unrelated processes consuming space, and does not establish recovery from every possible catalog growth or physical I/O failure. No database dependency was changed. These tests do not establish Windows 10 compatibility or installed-package acceptance. Gates 3 and 4 remain open: actual previous-installer upgrade/failed-upgrade rollback with pending intents and installed recovery, then target Windows validation. No new installer was published; installed 0.1.33 remains the user baseline. Group 2/3 security work and Full Scan remain paused/deferred.
+
+
+## 0.1.34 combined installer acceptance and publication
+
+[Run 41704978730](https://github.com/aataat12/immich-clone/actions/runs/41704978730), source `4e66d707cfc1847d33da87309b6aee53abb13f60`, job `126157762864`: PASS, first attempt, on Windows Server 2022. The actual released 0.1.33 installer was retrieved from its accepted run 41652777887 and SHA256-checked before installation. Both the failed initial 0.1.34 upgrade and successful retry preserved originals, prior names/tags and ready native AI results.
+
+The installed 0.1.34 executable and immutable providers passed HEIC/video inference, sampled timestamps, reanalysis restart/apply/discard and retained proposal checks. Hidden Media passed managed-location clipboard, narrow-dialog, restart and reversible restore checks. A synthetic non-regular preview blocked cleanup equally for LocalService and elevated installer initialization, without changing production ACLs. A pending deletion survived an injected 0.1.35 upgrade failure and rollback to 0.1.34, with original bytes retained and new backups blocked.
+
+The exact saved 0.1.33 executable then opened and verified that pending-intent catalog and served it as the CI account while the installed service was stopped. Its actual HTTP upload reimported the same orphaned original into the catalog. After the installed LocalService resumed, cleanup reported a conflict and kept that new publication. The browser's Keep current copy cleared only the old intent, retained the original and restored backup availability. A new explicit hide/typed-DELETE confirmation then completed deletion successfully. This older-writer probe proves compatibility behavior, not sandbox isolation of the CI process.
+
+The installed executable independently restored the actual pre-deletion archive to a different folder; the hidden original, pre-upgrade and installed named faces, and video corrections remained. The later full backup/uninstall/offline-state/independent-restore/reinstall sequence also passed, including restored secret authentication, original hashes, regenerated HEIC/frame/crop access, ready proposals and proposal Apply without duplicate/replaced detections. Full Windows units/vet, dependency checks, three actual bounded NTFS full-disk recoveries, browser navigation and application restore passed in the same run. No security Group 2/3 investigation or native dependency replacement was performed; the known progress-read:32 risk remains unexplained.
+
+Published [0.1.34-prototype](https://github.com/aataat12/immich-clone/releases/tag/v0.1.34-prototype) installer: 104197020 bytes; GitHub asset SHA256 `9ff8331cc1e908a816bb03a89a33e5ef68f7224cd094a7e6eb635b76d23557db`. The build labels milestone 3 delivered as a cloud-tested prototype. Gate 4 remains open: target-PC validation, with clean-machine/reboot/extended Windows 10 acceptance still separate. See [validation-0.1.34.md](validation-0.1.34.md). No claim of complete Windows 10 compatibility is made.
