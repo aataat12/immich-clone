@@ -1,5 +1,19 @@
 # Current status
 
+**Target Windows10 validation of0.1.30: sampled video FAIL, cause unknown.**
+User confirmed version/data, dismissal/restore, photo context, authentication and
+normal page navigation. HEIC AI and narrow layout were not exercised. One existing
+MP4 queued then failed with generic local AI task error and0/0 coverage. Do not
+claim6A target acceptance or a root-cause fix. Local candidate corrects obsolete
+HEIC/video help, retains known targets after first-sample failure, and adds fixed
+AI task stages plus numeric native exit codes to private-safe diagnostics.
+Previous controls are hidden on the first page by design (100 faces/50 photos
+per page) and appear after forward navigation; user pagination remains partial.
+Need private app diagnostics and nonidentifying clip dimensions/duration to
+narrow native failure; no personal media or raw support files in this repository.
+No replacement installer has been published for this report.
+
+
 **Released0.1.30-prototype**: [installer/release](https://github.com/aataat12/immich-clone/releases/tag/v0.1.30-prototype).
 Combined acceptance [41569614980](https://github.com/aataat12/immich-clone/actions/runs/41569614980),
 source042547e877f0c8957b7029ff6aa6d4ad4da9f8b0, job125699201968, passed on

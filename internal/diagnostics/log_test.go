@@ -58,3 +58,14 @@ func TestLoggingFailureDoesNotPanic(t *testing.T) {
 		t.Fatal("log write failure not surfaced")
 	}
 }
+
+type testChildExit struct{}
+
+func (testChildExit) Error() string          { return "private path and stderr must not be logged" }
+func (testChildExit) NativeExitCode() uint32 { return 0xc000001d }
+func TestNativeChildExitClassification(t *testing.T) {
+	category, code := classify(testChildExit{})
+	if category != "native_child_exit" || code != 0xc000001d {
+		t.Fatal("lost numeric native failure", category, code)
+	}
+}

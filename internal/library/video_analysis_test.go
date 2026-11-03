@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"image"
 	"immichclone/internal/media"
 	"immichclone/internal/recognition"
@@ -377,5 +378,42 @@ func TestVideoFaceSuggestionsUseCompatibleStillProvider(t *testing.T) {
 	}
 	if !found {
 		t.Fatal("sampled face missing")
+	}
+}
+
+func TestVideoFirstInferenceFailureKeepsKnownPlanForRetry(t *testing.T) {
+	s, _ := openTest(t)
+	mockAnalysisMedia(s)
+	s.SetRecognizer(func(context.Context, image.Image, string) (recognition.Result, error) {
+		return recognition.Result{}, errors.New("controlled inference failure")
+	}, true)
+	a, _, e := s.Put("clip.mp4", bytes.NewReader(mediaFixture(t, "hevc.mp4")))
+	if e != nil {
+		t.Fatal(e)
+	}
+	if e = s.QueueAnalysis(a.ID); e != nil {
+		t.Fatal(e)
+	}
+	if _, e = s.ProcessAnalysis(context.Background()); e != nil {
+		t.Fatal(e)
+	}
+	o, e := s.OrganizationPage("", "", "")
+	if e != nil {
+		t.Fatal(e)
+	}
+	v := o.Assets[0].Analysis
+	if v.Status != "failed" || v.Video.Next != 0 || len(v.Video.Targets) != 12 || len(v.Video.Samples) != 0 || len(o.Faces) != 0 {
+		t.Fatal("failed first sample lost known coverage or published results")
+	}
+	s.SetRecognizer(fakeAnalysis, true)
+	if e = s.ControlVideoAnalysis(a.ID, "resume"); e != nil {
+		t.Fatal(e)
+	}
+	if _, e = s.ProcessAnalysis(context.Background()); e != nil {
+		t.Fatal(e)
+	}
+	o, e = s.OrganizationPage("", "", "")
+	if e != nil || o.Assets[0].Analysis.Video.Next != 1 || len(o.Faces) != 1 {
+		t.Fatal("failed sample retry", e)
 	}
 }

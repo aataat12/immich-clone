@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"golang.org/x/image/draw"
 	"image"
 	"immichclone/internal/diagnostics"
@@ -217,14 +218,16 @@ func (p *Provider) Analyze(ctx context.Context, img image.Image, staging string)
 		if e = ctx.Err(); e != nil {
 			return Result{}, e
 		}
+		startedTask := time.Now()
 		child, cancel := context.WithTimeout(ctx, 30*time.Second)
 		r, err := media.Run(child, filepath.Join(p.dir, "ai-worker.exe"), []string{task, p.dir, f.Name()}, nil)
 		cancel()
+		diagnostics.Record("recognition", "ai_"+task, err, 0, 0, time.Since(startedTask))
 		if ctx.Err() != nil {
 			return Result{}, ctx.Err()
 		}
 		if err != nil {
-			return Result{}, errors.New("local AI task failed; retry after checking the provider")
+			return Result{}, fmt.Errorf("local AI %s task failed; check diagnostics before retrying", task)
 		}
 		var part Result
 		if json.Unmarshal(r.Output, &part) != nil || Validate(part, img.Bounds().Dx(), img.Bounds().Dy()) != nil {

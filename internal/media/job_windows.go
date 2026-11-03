@@ -5,7 +5,6 @@ package media
 import (
 	"context"
 	"errors"
-	"fmt"
 	"golang.org/x/sys/windows"
 	"io"
 	"os"
@@ -158,7 +157,7 @@ func runLimited(ctx context.Context, exe string, args []string, onStart func(uin
 		return result, e
 	}
 	if code != 0 {
-		return result, fmt.Errorf("child exit code %d", code)
+		return result, &ChildExitError{Code: code}
 	}
 	result.Output = read.b
 	return result, nil

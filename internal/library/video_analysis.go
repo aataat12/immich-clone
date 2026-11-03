@@ -254,6 +254,11 @@ func (s *Store) processVideoAnalysis(parent context.Context, asset Asset, a Anal
 			}
 		}
 	}
+	// Keep successfully probed coverage when the first inference fails. Only a
+	// completed frame advances Next; an unprobed/invalid clip still has no plan.
+	if workErr == nil && len(baseline.Targets) == 0 && len(v.Targets) > 0 {
+		baseline = *v
+	}
 	var faces []StoredFace
 	committed := false
 	defer func() {
