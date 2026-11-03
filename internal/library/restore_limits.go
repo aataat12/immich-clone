@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"runtime/debug"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -184,7 +185,7 @@ func RestoreWithLimits(ctx context.Context, archive, target string, l RestoreLim
 	}
 	var status struct{ Code string }
 	if json.Unmarshal(run.Output, &status) != nil {
-		return errRestoreWorker
+		return restoreStageError("worker-status-json", nil)
 	}
 	if status.Code == "budget" {
 		return ErrRestoreBudget
@@ -193,7 +194,7 @@ func RestoreWithLimits(ctx context.Context, archive, target string, l RestoreLim
 		return ErrRestoreInvalidArchive
 	}
 	if status.Code != "ok" {
-		return errRestoreWorker
+		return restoreStageError("worker-status-code", nil)
 	}
 	// Full stage traversal/checking already completed inside the bounded worker.
 	// Parent reads only this fixed-size status and one catalog stat.
@@ -361,18 +362,18 @@ func checkRestoreCatalogProgress(stage, nonce string, l RestoreLimits) error {
 		return errRestoreProgressNotReady
 	}
 	if e != nil {
-		return errRestoreWorker
+		return restoreStageError("progress-read", e)
 	}
 	if len(p) > 4096 {
 		return ErrRestoreBudget
 	}
 	var progress restoreProgress
 	if json.Unmarshal(p, &progress) != nil || progress.Nonce != nonce || progress.BaseBytes > l.MaxBytes {
-		return errRestoreWorker
+		return restoreStageError("progress-validation", nil)
 	}
 	info, e := os.Stat(filepath.Join(stage, "catalog.db"))
 	if e != nil {
-		return errRestoreWorker
+		return restoreStageError("catalog-stat", e)
 	}
 	if info.Size() < 0 || uint64(info.Size()) > l.MaxCatalogBytes || uint64(info.Size()) > l.MaxBytes-progress.BaseBytes {
 		return ErrRestoreBudget
@@ -397,4 +398,11 @@ func monitorRestoreGrowth(ctx context.Context, stage, nonce string, l RestoreLim
 			}
 		}
 	}
+}
+
+// Fixed stage and numeric OS code only; never include private paths, contents or raw errors.
+func restoreStageError(stage string, cause error) error {
+	var code syscall.Errno
+	_ = errors.As(cause, &code)
+	return fmt.Errorf("%w [%s:%d]", ErrRestoreWorkerFailed, stage, uint64(code))
 }
