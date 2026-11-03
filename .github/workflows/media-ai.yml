@@ -53,7 +53,7 @@ jobs:
           python -B experiments/media-ai/prepare.py $root
           if ($LASTEXITCODE -ne 0) { throw 'Fixture preparation failed' }
           ./experiments/media-ai/prepare.ps1 -Root $root
-      - name: Actual LocalService HEIC and timestamped video CPU analysis
+      - name: Actual LocalService HEIC and aspect-preserved timestamped video CPU analysis
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
