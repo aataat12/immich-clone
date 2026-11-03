@@ -20,5 +20,16 @@ numeric child-exit classification; actual Windows child exits17; Edge first-page
 control visibility; existing public-fixture LocalService inference, provider/
 storage failure, native-child crash and independent restore suite.
 
-Windows execution is pending. This is not an installer release or an assertion
+Windows Server2022/LocalService/Edge execution passed in
+[41583936189](https://github.com/aataat12/immich-clone/actions/runs/41583936189),
+source222ec96387f6a7bad9cc1aae33b6040d65c25eda, job125744900977. Synthetic
+first-failure/retry, actual native exit17, visible/disabled first-page Previous
+controls, public HEIC/video inference, provider/storage failure, service crash
+and independent restored crop/context regeneration passed. The first run
+41583371739 timed out because its name-text selector could match a different face
+with a suggested name; the test now selects the exact saved face ID and requires
+the saved name before opening its sampled-frame context. No inference assertion
+was removed. Local focused tests, JavaScript syntax and Windows cross-build passed.
+
+This is not an installer release or an assertion
 that every possible native inference failure has been explained or fixed.
