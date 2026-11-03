@@ -5,7 +5,7 @@ $state = Join-Path $root 'state'
 New-Item -ItemType Directory $root | Out-Null
 function Assert([bool]$condition,[string]$message) { if (!$condition) { throw $message }; Write-Output "PASS: $message" }
 function Install([string]$version) {
-    if ($version -eq '0.1.31') { $setup=Join-Path 'previous-installer' 'ImmichClone-0.1.31-prototype-x64-setup.exe';if ((Get-FileHash $setup).Hash.ToLowerInvariant() -ne '9ca49cbf2fb95ca3aee1bd6c72ab54886b018451b9339c59f2acfe4dc424054f') { throw 'Previous installer checksum mismatch' }; $setup=(Resolve-Path $setup).Path } else { $setup=(Resolve-Path "dist/ImmichClone-$version-prototype-x64-setup.exe").Path }
+    if ($version -eq '0.1.32') { $setup=Join-Path 'previous-installer' 'ImmichClone-0.1.32-prototype-x64-setup.exe';if ((Get-FileHash $setup).Hash.ToLowerInvariant() -ne '327f58cf149a1ccd220dbd9377f4151f807594ba9983d659fb002aa0ccdc645a') { throw 'Previous installer checksum mismatch' }; $setup=(Resolve-Path $setup).Path } else { $setup=(Resolve-Path "dist/ImmichClone-$version-prototype-x64-setup.exe").Path }
     $process = Start-Process $setup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$app+'"'),('/STATE="'+$state+'"'),('/LOG="'+$root+'/setup-'+$version+'.log"')) -Wait -PassThru
     if ($process.ExitCode -ne 0) {
         Get-Content "$root/setup-$version.log" -Tail 25 | ForEach-Object { Write-Host $_ }
@@ -14,11 +14,11 @@ function Install([string]$version) {
     return $process.ExitCode
 }
 try {
-    Assert ((Install '0.1.31') -eq 0) 'installer fresh install succeeds in path containing spaces'
+    Assert ((Install '0.1.32') -eq 0) 'installer fresh install succeeds in path containing spaces'
     Assert (Test-Path "$app/media/ffmpeg-8.1.3-7eb77d88e2e9/ffmpeg-8.1.3-source.tar.gz") 'installer includes exact media source and notices'
     $service = Get-CimInstance Win32_Service -Filter "Name='ImmichClone'"
     Write-Output ('Disposable CI service evidence: '+($service | Select-Object Name,StartName,StartMode,State | ConvertTo-Json -Compress))
-    if (!$service -or $service.StartName -ne 'NT AUTHORITY\LocalService' -or $service.StartMode -ne 'Auto') { Get-Content "$root/setup-0.1.31.log" -Tail 35 }
+    if (!$service -or $service.StartName -ne 'NT AUTHORITY\LocalService' -or $service.StartMode -ne 'Auto') { Get-Content "$root/setup-0.1.32.log" -Tail 35 }
     Assert (Test-Path "$app/Export-Diagnostics.ps1") 'installer includes standalone diagnostic exporter'
     Assert ($service.StartName -eq 'NT AUTHORITY\LocalService' -and $service.StartMode -eq 'Auto') 'installer configures restricted automatic service'
     & "$env:SystemRoot/System32/WindowsPowerShell/v1.0/powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/Test-LocalPrototype.ps1
@@ -45,15 +45,15 @@ try {
     # Fail the first initial upgrade upgrade too, then prove old executable/provider
     # and original data still work before attempting a successful upgrade.
     $env:IMMICH_INSTALL_TEST_FAILURE='1'
-    $firstUpgradeFailure=Install '0.1.32'
+    $firstUpgradeFailure=Install '0.1.33'
     Remove-Item Env:IMMICH_INSTALL_TEST_FAILURE
     Assert ($firstUpgradeFailure -ne 0) 'initial upgrade failed upgrade is rejected'
-    Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.31-prototype') 'initial upgrade rollback restores prior build'
+    Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.32-prototype') 'initial upgrade rollback restores prior build'
     Assert ((Get-FileHash "$app/ai/opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3/ai-worker.exe").Hash.ToLowerInvariant() -eq '15d1c2ca7ef3f526b34ac4823f9337c51280ad171ddf43df4f3af5d8128a7c58') 'initial upgrade rollback retains old immutable worker'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'initial upgrade rollback preserves original bytes'
-    Assert ((Install '0.1.32') -eq 0) 'installer upgrade succeeds'
-    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.32-prototype') 'upgrade deploys new executable version'
-    Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.32-prototype') 'installed health reports actual executable build'
+    Assert ((Install '0.1.33') -eq 0) 'installer upgrade succeeds'
+    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.33-prototype') 'upgrade deploys new executable version'
+    Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.33-prototype') 'installed health reports actual executable build'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'upgrade preserves original bytes'
     $session=[Microsoft.PowerShell.Commands.WebRequestSession]::new()
     $null=Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$code}|ConvertTo-Json) -WebSession $session
@@ -102,14 +102,28 @@ try {
     Restart-Service ImmichClone
     & node tests/media-ai.cjs finish
     Assert ($LASTEXITCODE -eq 0) 'installed6A timestamped video inference and original checks pass'
+    & node tests/reanalysis.cjs prepare
+    Assert ($LASTEXITCODE -eq 0) 'installed reanalysis HEIC discard apply and paused video pass'
+    Restart-Service ImmichClone
+    & node tests/reanalysis.cjs finish
+    Assert ($LASTEXITCODE -eq 0) 'installed reanalysis video restart discard apply and narrow layout pass'
+    # Retain an unapplied proposal through failed upgrade and independent restore.
+    $proposalReceipt=Get-Content (Join-Path $env:IMMICH_6A_FIXTURES 'app-receipt.json') -Raw | ConvertFrom-Json
+    $proposalID=$proposalReceipt.'face.heic'
+    $session=[Microsoft.PowerShell.Commands.WebRequestSession]::new()
+    $null=Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers $aiHeaders -Body (@{code=$code}|ConvertTo-Json) -WebSession $session
+    $null=Invoke-RestMethod "http://127.0.0.1:2283/api/assets/$proposalID/reanalysis" -Method Post -Headers $aiHeaders -Body '{"action":"start"}' -WebSession $session
+    for($i=0;$i -lt 30;$i++){ $proposalOrg=Invoke-RestMethod http://127.0.0.1:2283/api/organization -WebSession $session;$proposal=$proposalOrg.assets | Where-Object {$_.asset.id -eq $proposalID};if($proposal.reanalysis.status -eq 'ready'){break};Start-Sleep -Seconds 1 }
+    Assert ($proposal.reanalysis.status -eq 'ready') 'installed service prepares a durable unapplied proposal'
+    $proposalFaceIDs=@($proposalOrg.faces | Where-Object asset_id -eq $proposalID | Sort-Object id | ForEach-Object id) -join ','
     Remove-Item Env:IMMICH_TEST_STATE
     $env:IMMICH_INSTALL_TEST_FAILURE = '1'
-    $failedCode = Install '0.1.33'
+    $failedCode = Install '0.1.34'
     Remove-Item Env:IMMICH_INSTALL_TEST_FAILURE
     $installLog = Get-Content (Join-Path $env:ProgramData 'ImmichCloneDiagnostics/installer.jsonl') -Raw
     Assert ($installLog.Contains('installer_failed') -and $installLog.Contains('rollback_complete') -and !$installLog.Contains($state)) 'installer logs failed-upgrade and rollback stages without data paths'
     Assert ($failedCode -ne 0) 'injected failed upgrade returns failure'
-    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.32-prototype') 'failed upgrade restores previous executable'
+    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.33-prototype') 'failed upgrade restores previous executable'
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'rollback restores healthy service'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'failed upgrade preserves original bytes'
     Assert ((Get-FileHash "$state/originals/$($heicAsset.id)").Hash -eq $heicHash) 'failed upgrade preserves HEIC original'
@@ -120,6 +134,8 @@ try {
     $sixAReceipt=Get-Content (Join-Path $env:IMMICH_6A_FIXTURES 'app-receipt.json') -Raw | ConvertFrom-Json
     $sixA=$org.assets | Where-Object { $_.asset.id -eq $sixAReceipt.'video.mp4' }
     Assert ($sixA.analysis.video.next -eq 12 -and @($org.faces | Where-Object name -eq 'Video Test Person').Count -eq 1) 'failed upgrade preserves6A observations and manual corrections'
+    $proposal=$org.assets | Where-Object {$_.asset.id -eq $proposalID}
+    Assert ($proposal.reanalysis.status -eq 'ready' -and $proposal.analysis.status -eq 'ready') 'failed upgrade retains unapplied proposal and completed results'
     $recoveryTool = Join-Path $root 'recovery-tool.exe'
     Copy-Item "$app/immichclone.exe" $recoveryTool
     $session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
@@ -136,7 +152,7 @@ try {
     $state = Join-Path $root 'restored state'
     & $recoveryTool -mode restore -data $state -archive $archive
     Assert ($LASTEXITCODE -eq 0) 'offline restoration succeeds at a different location'
-    Assert ((Install '0.1.32') -eq 0) 'installer starts a restored library without the original data folder'
+    Assert ((Install '0.1.33') -eq 0) 'installer starts a restored library without the original data folder'
     $session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
     $restoredCode = (Get-Content "$state/access-code.txt" -Raw).Trim()
     $null = Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$restoredCode}|ConvertTo-Json) -WebSession $session
@@ -154,6 +170,13 @@ try {
     Assert (@($org.faces | Where-Object name -eq 'Installer Person').Count -eq 1) 'restored installer retains named faces'
     $sixA=$org.assets | Where-Object { $_.asset.id -eq $sixAReceipt.'video.mp4' }
     Assert ($sixA.analysis.video.next -eq 12 -and @($org.faces | Where-Object name -eq 'Video Test Person').Count -eq 1) 'independent installed restore retains6A observations and corrections'
+    $proposal=$org.assets | Where-Object {$_.asset.id -eq $proposalID}
+    Assert ($proposal.reanalysis.status -eq 'ready' -and $proposal.analysis.status -eq 'ready') 'independent installed restore retains unapplied proposal and completed results'
+    $null=Invoke-RestMethod "http://127.0.0.1:2283/api/assets/$proposalID/reanalysis" -Method Post -Headers $aiHeaders -Body '{"action":"apply"}' -WebSession $session
+    $appliedOrg=Invoke-RestMethod http://127.0.0.1:2283/api/organization -WebSession $session
+    $appliedProposal=$appliedOrg.assets | Where-Object {$_.asset.id -eq $proposalID}
+    $restoredFaceIDs=@($appliedOrg.faces | Where-Object asset_id -eq $proposalID | Sort-Object id | ForEach-Object id) -join ','
+    Assert ($appliedProposal.reanalysis.status -eq 'applied' -and $appliedProposal.reanalysis.added -eq 0 -and $restoredFaceIDs -eq $proposalFaceIDs) 'independently restored proposal applies without replacing or duplicating existing faces'
     $videoFace=@($org.faces | Where-Object name -eq 'Video Test Person')[0]
     Invoke-WebRequest ("http://127.0.0.1:2283/api/faces/"+$videoFace.id+"/context") -WebSession $session -OutFile "$root/restored-frame.png"
     Assert ((Get-Item "$root/restored-frame.png").Length -gt 0) 'restored installed provider regenerates sampled frame context'

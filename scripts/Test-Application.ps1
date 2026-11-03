@@ -1,4 +1,4 @@
-param([ValidatePattern('^[A-Za-z0-9][A-Za-z0-9.+-]{0,63}$')][string]$Version='0.1.32-prototype')
+param([ValidatePattern('^[A-Za-z0-9][A-Za-z0-9.+-]{0,63}$')][string]$Version='0.1.33-prototype')
 $ErrorActionPreference = 'Stop'
 $root = Join-Path $env:RUNNER_TEMP ('immich-app-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory $root | Out-Null

@@ -1,4 +1,4 @@
-IMMICH CLONE 0.1.32 - EARLY TEST BUILD
+IMMICH CLONE 0.1.33 - EARLY TEST BUILD
 
 This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
@@ -117,7 +117,7 @@ CPU worker with a 512MiB process cap. Select detected faces to name or reassign;
 clear a name to leave unknown, undo the last name edit, or mark a missed face.
 Suggested matches require confirmation and can be wrong. Custom tags are separate
 from the 80-class COCO object suggestions and searchable with filenames/names.
-No automatic person merging/naming, face dismissal or ready-result reanalysis yet.
+No automatic person merging/naming. False-face dismissal/restore and explicit additive ready-result reanalysis are available; automatic detection replacement remains unavailable.
 HEIC/video AI and broad family/age/profile quality are unaccepted. Original bytes
 are never changed. Hidden items are excluded from this review page.
 
@@ -176,3 +176,5 @@ regressions. Wider security review remains open; no LAN/Internet exposure.
 0.1.31 feedback: corrected supported-format help; retain a known video sampling plan after a first-sample inference error; separate face/object diagnostic stages with numeric process exit codes; Previous controls remain visible and disabled on the first page. No automatic retry or forced reanalysis.
 
 0.1.32: review-only name suggestions compare proven compatible serviced native providers while keeping original provenance and thresholds. People uses an explicit dark body background.
+
+0.1.33: explicit review-first additive reanalysis for completed supported photos and sampled videos. Prepare separately, then Apply or Discard. Existing detections, names, tags and dismissals remain; overlapping detections are skipped. Pause/resume and proposals persist across restart and backup. No automatic rerun, renaming, detection replacement or Full Scan.
