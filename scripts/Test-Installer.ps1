@@ -117,6 +117,10 @@ try {
     BrowserPhase 'tests/hidden-media.cjs' 'prepare'
     Restart-Service ImmichClone
     BrowserPhase 'tests/hidden-media.cjs' 'finish'
+    $env:IMMICH_IMPORT_SOURCE_FIXTURES=Join-Path $root 'import source'
+    & node tests/import-source-loss.cjs
+    Assert ($LASTEXITCODE -eq 0) 'installed import survives real source loss and rejects changed receipt replay'
+    Remove-Item Env:IMMICH_IMPORT_SOURCE_FIXTURES
     # Retain an unapplied proposal through failed upgrade and independent restore.
     $proposalReceipt=Get-Content (Join-Path $env:IMMICH_6A_FIXTURES 'app-receipt.json') -Raw | ConvertFrom-Json
     $proposalID=$proposalReceipt.'face.heic'
