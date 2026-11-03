@@ -269,7 +269,7 @@ func TestMediaAIApplicationRestoredCheckpoint(t *testing.T) {
 			}
 		}
 	}
-	if videoCount != 1 || heicCount != 2 {
+	if videoCount != 2 || heicCount != 3 {
 		t.Fatal("restored assets missing")
 	}
 	named := false

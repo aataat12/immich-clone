@@ -10,6 +10,7 @@ for name,sha in [('astronaut.png','88431cd9653ccd539741b555fb0a46b61558b301d4110
  b=urllib.request.urlopen(base+name,timeout=60).read();assert hashlib.sha256(b).hexdigest()==sha;(r/name).write_bytes(b)
 a=Image.open(r/'astronaut.png').convert('RGB')
 a.save(r/'face.heic',quality=95)
+a.save(r/'recovery.heic',quality=85)
 large=Image.new('RGB',(4032,3024));large.paste(a.resize((3024,3024)),(504,0))
 large.save(r/'face-grid-reference.png');large.save(r/'face-grid.heic',quality=90,tile_size=512)
 for name,size in [('face.heic',(512,512)),('face-grid.heic',(4032,3024))]:

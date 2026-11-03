@@ -115,3 +115,12 @@ acceptance, and applicable target Windows10 validation. Existing broad provider
 and malformed-codec evidence is reused; exhaustive paused Group2 security review
 is not reopened. No user-library enlargement or new dependency installation is
 needed for this checkpoint. Build Notes stays Planned until actual delivery.
+
+## Deferred proposal — post-import Full Scan
+
+User requested that this be tabled beyond6A. Future proposal: user selects videos
+or chooses all videos without a completed Full Scan, chooses detection checkboxes
+(people, places, particular objects) beforehand, then runs every-frame analysis
+with timestamps and persistent progress. Define place semantics and supported
+object detection/model capability before implementation. This proposal does not
+change current6A sampled coverage and is not being implemented now.
