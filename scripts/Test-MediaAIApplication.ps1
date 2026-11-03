@@ -16,6 +16,28 @@ try {
  Checked icacls @((Join-Path $env:ProgramData 'ImmichCloneDiagnostics'),'/grant','*S-1-5-19:(OI)(CI)M')
  Start-Service $name
  $env:IMMICH_TEST_STATE="$root/state";$env:IMMICH_6A_FIXTURES=$Fixtures
+ Checked node @('tests/deletion.cjs','normal')
+ Checked node @('tests/deletion.cjs','prepare-denied')
+ $deletionID=(Get-Content (Join-Path $Fixtures 'deletion-receipt.json') -Raw | ConvertFrom-Json).id
+ try {
+   Checked icacls @("$root/state/originals/$deletionID",'/deny','*S-1-5-19:D')
+   Checked icacls @("$root/state/originals",'/deny','*S-1-5-19:(DC)')
+   Checked node @('tests/deletion.cjs','denied')
+   $deletionServicePid=(Get-CimInstance Win32_Service -Filter "Name='$name'").ProcessId
+   Stop-Process -Id $deletionServicePid -Force
+   $deletionDeadline=[DateTime]::UtcNow.AddSeconds(15)
+   while((Get-Service $name).Status -ne 'Stopped' -and [DateTime]::UtcNow -lt $deletionDeadline){Start-Sleep -Milliseconds 100}
+   Start-Service $name
+   Checked node @('tests/deletion.cjs','pending')
+ } finally {
+   Checked icacls @("$root/state/originals/$deletionID",'/remove:d','*S-1-5-19')
+   Checked icacls @("$root/state/originals",'/remove:d','*S-1-5-19')
+ }
+ Checked node @('tests/deletion.cjs','retry')
+ Checked "$root/app.exe" @('-mode','restore','-data',"$root/deletion-restored",'-archive',(Join-Path $Fixtures 'deletion-before.zip'))
+ $env:IMMICH_DELETE_RESTORE="$root/deletion-restored"
+ Checked go @('test','-count=1','-timeout=120s','./internal/library','-run','^TestDeletionPreDeleteArchiveRestored$')
+ Remove-Item Env:IMMICH_DELETE_RESTORE
  Checked node @('tests/media-ai.cjs','start')
  Restart-Service $name
  Checked node @('tests/media-ai.cjs','finish')
@@ -67,28 +89,6 @@ try {
  Checked node @('tests/hidden-media.cjs','prepare')
  Restart-Service $name
  Checked node @('tests/hidden-media.cjs','finish')
- Checked node @('tests/deletion.cjs','normal')
- Checked node @('tests/deletion.cjs','prepare-denied')
- $deletionID=(Get-Content (Join-Path $Fixtures 'deletion-receipt.json') -Raw | ConvertFrom-Json).id
- try {
-   Checked icacls @("$root/state/originals/$deletionID",'/deny','*S-1-5-19:D')
-   Checked icacls @("$root/state/originals",'/deny','*S-1-5-19:(DC)')
-   Checked node @('tests/deletion.cjs','denied')
-   $deletionServicePid=(Get-CimInstance Win32_Service -Filter "Name='$name'").ProcessId
-   Stop-Process -Id $deletionServicePid -Force
-   $deletionDeadline=[DateTime]::UtcNow.AddSeconds(15)
-   while((Get-Service $name).Status -ne 'Stopped' -and [DateTime]::UtcNow -lt $deletionDeadline){Start-Sleep -Milliseconds 100}
-   Start-Service $name
-   Checked node @('tests/deletion.cjs','pending')
- } finally {
-   Checked icacls @("$root/state/originals/$deletionID",'/remove:d','*S-1-5-19')
-   Checked icacls @("$root/state/originals",'/remove:d','*S-1-5-19')
- }
- Checked node @('tests/deletion.cjs','retry')
- Checked "$root/app.exe" @('-mode','restore','-data',"$root/deletion-restored",'-archive',(Join-Path $Fixtures 'deletion-before.zip'))
- $env:IMMICH_DELETE_RESTORE="$root/deletion-restored"
- Checked go @('test','-count=1','-timeout=120s','./internal/library','-run','^TestDeletionPreDeleteArchiveRestored$')
- Remove-Item Env:IMMICH_DELETE_RESTORE
 
  # Capture an application-consistent archive, then remove access to the old state.
  $session=[Microsoft.PowerShell.Commands.WebRequestSession]::new()

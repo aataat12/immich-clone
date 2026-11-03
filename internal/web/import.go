@@ -99,6 +99,10 @@ func (s *Server) importHTTP(w http.ResponseWriter, r *http.Request) bool {
 		entry, e := s.Store.PutImport(r.Context(), parts[0], index, deadlineReader{r.Body, controller, s.copyIdle})
 		if e != nil {
 			status := 500
+			var max *http.MaxBytesError
+			if errors.Is(e, library.ErrTooLarge) || errors.As(e, &max) {
+				status = http.StatusRequestEntityTooLarge
+			}
 			if errors.Is(e, library.ErrImportConflict) {
 				status = 409
 			}
