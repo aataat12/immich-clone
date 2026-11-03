@@ -23,3 +23,7 @@ Permanent deletion is not implemented by this slice. Before adding its user acti
 5. Finish combined installer and Windows target acceptance before marking milestone 3 delivered.
 
 No security Group 2/3 investigation or mitigation, every-frame Full Scan, new dependency or user-PC action is included. Windows Server testing does not certify Windows 10 compatibility.
+
+## Verified candidate evidence
+
+[Windows run 41671321055](https://github.com/aataat12/immich-clone/actions/runs/41671321055), source `9ea771a8274f500b344b042440a5abc8f6e324b1`, job `126040140853`: PASS on Windows Server 2022, Go 1.27.3, LocalService, Edge/Playwright 1.62.1. Both hidden-media browser phases passed, including actual clipboard readback, 390px layout, restart while hidden, restore to library, exact original SHA256 and full review-record equality. HTTP/guard and hidden-state independent backup/restore unit tests passed. Existing HEIC/video inference, failure/crash recovery, reanalysis controls and independent restored-frame regeneration passed in the same run. Local full web suite and vet also passed. No installer/version publication or Windows 10 certification; milestone 3 is not complete.
