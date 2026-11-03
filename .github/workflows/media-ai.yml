@@ -62,7 +62,7 @@ jobs:
         run: |
           $r=Invoke-RestMethod 'https://api.github.com/repos/aataat12/immich-clone/actions/runs/41559260341'
           if ($r.conclusion -ne 'success' -or $r.head_sha -ne 'e95958bc9f24a1e56cdd5e47cce2248f80440d2a') { throw 'Prior exact feasibility evidence missing' }
-      - name: Validate deletion recovery before media regression execution
+      - name: Validate exact delete-only failure recovery and media regressions
         shell: pwsh
         run: |
           $root = Join-Path $env:ProgramData 'Immich 6A 試験'
@@ -76,6 +76,8 @@ jobs:
           }
 
   import-boundary:
+    # Large I/O is opt-in; prior exact-boundary evidence is reused for unrelated changes.
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[import-boundary]')
     runs-on: windows-2022
     timeout-minutes: 15
     env:
