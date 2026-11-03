@@ -108,7 +108,7 @@ jobs:
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
         with:
           go-version: '1.27.3'
-      - name: Prove Hidden Media return navigation in actual Edge
+      - name: Prove Show Hide selection and batch stop-on-error in Edge
         shell: pwsh
         run: |
           npm install --prefix "$env:RUNNER_TEMP/navigation-deps" --no-audit --no-fund playwright@1.62.1
