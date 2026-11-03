@@ -109,9 +109,10 @@ The source push also started broad workflows; scale/media completed successfully
 and application41561426175 was canceled. Temporary cancellation workflow removed.
 Only focused workflow ran for the final source.
 
-Remaining before full6A delivery: feature-specific provider-loss/retry and storage/
-interruption coverage, combined existing-feature/installed upgrade and rollback
-acceptance, and applicable target Windows10 validation. Existing broad provider
+Remaining before full6A delivery: combined existing-feature/installed upgrade
+and rollback acceptance, and applicable target Windows10 validation.
+Feature-specific provider-loss/retry and storage/interruption coverage passed
+in the recovery checkpoint below. Existing broad provider
 and malformed-codec evidence is reused; exhaustive paused Group2 security review
 is not reopened. No user-library enlargement or new dependency installation is
 needed for this checkpoint. Build Notes stays Planned until actual delivery.
@@ -124,3 +125,41 @@ or chooses all videos without a completed Full Scan, chooses detection checkboxe
 with timestamps and persistent progress. Define place semantics and supported
 object detection/model capability before implementation. This proposal does not
 change current6A sampled coverage and is not being implemented now.
+
+## Recovery checkpoint — November 2, 2026 (America/Chicago)
+
+[41567782811](https://github.com/aataat12/immich-clone/actions/runs/41567782811),
+source718eab96aa5ef281524de492498757d8b74469b3, job125693367010, passed on
+Windows Server2022/LocalService/Edge with unchanged selected native/media binaries.
+
+- Partial video observations persisted through pause and service restart; one face
+  was manually named and its clip tagged before failures were introduced.
+- Missing decoder at startup left saved organization accessible and disabled the
+  unavailable video resume control. Runtime decoder loss visibly failed a new
+  HEIC job; restoring the decoder allowed retry to ready with a real detected face.
+- Denying LocalService writes to the disposable derived-crop directory failed the
+  next video sample without advancing/replacing the prior checkpoint. This is
+  a concrete write-permission failure, not a new claim of full-disk coverage.
+- Removing the actual SFace model failed the next sample with the saved progress,
+  face identity, name and tag unchanged. The failure survived service restart.
+- After model restoration/resume, the test observed an actual native child and
+  forcibly terminated the service process without graceful shutdown. The child
+  was reaped; the restarted service completed the queued clip with unique sample
+  timestamps and all prior sample records/face IDs/manual corrections retained.
+- Original SHA256 downloads passed for the recovery MOV/HEIC. A final independent
+  archive restore with the old state offline rebuilt all crops and saved frame
+  context without an AI provider, now across2 clips and3 HEIC stills.
+- The original single/grid HEIC, sampled-video UI/restart and desktop/narrow suite
+  and focused Windows regressions ran successfully in the same workflow.
+
+The first recovery run41567306332 used a90-degree rotated fixture with no detected
+face and failed the required partial-face positive control. Recovery now uses a
+remux of the proven upright face/cup footage, retaining that assertion. Rotation
+probe/inference evidence remains distinct; no claim of rotation-invariant face
+recognition is made. No product protection or result assertion was weakened.
+
+These are functional recovery tests, not resumed Group2/3 mitigation. Full Scan
+stays deferred. No installer/version/main change; target Windows10 and combined
+release acceptance remain unverified for6A. The installer harness still starts
+from0.1.27; the next normal release validation must use the actual installed0.1.29
+prototype as its upgrade baseline and verify the combined candidate and rollback.

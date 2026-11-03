@@ -1,5 +1,19 @@
 # Current status
 
+6A failure-recovery checkpoint passed [41567782811](https://github.com/aataat12/immich-clone/actions/runs/41567782811),
+source718eab96aa5ef281524de492498757d8b74469b3, job125693367010. Actual
+LocalService/Edge checks covered unavailable-decoder startup, runtime decoder loss/
+HEIC retry, denied derived-crop writes, missing SFace/retry and forced service death
+after observing an active native child. Completed sample records, face IDs, names/
+tags and original SHA256s survived; the child was reaped and queued work completed
+after restart without duplicate timestamps. Final independent restore/crop/context
+regeneration passed for2 clips/3 HEICs. No full-disk or Windows10 certification
+is implied. Full Scan proposal is recorded but deferred beyond6A.
+Next: update normal installer acceptance from the old0.1.27 fixture to the actual
+installed0.1.29 baseline, then validate the combined candidate/rollback. No new
+installer/version/main publication and no user action needed for this checkpoint.
+
+
 Milestone6A functional candidate passed focused Windows Server2022 LocalService/
 Edge acceptance [41564920558](https://github.com/aataat12/immich-clone/actions/runs/41564920558),
 source9c15c56dba52481f98d8b255e98303f6ce29af7b, job125684028344.
