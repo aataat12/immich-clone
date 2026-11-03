@@ -70,9 +70,9 @@ try {
  Checked node @('tests/deletion.cjs','normal')
  Checked node @('tests/deletion.cjs','prepare-denied')
  $deletionID=(Get-Content (Join-Path $Fixtures 'deletion-receipt.json') -Raw | ConvertFrom-Json).id
- Checked icacls @("$root/state/originals/$deletionID",'/deny','*S-1-5-19:D')
- Checked icacls @("$root/state/originals",'/deny','*S-1-5-19:DC')
  try {
+   Checked icacls @("$root/state/originals/$deletionID",'/deny','*S-1-5-19:D')
+   Checked icacls @("$root/state/originals",'/deny','*S-1-5-19:(DC)')
    Checked node @('tests/deletion.cjs','denied')
    $deletionServicePid=(Get-CimInstance Win32_Service -Filter "Name='$name'").ProcessId
    Stop-Process -Id $deletionServicePid -Force
