@@ -2,6 +2,7 @@ name: Bounded native Windows AI worker
 on:
   push:
     paths:
+      - '.gitattributes'
       - 'experiments/native-ai/worker/**'
       - 'experiments/native-ai/security-patches/**'
       - 'experiments/native-ai/main_windows.go'

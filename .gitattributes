@@ -1,0 +1,3 @@
+
+# Checksum-pinned upstream patches must retain their exact downloaded bytes.
+experiments/native-ai/security-patches/*.patch -text
