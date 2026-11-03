@@ -60,7 +60,7 @@ jobs:
         run: |
           $r=Invoke-RestMethod 'https://api.github.com/repos/aataat12/immich-clone/actions/runs/41559260341'
           if ($r.conclusion -ne 'success' -or $r.head_sha -ne 'e95958bc9f24a1e56cdd5e47cce2248f80440d2a') { throw 'Prior exact feasibility evidence missing' }
-      - name: Actual 6A provider/storage failure, native-child crash and recovery
+      - name: Actual 6A upright recovery controls, unavailable providers and crash
         shell: pwsh
         run: |
           $root = Join-Path $env:ProgramData 'Immich 6A 試験'
