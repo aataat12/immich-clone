@@ -58,6 +58,43 @@ func TestActualDeletionDiskFull(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Windows extends the file to the mapped capacity. Consume that existing
+	// reserve too; filling the volume alone does not exhaust catalog write space.
+	info, err := os.Stat(s.db.Path())
+	if err != nil {
+		t.Fatal(err)
+	}
+	var used int64
+	if err = s.db.View(func(tx *bolt.Tx) error { used = tx.Size(); return nil }); err != nil {
+		t.Fatal(err)
+	}
+	if tail := info.Size() - used - (64 << 10); tail > 0 {
+		if tail > 32<<20 {
+			t.Fatal("unexpected catalog reserve exceeds bounded fixture")
+		}
+		if err = s.db.Update(func(tx *bolt.Tx) error {
+			b, e := tx.CreateBucket([]byte("disk_fixture_reserve"))
+			if e != nil {
+				return e
+			}
+			return b.Put([]byte("mapped-reserve"), make([]byte, int(tail)))
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	info, err = os.Stat(s.db.Path())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = s.db.View(func(tx *bolt.Tx) error { used = tx.Size(); return nil }); err != nil {
+		t.Fatal(err)
+	}
+	stats := s.db.Stats()
+	available := info.Size() - used + int64(stats.FreePageN+stats.PendingPageN)*int64(s.db.Info().PageSize)
+	t.Logf("Catalog reusable reserve before fill: %d bytes", available)
+	if available >= 200<<10 {
+		t.Fatal("fixture retained enough reserved space for deletion journal")
+	}
 	before := snapshotReview(t, s, a.ID)
 	reader, err := s.db.Begin(false)
 	if err != nil {
