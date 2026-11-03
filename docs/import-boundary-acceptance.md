@@ -77,7 +77,7 @@ state directory. Do not run it on a user's real library or ask for local setup.
 
 ## Remaining gates
 
-- Windows cloud execution of the exact same HTTP boundary and fast regression.
+- Windows cloud execution of the exact same HTTP boundary and fast regression: passed in the run below.
 - Actual packaged LocalService/browser large-file selection and interruption on
   the supported Windows target; source/storage disconnect scenarios beyond a
   deliberately failing reader; longer mixed HEIC/video/large-library endurance.
@@ -86,3 +86,10 @@ state directory. Do not run it on a user's real library or ask for local setup.
   workflow has been created by this worker slice.
 - Files larger than 4 GiB remain unsupported. Larger-file support would need an
   explicitly designed/tested path; ZIP64/backups remain separate milestone 5 work.
+
+
+## Windows cloud execution
+
+[Run 41683468062](https://github.com/aataat12/immich-clone/actions/runs/41683468062), source `e7d7b7ff8474875dd73ad672a549af14c3e94f0f`, independent job `126082908579`: PASS on Windows Server 2022, Go 1.27.3 windows/amd64, CGO disabled, GOAMD64=v1. The actual boundary test passed in 62.44 seconds. Exact import physically stored 4,294,967,296 bytes (13.992 s); unchanged replay streamed the same bytes (18.085 s); changed replay streamed the full size and returned 409 (14.088 s); +1-byte body produced 4,294,967,297 bytes and returned 413 (5.241 s). Both full HTTP SHA256 readbacks and final integrity/receipt/counter checks passed. The fast 413 regression passed as well. These timings are disposable-runner evidence, not performance promises.
+
+This was loopback HTTP plus filesystem execution, not packaged LocalService/browser selection, Windows 10 or a large-video decoding/backup test. The separate deletion job in the same workflow failed its permission-fixture read precondition; the overall workflow must not be called successful. Worker slice implementation and its Linux/Windows HTTP proof are complete, but milestone 4 and installed release acceptance remain open. Work paused at the user's request; no new installer was published.
