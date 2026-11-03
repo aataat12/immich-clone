@@ -63,8 +63,16 @@ jobs:
         with:
           name: prototype-server-tested
           path: previous-installer
-          run-id: 41590513659
+          run-id: 41652777887
           github-token: ${{ github.token }}
+      - name: Validate installer script syntax before lengthy acceptance
+        shell: pwsh
+        run: |
+          foreach ($file in @('scripts/Build-Installer.ps1','scripts/Test-Installer.ps1','scripts/Test-Application.ps1')) {
+            $tokens=$null;$parseErrors=$null
+            $null=[Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file),[ref]$tokens,[ref]$parseErrors)
+            if ($parseErrors.Count -gt 0) { throw ($file+': '+($parseErrors.Message -join '; ')) }
+          }
       - name: Verify dependency checksums and execute storage, recovery and HTTP tests
         shell: pwsh
         run: |
@@ -122,13 +130,13 @@ jobs:
         with:
           name: prototype-server-tested
           path: |
-            dist/ImmichClone-0.1.33-prototype-x64-setup.exe
+            dist/ImmichClone-0.1.34-prototype-x64-setup.exe
             dist/SHA256SUMS.txt
           retention-days: 7
-      - name: Publish checked unsigned0.1.33 prototype
+      - name: Publish checked unsigned0.1.34 prototype
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create v0.1.33-prototype dist/ImmichClone-0.1.33-prototype-x64-setup.exe dist/SHA256SUMS.txt --repo aataat12/immich-clone --target $env:GITHUB_SHA --prerelease --title 'Immich Clone0.1.33 prototype' --notes-file docs/release-0.1.33.md
+          gh release create v0.1.34-prototype dist/ImmichClone-0.1.34-prototype-x64-setup.exe dist/SHA256SUMS.txt --repo aataat12/immich-clone --target $env:GITHUB_SHA --prerelease --title 'Immich Clone0.1.34 prototype' --notes-file docs/release-0.1.34.md
           if ($LASTEXITCODE -ne 0) { throw 'Release publication failed' }
