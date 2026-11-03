@@ -3,6 +3,8 @@ on:
   push:
     paths:
       - 'experiments/native-ai/worker/**'
+      - 'experiments/native-ai/security-patches/**'
+      - 'experiments/native-ai/main_windows.go'
       - 'experiments/native-ai/zlib-check/**'
       - 'experiments/native-ai/build.ps1'
       - '.github/workflows/native-ai.yml'
@@ -31,6 +33,8 @@ jobs:
           name: experimental-native-ai-build-not-accepted
           path: |
             native-ai-candidate/ai-worker.exe
+            native-ai-candidate/native-security-check.exe
+            native-ai-candidate/opencv-security-patches.json
             native-ai-candidate/opencv-module-sources.zip
             native-ai-candidate/*.txt
             native-ai-candidate/*.cpp
@@ -70,7 +74,7 @@ jobs:
           function Checked([string]$exe,[string[]]$a) { & $exe @a; if ($LASTEXITCODE -ne 0) { throw 'Native AI operation failed' } }
           $root = Join-Path $env:ProgramData 'Immich Native AI 試験'
           New-Item -ItemType Directory $root | Out-Null
-          Copy-Item native-ai-candidate/ai-worker.exe $root
+          Copy-Item native-ai-candidate/ai-worker.exe,native-ai-candidate/native-security-check.exe $root
           if ((Get-FileHash "$root/ai-worker.exe").Hash -ne (Get-FileHash native-ai-candidate/ai-worker.exe).Hash) { throw 'Worker copy integrity failed' }
           $python = (Get-Command python).Source
           Checked $python @('-B','experiments/ai-probe/prepare.py',$root)
