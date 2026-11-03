@@ -15,7 +15,7 @@ const {chromium}=require(process.env.IMMICH_BROWSER_MODULE);
  const wait=async(id,status)=>{const end=Date.now()+120000;while(Date.now()<end){const o=await api('/api/organization');const j=record(o,id).reanalysis;if(j?.status===status)return o;if(j?.status==='failed'&&status!=='failed')throw Error('Proposal failed '+j.error);await new Promise(r=>setTimeout(r,250))}throw Error('Proposal timeout '+status)};
  const refresh=async()=>{await page.goto('http://127.0.0.1:2283/people');await page.waitForSelector('.assetCard')};
  const card=id=>page.locator('.assetCard[data-asset="'+id+'"]');
- const click=async(id,label)=>{await card(id).getByRole('button',{name:label,exact:true}).click()};
+ const click=async(id,label)=>{const [r]=await Promise.all([page.waitForResponse(r=>r.url().endsWith('/api/assets/'+id+'/reanalysis')&&r.request().method()==='POST'),card(id).getByRole('button',{name:label,exact:true}).click()]);assert.equal(r.status(),200);await page.waitForFunction(()=>!busy&&!paging)};
  const phase=process.argv[2];
  if(phase==='model-failure'){
   const before=snapshot(await api('/api/organization'),photo);
@@ -32,7 +32,7 @@ const {chromium}=require(process.env.IMMICH_BROWSER_MODULE);
   assert.equal(record(await api('/api/organization'),video).reanalysis.status,'paused');fs.writeFileSync(saved,JSON.stringify({baseline,lease:lease.id}));
  }else if(phase==='finish'){
   const savedState=JSON.parse(fs.readFileSync(saved));let o=await api('/api/organization');assert.equal(record(o,video).reanalysis.status,'paused');assert.deepEqual(snapshot(o,video),savedState.baseline);
-  await refresh();await click(video,'Resume reanalysis');await click(video,'Discard reanalysis proposal');assert.deepEqual(snapshot(await api('/api/organization'),video),savedState.baseline);
+  await refresh();await click(video,'Resume reanalysis');await click(video,'Discard reanalysis proposal');const discarded=await api('/api/organization');assert.equal(record(discarded,video).reanalysis.status,'cancelled');assert.deepEqual(snapshot(discarded,video),savedState.baseline);
   await refresh();await click(video,'Prepare reanalysis proposal');await api('/api/imports/'+savedState.lease+'/cancel',{});o=await wait(video,'ready');assert.equal(record(o,video).reanalysis.next,12);assert.equal(record(o,video).reanalysis.total,12);assert.deepEqual(snapshot(o,video),savedState.baseline);
   await refresh();page.once('dialog',d=>d.accept());await click(video,'Apply reanalysis proposal');o=await api('/api/organization');assert.equal(record(o,video).reanalysis.status,'applied');assert.equal(record(o,video).reanalysis.added,0);assert.deepEqual(snapshot(o,video).faces,savedState.baseline.faces);assert.deepEqual(snapshot(o,video).tags,savedState.baseline.tags);
   await page.setViewportSize({width:390,height:844});await page.reload();await page.waitForSelector('.assetCard');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);

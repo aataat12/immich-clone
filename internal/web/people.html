@@ -44,7 +44,7 @@ function videoControls(card,asset,analysis,data){
 function reanalysisControls(card,record,data){
  const a=record.asset,j=record.reanalysis;
  const actJob=action=>request('/api/assets/'+a.id+'/reanalysis',{method:'POST',body:JSON.stringify({action})});
- card.append(text('p','Reanalysis prepares an additive proposal. Existing faces, names, tags and dismissals stay. Overlapping detections are kept as existing observations; their embeddings and geometry are not replaced. Apply adds new detections and refreshes AI object suggestions.','muted'));
+ card.append(text('p','Reanalysis prepares an additive proposal. Existing faces, names, tags and dismissals stay. Existing detections are kept; overlapping new detections are skipped. Apply adds new detections and refreshes AI object suggestions.','muted'));
  if(!j||['applied','cancelled'].includes(j.status)){const b=button('Prepare reanalysis proposal',()=>actJob('start'));b.disabled=!data.available||((a.mime.startsWith('video/')||['image/heic','image/heif'].includes(a.mime))&&!data.media_available);card.append(b);if(j?.status==='applied')card.append(text('p','Applied: '+j.added+' added · '+j.retained+' existing kept · '+j.skipped+' overlaps skipped','muted'));return}
  card.append(text('p','Reanalysis: '+j.status+' · '+j.next+'/'+j.total+(j.error?' · '+j.error:''),'muted'));
  if(j.status==='queued')card.append(button('Pause reanalysis',()=>actJob('pause')));
