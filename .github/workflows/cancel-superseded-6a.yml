@@ -1,0 +1,19 @@
+name: Cancel superseded 6A checks
+on:
+  push:
+    paths:
+      - '.github/workflows/cancel-superseded-6a.yml'
+permissions:
+  actions: write
+jobs:
+  cancel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Cancel unintended broad runs for the exact 6A source push
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for run in 41561426149 41561426157 41561426175; do
+            gh api -X POST repos/aataat12/immich-clone/actions/runs/$run/cancel || exit 1
+          done
