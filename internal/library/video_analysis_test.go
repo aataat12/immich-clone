@@ -294,3 +294,42 @@ func TestMediaAIApplicationRestoredCheckpoint(t *testing.T) {
 		t.Fatal(e)
 	}
 }
+
+func TestVideoPauseDuringInferenceCommitsOnlyCurrentFrame(t *testing.T) {
+	s, _ := openTest(t)
+	mockAnalysisMedia(s)
+	entered, release := make(chan struct{}), make(chan struct{})
+	s.SetRecognizer(func(ctx context.Context, img image.Image, dir string) (recognition.Result, error) {
+		close(entered)
+		<-release
+		return fakeAnalysis(ctx, img, dir)
+	}, true)
+	a, _, e := s.Put("clip.mp4", bytes.NewReader(mediaFixture(t, "hevc.mp4")))
+	if e != nil {
+		t.Fatal(e)
+	}
+	if e = s.QueueAnalysis(a.ID); e != nil {
+		t.Fatal(e)
+	}
+	done := make(chan error, 1)
+	go func() { _, e := s.ProcessAnalysis(context.Background()); done <- e }()
+	<-entered
+	if e = s.ControlVideoAnalysis(a.ID, "pause"); e != nil {
+		t.Fatal(e)
+	}
+	close(release)
+	if e = <-done; e != nil {
+		t.Fatal(e)
+	}
+	o, e := s.OrganizationPage("", "", "")
+	if e != nil {
+		t.Fatal(e)
+	}
+	v := o.Assets[0].Analysis
+	if v.Status != "paused" || v.Video.Next != 1 || len(v.Video.Samples) != 1 || len(o.Faces) != 1 {
+		t.Fatal("in-flight pause did not preserve exactly the completed frame")
+	}
+	if processed, e := s.ProcessAnalysis(context.Background()); processed || e != nil {
+		t.Fatal("paused queue processed another frame", e)
+	}
+}

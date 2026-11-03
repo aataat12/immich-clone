@@ -21,7 +21,7 @@ const {chromium}=require(process.env.IMMICH_BROWSER_MODULE);
   for(const name of ['face.heic','face-grid.heic']){
    await card(name).getByRole('button',{name:'Analyze photo locally',exact:true}).click();
    await page.waitForFunction(async id=>{const o=await(await fetch('/api/organization')).json();return o.assets.find(x=>x.asset.id===id)?.analysis.status==='ready'},receipt[name]);
-   const o=await api('/api/organization');if(!o.faces.some(f=>f.asset_id===receipt[name]))throw Error('HEIC face missing');await page.click('#refresh');
+   const o=await api('/api/organization');if(!o.faces.some(f=>f.asset_id===receipt[name]))throw Error('HEIC face missing: '+JSON.stringify({name,faceCount:o.faces.length,faceAssets:o.faces.map(f=>f.asset_id),record:o.assets.find(x=>x.asset.id===receipt[name])}));await page.click('#refresh');
   }
   // Import priority holds the worker so pause is deterministic, including fast machines.
   const lease=await api('/api/imports',{files:[{name:'hold.txt',relative:'hold.txt',size:1,modified:0}]});await api('/api/imports/'+lease.id+'/start',{});receipt.lease=lease.id;
