@@ -13,6 +13,47 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
+// A damaged batch record fails after deletion has staged its journal and
+// metadata changes. None of those changes may escape the failed transaction.
+func TestDeletionTransactionRollback(t *testing.T) {
+	s, id, _ := seedReviewedPhoto(t)
+	if err := s.SetHidden(id, true); err != nil {
+		t.Fatal(err)
+	}
+	before := snapshotReview(t, s, id)
+	asset, err := s.Get(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = s.db.Update(func(tx *bolt.Tx) error { return tx.Bucket([]byte(batchMeta)).Put([]byte("current"), []byte("{")) })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pending, err := deleteForTest(s, context.Background(), id, id); err == nil || pending {
+		t.Fatal("damaged bookkeeping did not reject deletion", pending, err)
+	}
+	if s.deletionPending(id) {
+		t.Fatal("rolled-back journal escaped")
+	}
+	after, err := s.Get(id)
+	if err != nil || !reflect.DeepEqual(asset, after) {
+		t.Fatal("rolled-back asset changed", err)
+	}
+	if !reflect.DeepEqual(before, snapshotReview(t, s, id)) {
+		t.Fatal("rolled-back review changed")
+	}
+	data, err := os.ReadFile(s.Original(id))
+	if err != nil || !bytes.Equal(data, fixture(t)) {
+		t.Fatal("failed transaction removed original", err)
+	}
+	if err = s.db.Update(func(tx *bolt.Tx) error { return tx.Bucket([]byte(batchMeta)).Delete([]byte("current")) }); err != nil {
+		t.Fatal(err)
+	}
+	if pending, err := deleteForTest(s, context.Background(), id, id); err != nil || pending {
+		t.Fatal("retry after bookkeeping repair failed", pending, err)
+	}
+}
+
 // This opt-in test fills only the disposable volume mounted by Test-FullDisk.ps1.
 func TestActualDeletionDiskFull(t *testing.T) {
 	volume := os.Getenv("IMMICH_SMALL_VOLUME")
