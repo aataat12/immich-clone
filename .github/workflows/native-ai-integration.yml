@@ -53,7 +53,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Native checkpoint scan failed' }
           ./scripts/Test-GoSecurity.ps1
           if ($LASTEXITCODE -ne 0) { throw 'Go security scan failed' }
-      - name: Actual LocalService browser, inference, model recovery and independent restoration
+      - name: Actual candidate-version LocalService browser, inference, model recovery and independent restoration
         shell: pwsh
         run: |
           node --version
