@@ -380,6 +380,17 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": a.Name}))
 			w.Header().Set("Content-Type", "application/octet-stream")
 			http.ServeFile(w, r, s.Store.Original(a.ID))
+		case parts[1] == "managed-location" && r.Method == "GET":
+			if !a.Hidden {
+				http.Error(w, "Open Hidden items to inspect managed storage.", 409)
+				return
+			}
+			location, err := filepath.Abs(s.Store.Original(a.ID))
+			if err != nil {
+				http.Error(w, "Managed location unavailable", 500)
+				return
+			}
+			jsonResponse(w, map[string]string{"path": location, "name": a.Name})
 		case parts[1] == "preview" && r.Method == "GET" && a.Preview == "ready":
 			w.Header().Set("Content-Type", "image/png")
 			http.ServeFile(w, r, s.Store.PreviewPath(a.ID))

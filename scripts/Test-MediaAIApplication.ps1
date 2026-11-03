@@ -64,6 +64,9 @@ try {
  Checked node @('tests/reanalysis.cjs','prepare')
  Restart-Service $name
  Checked node @('tests/reanalysis.cjs','finish')
+ Checked node @('tests/hidden-media.cjs','prepare')
+ Restart-Service $name
+ Checked node @('tests/hidden-media.cjs','finish')
  # Capture an application-consistent archive, then remove access to the old state.
  $session=[Microsoft.PowerShell.Commands.WebRequestSession]::new()
  $code=(Get-Content "$root/state/access-code.txt" -Raw).Trim()
