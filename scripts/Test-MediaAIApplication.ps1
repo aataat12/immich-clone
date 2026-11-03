@@ -24,6 +24,11 @@ try {
  Restart-Service $name
  Checked node @('tests/media-ai-recovery.cjs','baseline')
  $ffmpeg="$root/media/ffmpeg-8.1.3-7eb77d88e2e9/ffmpeg.exe"
+ Stop-Service $name
+ Move-Item $ffmpeg ($ffmpeg+'.held')
+ try { Start-Service $name;Checked node @('tests/media-ai-recovery.cjs','unavailable-startup') }
+ finally { Stop-Service $name;Move-Item ($ffmpeg+'.held') $ffmpeg }
+ Start-Service $name
  Move-Item $ffmpeg ($ffmpeg+'.held')
  try { Checked node @('tests/media-ai-recovery.cjs','decoder-failure') }
  finally { Move-Item ($ffmpeg+'.held') $ffmpeg }

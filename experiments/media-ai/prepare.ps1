@@ -11,6 +11,7 @@ try {
  $ff=(Get-ChildItem "$tool/unpack" -Filter ffmpeg.exe -Recurse | Select-Object -First 1).FullName
  function Encode([string[]]$ArgsToUse) { & $ff -hide_banner -loglevel error -nostdin -y @ArgsToUse; if($LASTEXITCODE -ne 0){throw '6A fixture encoding failed'} }
  Encode @('-framerate','8','-i',"$Root/frames/%03d.png",'-c:v','libopenh264','-b:v','2000k','-pix_fmt','yuv420p',"$Root/video.mp4")
+ Encode @('-i',"$Root/video.mp4",'-c','copy',"$Root/recovery.mov")
  Encode @('-display_rotation:v:0','90','-i',"$Root/video.mp4",'-c','copy',"$Root/rotated-face.mov")
  Encode @('-i',"$Root/video.mp4",'-t','0.125','-c','copy',"$Root/short.mp4")
  @("file 'frames/000.png'","duration 0.25","file 'frames/031.png'","duration 0.75","file 'frames/000.png'","duration 0.125","file 'frames/031.png'","duration 0.875","file 'frames/031.png'") | Set-Content "$Root/vfr.txt"

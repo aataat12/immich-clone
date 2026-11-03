@@ -11,12 +11,15 @@ const {chromium}=require(process.env.IMMICH_BROWSER_MODULE);
  const record=o=>o.assets.find(a=>a.asset.id===r.video);
  const assertBaseline=o=>{const a=record(o);if(JSON.stringify(a.analysis.video)!==JSON.stringify(r.baseline))throw Error('Failed sample advanced or changed checkpoint');if(!o.faces.some(f=>f.id===r.face&&f.name==='Recovery Person')||!a.tags.includes('Recovery Review'))throw Error('Manual correction lost')};
  if(phase==='seed'){
-  for(const [key,name,mime] of [['video','rotated-face.mov','video/quicktime'],['heic','recovery.heic','image/heic']]){const bytes=fs.readFileSync(path.join(process.env.IMMICH_6A_FIXTURES,name));r[key]=crypto.createHash('sha256').update(bytes).digest('hex');await page.setInputFiles('#files',{name,mimeType:mime,buffer:bytes});await page.waitForFunction(name=>Array.from(document.querySelectorAll('.card .name')).some(n=>n.textContent===name),name)}
+  for(const [key,name,mime] of [['video','recovery.mov','video/quicktime'],['heic','recovery.heic','image/heic']]){const bytes=fs.readFileSync(path.join(process.env.IMMICH_6A_FIXTURES,name));r[key]=crypto.createHash('sha256').update(bytes).digest('hex');await page.setInputFiles('#files',{name,mimeType:mime,buffer:bytes});await page.waitForFunction(name=>Array.from(document.querySelectorAll('.card .name')).some(n=>n.textContent===name),name)}
   await api('/api/assets/'+r.video+'/analyze',{});await wait(o=>record(o)?.analysis.video?.next>=1);await api('/api/assets/'+r.video+'/video-analysis',{action:'pause'});
  }else if(phase==='baseline'){
   const o=await api('/api/organization'),a=record(o);if(a.analysis.status!=='paused'||a.analysis.video.next<1||a.analysis.video.next>=5)throw Error('Controlled partial face-bearing checkpoint missing');
   r.baseline=a.analysis.video;r.faces=o.faces.filter(f=>f.asset_id===r.video).map(f=>f.id);if(!r.faces.length)throw Error('Partial video faces missing');r.face=r.faces[0];
   await api('/api/faces/label',{ids:[r.face],name:'Recovery Person'});await api('/api/assets/'+r.video+'/tags',{tags:['Recovery Review']});
+ }else if(phase==='unavailable-startup'){
+  const o=await api('/api/organization');if(o.media_available||!o.available||!o.faces.some(f=>f.name==='Video Test Person'))throw Error('Missing decoder blocked saved organization or reported available');assertBaseline(o);
+  await page.goto('http://127.0.0.1:2283/people');const c=page.locator('.assetCard').filter({hasText:'recovery.mov'});if(!await c.getByRole('button',{name:'Resume video analysis',exact:true}).isDisabled())throw Error('Unavailable decoder resume control enabled');
  }else if(phase==='decoder-failure'){
   await api('/api/assets/'+r.heic+'/analyze',{});const o=await wait(o=>o.assets.find(a=>a.asset.id===r.heic)?.analysis.status==='failed');assertBaseline(o);
  }else if(phase==='decoder-retry'){
