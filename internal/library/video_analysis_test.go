@@ -333,3 +333,49 @@ func TestVideoPauseDuringInferenceCommitsOnlyCurrentFrame(t *testing.T) {
 		t.Fatal("paused queue processed another frame", e)
 	}
 }
+
+func TestVideoFaceSuggestionsUseCompatibleStillProvider(t *testing.T) {
+	s, _ := openTest(t)
+	mockAnalysisMedia(s)
+	s.SetRecognizer(fakeAnalysis, true)
+	still, _, e := s.Put("reference.png", bytes.NewReader(fixture(t)))
+	if e != nil {
+		t.Fatal(e)
+	}
+	if e = s.QueueAnalysis(still.ID); e != nil {
+		t.Fatal(e)
+	}
+	if _, e = s.ProcessAnalysis(context.Background()); e != nil {
+		t.Fatal(e)
+	}
+	o, _ := s.OrganizationPage("", "", "")
+	if e = s.LabelFaces([]string{o.Faces[0].ID}, "Reference Person"); e != nil {
+		t.Fatal(e)
+	}
+	clip, _, e := s.Put("clip.mp4", bytes.NewReader(mediaFixture(t, "hevc.mp4")))
+	if e != nil {
+		t.Fatal(e)
+	}
+	if e = s.QueueAnalysis(clip.ID); e != nil {
+		t.Fatal(e)
+	}
+	if _, e = s.ProcessAnalysis(context.Background()); e != nil {
+		t.Fatal(e)
+	}
+	o, e = s.OrganizationPage("", "", "")
+	if e != nil {
+		t.Fatal(e)
+	}
+	found := false
+	for _, f := range o.Faces {
+		if f.AssetID == clip.ID {
+			found = true
+			if f.Name != "" || f.Suggestion != "Reference Person" {
+				t.Fatal("compatible sampled face must suggest, never auto-name", f.Name, f.Suggestion)
+			}
+		}
+	}
+	if !found {
+		t.Fatal("sampled face missing")
+	}
+}

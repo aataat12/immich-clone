@@ -155,7 +155,7 @@ func (s *Store) queueVideoLocked(asset Asset) error {
 			return nil
 		}
 		if a.Video == nil {
-			a = Analysis{AssetID: asset.ID, Provider: recognition.AnalysisID + "-" + videoPolicy, Objects: []string{}, Video: &VideoProgress{Version: 1, Policy: videoPolicy, Targets: []int64{}, Samples: []VideoSample{}}}
+			a = Analysis{AssetID: asset.ID, Provider: recognition.AnalysisID, Objects: []string{}, Video: &VideoProgress{Version: 1, Policy: videoPolicy, Targets: []int64{}, Samples: []VideoSample{}}}
 		}
 		if !validVideo(a.Video) {
 			return ErrOrganizationInput
@@ -271,7 +271,7 @@ func (s *Store) processVideoAnalysis(parent context.Context, asset Asset, a Anal
 			e = workErr
 		}
 		if e == nil {
-			a.Provider = recognition.AnalysisID + "-" + videoPolicy
+			a.Provider = recognition.AnalysisID
 			duplicate := false
 			for _, old := range v.Samples {
 				if old.PositionUS == sample.PositionUS {

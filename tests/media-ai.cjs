@@ -42,7 +42,7 @@ const {chromium}=require(process.env.IMMICH_BROWSER_MODULE);
   receipt.face=faces[0].id;await api('/api/faces/label',{ids:[receipt.face],name:'Video Test Person'});await api('/api/assets/'+receipt['video.mp4']+'/tags',{tags:['Video Review']});
   await page.click('#refresh');const face=page.locator('.faceCard').filter({hasText:'Video Test Person'}).first();await face.getByRole('button',{name:'View sampled frame',exact:true}).click();
   await page.waitForFunction(()=>document.querySelector('#contextImage').naturalWidth>0);if(!(await page.locator('#contextCaption').textContent()).includes('s'))throw Error('Timestamp caption missing');await page.keyboard.press('Escape');
-  for(const [name,id] of Object.entries(receipt).filter(([n])=>n.endsWith('.heic')||n.endsWith('.mp4'))){const r=await page.request.get('/api/assets/'+id+'/original');if(!r.ok()||crypto.createHash('sha256').update(await r.body()).digest('hex')!==id)throw Error('Original changed '+name)}
+  for(const [name,id] of Object.entries(receipt).filter(([n])=>n.endsWith('.heic')||n.endsWith('.mp4'))){const r=await page.request.get('http://127.0.0.1:2283/api/assets/'+id+'/original');if(!r.ok()||crypto.createHash('sha256').update(await r.body()).digest('hex')!==id)throw Error('Original changed '+name)}
   await page.setViewportSize({width:390,height:844});await page.reload();await page.waitForSelector('.assetCard');if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('6A narrow overflow');
   fs.writeFileSync(receiptPath,JSON.stringify(receipt));
  }else throw Error('Unknown test phase');
