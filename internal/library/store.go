@@ -128,6 +128,9 @@ func Open(root string) (*Store, error) {
 		if e := b.Put([]byte("schema"), []byte("1")); e != nil {
 			return e
 		}
+		if e := initDeletions(tx); e != nil {
+			return e
+		}
 		// Derived index: rebuild from authoritative asset status on every open.
 		if tx.Bucket([]byte(queueBucket)) != nil {
 			if e := tx.DeleteBucket([]byte(queueBucket)); e != nil {
@@ -195,6 +198,7 @@ func Open(root string) (*Store, error) {
 			}
 		}
 	}
+	s.recoverDeletions()
 	return s, nil
 }
 func (s *Store) Close() error                 { return s.db.Close() }
@@ -314,6 +318,9 @@ func (s *Store) putWithPath(name, relative string, r io.Reader, size int64, expe
 		return a, false, errors.New("empty files are not accepted")
 	}
 	id := hex.EncodeToString(h.Sum(nil))
+	if s.deletionPending(id) {
+		return a, false, ErrDeletionPending
+	}
 	if (size >= 0 && n != size) || (expected != "" && id != expected) {
 		return a, false, ErrImportConflict
 	}

@@ -33,6 +33,7 @@ type ImportEntry struct {
 	Index     int    `json:"index"`
 	AssetID   string `json:"asset_id,omitempty"`
 	Duplicate bool   `json:"duplicate"`
+	Deleted   bool   `json:"deleted,omitempty"`
 	Error     string `json:"error,omitempty"`
 }
 type ImportSession struct {
@@ -295,7 +296,13 @@ func (s *Store) PutImport(ctx context.Context, id string, index int, r io.Reader
 		if m.Status != "running" || !s.liveImport(id) {
 			return ErrImportConflict
 		}
-		return readJSON(b, entryKey(index), &entry)
+		if e := readJSON(b, entryKey(index), &entry); e != nil {
+			return e
+		}
+		if entry.Deleted {
+			return ErrImportConflict
+		}
+		return nil
 	})
 	if e != nil {
 		return entry, e

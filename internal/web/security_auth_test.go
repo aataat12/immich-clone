@@ -13,7 +13,7 @@ import (
 func TestSensitiveRouteGuardMatrix(t *testing.T) {
 	s, cookie := setup(t)
 	routes := []struct{ method, path string }{
-		{"GET", "/api/gallery"}, {"GET", "/api/assets"}, {"GET", "/api/organization"},
+		{"GET", "/api/deletions"}, {"POST", "/api/deletions/missing/retry"}, {"POST", "/api/deletions/missing/keep"}, {"GET", "/api/gallery"}, {"GET", "/api/assets"}, {"GET", "/api/organization"},
 		{"GET", "/api/export"}, {"GET", "/api/diagnostics"}, {"GET", "/api/backup"},
 		{"GET", "/api/backup-plan"}, {"GET", "/api/backup-job"}, {"GET", "/api/backup-job/download?id=missing"},
 		{"POST", "/api/backup-job/start"}, {"POST", "/api/backup-job/cancel"}, {"POST", "/api/backup-job/discard"},
@@ -24,7 +24,7 @@ func TestSensitiveRouteGuardMatrix(t *testing.T) {
 		{"POST", "/api/upload?name=guard.txt"}, {"POST", "/api/faces/label"},
 		{"POST", "/api/faces/missing/dismiss"}, {"GET", "/api/faces/missing/context"}, {"GET", "/api/faces/missing/crop"}, {"POST", "/api/faces/missing/undo"},
 	}
-	for _, action := range []string{"original", "preview", "view", "retry", "hide", "unhide", "analyze", "tags", "dismiss-tag", "manual-face", "video-analysis", "reanalysis", "managed-location"} {
+	for _, action := range []string{"original", "preview", "view", "retry", "hide", "unhide", "analyze", "tags", "dismiss-tag", "manual-face", "video-analysis", "reanalysis", "delete", "managed-location"} {
 		method := "POST"
 		if action == "original" || action == "preview" || action == "view" || action == "managed-location" {
 			method = "GET"

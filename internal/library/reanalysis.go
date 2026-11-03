@@ -446,6 +446,10 @@ func overlaps(a, b []float64) bool {
 	return len(a) == 4 && len(b) == 4 && a[0] < b[0]+b[2] && b[0] < a[0]+a[2] && a[1] < b[1]+b[3] && b[1] < a[1]+a[3]
 }
 func (s *Store) ApplyReanalysis(parent context.Context, id string) error {
+	var requested reanalysisJob
+	if e := s.db.View(func(tx *bolt.Tx) error { return readJSON(tx.Bucket([]byte(reanalysisBucket)), id, &requested) }); e != nil {
+		return e
+	}
 	// Hash the immutable source before the short atomic metadata transaction.
 	ctx, cancel := context.WithTimeout(parent, 75*time.Second)
 	defer cancel()
@@ -464,7 +468,7 @@ func (s *Store) ApplyReanalysis(parent context.Context, id string) error {
 		if e := readJSON(b, id, &j); e != nil {
 			return e
 		}
-		if !validReanalysis(j, id) || j.Status != "ready" {
+		if !validReanalysis(j, id) || j.Status != "ready" || j.Token != requested.Token {
 			return ErrOrganizationInput
 		}
 		if j.MediaProvider != media.ProviderID {

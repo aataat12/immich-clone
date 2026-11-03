@@ -443,6 +443,12 @@ func (s *Store) FaceCrop(id string) (string, error) {
 	}
 	s.gate.Lock()
 	defer s.gate.Unlock()
+	if e = s.db.View(func(tx *bolt.Tx) error {
+		var current StoredFace
+		return readJSON(tx.Bucket([]byte(facesBucket)), id, &current)
+	}); e != nil {
+		return "", e
+	}
 	if e = s.publishFaceCrop(f, img); e != nil {
 		return "", e
 	}
@@ -825,12 +831,23 @@ func (s *Store) ManualFace(ctx context.Context, id string, box []float64, name s
 	if box[2] <= 0 || box[3] <= 0 || box[0]+box[2] > 1 || box[1]+box[3] > 1 {
 		return ErrOrganizationInput
 	}
+	initial, e := s.Get(id)
+	if e != nil {
+		return e
+	}
 	img, e := s.analysisImage(ctx, id)
 	if e != nil {
 		return e
 	}
 	s.gate.Lock()
 	defer s.gate.Unlock()
+	current, e := s.Get(id)
+	if e != nil {
+		return e
+	}
+	if !current.Added.Equal(initial.Added) {
+		return ErrOrganizationInput
+	}
 	key, e := newFaceID()
 	if e != nil {
 		return e

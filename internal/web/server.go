@@ -283,6 +283,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	if s.deletionHTTP(w, r) {
+		return
+	}
 	if s.backupHTTP(w, r) {
 		return
 	}

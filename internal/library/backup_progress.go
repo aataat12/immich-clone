@@ -70,6 +70,9 @@ func (s *Store) backupLock(ctx context.Context) error {
 }
 func (s *Store) backupPlanLocked() (BackupPlan, error) {
 	var p BackupPlan
+	if s.deletionPending("") {
+		return p, ErrDeletionPending
+	}
 	assets, e := s.List()
 	if e != nil {
 		return p, e
