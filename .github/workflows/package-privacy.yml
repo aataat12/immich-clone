@@ -24,11 +24,11 @@ jobs:
         with:
           name: experimental-native-ai-build-not-accepted
           path: native-privacy-input
-          run-id: 41483644241
+          run-id: 41551816976
           github-token: ${{ github.token }}
       - name: Verify worker and inspect actual candidate payload
         shell: pwsh
         run: |
-          if ((Get-FileHash native-privacy-input/ai-worker.exe).Hash.ToLowerInvariant() -ne 'cb35f0ccb3e38a6120a6f84fe91d17beaa719f9dcb9329c192b2c885bfb121ba') { throw 'Pinned worker mismatch' }
+          if ((Get-FileHash native-privacy-input/ai-worker.exe).Hash.ToLowerInvariant() -ne '15d1c2ca7ef3f526b34ac4823f9337c51280ad171ddf43df4f3af5d8128a7c58') { throw 'Pinned worker mismatch' }
           python scripts/Check-ArtifactPrivacy.py native-privacy-input
           if ($LASTEXITCODE -ne 0) { throw 'Candidate payload privacy check failed' }

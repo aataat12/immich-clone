@@ -1,7 +1,8 @@
 # NR-01 OpenCV security servicing
 
-Status: candidate backports; actual Windows build/API/model/service execution
-required before selection. Existing installed/app-pinned provider is unchanged.
+Status: component accepted on Windows Server 2022; application selection candidate
+now pins the new identity below. Actual application integration remains required.
+The existing installed provider is unchanged until a new validated installer.
 No SEC item is closed by source readiness and no new product release is implied.
 
 The exact retained OpenCV 4.12.0 source is kept, with zlib 1.3.2 and the previously
@@ -44,3 +45,25 @@ project patch now scales each contribution once, matching the existing multi-pla
 branch. It is explicitly not represented as an upstream security patch. The
 original expected-value assertions remain, with four-input coverage added and
 fixed synthetic case labels for diagnosis. Actual rerun remains required.
+
+## Accepted native component
+
+[41551816976](https://github.com/aataat12/immich-clone/actions/runs/41551816976),
+source 6e0a38d748e22ea04bb6b8571cb4b373b022e42d, build 125641002773 and
+LocalService 125643646910 passed. All 64 API cases and core controls ran, as did
+actual three-model face/object inference, four malformed frames, model failure,
+cancellation, Unicode/space paths and restart. Minimum reference embedding cosine
+0.9999996401; peak committed bytes 271400960 within 536870912; inputs unchanged.
+Only kernel32.dll imported, with the same static CRT/SSE2 baseline. No new end-user
+prerequisite. These are regressions/operation evidence, not sanitizer/fuzz or
+Windows 10 certification.
+
+Worker SHA256: 15d1c2ca7ef3f526b34ac4823f9337c51280ad171ddf43df4f3af5d8128a7c58
+(7365120 bytes); immutable selection ID
+opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3. Model hashes/preprocessing unchanged.
+Artifact 13192746922 ZIP SHA256
+2d420cb78acd8d9d170eeac9952f0c669d34cac6a8e071228ee8af4ee3d7c3ea
+retrieved and verified; six patched source files match the retained manifest.
+Actual checkpoint signature scan passed: 4291 inputs/members, 61531095 bytes.
+This checkpoint is not a new installer and its test executable is excluded from
+application packaging. All original remaining security/release gates remain.

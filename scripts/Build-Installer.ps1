@@ -9,7 +9,7 @@ $process = Start-Process $compilerSetup -ArgumentList @('/VERYSILENT','/SUPPRESS
 if ($process.ExitCode -ne 0) { throw 'Compiler provisioning failed' }
 New-Item -ItemType Directory -Force dist | Out-Null
 ./scripts/Prepare-MediaProvider.ps1 -Destination 'dist/media/ffmpeg-8.1.3-7eb77d88e2e9'
-./scripts/Prepare-AIProvider.ps1 -Destination 'dist/ai/opencv-4.12.0-zlib-1.3.2-cb35f0ccb3e3'
+./scripts/Prepare-AIProvider.ps1 -Destination 'dist/ai/opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3'
 $goRoot = & go env GOROOT
 $boltDir = & go list -m -f '{{.Dir}}' go.etcd.io/bbolt
 $sysDir = & go list -m -f '{{.Dir}}' golang.org/x/sys

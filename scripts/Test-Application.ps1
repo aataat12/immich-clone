@@ -1,3 +1,4 @@
+param([ValidatePattern('^[A-Za-z0-9][A-Za-z0-9.+-]{0,63}$')][string]$Version='0.1.29-prototype')
 $ErrorActionPreference = 'Stop'
 $root = Join-Path $env:RUNNER_TEMP ('immich-app-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory $root | Out-Null
@@ -13,8 +14,8 @@ function Login {
 }
 try {
     ./scripts/Prepare-MediaProvider.ps1 -Destination (Join-Path $root 'media/ffmpeg-8.1.3-7eb77d88e2e9')
-    ./scripts/Prepare-AIProvider.ps1 -Destination (Join-Path $root 'ai/opencv-4.12.0-zlib-1.3.2-cb35f0ccb3e3')
-    Checked go @('build','-trimpath','-ldflags','-X main.version=0.1.29-prototype','-o',$binary,'./cmd/immichclone')
+    ./scripts/Prepare-AIProvider.ps1 -Destination (Join-Path $root 'ai/opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3')
+    Checked go @('build','-trimpath','-ldflags',("-X main.version=$Version"),'-o',$binary,'./cmd/immichclone')
     Checked $binary @('-mode','init','-data',$state)
     Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)RX')
     Checked icacls @($state,'/grant','*S-1-5-19:(OI)(CI)M')
@@ -114,7 +115,7 @@ try {
     }
     if ($env:IMMICH_BROWSER_MODULE) {
         Stop-Service $name
-        $aiModel=Join-Path $root 'ai/opencv-4.12.0-zlib-1.3.2-cb35f0ccb3e3/sface.onnx'
+        $aiModel=Join-Path $root 'ai/opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3/sface.onnx'
         Move-Item $aiModel ($aiModel+'.held')
         Start-Service $name;Login
         $org=Invoke-RestMethod http://127.0.0.1:2283/api/organization -WebSession $session
