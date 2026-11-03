@@ -24,5 +24,6 @@ function Test-BoundedVolume([int]$sizeMiB,[string]$pattern) {
     }
 }
 Test-BoundedVolume 96 '^TestActualDiskFull$'
+Test-BoundedVolume 96 '^TestActualDeletionDiskFull$'
 # Backup preflight intentionally reserves space; this separate fixture must first fit.
 Test-BoundedVolume 192 '^TestActualBackupDiskFull$'
