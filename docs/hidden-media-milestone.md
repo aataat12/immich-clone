@@ -17,7 +17,7 @@ Restore to library uses the existing durable visibility update. No original, fac
 The deletion implementation below is a candidate. Remaining acceptance gates:
 
 1. Focused Windows LocalService/browser deletion, permission-failure, crash/retry and real pre-delete archive restoration: PASS in run 41697638495 (details below).
-2. Deletion-specific full-disk/transaction failure checks on disposable NTFS storage.
+2. Deletion-specific full-volume refusal/retry and transaction rollback checks: PASS in run 41702306375, within the scope documented below.
 3. Combined actual old-installer upgrade/failed-upgrade rollback, including pending intents, followed by installed deletion/restore/uninstall checks.
 4. Final target Windows acceptance before marking milestone 3 delivered.
 
@@ -66,3 +66,18 @@ The user unpaused development. The test now records the basic `D` deny mask, rem
 The same run passed normal confirmation/cancel/busy/narrow/reimport checks, focused Windows units/guards, HEIC/video inference and failure/crash recovery, reanalysis controls, hidden location/clipboard/restart restoration and final independent restored-frame regeneration. No production ACL, deletion implementation, provider, limit or acceptance assertion was weakened to get this result. The prior timeout was addressed by bounding the browser observation and avoiding an unnecessary body read on a successful Retry; actual state/file/backup assertions established completion. The earlier failed/cancelled run history remains above.
 
 The unrelated 4 GiB job was intentionally skipped and reuses its successful Windows proof in run 41683468062. Remaining gates 2–4 above remain open: deletion-specific disk-full/transaction-failure execution, actual old-installer upgrade/rollback and installed deletion/recovery, then target Windows acceptance. No installer/version was published; use installed 0.1.33. Work is unpaused, with this focused recovery checkpoint complete; milestone 3 is not delivered.
+
+## Full-volume and transaction-failure checkpoint
+
+[Run 41702306375](https://github.com/aataat12/immich-clone/actions/runs/41702306375), source `43ad2bb00e7198e8b9123c7dc02af3678344c3e1`, job `126148456024`: PASS on Windows Server 2022, Go 1.27.3. The bounded fixture uses an isolated 96 MiB NTFS volume, 4,096 synthetic manual face records with names, and catalog padding to leave only 69,632 bytes of reusable catalog reserve before exhausting the volume. The application now refuses a new deletion below a 16 MiB free-space floor before beginning its durable transaction; HTTP returns 507 with an instruction to free storage and retry. The test checks that no journal appears, the hidden asset and review records remain unchanged, original bytes remain identical, the catalog stays readable, and deletion succeeds after removing the disposable filler. Existing actual upload/import and backup full-disk recovery also passed on separate bounded volumes.
+
+The same run passed `TestDeletionTransactionRollback`: damaged disposable batch bookkeeping causes failure after the deletion transaction has staged its journal and review-record removals. Rollback retains the hidden asset, review data and original, publishes no intent, and permits successful deletion after repairing the fixture. This is a logical transaction failure, not a claim of power-loss or failed-sector simulation. Local library/web suites and vet also passed.
+
+Earlier attempts are retained as evidence:
+
+- [41700458714](https://github.com/aataat12/immich-clone/actions/runs/41700458714), source `052a63a4d6dea0eadcd3a5517497a34904b83790`: fixture failed because Windows' existing catalog mapping reserve still allowed deletion to succeed on the full volume. This did not prove the intended rejected-write path.
+- [41700965342](https://github.com/aataat12/immich-clone/actions/runs/41700965342), source `f067a85449997a6bebc230cbc7ebe88140212047`: fixture retained a read transaction while requesting a mapping expansion, blocking the write. That fixture-only read lock was removed; individual disk tests now have a 120-second timeout.
+- [41701392733](https://github.com/aataat12/immich-clone/actions/runs/41701392733), source `e6af7da1f6969119754a1d5358dde6ad375b2fee`: actual disk exhaustion rejected mapping expansion and left the open database handle unmapped. The preservation/readability assertion failed. This is the reason for the new pre-transaction low-space refusal.
+- [41701950792](https://github.com/aataat12/immich-clone/actions/runs/41701950792), source `a39b2cac61d1be92035b73833aa7b3948ad9862a`: full-volume refusal, unchanged catalog/original/review, retry, and existing upload/backup recovery passed before adding the separate transaction-rollback case.
+
+The free-space floor is a preflight check, not an exclusive reservation against unrelated processes consuming space, and does not establish recovery from every possible catalog growth or physical I/O failure. No database dependency was changed. These tests do not establish Windows 10 compatibility or installed-package acceptance. Gates 3 and 4 remain open: actual previous-installer upgrade/failed-upgrade rollback with pending intents and installed recovery, then target Windows validation. No new installer was published; installed 0.1.33 remains the user baseline. Group 2/3 security work and Full Scan remain paused/deferred.
