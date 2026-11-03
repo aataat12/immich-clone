@@ -42,6 +42,8 @@ jobs:
         run: |
           go mod verify
           if ($LASTEXITCODE -ne 0) { throw 'Module verification failed' }
+          go test -count=50 -timeout=120s ./internal/library -run '^TestCancelledMediaJobSurvivesRestartAndRestore$'
+          if ($LASTEXITCODE -ne 0) { throw 'Repeated HEIC restore recovery failed' }
           go test -v -count=1 -timeout=240s ./internal/... ./cmd/immichclone
           if ($LASTEXITCODE -ne 0) { throw 'Integrated tests failed' }
           go vet ./internal/... ./cmd/immichclone
