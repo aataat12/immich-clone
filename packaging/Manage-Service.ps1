@@ -45,6 +45,16 @@ function Health {
     throw 'Installed service did not become healthy'
 }
 try {
+    if ($Action -eq 'Uninstall') {
+        # Bootstrap comes from the uninstaller's hash-verified private staging.
+        # No ACL/log/state writes. Unsafe stationary trees refuse before stop.
+        Checked $BoundaryHelper @('-action','audit-cleanup','-app-dir',$AppDir,'-data-dir',$DataDir)
+        $owned = Own-Service
+        if ($owned) { Stop-Service $name -Force }
+        Checked $BoundaryHelper @('-action','cleanup','-app-dir',$AppDir,'-data-dir',$DataDir)
+        if ($owned) { Checked sc.exe @('delete',$name) }
+        exit 0
+    }
     # During Setup this script/helper come from the new bundled payload. Refuse
     # writable retained code before any log/ACL write, service stop or snapshot.
     $stage = 'audit code permissions'
@@ -98,12 +108,6 @@ try {
         Diagnostic 'installer_complete'
     exit 0
     }
-    if ($Action -eq 'Uninstall') {
-        if ($owned) { Stop-Service $name -Force; Checked sc.exe @('delete',$name) }
-        # Application state and originals deliberately remain untouched.
-        Diagnostic 'installer_complete'
-    exit 0
-    }
     $stage = 'validate state location'
     if ([IO.Path]::GetFullPath($AppDir).TrimEnd('\') -eq [IO.Path]::GetFullPath($DataDir).TrimEnd('\')) { throw 'State and installation directories must differ' }
     foreach ($component in ($DataDir -split '[\\/]')) { if ($component -ieq 'Dropbox') { throw 'Application state cannot be inside a sync folder' } }
@@ -139,6 +143,10 @@ try {
     Diagnostic 'installer_complete'
     exit 0
 } catch {
+    if ($Action -eq 'Uninstall') {
+        Write-Error 'Uninstall refused or incomplete. Application data was preserved; review the service and registration before retrying.' -ErrorAction Continue
+        exit 1
+    }
     if (!$pathsValidated) {
         if ($stoppedForAcl) {
             try {

@@ -798,3 +798,29 @@ real prior-release/full-provider/recovery validation1. No Group3 reclassificatio
 new dependency/provider/schema/version/release/cost or local PC action. SEC03
 stays open, security4 closed/4 open, published0.1.39 unchanged. Server is not
 Windows10 certification. Worker and focused CI finished; paused at this checkpoint.
+
+### Native uninstall/cleanup candidate (acceptance pending)
+
+Uninstall stages only compiler-hash/held-info-verified installed helper and two
+scripts into Inno private temp, holds staged files against writes/deletion and
+pins all actual app directory-chain components (nofollow, actual directory flag)
+through DeinitializeUninstall. InitializeUninstall only stages/audits, so user
+confirmation still precedes service stop/deletion. usUninstall invokes staged
+management; whole-app read-only native audit precedes stop, then native selected
+cleanup reacquires every removal target before any deletion. Remove exact fixed7
+rootfiles, recursive media/ai, fixed4 rollback files via read/delete handles, close
+children before parents, reject late names, preserve unknown root/rollback files,
+state/originals and diagnostics. Delete only verified owned service registration
+after successful file cleanup. Partial errors are explicit, not transactional
+rollback/healthy restart claims. App/rollback empty dirs remain intentionally.
+
+Remove path UninstallRun/UninstallDelete sections; overwrite Inno same-app log
+rather than retaining older logged path-executing/deletion actions. Existing
+fixed payload coverage and registry/icons remain current, but real prior-release
+upgrade/removal stays final combined gate. Inno metadata removal remains builtin
+under held app/ancestor directories; trusted loaded uninstaller integrity is a
+premise, not retroactive tamper recovery. No root wildcard, new dependency, cost,
+release/provider/schema/feature or Group3 work. Worker provided independent
+normal/unsafe-alias/ACL/writer/late-name/overlap/persistent-pin tests. Local cross
+build/vet passed; actual Windows and production Inno tests pending. Three-pass
+forecast unchanged until actual acceptance.

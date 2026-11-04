@@ -263,8 +263,45 @@ try {
     Assert (![UpgradeWriteProbe]::CanWrite($ordinaryUser,$ordinaryPassword,(Join-Path $currentApp 'Manage-Service.ps1'))) 'normal installed helper denies real standard-user modification'
     Assert ((Run-Setup $currentApp $state -ObserveStaging) -eq 0) 'protected custom application remains upgradeable after negative controls'
     Wait-Health
+    # Real uninstaller refusals must happen before service stop, metadata removal,
+    # retained-script execution or any app/data deletion.
+    $uninstallMarker = Join-Path $currentApp 'unexpected-uninstall-script.txt'
+    $helperPath = Join-Path $currentApp 'Manage-Service.ps1'
+    $helperBytes = [IO.File]::ReadAllBytes($helperPath)
+    $providerPath = Join-Path $currentApp 'ai/preparation-probe.txt'
+    $providerBytes = [IO.File]::ReadAllBytes($providerPath)
+    $providerAcl = Get-Acl -LiteralPath $providerPath
+    foreach ($kind in @('changed-script','provider-hardlink','provider-writer')) {
+        $pidBefore = (Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").ProcessId
+        $uninstallLogHash = (Get-FileHash -LiteralPath (Join-Path $currentApp 'unins000.dat')).Hash
+        try {
+            if ($kind -eq 'changed-script') {
+                [IO.File]::WriteAllText($helperPath,('[IO.File]::WriteAllText("'+$uninstallMarker+'","unexpected execution")'))
+            } elseif ($kind -eq 'provider-hardlink') {
+                Remove-Item -LiteralPath $providerPath
+                New-Item -ItemType HardLink -Path $providerPath -Target $noteOutside | Out-Null
+            } else {
+                Native icacls @($providerPath,'/grant','*S-1-5-32-545:F')
+                Assert ([UpgradeWriteProbe]::CanWrite($ordinaryUser,$ordinaryPassword,$providerPath)) 'uninstall unsafe provider has actual standard-user write positive control'
+            }
+            $refused = Start-Process (Join-Path $currentApp 'unins000.exe') -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru
+            Assert ($refused.ExitCode -ne 0) 'actual uninstaller refuses modified bootstrap unsafe ACL or hard-linked provider'
+            Assert ((Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").ProcessId -eq $pidBefore) 'unsafe uninstall refuses before service stop or registration deletion'
+            Assert (!(Test-Path -LiteralPath $uninstallMarker) -and (Test-Path 'HKLM:\SOFTWARE\ImmichClone') -and (Get-FileHash -LiteralPath (Join-Path $currentApp 'unins000.dat')).Hash -eq $uninstallLogHash) 'refused uninstall executes no changed script and preserves uninstall metadata and registration'
+            Assert ((Get-FileHash -LiteralPath $noteOutside).Hash -eq $noteHash -and (Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash -and (Test-Path (Join-Path $currentApp 'immichclone.exe'))) 'refused uninstall preserves outside bytes original and earlier payload files'
+        } finally {
+            [IO.File]::WriteAllBytes($helperPath,$helperBytes)
+            if ($kind -eq 'provider-hardlink') { Remove-Item -LiteralPath $providerPath; [IO.File]::WriteAllBytes($providerPath,$providerBytes) }
+            Set-Acl -LiteralPath $providerPath -AclObject $providerAcl
+        }
+    }
+    $unknownRoot = Join-Path $currentApp 'unrelated-preserved.txt'
+    $unknownRollback = Join-Path $currentApp 'rollback/unrelated-preserved.txt'
+    foreach ($path in @($unknownRoot,$unknownRollback)) { [IO.File]::WriteAllText($path,'unrelated retained bytes') }
     $process = Start-Process (Join-Path $currentApp 'unins000.exe') -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru
     Assert ($process.ExitCode -eq 0) 'disposable preparation installer uninstalls cleanly'
+    foreach ($path in @($unknownRoot,$unknownRollback)) { Assert ([IO.File]::ReadAllText($path) -eq 'unrelated retained bytes') 'native uninstall preserves unrelated root and rollback contents' }
+    Assert (!(Get-Service ImmichClone -ErrorAction SilentlyContinue) -and !(Test-Path 'HKLM:\SOFTWARE\ImmichClone')) 'completed native uninstall removes owned service and product registration'
     foreach ($leaf in $payloadNames) { Assert (!(Test-Path -LiteralPath (Join-Path $currentApp $leaf))) 'uninstall removes fixed native-published payload and provider fixture files' }
     Assert ((Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash) 'probe uninstall retains managed original bytes'
     # Use actual default Program Files inheritance too, rather than inferring

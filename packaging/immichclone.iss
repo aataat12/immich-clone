@@ -21,6 +21,7 @@ Compression=lzma2
 SolidCompression=yes
 CloseApplications=no
 SetupLogging=no
+UninstallLogMode=overwrite
 UninstallDisplayIcon={app}\immichclone.exe
 InfoBeforeFile=..\docs\prototype-notes.txt
 
@@ -49,35 +50,32 @@ Name: "{group}\Prototype limitations"; Filename: "{app}\prototype-notes.txt"
 
 Name: "{group}\Export diagnostic log"; Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\Export-Diagnostics.ps1"""
 
-[UninstallRun]
-Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File ""{app}\Manage-Service.ps1"" -Action Uninstall -AppDir ""{app}"" -DataDir ""{code:GetState}"""; RunOnceId: "RemoveImmichService"; Flags: runhidden waituntilterminated
-
-[UninstallDelete]
-; Native-published fixed files retain removal behavior; no app-root wildcard.
-Type: files; Name: "{app}\Manage-Service.ps1"
-Type: files; Name: "{app}\Storage-Security.ps1"
-Type: files; Name: "{app}\installer-files.exe"
-Type: files; Name: "{app}\immichclone.exe"
-Type: files; Name: "{app}\Export-Diagnostics.ps1"
-Type: files; Name: "{app}\THIRD-PARTY-LICENSES.txt"
-Type: files; Name: "{app}\prototype-notes.txt"
-Type: filesandordirs; Name: "{app}\media"
-Type: filesandordirs; Name: "{app}\ai"
-Type: files; Name: "{app}\rollback\immichclone.exe"
-Type: files; Name: "{app}\rollback\catalog.db"
-Type: files; Name: "{app}\rollback\access-code.txt"
-Type: files; Name: "{app}\rollback\snapshot-ready.json"
-Type: dirifempty; Name: "{app}\rollback"
-
 [Code]
+type
+  THeldFileInfo = record
+    Attributes, CreationLow, CreationHigh, AccessLow, AccessHigh,
+    WriteLow, WriteHigh, Volume, SizeHigh, SizeLow, Links, IndexHigh, IndexLow: LongWord;
+  end;
 var StatePage: TInputDirWizardPage; ManagementFailed: Boolean;
     ManagementHandle, SecurityHandle, BoundaryHandle: Integer;
+    UninstallDirectoryHandles: array of Integer;
 
 function OpenReadLockedFile(Name: String; Access, Sharing: LongWord;
   Security: Integer; Creation, Attributes: LongWord; Template: Integer): Integer;
   external 'CreateFileW@kernel32.dll stdcall';
 function CloseLockedFile(Handle: Integer): Boolean;
   external 'CloseHandle@kernel32.dll stdcall';
+
+function ReadHeldFileInfo(Handle: Integer; var Info: THeldFileInfo): Boolean;
+  external 'GetFileInformationByHandle@kernel32.dll stdcall';
+
+function ValidHeldFile(Handle: Integer): Boolean;
+var Info: THeldFileInfo;
+begin
+  Result := (Handle <> 0) and (Handle <> -1);
+  if Result then Result := ReadHeldFileInfo(Handle, Info);
+  if Result then Result := ((Info.Attributes and $410) = 0) and (Info.Links = 1);
+end;
 
 procedure ClosePreparationHandles;
 begin
@@ -206,4 +204,88 @@ end;
 function GetCustomSetupExitCode: Integer;
 begin
   if ManagementFailed then Result := 1 else Result := 0;
+end;
+
+function PinUninstallDirectory(Name: String): Boolean;
+var Parent: String; Handle, Count: Integer; Info: THeldFileInfo;
+begin
+  Result := False;
+  Name := RemoveBackslashUnlessRoot(Name);
+  Parent := ExtractFileDir(Name);
+  if CompareText(Parent, Name) <> 0 then
+    if not PinUninstallDirectory(Parent) then exit;
+  Handle := OpenReadLockedFile(Name, 1, 1, 0, 3, $02200000, 0);
+  if Handle = -1 then exit;
+  if not ReadHeldFileInfo(Handle, Info) or
+     ((Info.Attributes and $410) <> $10) then begin
+    CloseLockedFile(Handle);
+    exit;
+  end;
+  Count := GetArrayLength(UninstallDirectoryHandles);
+  SetArrayLength(UninstallDirectoryHandles, Count + 1);
+  UninstallDirectoryHandles[Count] := Handle;
+  Result := True;
+end;
+
+function StageUninstallPayload: Boolean;
+var SourceManagement, SourceSecurity, SourceBoundary: Integer;
+begin
+  Result := False;
+  SourceManagement := 0; SourceSecurity := 0; SourceBoundary := 0;
+  try
+    SourceManagement := OpenReadLockedFile(ExpandConstant('{app}\Manage-Service.ps1'), $80000000, 1, 0, 3, $00200000, 0);
+    SourceSecurity := OpenReadLockedFile(ExpandConstant('{app}\Storage-Security.ps1'), $80000000, 1, 0, 3, $00200000, 0);
+    SourceBoundary := OpenReadLockedFile(ExpandConstant('{app}\installer-files.exe'), $80000000, 1, 0, 3, $00200000, 0);
+    if not ValidHeldFile(SourceManagement) or not ValidHeldFile(SourceSecurity) or not ValidHeldFile(SourceBoundary) then exit;
+    if (CompareText(GetSHA256OfFile(ExpandConstant('{app}\Manage-Service.ps1')), '{#ManagementSHA256}') <> 0) or
+       (CompareText(GetSHA256OfFile(ExpandConstant('{app}\Storage-Security.ps1')), '{#StorageSecuritySHA256}') <> 0) or
+       (CompareText(GetSHA256OfFile(ExpandConstant('{app}\installer-files.exe')), '{#BoundaryHelperSHA256}') <> 0) then exit;
+    if not FileCopy(ExpandConstant('{app}\Manage-Service.ps1'), ExpandConstant('{tmp}\Manage-Service.ps1'), True) or
+       not FileCopy(ExpandConstant('{app}\Storage-Security.ps1'), ExpandConstant('{tmp}\Storage-Security.ps1'), True) or
+       not FileCopy(ExpandConstant('{app}\installer-files.exe'), ExpandConstant('{tmp}\installer-files.exe'), True) then exit;
+    ManagementHandle := OpenReadLockedFile(ExpandConstant('{tmp}\Manage-Service.ps1'), $80000000, 1, 0, 3, $00200000, 0);
+    SecurityHandle := OpenReadLockedFile(ExpandConstant('{tmp}\Storage-Security.ps1'), $80000000, 1, 0, 3, $00200000, 0);
+    BoundaryHandle := OpenReadLockedFile(ExpandConstant('{tmp}\installer-files.exe'), $80000000, 1, 0, 3, $00200000, 0);
+    if not ValidHeldFile(ManagementHandle) or not ValidHeldFile(SecurityHandle) or not ValidHeldFile(BoundaryHandle) then exit;
+    Result := (CompareText(GetSHA256OfFile(ExpandConstant('{tmp}\Manage-Service.ps1')), '{#ManagementSHA256}') = 0) and
+      (CompareText(GetSHA256OfFile(ExpandConstant('{tmp}\Storage-Security.ps1')), '{#StorageSecuritySHA256}') = 0) and
+      (CompareText(GetSHA256OfFile(ExpandConstant('{tmp}\installer-files.exe')), '{#BoundaryHelperSHA256}') = 0);
+  finally
+    if (SourceManagement <> 0) and (SourceManagement <> -1) then CloseLockedFile(SourceManagement);
+    if (SourceSecurity <> 0) and (SourceSecurity <> -1) then CloseLockedFile(SourceSecurity);
+    if (SourceBoundary <> 0) and (SourceBoundary <> -1) then CloseLockedFile(SourceBoundary);
+  end;
+end;
+
+function InitializeUninstall: Boolean;
+var ResultCode: Integer;
+begin
+  Result := False;
+  try
+    if not PinUninstallDirectory(ExpandConstant('{app}')) then exit;
+    if not StageUninstallPayload then exit;
+    { Only audit here: initialization precedes the user's uninstall confirmation. }
+    Result := Exec(ExpandConstant('{tmp}\installer-files.exe'),
+      '-action audit-cleanup -app-dir "' + ExpandConstant('{app}') + '" -data-dir "' + GetState('') + '"',
+      '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
+  except
+    Result := False;
+  end;
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var ResultCode: Integer;
+begin
+  if CurUninstallStep = usUninstall then
+    if not RunManagement('Uninstall', ResultCode) or (ResultCode <> 0) then
+      RaiseException('Safe uninstall refused or incomplete. Application data was preserved; review the service before retrying.');
+end;
+
+procedure DeinitializeUninstall;
+var I: Integer;
+begin
+  ClosePreparationHandles;
+  for I := GetArrayLength(UninstallDirectoryHandles) - 1 downto 0 do
+    CloseLockedFile(UninstallDirectoryHandles[I]);
+  SetArrayLength(UninstallDirectoryHandles, 0);
 end;
