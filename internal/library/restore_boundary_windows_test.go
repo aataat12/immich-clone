@@ -3,6 +3,7 @@
 package library
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -133,6 +134,32 @@ func TestRestoreBoundaryValidPrivateAtBirthAndIndependentRecovery(t *testing.T) 
 	offlineAssertSnapshot(t, filepath.Dir(archive), archiveBefore)
 	t.Log("PASS: actual restore stage and derived directories are private/protected before any catalog extraction; authentic supervised recovery verifies original bytes while source and archive remain unchanged")
 }
+func TestRestoreBoundaryArchiveBesideDestination(t *testing.T) {
+	archive, _, _, _ := restoreBoundaryFixture(t)
+	before, e := os.ReadFile(archive)
+	if e != nil {
+		t.Fatal(e)
+	}
+	target := filepath.Join(filepath.Dir(archive), "sibling recovery")
+	if e = restoreBoundaryCall(archive, target); e != nil {
+		t.Fatal("archive parent pin blocked sibling recovery", e)
+	}
+	s, e := OpenReadOnly(target)
+	if e != nil {
+		t.Fatal(e)
+	}
+	e = s.Verify()
+	ce := s.Close()
+	if e != nil || ce != nil {
+		t.Fatal(errors.Join(e, ce))
+	}
+	after, e := os.ReadFile(archive)
+	if e != nil || !bytes.Equal(before, after) {
+		t.Fatal("sibling recovery changed held archive", e)
+	}
+	t.Log("PASS: archive inside selected destination parent remains byte-identical while independently verified sibling recovery publishes")
+}
+
 func TestRestoreBoundaryStaticInputAliasesAndWriterRefuse(t *testing.T) {
 	for _, kind := range []string{"archive-file-link", "archive-hardlink", "archive-parent-link", "target-parent-link", "target-parent-junction", "existing-directory", "existing-target-link", "existing-target-file", "archive-writer"} {
 		t.Run(kind, func(t *testing.T) {

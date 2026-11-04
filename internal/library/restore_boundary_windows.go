@@ -169,6 +169,13 @@ func restorePlatform(ctx context.Context, archive, target string, l RestoreLimit
 	if e != nil {
 		return e
 	}
+	// The selected nofollow archive file is now held read-only and cannot be
+	// replaced or written. Release redundant directory pins: an archive inside
+	// the destination parent must not retain a strict pin that blocks rename.
+	if e = b.archiveParent.Close(); e != nil {
+		return e
+	}
+	b.archiveParent = nil
 	l, e = l.defaults(filepath.Dir(target))
 	if e != nil {
 		return e
@@ -197,6 +204,28 @@ func restorePlatform(ctx context.Context, archive, target string, l RestoreLimit
 		}
 	}()
 	if e = restorePrivateDirectory(b.stage.Directory()); e != nil {
+		return e
+	}
+	// Keep the initial strict parent pin until this protected, DELETE-pinned
+	// child makes the parent persistently nonempty. Native rename needs WRITE
+	// sharing on its target directory; nonempty directories cannot acquire a
+	// reparse point. Check identity while both versions of the pin are held.
+	parentID, e := b.parent.Identity()
+	if e != nil {
+		return e
+	}
+	publicationParent, e := winfs.OpenRestoreParent(filepath.Dir(target))
+	if e != nil {
+		return e
+	}
+	publicationID, e := publicationParent.Identity()
+	if e != nil || publicationID != parentID {
+		publicationParent.Close()
+		return errors.New("restore parent identity changed")
+	}
+	oldParent := b.parent
+	b.parent = publicationParent
+	if e = oldParent.Close(); e != nil {
 		return e
 	}
 	for _, n := range []string{"originals", "staging", "previews", "faces"} {

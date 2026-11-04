@@ -5,6 +5,7 @@ package winfs
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"sync"
 	"unsafe"
 
@@ -17,6 +18,68 @@ import (
 type RestoreStage struct {
 	mu sync.Mutex
 	h  windows.Handle
+}
+
+// OpenRestoreParent pins the same nofollow chain as OpenDirectory. Only its
+// final read-only handle shares WRITE so native relative rename can open the
+// target directory for adding an entry. DELETE remains unshared at every level.
+// Before releasing any strict pin or using this for publication, the caller must
+// already hold a protected private stage child with DELETE sharing denied. That
+// child keeps the parent nonempty, preventing reparse conversion while WRITE is
+// shared. Opening an empty parent this way alone is not a safe restore boundary.
+func OpenRestoreParent(path string) (_ *Directory, err error) {
+	d, err := OpenDirectory(path)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err != nil {
+			d.Close()
+		}
+	}()
+	before, err := d.Identity()
+	if err != nil {
+		return nil, err
+	}
+	access := uint32(windows.FILE_LIST_DIRECTORY | windows.FILE_READ_ATTRIBUTES | windows.READ_CONTROL | windows.SYNCHRONIZE)
+	var h windows.Handle
+	if len(d.holds) == 1 {
+		var u *uint16
+		u, err = windows.UTF16PtrFromString(filepath.VolumeName(filepath.Clean(path)) + `\`)
+		if err == nil {
+			h, err = windows.CreateFile(u, access, windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE, nil, windows.OPEN_EXISTING, windows.FILE_FLAG_BACKUP_SEMANTICS|windows.FILE_FLAG_OPEN_REPARSE_POINT, 0)
+		}
+	} else {
+		var u *windows.NTUnicodeString
+		u, err = windows.NewNTUnicodeString(filepath.Base(filepath.Clean(path)))
+		if err == nil {
+			oa := windows.OBJECT_ATTRIBUTES{RootDirectory: d.holds[len(d.holds)-2], ObjectName: u, Attributes: windows.OBJ_CASE_INSENSITIVE | windows.OBJ_DONT_REPARSE}
+			oa.Length = uint32(unsafe.Sizeof(oa))
+			var status windows.IO_STATUS_BLOCK
+			err = windows.NtCreateFile(&h, access, &oa, &status, nil, 0, windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE, windows.FILE_OPEN, windows.FILE_DIRECTORY_FILE|windows.FILE_OPEN_REPARSE_POINT|windows.FILE_SYNCHRONOUS_IO_NONALERT, 0, 0)
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	if err = checked(h, true); err != nil {
+		windows.CloseHandle(h)
+		return nil, err
+	}
+	after, e := (&Directory{holds: []windows.Handle{h}}).Identity()
+	if e != nil || before != after {
+		windows.CloseHandle(h)
+		if e != nil {
+			return nil, e
+		}
+		return nil, ErrUnsafeObject
+	}
+	old := d.holds[len(d.holds)-1]
+	d.holds[len(d.holds)-1] = h
+	if err = windows.CloseHandle(old); err != nil {
+		return nil, err
+	}
+	return d, nil
 }
 
 func (d *Directory) CreateExclusiveDirectory(name string, sd *windows.SECURITY_DESCRIPTOR) (*RestoreStage, error) {
@@ -43,7 +106,7 @@ func (d *Directory) CreateExclusiveDirectory(name string, sd *windows.SECURITY_D
 	oa.Length = uint32(unsafe.Sizeof(oa))
 	var status windows.IO_STATUS_BLOCK
 	var h windows.Handle
-	e = windows.NtCreateFile(&h, windows.FILE_LIST_DIRECTORY|windows.FILE_READ_ATTRIBUTES|windows.READ_CONTROL|windows.DELETE|windows.SYNCHRONIZE, &oa, &status, nil, 0, windows.FILE_SHARE_READ, windows.FILE_CREATE, windows.FILE_DIRECTORY_FILE|windows.FILE_OPEN_REPARSE_POINT|windows.FILE_SYNCHRONOUS_IO_NONALERT, 0, 0)
+	e = windows.NtCreateFile(&h, windows.FILE_LIST_DIRECTORY|windows.FILE_READ_ATTRIBUTES|windows.READ_CONTROL|windows.DELETE|windows.SYNCHRONIZE, &oa, &status, nil, 0, windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE, windows.FILE_CREATE, windows.FILE_DIRECTORY_FILE|windows.FILE_OPEN_REPARSE_POINT|windows.FILE_SYNCHRONOUS_IO_NONALERT, 0, 0)
 	if e != nil {
 		return nil, e
 	}
