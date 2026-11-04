@@ -62,23 +62,7 @@ func start(ctx context.Context, o options) (func() error, error) {
 	workerDone := make(chan struct{})
 	go func() {
 		defer close(workerDone)
-		ticker := time.NewTicker(time.Second)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-child.Done():
-				return
-			case <-ticker.C:
-				if processed, e := s.ProcessOneContext(child); e != nil {
-					diagnostics.Record("preview", "failed", e, 0, 0, 0)
-					log.Print("Preview worker encountered a storage error; job remains persistent")
-				} else if !processed {
-					if _, err := s.ProcessAnalysis(child); err != nil {
-						log.Print("AI worker encountered a storage error; job remains persistent")
-					}
-				}
-			}
-		}
+		runWorker(child, s, time.Second)
 	}()
 	serveDone := make(chan error, 1)
 	go func() {
@@ -110,6 +94,30 @@ func start(ctx context.Context, o options) (func() error, error) {
 		return closeErr
 	}, nil
 }
+
+// Drain ready previews serially. ProcessOneContext rechecks the import lease and
+// cancellation before each item. Idle, AI and storage-error paths retain their
+// polling delay so an unavailable store cannot create a busy retry loop.
+func runWorker(ctx context.Context, s *library.Store, idle time.Duration) {
+	for ctx.Err() == nil {
+		if processed, err := s.ProcessOneContext(ctx); err != nil {
+			diagnostics.Record("preview", "failed", err, 0, 0, 0)
+			log.Print("Preview worker encountered a storage error; job remains persistent")
+		} else if processed {
+			continue
+		} else if _, err := s.ProcessAnalysis(ctx); err != nil {
+			log.Print("AI worker encountered a storage error; job remains persistent")
+		}
+		timer := time.NewTimer(idle)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return
+		case <-timer.C:
+		}
+	}
+}
+
 func main() {
 	data := flag.String("data", "", "application data directory outside cloud sync folders")
 	address := flag.String("listen", "127.0.0.1:2283", "loopback listen address")

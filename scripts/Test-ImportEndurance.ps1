@@ -1,3 +1,4 @@
+param([string]$CandidateBinary='')
 $ErrorActionPreference='Stop'
 $root=Join-Path $env:RUNNER_TEMP ('installed-import-endurance-'+[guid]::NewGuid().ToString('N'))
 $app=Join-Path $root 'application';$state=Join-Path $root 'state'
@@ -12,6 +13,14 @@ try{
  if($p.ExitCode -ne 0){throw 'Accepted installation failed'}
  $service=Get-CimInstance Win32_Service -Filter "Name='ImmichClone'"
  if($service.StartName -ne 'NT AUTHORITY\LocalService' -or (& "$app/immichclone.exe" -mode version) -ne '0.1.38-prototype'){throw 'Installed account/version mismatch'}
+ if($CandidateBinary){
+  if((& $CandidateBinary -mode version) -ne '0.1.39-prototype-candidate'){throw 'Unexpected preview-throughput candidate'}
+  Stop-Service ImmichClone
+  Copy-Item -LiteralPath $CandidateBinary -Destination "$app/immichclone.exe" -Force
+  Start-Service ImmichClone
+  if((& "$app/immichclone.exe" -mode version) -ne '0.1.39-prototype-candidate'){throw 'Candidate replacement mismatch'}
+  Write-Output 'Testing source-built0.1.39 candidate executable with accepted0.1.38 installed service/providers; not a new installer proof'
+ }
  $env:IMMICH_IMPORT_ENDURANCE_ROOT=$root
  Checked node @('tests/import-endurance.cjs','first')
  Restart-Service ImmichClone
