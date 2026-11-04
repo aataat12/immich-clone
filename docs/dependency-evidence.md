@@ -1001,3 +1001,23 @@ and docs, retaining exact assertions/product bytes. Admin recovery, pre-main
 worker, durable payload interruption and real metadata concurrency remain original
 SEC03 implementation gates. Corrected best additional passes5 (range5–7), not
 full integrated closure or Windows10 certification. See filesystem boundary record.
+
+## Administrative read-only verification and backup
+
+No new dependency. Existing bbolt1.4.3 ReadOnly+OpenFile consumes actual held
+Windows read-only catalog handle; actual mapping/shared lock and default-zero
+Tx.WriteTo reusing fd were executed in native tests and ordinary RX-user CLI.
+ZIP catalog streams directly, no source temp; existing x/sys NtCreateFile
+FILE_CREATE supplies final private DACL and exclusive-name create, not OPEN_IF.
+Windows Server2022 run41913488167/source348dd18b790fcc47e6ccf5228a723be7f0fbd125/
+job126866916248 completed success: complete source immutability, real input/output
+aliases/writers, unsupported state, private/exclusive output, bounded integrity
+failures/exact cleanup, independent ZIP/restore; actual admin installed source and
+separate RX-only source-copy verify/backup, archive ACL/checksums, preserved
+administrator recovery, remaining Setup/uninstall/rollback/SEC01. First run017b5130
+passed product checks but failed fixture ACLrestore; accepted fixture avoids
+installed ACLmutation without product changes or weaker checks. Existing automatic
+catalog baseline41912052098 passed. Native tests/cross-build/vet and Linux baseline
+backup checks passed; two worker reviews/tests done. Full untrusted restore,
+durable installer interruption, metadata races and genuine release/providers
+remain original SEC03 rows. Published0.1.39 unchanged; not Win10 certification.

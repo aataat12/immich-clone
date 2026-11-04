@@ -1038,3 +1038,67 @@ installed executable checks remain, admin recovery and privateZIP checks remain.
 No product bytes/assertions are weakened. Full gate rerun still required.
 Automatic bounded catalog-scale baseline41912052098 also completed success; no
 new scale work or repeated scale run is requested.
+
+### Accepted administrative verify and backup checkpoint
+
+[Run41913488167](https://github.com/aataat12/immich-clone/actions/runs/41913488167)
+completed success on Windows Server2022, exact source
+348dd18b790fcc47e6ccf5228a723be7f0fbd125/job126866916248. Complete logs reach
+cleanup with zero errors/failing tests. Native TestOffline matrix passed: unchanged
+source bytes/owners/DACLs/namespace including queued previews/staging, missing or
+unsupported marker/catalog/buckets, real directory/file symlinks/hardlinks and
+preexisting data-writer refusals, optional missing-code no-generation, cancellation/
+writer failure, exclusive private output, existing/source-contained/aliased output
+refusal, corrupt-original and declared-size mismatch exact-new-file cleanup,
+ZIP/manifest readback and actual independent Restore+Verify. Native fd creation,
+read-only mapping/locking and direct Tx.WriteTo were executed, not compile-only.
+
+Actual administrator CLI verify/backup read the installed library with exact
+source/permission/namespace/no-selected-log checks. A byte/namespace-verified copy
+of that stopped library received RX-only permissions for a real separate ordinary
+account; its catalog/original write attempts failed while CLI verify/backup
+succeeded. Creator/BA/SY-only protected archive permissions and every manifest
+payload checksum were independently checked. Existing administrator restore+
+new verification recovered a distinct library from that ZIP with unchanged ZIP,
+installed source and RX copy. Installed executable ACLs/source never changed.
+Normal service resumed; remaining Setup, rollback, uninstall, privacy/original and
+SEC01 compatibility passed. This is representative small synthetic recovery,
+not the pending genuine prior-release/full-provider/large-volume combined gate.
+
+OpenReadOnly never creates missing state, repairs schema/index/queue, generates
+codes or initializes diagnostics. Windows marker/catalog/code/root/originals are
+held nofollow/singlelink/read-only. Existing catalog passes once to bboltRO
+OpenFile, with nonzero-size/schema/assets checks before use. CLI dispatch occurs
+before diagnostic init; Verify hashes held originals. Offline backup streams
+existing read transaction directly into ZIP, with no source staging and existing
+pending-delete/count/config/catalog/original-size bounds, including actual vs
+recorded size and original SHA256. Backup locking serializes shared marker/code
+read offsets. Browser/service backup retains its existing path.
+
+Archive parent is pinned and physical source-subtree output refused while valid
+sibling output remains supported. FILE_CREATE never opens an existing name and
+receives creator/BA/SY protected private DACL at birth. Failure removes only the
+held newly-created file before close; no pathname cleanup. Unverifiable cleanup
+or close failure is explicit and may leave a private incomplete archive, never a
+success claim. Missing optional access-code format behavior is preserved without
+creating one. Two authorized workers provided independent code review/native tests
+and actual account/recovery tests. Local Windows cross-build/vet and focused Linux
+baseline backup tests passed.
+
+First run41912052062/source017b5130/job126861893332 had passed all product/native/
+RX/ZIP/admin-recovery assertions but failed test-only ACL reapplication teardown.
+Accepted rerun changes only fixture/docs: installed source/executable permissions
+are never temporarily edited, exact original-source checks retained+expanded,
+RX setup is confined to its verified copy. Product source bytes are unchanged.
+Automatically triggered bounded catalog baseline41912052098 also passed; no extra
+scale implementation or repeat was requested. All CI/workers completed.
+
+This completes the SAME administrative verify/backup row; best forecast **5 to4
+additional passes**. Remaining rows unchanged: restore supervisor/pre-main-worker1;
+durable full-payload prewrite intent/interrupted mixed recovery1; separate-account
+installer/metadata concurrency1; genuine prior-release/full-provider/recovery1.
+Actual trusted archive restoration here preserves functional compatibility; it
+does NOT close the untrusted restore path boundary. Those are original SEC03
+obligations, not new features or Group3 work. No dependency/provider/schema/version/
+release/cost or local PC action. SEC03 open, security4 closed/4 open; keep0.1.39.
+Server results do not certify Windows10. Paused at this checkpoint.

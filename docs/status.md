@@ -73,18 +73,18 @@ proved that fresh read really is denied. Production policy was not weakened.
 
 User definition: one pass is a work session ending with completion/pause. Latest
 forecast was7 remaining, conditional on proof/integration; this completed ACL
-integration reduced it to6 remaining passes; initialization reduced it to5; the code-permission checkpoint reduced it to4; application payload publication reduced it to3; bounded uninstall/cleanup reduced it to2. Residual implementation review below corrects that forecast to **5**, not a guarantee.
+integration reduced it to6 remaining passes; initialization reduced it to5; the code-permission checkpoint reduced it to4; application payload publication reduced it to3; bounded uninstall/cleanup reduced it to2. Residual implementation review below corrected that forecast to5; accepted verify/backup below reduces it to **4**, not a guarantee.
 
 | SEC-03 workstream | Current checkpoint | More passes, best estimate |
 |---|---|---:|
 | State/log/rollback ACLs, initialization, Setup payload and uninstall | Focused Windows checkpoints accepted | 0 |
 | Command entrypoint guards, existing-code reads and stationary metadata aliases | Focused Windows checkpoint accepted | 0 |
-| Administrative verify/backup held read-only paths and archive output | Remaining | 1 |
+| Administrative verify/backup held read-only paths and archive output | Focused Windows checkpoint accepted | 0 |
 | Restore supervisor and pre-main worker path boundary | Remaining | 1 |
 | Durable full-payload intent and interrupted/mixed-copy recovery | Remaining | 1 |
 | Separate-account installer/metadata concurrency controls | Remaining | 1 |
 | Genuine prior-release/full-provider/recovery closure | Remaining | 1 |
-| Total | SEC-03 remains open; corrected forecast | 5 |
+| Total | SEC-03 remains open | 4 |
 
 No worker/CI remains active. No new feature/provider/version/release, cost,
 Group3 work or PC action; keep published0.1.39. Security remains4 closed/4 open.
@@ -222,6 +222,32 @@ worker, temporary fullcode intent/recovery and concurrent metadata-leaf gaps
 remain open. This tranche does not close the full integrated row or SEC03.
 Security4 closed/4 open; keep0.1.39, no new feature/dependency/release/cost/Group3
 work or local action. Server is not Win10. Worker/CI finished; paused here.
+
+### Accepted administrative verify/backup checkpoint
+
+[Run41913488167](https://github.com/aataat12/immich-clone/actions/runs/41913488167)
+completed success, source348dd18b790fcc47e6ccf5228a723be7f0fbd125/job126866916248.
+Read-only existing-store/held catalog+original reads replace offline initialization;
+ZIP catalog streams directly without source staging. Archive is exclusive/private
+at creation; errors clean only its held new file, with truthful incomplete-close/
+cleanup reporting. No source/log/schema/index changes. Normal browser/service
+backup path remains. Native real aliases/writers/bounds/privatearchive/failure/
+no-generation and independent restore controls passed. Administrator commands on
+actual installed source and real RX-only account commands on verified library
+copy passed with exact source/ACL/namespace/no-log checks; ZIP private permissions,
+manifest hashes and independent administrator restore/verify also passed.
+Two workers finished review/tests. Test-only permission teardown was isolated
+into a copy without product or assertion weakening. Actual remaining Setup/
+uninstall/rollback/privacy/SEC01 and automatic existing catalog baseline passed.
+[Exact evidence/limits](filesystem-boundary-milestone7.md#accepted-administrative-verify-and-backup-checkpoint).
+
+Same tracked row complete; best additional passes **5 to4**. Four remaining rows
+are unchanged: restore supervisor/pre-main-worker1, durable interrupted payload1,
+actual metadata/installer concurrency1, genuine prior-release/fullprovider1.
+Trusted recovery compatibility here does not close the separate untrusted restore
+boundary. SEC03 stays open, security4 closed/4 open. No feature/dependency/provider/
+schema/version/release/cost/Group3 expansion or PC action; keep0.1.39. Server is
+not Win10 certification. All CI/workers done; paused here.
 
 ## Historical checkpoints (superseded where later acceptance applies)
 

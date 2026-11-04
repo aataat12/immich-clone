@@ -519,3 +519,18 @@
   and concurrent metadata tests remain implementation, not merely validation.
   Correct prior2-pass estimate to best5 (range5–7) original SEC03 passes; no
   feature/Group3 expansion, new release/dependency/cost or Win10 certification.
+
+- SEC03 administrative verify/backup: preserve admin and RX-user recovery use
+  with existing-only ReadOnly store, native held source leaves/catalog fd hook,
+  direct Tx.WriteTo ZIP instead of source staging and no diagnostics/repair.
+  Preserve source/count/size/pending-delete/config bounds; compare actual blob
+  size, serialize metadata reads. New archive is FILE_CREATE private at birth,
+  held-parent/physical source exclusion, handle-only failed-output cleanup and
+  truthful incomplete-close reporting. Run41913488167/source348dd18/job126866916248
+  passed native tests, actual admin installed source and ordinary RX copy commands,
+  immutable source/ACL/namespace/log checks, ZIPpermissions/checksums, independent
+  restore/verify and Setup/uninstall/rollback/SEC01. Two workers complete. Initial
+  product checks passed but fixture ACLreapply cleanup failed; isolate RXclone
+  instead of mutating installed ACLs, retain+expand exact assertions. Same row
+  completes; forecast5 to4, unchanged remaining restore/durable/races/combined
+  rows. No new dependency/provider/schema/release/cost, Group3 or Win10 claim.
