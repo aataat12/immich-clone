@@ -172,11 +172,21 @@ try {
     # and only the verified native restore permits restart/rollback_complete.
     $installerLog = Join-Path $env:ProgramData 'ImmichCloneDiagnostics/installer.jsonl'
     $rollbackBeforeCount = @(Get-Content -LiteralPath $installerLog | Where-Object { $_ -match '"event":"rollback_complete"' }).Count
+    # A hard-linked optional failure note must be refused without suppressing
+    # the real restore path or changing the outside sentinel.
+    $noteOutside = Join-Path $root 'outside-note-sentinel.txt'
+    [IO.File]::WriteAllText($noteOutside,'outside diagnostic sentinel')
+    Set-Acl -LiteralPath $noteOutside -AclObject (Get-Acl -LiteralPath (Join-Path $currentApp 'immichclone.exe'))
+    $noteHash = (Get-FileHash -LiteralPath $noteOutside).Hash
+    $notePath = Join-Path $currentApp 'install-diagnostic.txt'
+    New-Item -ItemType HardLink -Path $notePath -Target $noteOutside | Out-Null
     try {
         $env:IMMICH_INSTALL_TEST_FAILURE = '1'
         Assert ((Run-Setup $currentApp $state) -ne 0) 'actual candidate Setup rejects injected post-initialization failure'
     } finally { Remove-Item Env:IMMICH_INSTALL_TEST_FAILURE -ErrorAction SilentlyContinue }
     Wait-Health
+    Assert ((Get-FileHash -LiteralPath $noteOutside).Hash -eq $noteHash) 'refused hard-linked failure note preserves outside bytes and does not prevent real Setup rollback'
+    Remove-Item -LiteralPath $notePath
     $rollbackAfterCount = @(Get-Content -LiteralPath $installerLog | Where-Object { $_ -match '"event":"rollback_complete"' }).Count
     Assert ($rollbackAfterCount -eq $rollbackBeforeCount+1) 'verified native restore completes before management reports rollback and service health'
     Assert ((Get-FileHash (Join-Path $currentApp 'immichclone.exe')).Hash -eq $priorBinaryHash -and (Get-FileHash (Join-Path $state 'access-code.txt')).Hash -eq $codeHash -and (Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash) 'actual failed Setup restores code and preserves access code and original bytes'

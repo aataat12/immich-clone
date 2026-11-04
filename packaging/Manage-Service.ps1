@@ -22,13 +22,8 @@ $logRoot = Join-Path $env:ProgramData 'ImmichCloneDiagnostics'
 function Diagnostic([string]$event,[int]$result=0) {
     if (!$diagnosticsReady) { return }
     try {
-        $file = Join-Path $logRoot 'installer.jsonl'
-        if ((Test-Path $file) -and (Get-Item $file).Length -gt 4MB-1024) {
-            Move-Item -LiteralPath $file -Destination ($file+'.previous') -Force
-        }
-        # These values are fixed internal labels and numbers, never exception text.
-        $record = @{time_utc=[DateTime]::UtcNow.ToString('o');event=$event;action=$Action;stage=$stage;result_code=$result}
-        [IO.File]::AppendAllText($file,($record | ConvertTo-Json -Compress)+[Environment]::NewLine,(New-Object Text.UTF8Encoding($false)))
+        & $BoundaryHelper '-action' 'diagnostic' '-log-dir' $logRoot '-event' $event '-operation' $Action '-stage' $stage '-result' $result | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw 'Diagnostic operation refused' }
     } catch { Write-Warning 'A diagnostic event could not be saved' }
 }
 
@@ -138,7 +133,10 @@ try {
         $inner = $inner.InnerException
     }
     # No paths, credentials, machine inventory or exception text in diagnostics.
-    ($stage+'; '+$_.Exception.GetType().Name+'; HResult='+$_.Exception.HResult) | Set-Content (Join-Path $AppDir 'install-diagnostic.txt')
+    try {
+        & $BoundaryHelper '-action' 'failure-note' '-app-dir' $AppDir '-stage' $stage '-result' $_.Exception.HResult | Out-Null
+        if ($LASTEXITCODE -ne 0) { Write-Warning 'Installation failure note could not be saved' }
+    } catch { Write-Warning 'Installation failure note could not be saved' }
     # Schema 1 installer never mutates originals. Restore prior catalog and binary
     # after startup/configuration failure; retained orphan blobs are never deleted.
     if ($Action -eq 'Install' -and (Test-Path "$rollback/immichclone.exe")) {

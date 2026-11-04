@@ -118,6 +118,9 @@ func privateFile(f *os.File) error {
 	return privateDescriptor(sd, false)
 }
 func privateDescriptor(sd *windows.SECURITY_DESCRIPTOR, directory bool) error {
+	return policyDescriptor(sd, directory, map[string]uint32{"S-1-5-18": fileFullAccess, "S-1-5-32-544": fileFullAccess})
+}
+func policyDescriptor(sd *windows.SECURITY_DESCRIPTOR, directory bool, policy map[string]uint32) error {
 	if sd == nil {
 		return ErrRefused
 	}
@@ -137,7 +140,7 @@ func privateDescriptor(sd *windows.SECURITY_DESCRIPTOR, directory bool) error {
 		return e
 	}
 	ownerSID := owner.String()
-	if ownerSID != "S-1-5-18" && ownerSID != "S-1-5-32-544" && ownerSID != u.User.Sid.String() {
+	if ownerSID != "S-1-5-18" && ownerSID != "S-1-5-32-544" && ownerSID != u.User.Sid.String() && policy[ownerSID] == 0 {
 		return ErrRefused
 	}
 	acl, _, e := sd.DACL()
@@ -155,7 +158,8 @@ func privateDescriptor(sd *windows.SECURITY_DESCRIPTOR, directory bool) error {
 			return ErrRefused
 		}
 		sid := (*windows.SID)(unsafe.Pointer(&ace.SidStart)).String()
-		if sid != "S-1-5-18" && sid != "S-1-5-32-544" {
+		rights, allowed := policy[sid]
+		if !allowed || uint32(ace.Mask)&^rights != 0 {
 			return ErrRefused
 		}
 		if ace.Header.AceFlags&3 == 3 && ace.Header.AceFlags&12 == 0 {
@@ -165,8 +169,8 @@ func privateDescriptor(sd *windows.SECURITY_DESCRIPTOR, directory bool) error {
 			self[sid] |= uint32(ace.Mask)
 		}
 	}
-	for _, sid := range []string{"S-1-5-18", "S-1-5-32-544"} {
-		if self[sid]&fileFullAccess != fileFullAccess || (directory && inherited[sid]&fileFullAccess != fileFullAccess) {
+	for sid, rights := range policy {
+		if self[sid]&rights != rights || (directory && inherited[sid]&rights != rights) {
 			return ErrRefused
 		}
 	}

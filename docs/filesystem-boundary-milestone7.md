@@ -184,3 +184,25 @@ Next checkpoint: convert the remaining privileged root/ACL and diagnostic writes
 without weakening inherited-rights policy; then test those real operations and the
 applicable combined prior-release/provider/recovery gate. Reuse this passing evidence
 unless relevant source, version or a reported failure changes.
+
+
+## Native diagnostic integration candidate
+
+The next bounded SEC-03 slice replaces management installer-log append/rotation
+and failure-note writes with fixed operations in the existing staged native helper.
+Existing directory/file handles and actual descriptors are checked before content
+mutation. The log uses the existing private access policy and exact JSON fields;
+only allowlisted labels, numeric results and native UTC timestamps are accepted.
+Both current/previous leaves are held before rotation. Rotation copies at most
+4MiB into the checked previous file and syncs before truncating current; an already
+oversized current log is refused. Interrupted log writes may lose diagnostic
+records; this is not transactional logging. There is no pathname rename fallback.
+The failure note contains only stage/result, audits actual code mutation rights,
+and is best effort so refusal cannot suppress installer recovery.
+
+One user-authorized worker independently reviews and tests this slice. Native
+Windows execution, including an actual failed Setup with a hard-linked failure
+note, is pending. Cross-compilation/vet do not establish acceptance. Root/ACL
+creation/propagation, initialization, Inno publication/deletion and final combined
+release gates remain outside this conversion. SEC-03 remains open; 4 closed /
+4 open, published0.1.39 unchanged. No new dependency, release or PC action.
