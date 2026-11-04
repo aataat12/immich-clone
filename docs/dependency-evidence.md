@@ -919,3 +919,18 @@ safe service restart, normal/failed-upgrade recovery and closed SEC-01 matrix.
 Independent worker review/tests complete. Full bounds, first fixture failure and
 remaining integrated/target gates: filesystem-boundary-milestone7.md. No new public
 installer or Windows10 certification; original SEC-03 remains open.
+
+
+## Installer initialization through LocalService
+
+No new dependency, service, account, launcher, schema or runtime download. Existing
+LocalService startup performs store/access-code initialization before health;
+installer no longer runs elevated offline init. Existing x/sys TokenElevation
+query guards Windows elevated explicit init before any diagnostic/state access.
+Windows Server2022 run41873094251/sourceb31f1aa/job126725226588 passed actual
+elevated no-write direct/junction/hard-link controls, fresh Program Files install
+with actual LocalService metadata/directory owners, unchanged commands log, usable
+upload, post-initialization failure/rollback and SEC01 compatibility. Linux cmd
+tests and Windows build/vet passed. Exact test-only status correction, broader
+fixture scaffolding scope, other-offline-mode and final target/combined limitations
+are filesystem-boundary-milestone7.md. No new artifact or Windows10 certification.

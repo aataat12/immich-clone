@@ -73,21 +73,43 @@ proved that fresh read really is denied. Production policy was not weakened.
 
 User definition: one pass is a work session ending with completion/pause. Latest
 forecast was7 remaining, conditional on proof/integration; this completed ACL
-integration reduces it to **6 remaining passes**, not a guarantee.
+integration reduced it to6 remaining passes; initialization below now reduces it to **5**, not a guarantee.
 
 | SEC-03 workstream | Current checkpoint | More passes, best estimate |
 |---|---|---:|
 | State/log/rollback existing-tree ACL handling | Integrated and focused Windows-validated | 0 |
-| Elevated initialization writes | Remaining | 1 |
+| Installer/explicit elevated initialization | Integrated and focused Windows-validated | 0 |
 | Setup file installation/replacement, including code permission grant | Remaining | 2 |
 | Uninstall/cleanup boundaries | Remaining | 1 |
 | Integrated real-account concurrent-replacement tests | Remaining | 1 |
 | Combined prior-release/full-provider/recovery closure | Remaining | 1 |
-| Total | SEC-03 remains open | 6 |
+| Total | SEC-03 remains open | 5 |
 
 No worker/CI remains active. No new feature/provider/version/release, cost,
 Group3 work or PC action; keep published0.1.39. Security remains4 closed/4 open.
 Windows Server results do not certify Windows10.
+
+### SEC-03 initialization checkpoint accepted
+
+Installer uses existing LocalService startup to initialize before health, rather
+than invoking elevated -mode init. Explicit Windows elevated init now refuses
+before diagnostics/state access, including identity-query failure.
+[Run41873094251](https://github.com/aataat12/immich-clone/actions/runs/41873094251),
+sourceb31f1aaf2b76ee681aa464714ca8c9f5c96d0cb1/job126725226588 passed actual
+elevated direct/junction/hard-link refusal, fresh Program Files state creation
+with LocalService file/directory ownership, unchanged command log, actual upload,
+post-start failure/verified rollback and existing permission controls.
+[Exact scope/limits](filesystem-boundary-milestone7.md#accepted-initialization-checkpoint).
+Worker review/tests finished. One test-status plumbing correction retained every
+negative assertion. Five broad fixture diagnostic-directory scaffolding additions
+were reviewed; their full scenarios await combined acceptance. Product code bytes
+match the accepted source. No workers/CI active, release or PC action.
+
+Previous forecast6 now **5 remaining passes**. Other offline command filesystem
+paths remain explicitly in SEC-03 integrated boundary review; no blanket elevated
+CLI closure. Setup/code permissions2, uninstall1, integrated races/boundaries1,
+combined full-provider/prior-release/recovery1. Scope stays original SEC-03,
+security4 closed/4 open and published0.1.39 unchanged. Server is not Windows10.
 
 ## Historical checkpoints (superseded where later acceptance applies)
 

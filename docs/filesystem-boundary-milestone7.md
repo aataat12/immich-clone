@@ -473,8 +473,8 @@ with actual alias positive control and unchanged outside descriptors/bytes. Actu
 fresh Program Files Setup uses a brand-new state root and checks LocalService
 ownership of marker/catalog/access code and known storage directories, unchanged
 commands logging, usable upload and original preservation on uninstall. These
-Windows controls are pending; local Linux command tests, Windows cross-build/vet
-and one authorized worker's review are preparation evidence.
+Windows controls passed in the acceptance below; local Linux command tests, Windows cross-build/vet
+and one authorized worker's review alone were preparation evidence.
 
 Scope is installer initialization plus explicit elevated init entry point, not a
 claim that every elevated CLI mode is secured: verify/show-code/backup/restore
@@ -495,3 +495,45 @@ explicitly return a successful script exit status. Test-only correction adds exi
 after successful try/finally; exceptions still terminate and candidate exit1
 assertions are unchanged. No application policy change or weakened assertion.
 Native/actual Setup/SEC01 steps were skipped; this is not full integration acceptance.
+
+
+## Accepted initialization checkpoint
+
+[Run41873094251](https://github.com/aataat12/immich-clone/actions/runs/41873094251),
+source `b31f1aaf2b76ee681aa464714ca8c9f5c96d0cb1`, job `126725226588`: **PASS**
+on Windows Server2022 x64. Primary inspected actual logs; the authorized worker
+reviewed the bounded change and contributed independent binary controls.
+
+Actual elevated token was independently established. Explicit elevated init
+returned fixed refusal/exit1 before missing state/log creation, direct existing
+marker/catalog/code/log mutation, junction traversal and actual hard-linked leaf
+writes. Positive hard-link control changed/restored the outside file; candidate
+refusal preserved all selected/outside descriptors and bytes. Linux command test
+preparation, Windows cross-build and vet passed; non-elevated Windows offline init
+was not independently executed in this focused gate.
+
+Actual fresh Program Files Setup began with no selected state root or metadata.
+After healthy startup the marker, catalog, access code and all four known storage
+directories had actual LocalService owner SID, not installer identity. Command log
+was unchanged; login/upload and original-byte preservation passed. Custom upgrade,
+ACL sharing-refusal safe restart, real failure injected after Health with verified
+healthy rollback, retained originals/access code, staged trust controls, fresh/old
+original preservation on uninstall and the full SEC-01 matrix passed. Earlier
+native ACL/copy/readiness/logging/creation suites passed.
+
+Five broader service fixture scripts additionally get explicit diagnostic-root
+mkdir before their existing icacls call because removed init formerly created it.
+This small scaffolding correction was independently reviewed/diff-checked, not
+executed as those full browser/import/media scenarios here. The initial six fixture
+bootstrap edits were Windows-parsed. Production cmd/packaging bytes remain exact
+to accepted b31f1aa after these test-only directory additions. No unchanged full
+provider/browser gate was rerun or inferred.
+
+Completion is installer plus explicit elevated-init entry points. Other offline
+modes retain existing Open/diagnostic paths in SEC-03 boundary inventory/integrated
+review; no blanket claim that every elevated CLI write is now secured. Remaining
+Setup/code-permission/publication, uninstall, real-account races and combined
+prior-release/full-provider/recovery gates remain. No Windows10 certification,
+feature/provider/schema/version/release change, cost, local action or Group3 work.
+Worker/CI complete. Latest user-defined pass estimate drops6 to **5**: Setup2,
+uninstall1, integrated boundaries/races1, combined closure1. SEC-03 stays open.

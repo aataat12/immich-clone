@@ -10,6 +10,7 @@ try {
     Checked icacls @("$root/state",'/grant','*S-1-5-19:(OI)(CI)M')
     $credential=[PSCredential]::new('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))
     New-Service -Name $name -BinaryPathName ('"'+"$root/app.exe"+'" -mode service -data "'+"$root/state"+'"') -Credential $credential | Out-Null
+    New-Item -ItemType Directory -Force -Path (Join-Path $env:ProgramData 'ImmichCloneDiagnostics') | Out-Null
     Checked icacls @((Join-Path $env:ProgramData 'ImmichCloneDiagnostics'),'/grant','*S-1-5-19:(OI)(CI)M')
     Start-Service $name
     $env:IMMICH_TEST_STATE="$root/state"

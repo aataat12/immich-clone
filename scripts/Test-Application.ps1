@@ -26,6 +26,7 @@ try {
     $credential = [PSCredential]::new('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))
     New-Service -Name $name -BinaryPathName ('"'+$binary+'" -mode service -data "'+$state+'"') -Credential $credential | Out-Null
     $diagnosticRoot = Join-Path $env:ProgramData 'ImmichCloneDiagnostics'
+    New-Item -ItemType Directory -Force -Path $diagnosticRoot | Out-Null
     Checked icacls @($diagnosticRoot,'/grant','*S-1-5-19:(OI)(CI)M')
     Start-Service $name
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'actual application starts as LocalService'

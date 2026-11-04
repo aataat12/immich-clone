@@ -448,3 +448,18 @@
   after this bounded ACL conversion. Remaining init1/Setup2/uninstall1/races1/
   combined closure1; code-tree permission grant remains Setup/init scope. No
   feature/Group3 expansion, new release/cost, whole SEC-03 or Windows10 claim.
+
+- November4: eliminate elevated installer initialization by using already-proven
+  LocalService startup before health; no new store/bootstrap implementation.
+  Explicit Windows elevated -mode init (or failed elevation query) refuses before
+  diagnostics/state writes. Move injected failure after Health so rollback still
+  follows real initialization. Six disposable fixtures bootstrap empty roots via
+  their existing services; five explicitly mkdir diagnostics before grants.
+  Run41873094251/sourceb31f1aa/job126725226588 passed independent token/alias
+  refusal controls, fresh LocalService-owned metadata/directories, unchanged
+  command log, actual Setup/rollback/original preservation and SEC01 suite.
+  First run's test-only missing success exit was corrected without changing
+  candidate exit1/refusal assertions. Worker review/tests done. Broad fixture
+  scenarios and other offline mode paths remain in combined/integrated review,
+  not falsely certified or moved to Group3. Forecast6 to5 remaining passes. No
+  new dependency, feature, release, cost or Windows10 claim.
