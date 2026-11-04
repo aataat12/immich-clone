@@ -1,6 +1,6 @@
 # Milestone 2: People review scale and functional acceptance
 
-This closes the remaining review/search performance work for the current functional scope. Earlier false-face dismissal, confirmed suggestions, independent paging, photo context and additive reanalysis remain delivered features. The companion native-quality evaluation is a separate gate; do not mark delivery until its results and combined installed acceptance are recorded.
+This closes the remaining review/search performance work for the current functional scope. Earlier false-face dismissal, confirmed suggestions, independent paging, photo context and additive reanalysis remain delivered features. The [companion native-quality evaluation](native-face-quality-milestone2.md) passed its declared production-pipeline screen in run41767731927. Combined installed acceptance still gates delivery.
 
 Original Group 2/3 security work remains deferred under the user's existing priority amendment. Functional milestone delivery does not close those original security items or establish comprehensive security/Windows 10 certification. See security-priority-groups.md. No new security item, provider/model, threshold, dependency, catalog format or resource-limit change is introduced by this index.
 
