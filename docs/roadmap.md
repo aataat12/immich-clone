@@ -1,23 +1,22 @@
 # Remaining milestones and Build Notes acceptance
 
-Baseline: 0.1.23. This table tracks remaining work, not the already delivered
-baseline. No future release number is assigned before delivery.
+Current prototype baseline: 0.1.36. This table tracks delivered slices and remaining acceptance. No future release number is assigned before delivery. Server-tested delivery does not establish final Windows 10 acceptance. The installed Build Notes page describes its shipped build; align it with these later evidence updates when preparing the next functional release.
 
 | Order | Milestone | Completion criteria | Status | Released In |
 |---|---|---|---|---|
 | 1 | Bulk local AI analysis | Analyze all unprocessed eligible photos; counts/progress, pause/cancel, restart recovery, no duplicate jobs, preserve names/corrections. Include the Build Notes page and navigation specified below. | Cloud accepted — local functional checks passed | 0.1.25-prototype |
-| 2 | Security baseline and People & Tags improvements | Complete the security review and mitigation acceptance below before delivering this milestone; false-face dismissal, safe reanalysis preserving corrections, larger-library review/search performance, broader recognition-quality evaluation. | In progress — security checks and mitigations | — |
-| 3 | Hidden Media management | Managed-file location, restore, confirmed permanent managed-copy deletion, durable recovery and job/backup coordination; external sources untouched. | Planned | — |
-| 4 | Large-library import reliability | Longer mixed-media imports, interruption/retry/duplicate/disconnected-storage tests, safe resume improvements and resolution of large-file limits. | Planned | — |
-| 5 | Large-library backup and recovery | Large ZIP/ZIP64, capacity and throughput, interruption handling, independent restoration and practical full-library backup workflow. | Planned | — |
+| 2 | Security baseline and People & Tags improvements | Complete the security review and mitigation acceptance below before delivering this milestone; false-face dismissal, safe reanalysis preserving corrections, larger-library review/search performance, broader recognition-quality evaluation. | In progress — false-face review and additive reanalysis delivered; broader recognition/review work pending; only original Group 1 security work active | — |
+| 3 | Hidden Media management | Managed-file location, restore, confirmed permanent managed-copy deletion, durable recovery and job/backup coordination; external sources untouched. | Delivered — cloud-tested prototype; batch selection/toggle added in 0.1.36; target acceptance pending | 0.1.34-prototype |
+| 4 | Large-library import reliability | Longer mixed-media imports, interruption/retry/duplicate/disconnected-storage tests, safe resume improvements and resolution of large-file limits. | In progress — installed 4 GiB import/interruption/resume, mixed-media crash/restore and directory outage proven; physical storage outage/endurance pending | — |
+| 5 | Large-library backup and recovery | Large ZIP/ZIP64, capacity and throughput, interruption handling, independent restoration and practical full-library backup workflow. | In progress — ZIP64 entry-count, >4 GiB archive, cancellation/cleanup/retry and independent restore proven; installed scale/endurance and broader interruption/outage acceptance pending | — |
 | 6 | Media compatibility and resource limits | Representative camera/video and metadata checks, malformed media and CPU/memory limits; prove actual operations/inference before adding providers or formats. | Planned | — |
-| 6A | HEIC and video AI | HEIC still-image face/object analysis; bounded timestamped video-frame analysis, durable progress/cancel/restart, correction preservation and independent restore. Actual patched-provider/decoder execution before integration; detailed acceptance in heic-video-ai.md. | Planned — dependency/security gate first | — |
+| 6A | HEIC and video AI | HEIC still-image face/object analysis; bounded timestamped video-frame analysis, durable progress/cancel/restart, correction preservation and independent restore. Actual patched-provider/decoder execution before integration; detailed acceptance in heic-video-ai.md. | Delivered — cloud-tested prototype; every-frame Full Scan deferred | 0.1.30-prototype |
 | 7 | Installer, security, and update hardening | Dependency/security and diagnostic-privacy review, upgrade/rollback coverage and signing arrangements; obtain approval before new charges. | Planned | — |
 | 8 | Final Windows 10 acceptance and release candidate | Clean install without development prerequisites, final reboot/service startup, upgrade/uninstall preservation, extended operation, final restore drill and documented limits/recovery. | Planned | — |
 
-Current requested focus: remediate NR-01 first, then milestone 6A HEIC/video AI
-feasibility. The added label preserves existing milestone IDs; it does not require
-finishing every other planned feature before starting that feasibility work.
+Current focus: remaining milestone 4/5 import and recovery acceptance. Milestone 6A's bounded HEIC/video analysis is delivered. Every-frame Full Scan remains deferred. Security work is restricted to Group 1 classifications of the original eight items; Group 2 and new Group 3 work remain paused. The historical review matrix below does not authorize expanding that scope.
+
+Evidence: [Hidden Media 0.1.36](hidden-media-milestone.md), [import acceptance](import-boundary-acceptance.md), [installed 4 GiB browser import](installed-import-boundary-acceptance.md), [ZIP64 entry count](backup-zip64-entry-count-acceptance.md), [large backup byte volume](backup-large-volume-acceptance.md), [extraction interruption](restore-interruption-acceptance.md). A [manual independent recovery guide](recovery-guide.md) explains the existing CLI without switching the live service to a restored folder. It is reviewed documentation, not a new user-PC validation result.
 
 ## Required in milestone 1: Build Notes
 
@@ -44,8 +43,7 @@ User reported 0.1.25 backup and bulk AI functional checks passed; new-import
 follow-up and repeated narrow-width checks were not performed.
 Previously passed local checks need no routine repetition. Reboot remains deferred
 to final acceptance. Windows Server evidence does not certify Windows 10.
-HEIC/video AI is now explicitly planned as milestone 6A, with feasibility/security
-gates in heic-video-ai.md. RAW/HDR expansion and incremental/scheduled backups
+Milestone 6A is delivered as bounded supported HEIC AI and sampled video analysis; detailed evidence remains in heic-video-ai.md. RAW/HDR expansion and incremental/scheduled backups
 remain deferred possibilities. Mobile is excluded.
 
 Milestone 1 evidence: Windows Server 2022 run [41406051070](https://github.com/aataat12/immich-clone/actions/runs/41406051070), source d558f7c. PR #1 merged into main.
