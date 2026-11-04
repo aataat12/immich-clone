@@ -9,6 +9,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 )
 
 func fixture(t *testing.T) (string, string) {
@@ -117,6 +118,7 @@ func TestPinnedDirectoryAndAncestorReplacement(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
+	defer d.Close()
 	for i := 0; i < 100; i++ {
 		if e = os.Rename(slot, moved); e == nil {
 			t.Fatal("pinned leaf renamed")
@@ -195,6 +197,9 @@ func TestConcurrentLeafSwapCannotRedirectWrites(t *testing.T) {
 			t.Fatal("validated file write failed")
 		}
 		accepted++
+		// Give the real Windows link operation an acquisition window instead
+		// of letting repeated OPEN_IF starve the adversarial actor.
+		time.Sleep(100 * time.Microsecond)
 	}
 	stop.Store(true)
 	wg.Wait()

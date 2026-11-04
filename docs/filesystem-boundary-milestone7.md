@@ -40,3 +40,17 @@ The existing Go/x/sys implementations and signatures were inspected locally.
 SetKernelObjectSecurity is explicitly not selected for filesystem ACL updates:
 Microsoft cautions against that use. Inheritance propagation must be designed and
 executed before replacing existing ACL behavior; no silent recursive ACL repair.
+
+
+## First actual Windows result
+
+Run [41835754542](https://github.com/aataat12/immich-clone/actions/runs/41835754542),
+source `50f2d8493ee00f343f7b64cd5e0a14dcf088b073`, job `126594088975`: FAILED.
+Real copy, hard-link positive/refusal, symbolic-link/name/device/ADS refusal and
+outside-byte controls passed. A held directory still renamed: metadata-only
+READ_ATTRIBUTES handles did not establish the claimed sharing exclusion. Directory
+opens now request FILE_LIST_DIRECTORY as well. The concurrent actor also achieved
+no successful link swaps while the writer repeatedly acquired the name; the test
+now yields a short acquisition window and still requires successful actual swaps,
+both write/refusal outcomes and unchanged outside bytes. No passing race evidence
+or installer integration/SEC-03 closure is claimed by this failed run.

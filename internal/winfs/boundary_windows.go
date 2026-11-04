@@ -57,7 +57,7 @@ func relative(parent windows.Handle, name string, directory, write bool) (window
 	oa.Length = uint32(unsafe.Sizeof(oa))
 	var status windows.IO_STATUS_BLOCK
 	var h windows.Handle
-	access := uint32(windows.FILE_READ_ATTRIBUTES | windows.READ_CONTROL | windows.SYNCHRONIZE)
+	access := uint32(windows.FILE_LIST_DIRECTORY | windows.FILE_READ_ATTRIBUTES | windows.READ_CONTROL | windows.SYNCHRONIZE)
 	options := uint32(windows.FILE_OPEN_REPARSE_POINT | windows.FILE_SYNCHRONOUS_IO_NONALERT)
 	disposition := uint32(windows.FILE_OPEN)
 	if directory {
@@ -98,7 +98,7 @@ func OpenDirectory(path string) (*Directory, error) {
 	if err != nil {
 		return nil, err
 	}
-	h, err := windows.CreateFile(u, windows.FILE_READ_ATTRIBUTES|windows.READ_CONTROL|windows.SYNCHRONIZE,
+	h, err := windows.CreateFile(u, windows.FILE_LIST_DIRECTORY|windows.FILE_READ_ATTRIBUTES|windows.READ_CONTROL|windows.SYNCHRONIZE,
 		windows.FILE_SHARE_READ, nil, windows.OPEN_EXISTING,
 		windows.FILE_FLAG_BACKUP_SEMANTICS|windows.FILE_FLAG_OPEN_REPARSE_POINT, 0)
 	if err != nil {
