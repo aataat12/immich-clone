@@ -344,7 +344,7 @@ func checkRestoreStage(stage string, l RestoreLimits) error {
 }
 
 func restoreWorkerFailure(code uint32) error {
-	return fmt.Errorf("%w (exit %d)", ErrRestoreWorkerFailed, code)
+	return &restoreFailureDetail{Stage: "worker-exit", Code: uint64(code)}
 }
 
 func readRestoreProgress(path string) ([]byte, error) {
@@ -404,5 +404,28 @@ func monitorRestoreGrowth(ctx context.Context, stage, nonce string, l RestoreLim
 func restoreStageError(stage string, cause error) error {
 	var code syscall.Errno
 	_ = errors.As(cause, &code)
-	return fmt.Errorf("%w [%s:%d]", ErrRestoreWorkerFailed, stage, uint64(code))
+	return &restoreFailureDetail{Stage: stage, Code: uint64(code)}
+}
+
+// Only program-owned stage names and numeric codes cross into CLI diagnostics.
+type restoreFailureDetail struct {
+	Stage string
+	Code  uint64
+}
+
+func (e *restoreFailureDetail) Error() string {
+	return fmt.Sprintf("%s [%s:%d]", ErrRestoreWorkerFailed, e.Stage, e.Code)
+}
+func (e *restoreFailureDetail) Unwrap() error { return ErrRestoreWorkerFailed }
+func RestoreFailureDetail(err error) string {
+	var detail *restoreFailureDetail
+	if !errors.As(err, &detail) {
+		return "unavailable"
+	}
+	switch detail.Stage {
+	case "worker-exit", "worker-status-json", "worker-status-code", "progress-read", "progress-validation", "catalog-stat":
+		return fmt.Sprintf("%s:%d", detail.Stage, detail.Code)
+	default:
+		return "unavailable"
+	}
 }

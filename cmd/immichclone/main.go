@@ -164,7 +164,7 @@ func main() {
 				log.Fatal("Restore archive failed structure, checksum, or catalog validation. Existing data was not replaced.")
 			}
 			if errors.Is(e, library.ErrRestoreWorkerFailed) || errors.Is(e, library.ErrRestoreOutputLimit) {
-				log.Fatal("Restore worker failed or exceeded its memory/process/output budget; inspect the archive and selected -restore-memory-bytes budget before retrying. Existing data was not replaced.")
+				log.Fatalf("Restore worker failed or exceeded its memory/process/output budget (detail %s); inspect the archive and selected -restore-memory-bytes budget before retrying. Existing data was not replaced.", library.RestoreFailureDetail(e))
 			}
 			if errors.Is(e, context.Canceled) {
 				log.Fatal("Restore cancelled before publication; existing data was not replaced.")
