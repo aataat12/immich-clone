@@ -264,9 +264,45 @@ root creation; disposable storage acceptance supplies the compiled helper too,
 including its ordinary-reader fixtures. Tests cover nested policies/inheritance,
 permissive-parent isolation, existing root preservation, links/non-directories,
 invalid reader, held ancestors and safe partial progress. Native and actual
-Setup/storage execution is pending; cross-compilation/vet alone is not acceptance.
+Setup/storage acceptance is recorded below; cross-compilation/vet alone is not acceptance.
 One user-authorized worker reviews and contributes independent root tests.
 
 API references: Microsoft [new-object security descriptors](https://learn.microsoft.com/en-us/windows/win32/secauthz/security-descriptors-for-new-objects),
 [NtCreateFile](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntcreatefile),
 and [SetSecurityInfo inheritance propagation](https://learn.microsoft.com/en-us/windows/win32/api/aclapi/nf-aclapi-setsecurityinfo).
+
+
+## Accepted focused private-root creation
+
+[Run41849734950](https://github.com/aataat12/immich-clone/actions/runs/41849734950),
+source `db37f6ce4d4cac14a829ed5941149260c7d1ede1`, job `126642511204`: **PASS**
+on Windows Server2022 x64, first focused execution. The authorized worker completed
+review/independent tests; the primary inspected actual job logs.
+
+Native tests passed nested protected creation under a permissive Everyone parent,
+exact admin/service/reader rights including duplicate principals, actual child
+inheritance, existing unsafe root/child ACL and byte preservation, real symlink
+root/ancestor refusal with outside ACL/bytes unchanged, invalid reader and ordinary
+file-component refusal, and safe retained progress after later-component failure.
+The creation verifier observed held new/existing ancestors refusing renames; an
+injected later verification failure retained protected directories and released
+handles. Vet and prior snapshot/diagnostic/privacy/DOS-alias regressions passed.
+Underlying race controls completed2,000 writes (1,236 accepted/764 refused),398
+actual link swaps and unchanged outside bytes: one runner interleaving only.
+
+The real separate-account storage fixture executed native creation alone before
+Set-Acl normalization: ordinary-user secret reads and child writes were denied,
+and the existing permissive parent descriptor stayed unchanged. Actual production
+Setup with current runtime/minimal disposable provider placeholders passed staged
+locks, unsafe-code refusals, protected custom/default Program Files installation,
+injected post-init failure with verified healthy rollback despite refused linked
+failure note, and original/access-code preservation. Existing SEC-01 permission
+acceptance passed, including the ordinary-reader policy fixtures.
+
+Scope stops at creation: existing-tree PowerShell Set-Acl propagation, elevated
+initialization, remaining Inno publication/deletion/uninstall, real-account races
+and complete prior-release/full-provider/recovery gates remain. No full SEC-03
+closure or Windows10 certification. Counts remain4 closed/4 open; published0.1.39
+unchanged. No new dependencies/features/costs, release, PC action or running
+workers/CI. Next checkpoint: handle-bound existing-tree ACL normalization with
+explicit descendant/inheritance semantics, without widening this scope.

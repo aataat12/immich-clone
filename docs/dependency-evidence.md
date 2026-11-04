@@ -878,3 +878,17 @@ health and completion order passed; existing native and SEC-01 suites passed.
 Worker review/tests complete. Exact bounds and remaining root/ACL/init/Setup/full
 release/Windows10 gates: filesystem-boundary-milestone7.md. No public artifact
 or new end-user prerequisite; this does not close original SEC-03.
+
+
+## Private storage root creation integration
+
+No dependency/version/runtime change. Existing NtCreateFile now supplies a protected
+security descriptor while creating each missing directory relative to held parent
+handles; IO_STATUS_BLOCK distinguishes newly created objects for verification.
+Focused Server2022 execution41849734950/source db37f6c/job126642511204 passed
+exact root/child inheritance, protected creation under permissive parent, existing
+ACL/byte preservation, real symlink refusal, held-ancestor and partial-progress
+controls; separate ordinary-user reads/writes were denied by creation alone.
+Actual Setup/rollback and existing SEC-01 compatibility passed. Scope/evidence:
+filesystem-boundary-milestone7.md. Existing-tree ACL normalization is unconverted;
+no new distribution/runtime prerequisite, artifact release or Windows10 certification.

@@ -410,3 +410,15 @@
   note/Setup failure proved outside-byte preservation and healthy verified rollback.
   Worker review/independent tests complete. No new dependency/release/Win10
   claim or SEC-03 closure; remaining root/ACL/init/Setup gates stay open.
+
+- November4: user requested continued development with scope/drift prevention and
+  allowed one worker. Bound this checkpoint to native private-root creation only:
+  existing-tree ACL normalization is a separate gate because inheritable
+  SetSecurityInfo can propagate to descendants. Do not use a root-only handle as
+  proof of safe recursive ACL mutation or introduce protected-child policy drift.
+  Missing components receive final protected policy in relative NtCreateFile;
+  verify while held, leave existing components untouched, retain safe progress
+  after errors without pathname cleanup/fallback. First focused actual Windows
+  run41849734950/source db37f6c/job126642511204 passed native, separate ordinary-user
+  creation-only, actual Setup/rollback and existing SEC-01 controls. Worker completed
+  review/tests. SEC-03 remains open; no new release, cost or Windows10 claim.

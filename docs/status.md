@@ -44,6 +44,18 @@ The worker completed review/tests; no workers or CI remain active. SEC-03 stays
 open for root/ACL, initialization, remaining Setup paths and full combined gates.
 Count remains4 closed/4 open; keep0.1.39, no PC action or new release.
 
+### SEC-03 private-root creation checkpoint
+
+Missing installer storage components now receive protected private permissions
+at native creation through held parents. Focused Server2022 run41849734950,
+source db37f6c, passed creation/inheritance/link/partial-failure controls, real
+ordinary-user denial before ACL normalization, actual Setup rollback and existing
+SEC-01 compatibility. [Exact evidence](filesystem-boundary-milestone7.md#accepted-focused-private-root-creation).
+Worker review/tests complete; no workers/CI active. Existing-tree ACL normalization
+remains explicitly unconverted; next is that bounded change, followed by remaining
+init/Setup/full acceptance gates. No feature scope expansion or Group3 work.
+SEC-03 remains open,4 closed/4 open; keep0.1.39 with no local action/new release.
+
 ## Historical checkpoints (superseded where later acceptance applies)
 
 The chronological snapshots below are retained as history. Their old current/
