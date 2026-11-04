@@ -852,3 +852,16 @@ Python/Pillow/pillow-heif and the fixture encoder are cloud test tooling only;
 none is packaged as a new user dependency. Native models/binaries unchanged.
 The earlier SEC04 reopening statement above is superseded by the original-eight
 classification in security-priority-groups.md; no Group2/3 investigation here.
+
+
+## SEC-03 installer file helper candidate — November 4
+
+`cmd/installerfiles` reuses pinned Go1.27.3 and x/sys0.49.0, Windows x64,
+CGO=0/GOAMD64=v1. It is a bundled fixed-action executable, not an end-user SDK,
+new service, listener, user account, runtime download or native provider/model.
+Existing Go/x/sys distribution notices apply. Inno verifies its compiled payload
+hash and pins the staged bytes; the installed-payload canary inventory and Windows
+Go scan now include this executable. Actual held-object descriptors and normalized
+volume-GUID names use existing Windows APIs. Cross-compilation/vet passed; focused
+actual helper/privacy/alias and production Setup execution is pending before any
+integration acceptance. These APIs do not establish Windows10 behavior from Server.

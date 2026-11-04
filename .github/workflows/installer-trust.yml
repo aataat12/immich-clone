@@ -7,6 +7,9 @@ on:
       - 'packaging/Manage-Service.ps1'
       - 'packaging/Storage-Security.ps1'
       - 'scripts/Test-UpgradePreparation.ps1'
+      - 'internal/installerfiles/**'
+      - 'internal/winfs/**'
+      - 'cmd/installerfiles/**'
   workflow_dispatch:
 permissions:
   contents: read
@@ -40,6 +43,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Module verification failed' }
           go build -trimpath -o "$env:RUNNER_TEMP/trust-app.exe" ./cmd/immichclone
           if ($LASTEXITCODE -ne 0) { throw 'Application build failed' }
+      - name: Execute native installer snapshot and partial-failure controls
+        shell: pwsh
+        run: |
+          go test -mod=readonly -v -count=1 -timeout=120s ./internal/winfs ./internal/installerfiles
+          if ($LASTEXITCODE -ne 0) { throw 'Installer file-set controls failed' }
+          go vet ./internal/winfs ./internal/installerfiles ./cmd/installerfiles
+          if ($LASTEXITCODE -ne 0) { throw 'Installer file-set vet failed' }
       - name: Actual Inno setup and separate standard-user trust controls
         shell: powershell
         run: |

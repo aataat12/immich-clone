@@ -28,7 +28,7 @@ function Run-Setup([string]$Application,[string]$State,[switch]$ObserveStaging) 
                 Assert $true 'actual staging directory passes the production code trust audit'
                 # No paths/command lines are printed. Check both exact extracted
                 # helpers against writes by even the current elevated account.
-                foreach ($file in @($staged,(Join-Path (Split-Path $staged -Parent) 'Storage-Security.ps1'))) {
+                foreach ($file in @($staged,(Join-Path (Split-Path $staged -Parent) 'Storage-Security.ps1'),(Join-Path (Split-Path $staged -Parent) 'installer-files.exe'))) {
                     $locked = $false
                     try { $f = [IO.File]::Open($file,[IO.FileMode]::Open,[IO.FileAccess]::Write,[IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete); $f.Dispose() }
                     catch [IO.IOException] { $locked = (($_.Exception.HResult -band 0xffff) -eq 32) }
@@ -110,6 +110,7 @@ try {
     Copy-Item -LiteralPath (Join-Path $repo 'docs/prototype-notes.txt') -Destination (Join-Path $source 'docs/prototype-notes.txt')
     Copy-Item -LiteralPath $Binary -Destination (Join-Path $source 'dist/immichclone.exe')
     foreach ($file in @('dist/THIRD-PARTY-LICENSES.txt','dist/media/preparation-probe.txt','dist/ai/preparation-probe.txt')) { [IO.File]::WriteAllText((Join-Path $source $file),'Disposable upgrade-preparation fixture only; not a distributable package.') }
+    Native go @('build','-trimpath','-o',(Join-Path $source 'dist/installer-files.exe'),'./cmd/installerfiles')
     Native $Compiler @('/DAppVersion=0.0.0',(Join-Path $source 'packaging/immichclone.iss'))
     $script:setup = Join-Path $source 'dist/ImmichClone-0.0.0-prototype-x64-setup.exe'
     Assert (Test-Path -LiteralPath $script:setup) 'production Inno script compiled with minimal disposable payload'
@@ -167,6 +168,21 @@ try {
     Assert ((Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash -and (Get-FileHash (Join-Path $state 'access-code.txt')).Hash -eq $codeHash) 'bundled preparation preserves managed original and access code'
     Assert ((Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").StartName -eq 'NT AUTHORITY\LocalService') 'prepared service remains LocalService'
     Assert ((Get-ItemProperty 'HKLM:\SOFTWARE\ImmichClone').State -eq $state) 'Setup retains real application data location'
+    # Exercise the real management catch path too: snapshot must be complete,
+    # and only the verified native restore permits restart/rollback_complete.
+    $installerLog = Join-Path $env:ProgramData 'ImmichCloneDiagnostics/installer.jsonl'
+    $rollbackBeforeCount = @(Get-Content -LiteralPath $installerLog | Where-Object { $_ -match '"event":"rollback_complete"' }).Count
+    try {
+        $env:IMMICH_INSTALL_TEST_FAILURE = '1'
+        Assert ((Run-Setup $currentApp $state) -ne 0) 'actual candidate Setup rejects injected post-initialization failure'
+    } finally { Remove-Item Env:IMMICH_INSTALL_TEST_FAILURE -ErrorAction SilentlyContinue }
+    Wait-Health
+    $rollbackAfterCount = @(Get-Content -LiteralPath $installerLog | Where-Object { $_ -match '"event":"rollback_complete"' }).Count
+    Assert ($rollbackAfterCount -eq $rollbackBeforeCount+1) 'verified native restore completes before management reports rollback and service health'
+    Assert ((Get-FileHash (Join-Path $currentApp 'immichclone.exe')).Hash -eq $priorBinaryHash -and (Get-FileHash (Join-Path $state 'access-code.txt')).Hash -eq $codeHash -and (Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash) 'actual failed Setup restores code and preserves access code and original bytes'
+    $snapshotReady = Get-Content -LiteralPath (Join-Path $currentApp 'rollback/snapshot-ready.json') -Raw | ConvertFrom-Json
+    Assert ($snapshotReady.Version -eq 1 -and @($snapshotReady.Files).Count -eq 3) 'real Setup rollback uses a complete three-file readiness receipt'
+
     # Execute the real candidate installer against an existing healthy service.
     # Opening a file for write is the standard-user positive control; no code
     # bytes are changed or arbitrary elevated payload executed.

@@ -2,6 +2,7 @@
 #define AppVersion "0.1.23"
 #endif
 #define ManagementSHA256 GetSHA256OfFile(AddBackslash(SourcePath) + "Manage-Service.ps1")
+#define BoundaryHelperSHA256 GetSHA256OfFile(AddBackslash(SourcePath) + "..\dist\installer-files.exe")
 #define StorageSecuritySHA256 GetSHA256OfFile(AddBackslash(SourcePath) + "Storage-Security.ps1")
 [Setup]
 AppId={{5DF7680B-6F42-4BAF-AD97-5A3095728DFA}
@@ -27,6 +28,7 @@ InfoBeforeFile=..\docs\prototype-notes.txt
 ; Extracted before file publication; keep these first with solid compression.
 Source: "Manage-Service.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Storage-Security.ps1"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\installer-files.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\dist\immichclone.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Export-Diagnostics.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\dist\THIRD-PARTY-LICENSES.txt"; DestDir: "{app}"; Flags: ignoreversion
@@ -54,11 +56,12 @@ Type: filesandordirs; Name: "{app}\ai"
 Type: files; Name: "{app}\rollback\immichclone.exe"
 Type: files; Name: "{app}\rollback\catalog.db"
 Type: files; Name: "{app}\rollback\access-code.txt"
+Type: files; Name: "{app}\rollback\snapshot-ready.json"
 Type: dirifempty; Name: "{app}\rollback"
 
 [Code]
 var StatePage: TInputDirWizardPage; ManagementFailed: Boolean;
-    ManagementHandle, SecurityHandle: Integer;
+    ManagementHandle, SecurityHandle, BoundaryHandle: Integer;
 
 function OpenReadLockedFile(Name: String; Access, Sharing: LongWord;
   Security: Integer; Creation, Attributes: LongWord; Template: Integer): Integer;
@@ -72,8 +75,11 @@ begin
     CloseLockedFile(ManagementHandle);
   if (SecurityHandle <> 0) and (SecurityHandle <> -1) then
     CloseLockedFile(SecurityHandle);
+  if (BoundaryHandle <> 0) and (BoundaryHandle <> -1) then
+    CloseLockedFile(BoundaryHandle);
   ManagementHandle := 0;
   SecurityHandle := 0;
+  BoundaryHandle := 0;
 end;
 
 procedure DeinitializeSetup;
@@ -117,7 +123,7 @@ function RunManagementFrom(ScriptPath, Action: String; var ResultCode: Integer):
 begin
   Result := Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
     '-NoProfile -NonInteractive -ExecutionPolicy Bypass -File "' + ScriptPath +
-    '" -Action ' + Action + ' -AppDir "' + ExpandConstant('{app}') + '" -DataDir "' + GetState('') + '"',
+    '" -Action ' + Action + ' -AppDir "' + ExpandConstant('{app}') + '" -DataDir "' + GetState('') + '" -BoundaryHelper "' + ExpandConstant('{tmp}\installer-files.exe') + '"',
     '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
 end;
 
@@ -135,6 +141,7 @@ begin
     ClosePreparationHandles;
     ExtractTemporaryFile('Manage-Service.ps1');
     ExtractTemporaryFile('Storage-Security.ps1');
+    ExtractTemporaryFile('installer-files.exe');
     { Hold read-only handles without WRITE/DELETE sharing from before hashing
       until Setup exits. A writer already holding access also makes this fail.
       These handles cover the exact staged files, not all filesystem races. }
@@ -142,11 +149,15 @@ begin
       $80000000, 1, 0, 3, $00200000, 0);
     SecurityHandle := OpenReadLockedFile(ExpandConstant('{tmp}\Storage-Security.ps1'),
       $80000000, 1, 0, 3, $00200000, 0);
-    if (ManagementHandle = -1) or (SecurityHandle = -1) then exit;
+    BoundaryHandle := OpenReadLockedFile(ExpandConstant('{tmp}\installer-files.exe'),
+      $80000000, 1, 0, 3, $00200000, 0);
+    if (ManagementHandle = -1) or (SecurityHandle = -1) or (BoundaryHandle = -1) then exit;
     if (CompareText(GetSHA256OfFile(ExpandConstant('{tmp}\Manage-Service.ps1')),
          '{#ManagementSHA256}') <> 0) or
        (CompareText(GetSHA256OfFile(ExpandConstant('{tmp}\Storage-Security.ps1')),
-         '{#StorageSecuritySHA256}') <> 0) then
+         '{#StorageSecuritySHA256}') <> 0) or
+       (CompareText(GetSHA256OfFile(ExpandConstant('{tmp}\installer-files.exe')),
+         '{#BoundaryHelperSHA256}') <> 0) then
       exit;
     { The script dot-sources its sibling helper from this extracted payload.
       Never execute the retained installed preparer before new validation. }

@@ -10,5 +10,5 @@ if ($LASTEXITCODE -ne 0) { throw 'Pinned security scanner provisioning failed' }
 $scanner = Join-Path $env:GOBIN 'govulncheck.exe'
 & $scanner -version
 if ($LASTEXITCODE -ne 0) { throw 'Scanner identity check failed' }
-& $scanner ./cmd/immichclone
+& $scanner ./cmd/immichclone ./cmd/installerfiles
 if ($LASTEXITCODE -ne 0) { throw 'Dependency vulnerability check failed; inspect findings before release' }

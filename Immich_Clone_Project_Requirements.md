@@ -1,3 +1,9 @@
+## SEC-03 worker amendment — November 4, 2026
+
+The user permitted a worker for the next development checkpoint. One bounded
+worker reviews SEC-03 integration and contributes independent privacy/alias tests;
+this does not authorize extra workers, new charges or Group3 investigations.
+
 ## Milestone 7 authorization — November 4, 2026 (America/Chicago)
 
 The user explicitly approved resuming the five original open items SEC-02,

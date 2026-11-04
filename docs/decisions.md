@@ -385,3 +385,10 @@
   or original-item closure is inferred. Current count stays4 closed/4 open.
   User permits checkpoint handoffs awaiting a response; next work is installer
   ACL/snapshot/rollback integration, without new charges, workers or local tests.
+
+- November4: user permits one worker for SEC-03 integration review and independent
+  privacy/alias controls. Integrate the verified winfs primitive through one fixed
+  three-file installer helper operation, preserving preflight ACL policy and
+  staged exact-hash/no-write/delete-sharing trust. Require completion receipts,
+  actual-file private descriptors, physical-root overlap checks and fail-closed
+  partial recovery. No whole SEC-03 closure or new product release from this slice.

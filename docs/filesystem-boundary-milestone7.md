@@ -83,3 +83,60 @@ Next checkpoint: use the verified handles in actual privileged installer operati
 including ACL inheritance semantics and snapshot/rollback; then execute adversarial
 account/race tests and applicable combined acceptance. Do not substitute another
 primitive-only run for that integration or repeat this passing run without a change.
+
+
+## Installer snapshot/rollback integration candidate
+
+The user authorized one worker for this checkpoint. That worker independently
+reviewed staging, file-set failure handling and metadata policies and added
+protected-child/receipt/inheritance/drive-alias tests. Cross-compilation/vet are
+preparation evidence only; the focused Windows integration run is required.
+
+A standalone CGO-disabled Go `installer-files.exe`, built with the already pinned
+Go/x/sys components, now performs the management helper's fixed three-file
+snapshot and rollback byte copies. It introduces no service, listener, account,
+SDK, external runtime, model or catalog schema. Inno bundles it, hashes it at
+compile time and pins the exact extracted executable against write/delete sharing
+from before checksum verification through Setup exit. Both Prepare and failure
+rollback use the new staged copy; manual installed management defaults to the
+installed helper. No per-file CLI or old-helper fallback exists.
+
+Each operation pins the application/data/rollback roots and opens all fixed files
+before the first existing-file truncate. A held-handle, normalized volume-GUID
+path comparison refuses physical role overlaps hidden by DOS drive aliases.
+Rollback directory and every opened snapshot/receipt file are checked using their
+actual security descriptors; protected children cannot hide broader explicit
+rights behind a private parent. The rollback root must grant admin/system full
+self and inheritable rights, with no unrelated reader/writer. No ACL or owner is
+rewritten by this helper; destination data files keep their existing descriptors,
+while newly created files inherit their role root's existing policy.
+
+Before overwriting snapshots, readiness is invalidated and synced. All three files
+must copy, sync, hash-verify and close successfully before a bounded protected
+completion receipt is written, synced and closed. The receipt binds the actual
+app/data directory identities and all three byte hashes/sizes. Restore checks the
+receipt and every source before opening all live destinations; it verifies all
+restored bytes and propagates Sync/Close errors. A failed restore exits nonzero,
+so management cannot restart or report rollback_complete as though it succeeded.
+This is not an atomic three-file transaction: partial restore failure still needs
+recovery and is not hidden by a healthy HTTP response. Existing filenames/layout
+are retained; the receipt is new installer-only metadata, not an app schema change.
+
+Required focused execution now includes complete round-trip, interruption after
+first snapshot copy, unsafe third source/target before earlier truncation,
+corruption and changed-root refusal, actual-object privacy and drive-alias controls,
+production Inno/custom/Program Files service execution, staged helper mutation
+denial and actual injected failed-Setup rollback. Existing SEC-01/02 tests remain.
+The worker's review identified the actual-child privacy and drive-alias gaps before
+CI; neither root-only ACL checks nor lexical overlap checks are accepted substitutes.
+
+**SEC-03 remains open.** This slice does not change path-based root creation/ACL
+inheritance, logging/rotation/fallback, elevated initialization, Inno publication or
+uninstall deletion. No unguarded creation fallback is added. Full original-item
+account/race and genuine prior-release/full-provider/independent recovery gates
+still remain after this focused integration. No new installer release or PC action
+is requested, and the original count remains 4 closed / 4 open.
+
+Primary API checks: Microsoft [held-object security](https://learn.microsoft.com/en-us/windows/win32/api/aclapi/nf-aclapi-getsecurityinfo)
+and [normalized handle paths](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfinalpathnamebyhandlew).
+There is no string-path fallback if a normalized volume-GUID path query fails.

@@ -102,7 +102,7 @@ try {
     # snapshot (which intentionally preserves the catalog and access code).
     $forbidden = Join-Path $root 'private-package-canaries.txt'
     [IO.File]::WriteAllText($forbidden,($code+"`n"+$privateMarker+"`n"),[Text.UTF8Encoding]::new($false))
-    & python scripts/Check-ArtifactPrivacy.py --forbidden-file $forbidden "$app/immichclone.exe" "$app/Export-Diagnostics.ps1" "$app/Manage-Service.ps1" "$app/THIRD-PARTY-LICENSES.txt" "$app/prototype-notes.txt" "$app/media" "$app/ai"
+    & python scripts/Check-ArtifactPrivacy.py --forbidden-file $forbidden "$app/immichclone.exe" "$app/installer-files.exe" "$app/Export-Diagnostics.ps1" "$app/Manage-Service.ps1" "$app/THIRD-PARTY-LICENSES.txt" "$app/prototype-notes.txt" "$app/media" "$app/ai"
     Assert ($LASTEXITCODE -eq 0) 'installed payload omits runtime access code and private media canary'
 
     $session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()

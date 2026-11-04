@@ -26,6 +26,59 @@ type Directory struct {
 	holds []windows.Handle
 }
 
+type Identity struct {
+	Volume uint32
+	High   uint32
+	Low    uint32
+}
+
+func (d *Directory) Identity() (Identity, error) {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	if len(d.holds) == 0 {
+		return Identity{}, os.ErrClosed
+	}
+	var info windows.ByHandleFileInformation
+	if err := windows.GetFileInformationByHandle(d.holds[len(d.holds)-1], &info); err != nil {
+		return Identity{}, err
+	}
+	return Identity{info.VolumeSerialNumber, info.FileIndexHigh, info.FileIndexLow}, nil
+}
+
+// SecurityDescriptor reads the actual held object, rather than resolving its name.
+func (d *Directory) SecurityDescriptor() (*windows.SECURITY_DESCRIPTOR, error) {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	if len(d.holds) == 0 {
+		return nil, os.ErrClosed
+	}
+	return windows.GetSecurityInfo(d.holds[len(d.holds)-1], windows.SE_FILE_OBJECT, windows.OWNER_SECURITY_INFORMATION|windows.DACL_SECURITY_INFORMATION)
+}
+
+// FinalPath uses the held object and a volume-GUID name, so drive aliases cannot
+// disguise overlapping installer roles. Failure has no string-path fallback.
+func (d *Directory) FinalPath() (string, error) {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	if len(d.holds) == 0 {
+		return "", os.ErrClosed
+	}
+	buf := make([]uint16, 256)
+	for {
+		n, e := windows.GetFinalPathNameByHandle(d.holds[len(d.holds)-1], &buf[0], uint32(len(buf)), 1)
+		if e != nil {
+			return "", e
+		}
+		if n < uint32(len(buf)) {
+			return windows.UTF16ToString(buf[:n]), nil
+		}
+		if n >= 32768 {
+			return "", ErrUnsafeObject
+		}
+		buf = make([]uint16, n+1)
+	}
+}
+
 func component(name string) bool {
 	return name != "." && name != ".." && name != "" &&
 		!strings.ContainsAny(name, `\/:`+"\x00") &&
@@ -152,17 +205,17 @@ func (d *Directory) OpenFile(name string, write bool) (*os.File, error) {
 
 // Copy copies through validated handles. It does not provide atomic publication
 // or installer rollback orchestration; those are separate integration gates.
-func Copy(destination *Directory, destinationName string, source *Directory, sourceName string) error {
+func Copy(destination *Directory, destinationName string, source *Directory, sourceName string) (err error) {
 	r, err := source.OpenFile(sourceName, false)
 	if err != nil {
 		return err
 	}
-	defer r.Close()
+	defer func() { err = errors.Join(err, r.Close()) }()
 	w, err := destination.OpenFile(destinationName, true)
 	if err != nil {
 		return err
 	}
-	defer w.Close()
+	defer func() { err = errors.Join(err, w.Close()) }()
 	if err = w.Truncate(0); err != nil {
 		return err
 	}

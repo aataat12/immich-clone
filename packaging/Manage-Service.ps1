@@ -1,7 +1,8 @@
 param(
     [Parameter(Mandatory=$true)][ValidateSet('Prepare','Install','Uninstall')][string]$Action,
     [Parameter(Mandatory=$true)][string]$AppDir,
-    [Parameter(Mandatory=$true)][string]$DataDir
+    [Parameter(Mandatory=$true)][string]$DataDir,
+    [string]$BoundaryHelper = ''
 )
 $ErrorActionPreference = 'Stop'
 # Use the OS-provided Windows PowerShell modules even when setup is launched
@@ -10,6 +11,7 @@ $env:PSModulePath = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\M
 Import-Module Microsoft.PowerShell.Management -Force
 Import-Module Microsoft.PowerShell.Security -Force
 . (Join-Path $PSScriptRoot 'Storage-Security.ps1')
+if (!$BoundaryHelper) { $BoundaryHelper = Join-Path $PSScriptRoot 'installer-files.exe' }
 $name = 'ImmichClone'
 $binary = Join-Path $AppDir 'immichclone.exe'
 $rollback = Join-Path $AppDir 'rollback'
@@ -49,6 +51,7 @@ try {
     $stage = 'audit code permissions'
     Assert-TrustedCodeTree $PSScriptRoot
     Assert-TrustedCodeTree $AppDir
+    Assert-TrustedCodeTree (Split-Path -Parent $BoundaryHelper)
     Assert-NoReparsePath $AppDir
     Assert-NoReparsePath $DataDir
     Assert-NoReparsePath $logRoot
@@ -83,9 +86,7 @@ try {
             Diagnostic 'upgrade_prepare'
             Stop-Service $name
             Set-PrivateDirectoryAcl -Path $rollback
-            Copy-Item $binary "$rollback/immichclone.exe" -Force
-            Copy-Item "$DataDir/catalog.db" "$rollback/catalog.db" -Force
-            Copy-Item "$DataDir/access-code.txt" "$rollback/access-code.txt" -Force
+            Checked $BoundaryHelper @('-action','snapshot','-app-dir',$AppDir,'-data-dir',$DataDir)
         }
         Diagnostic 'installer_complete'
     exit 0
@@ -143,9 +144,7 @@ try {
     if ($Action -eq 'Install' -and (Test-Path "$rollback/immichclone.exe")) {
         try {
             if (Get-Service $name -ErrorAction SilentlyContinue) { Stop-Service $name -Force -ErrorAction SilentlyContinue }
-            Copy-Item "$rollback/immichclone.exe" $binary -Force
-            Copy-Item "$rollback/catalog.db" "$DataDir/catalog.db" -Force
-            Copy-Item "$rollback/access-code.txt" "$DataDir/access-code.txt" -Force
+            Checked $BoundaryHelper @('-action','restore','-app-dir',$AppDir,'-data-dir',$DataDir)
             Start-Service $name
             Health
             Diagnostic 'rollback_complete'

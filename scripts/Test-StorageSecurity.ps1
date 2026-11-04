@@ -79,6 +79,7 @@ try {
  [IO.Directory]::Delete($link)
  $app=Join-Path $root 'app';New-Item -ItemType Directory $app | Out-Null
  Copy-Item -LiteralPath $Binary -Destination (Join-Path $app 'immichclone.exe')
+ Native go @('build','-trimpath','-o',(Join-Path $app 'installer-files.exe'),'./cmd/installerfiles')
  Copy-Item -LiteralPath (Join-Path $PSScriptRoot '../packaging/Storage-Security.ps1') -Destination $app
  Copy-Item -LiteralPath (Join-Path $PSScriptRoot '../packaging/Manage-Service.ps1') -Destination $app
  $state=Join-Path $root 'state';New-Item -ItemType Directory $state | Out-Null
