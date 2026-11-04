@@ -1,4 +1,5 @@
 name: Installed import mounted-volume recovery
+# Wait for real resumed video preview completion before asserting quiescent staging.
 on:
   push:
     paths:
