@@ -262,12 +262,16 @@ var ResultCode: Integer;
 begin
   Result := False;
   try
+    Log('Uninstall boundary: directory_pin_begin');
     if not PinUninstallDirectory(ExpandConstant('{app}')) then exit;
+    Log('Uninstall boundary: directory_pin_ok');
     if not StageUninstallPayload then exit;
+    Log('Uninstall boundary: staged_payload_ok');
     { Only audit here: initialization precedes the user's uninstall confirmation. }
     Result := Exec(ExpandConstant('{tmp}\installer-files.exe'),
       '-action audit-cleanup -app-dir "' + ExpandConstant('{app}') + '" -data-dir "' + GetState('') + '"',
       '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
+    Log('Uninstall boundary: audit_result=' + IntToStr(ResultCode));
   except
     Result := False;
   end;
@@ -277,8 +281,10 @@ procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var ResultCode: Integer;
 begin
   if CurUninstallStep = usUninstall then
-    if not RunManagement('Uninstall', ResultCode) or (ResultCode <> 0) then
+    if not RunManagement('Uninstall', ResultCode) or (ResultCode <> 0) then begin
+      Log('Uninstall boundary: cleanup_result=' + IntToStr(ResultCode));
       RaiseException('Safe uninstall refused or incomplete. Application data was preserved; review the service before retrying.');
+    end;
 end;
 
 procedure DeinitializeUninstall;

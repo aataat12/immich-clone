@@ -298,7 +298,16 @@ try {
     $unknownRoot = Join-Path $currentApp 'unrelated-preserved.txt'
     $unknownRollback = Join-Path $currentApp 'rollback/unrelated-preserved.txt'
     foreach ($path in @($unknownRoot,$unknownRollback)) { [IO.File]::WriteAllText($path,'unrelated retained bytes') }
-    $process = Start-Process (Join-Path $currentApp 'unins000.exe') -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru
+    $uninstallTrace = Join-Path $root 'uninstall-boundary.log'
+    $process = Start-Process (Join-Path $currentApp 'unins000.exe') -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/LOG="'+$uninstallTrace+'"')) -Wait -PassThru
+    if ($process.ExitCode -ne 0) {
+        Write-Host ('Uninstall boundary: exit_code='+$process.ExitCode)
+        if (Test-Path -LiteralPath $uninstallTrace) { Get-Content -LiteralPath $uninstallTrace | Where-Object { $_ -match 'Uninstall boundary:' } | ForEach-Object { Write-Host ($_.Substring($_.IndexOf('Uninstall boundary:'))) } }
+        $remainingService = Get-Service ImmichClone -ErrorAction SilentlyContinue
+        Write-Host ('Uninstall boundary: service_present='+[bool]$remainingService)
+        if ($remainingService) { Write-Host ('Uninstall boundary: service_state='+$remainingService.Status) }
+        foreach ($leaf in @('Manage-Service.ps1','immichclone.exe','ai','media','rollback/catalog.db')) { Write-Host ('Uninstall boundary: selected_remaining='+[bool](Test-Path -LiteralPath (Join-Path $currentApp $leaf))) }
+    }
     Assert ($process.ExitCode -eq 0) 'disposable preparation installer uninstalls cleanly'
     foreach ($path in @($unknownRoot,$unknownRollback)) { Assert ([IO.File]::ReadAllText($path) -eq 'unrelated retained bytes') 'native uninstall preserves unrelated root and rollback contents' }
     Assert (!(Get-Service ImmichClone -ErrorAction SilentlyContinue) -and !(Test-Path 'HKLM:\SOFTWARE\ImmichClone')) 'completed native uninstall removes owned service and product registration'

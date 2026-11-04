@@ -824,3 +824,11 @@ release/provider/schema/feature or Group3 work. Worker provided independent
 normal/unsafe-alias/ACL/writer/late-name/overlap/persistent-pin tests. Local cross
 build/vet passed; actual Windows and production Inno tests pending. Three-pass
 forecast unchanged until actual acceptance.
+
+First uninstall run41897021430/source42e011ad/job126809153565 passed every
+native cleanup/audit/refusal control and all three actual hostile-uninstaller
+controls (changed script, real hardlink, actual ordinary-user writable provider)
+with same service PID, unchanged metadata/registration/original/outside bytes.
+Normal custom uninstall returned nonzero, so this checkpoint is NOT accepted and
+forecast remains3. Add fixed-stage/numeric/boolean tracing only to locate the
+production failure; do not dump private log paths or weaken negative assertions.
