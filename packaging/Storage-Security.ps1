@@ -58,9 +58,15 @@ function Assert-NoReparsePath([string]$Path) {
     }
 }
 
-function Set-PrivateDirectoryAcl([string]$Path, [string]$ReaderSid, [switch]$ServiceAccess) {
+function Set-PrivateDirectoryAcl([string]$Path, [string]$ReaderSid, [switch]$ServiceAccess, [Parameter(Mandatory=$true)][string]$CreationHelper) {
     Assert-NoReparsePath $Path
-    [IO.Directory]::CreateDirectory($Path) | Out-Null
+    # Missing components receive the final protected policy at native creation.
+    # Existing-tree Set-Acl propagation below remains a separate SEC-03 gate.
+    $createArgs = @('-action','ensure-private-root','-root-dir',$Path)
+    if ($ReaderSid) { $createArgs += @('-reader-sid',$ReaderSid) }
+    if ($ServiceAccess) { $createArgs += '-service-access' }
+    & $CreationHelper @createArgs | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Private storage root creation refused' }
     Assert-NoReparsePath $Path
     # Build a fresh DACL: grant:r only replaces named principals and can retain
     # unrelated explicit allow/deny entries on a preexisting directory.

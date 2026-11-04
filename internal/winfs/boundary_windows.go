@@ -99,14 +99,19 @@ func checked(h windows.Handle, directory bool) error {
 }
 
 func relative(parent windows.Handle, name string, directory, write bool) (windows.Handle, error) {
+	h, _, err := relativeCreate(parent, name, directory, write, nil)
+	return h, err
+}
+func relativeCreate(parent windows.Handle, name string, directory, write bool, descriptor *windows.SECURITY_DESCRIPTOR) (windows.Handle, bool, error) {
 	if !component(name) {
-		return 0, ErrUnsafeObject
+		return 0, false, ErrUnsafeObject
 	}
 	u, err := windows.NewNTUnicodeString(name)
 	if err != nil {
-		return 0, err
+		return 0, false, err
 	}
 	oa := windows.OBJECT_ATTRIBUTES{RootDirectory: parent, ObjectName: u, Attributes: windows.OBJ_CASE_INSENSITIVE | windows.OBJ_DONT_REPARSE}
+	oa.SecurityDescriptor = descriptor
 	oa.Length = uint32(unsafe.Sizeof(oa))
 	var status windows.IO_STATUS_BLOCK
 	var h windows.Handle
@@ -115,6 +120,9 @@ func relative(parent windows.Handle, name string, directory, write bool) (window
 	disposition := uint32(windows.FILE_OPEN)
 	if directory {
 		options |= windows.FILE_DIRECTORY_FILE
+		if descriptor != nil {
+			disposition = windows.FILE_OPEN_IF
+		}
 	} else {
 		options |= windows.FILE_NON_DIRECTORY_FILE
 		access = windows.FILE_GENERIC_READ
@@ -127,13 +135,14 @@ func relative(parent windows.Handle, name string, directory, write bool) (window
 	// DELETE sharing means a validated file cannot be rewritten or redirected.
 	err = windows.NtCreateFile(&h, access, &oa, &status, nil, 0, windows.FILE_SHARE_READ, disposition, options, 0, 0)
 	if err != nil {
-		return 0, err
+		return 0, false, err
 	}
 	if err = checked(h, directory); err != nil {
 		windows.CloseHandle(h)
-		return 0, err
+		return 0, false, err
 	}
-	return h, nil
+	const fileCreated = 2 // IO_STATUS_BLOCK.Information: FILE_CREATED
+	return h, status.Information == fileCreated, nil
 }
 
 // OpenDirectory accepts local absolute drive paths only. It refuses links in

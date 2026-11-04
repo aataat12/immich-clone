@@ -39,6 +39,8 @@ $created=$false
 $serviceAttempted=$false
 try {
  New-Item -ItemType Directory $root | Out-Null
+ $creationHelper=Join-Path $root 'installer-files.exe'
+ Native go @('build','-trimpath','-o',$creationHelper,'./cmd/installerfiles')
  Native icacls @($root,'/inheritance:r','/grant:r','*S-1-5-18:(OI)(CI)F','*S-1-5-32-544:(OI)(CI)F',('*'+$identity+':(OI)(CI)F'),'*S-1-1-0:(OI)(CI)RX','*S-1-5-19:(OI)(CI)RX')
  New-LocalUser -Name $user -Password (ConvertTo-SecureString $password -AsPlainText -Force) -AccountNeverExpires | Out-Null
  $created=$true
@@ -52,12 +54,21 @@ try {
  Assert ([StorageAccessProbe]::Access($user,$password,$secret,$false)) 'ordinary-user positive control can read permissive fixture'
  Native icacls @($fixture,'/inheritance:r','/grant:r','*S-1-5-18:(OI)(CI)F','*S-1-5-32-544:(OI)(CI)F','*S-1-5-19:(OI)(CI)M',('*'+$identity+':(OI)(CI)RX'))
  Assert ([StorageAccessProbe]::Access($user,$password,$secret,$false)) 'previous grant command reproduces retained explicit Everyone access'
+ # Execute the native creation action alone, before any Set-Acl normalization.
+ $birthParentAcl=(Get-Acl -LiteralPath $fixture).Sddl
+ $bornPrivate=Join-Path $fixture 'private from birth/nested'
+ Native $creationHelper @('-action','ensure-private-root','-root-dir',$bornPrivate,'-reader-sid',$identity,'-service-access')
+ $birthSecret=Join-Path $bornPrivate 'synthetic-private.txt'
+ [IO.File]::WriteAllText($birthSecret,'native private creation fixture')
+ Assert (![StorageAccessProbe]::Access($user,$password,$birthSecret,$false)) 'native creation alone denies real ordinary-user read before ACL normalization'
+ Assert (![StorageAccessProbe]::Access($user,$password,(Join-Path $bornPrivate 'forbidden.txt'),$true)) 'native creation alone denies real ordinary-user write before ACL normalization'
+ Assert ((Get-Acl -LiteralPath $fixture).Sddl -eq $birthParentAcl) 'native private creation leaves existing permissive parent ACL unchanged'
  Assert-PrivateDirectoryTree -Path $fixture -ReaderSid $identity -ServiceAccess
  Assert $true 'normal inherited grants pass read-only descendant audit before root normalization'
  $inheritedUnsafe=$false
  try {Assert-PrivateDirectoryTree -Path $fixture -ReaderSid $identity -ServiceAccess -VerifyInherited} catch {$inheritedUnsafe=$true}
  Assert $inheritedUnsafe 'final-state verification rejects inherited Everyone before normalization'
- Set-PrivateDirectoryAcl -Path $fixture -ReaderSid $identity -ServiceAccess
+ Set-PrivateDirectoryAcl -CreationHelper $creationHelper -Path $fixture -ReaderSid $identity -ServiceAccess
  Assert-PrivateDirectoryTree -Path $fixture -ReaderSid $identity -ServiceAccess -VerifyInherited
  Assert $true 'final-state verification accepts complete normalized root and descendants'
  Assert (![StorageAccessProbe]::Access($user,$password,$secret,$false)) 'replacement DACL denies ordinary-user secret read'
@@ -72,14 +83,14 @@ try {
  $link=Join-Path $root 'junction'
  New-Item -ItemType Junction -Path $link -Target $outside | Out-Null
  foreach($path in @($link,(Join-Path $link 'nested'))) {
-  $rejected=$false;try { Set-PrivateDirectoryAcl -Path $path -ServiceAccess } catch { $rejected=$true }
+  $rejected=$false;try { Set-PrivateDirectoryAcl -CreationHelper $creationHelper -Path $path -ServiceAccess } catch { $rejected=$true }
   Assert $rejected 'junction or junction ancestor rejected before ACL/create'
  }
  Assert ((Get-Acl -LiteralPath $outside).Sddl -eq $before -and [IO.File]::ReadAllText($sentinel) -eq 'untouched' -and !(Test-Path (Join-Path $outside 'nested'))) 'junction target ACL and bytes remain untouched'
  [IO.Directory]::Delete($link)
  $app=Join-Path $root 'app';New-Item -ItemType Directory $app | Out-Null
  Copy-Item -LiteralPath $Binary -Destination (Join-Path $app 'immichclone.exe')
- Native go @('build','-trimpath','-o',(Join-Path $app 'installer-files.exe'),'./cmd/installerfiles')
+ Copy-Item -LiteralPath $creationHelper -Destination (Join-Path $app 'installer-files.exe')
  Copy-Item -LiteralPath (Join-Path $PSScriptRoot '../packaging/Storage-Security.ps1') -Destination $app
  Copy-Item -LiteralPath (Join-Path $PSScriptRoot '../packaging/Manage-Service.ps1') -Destination $app
  $state=Join-Path $root 'state';New-Item -ItemType Directory $state | Out-Null
@@ -104,7 +115,7 @@ try {
  Assert ((Get-FileHash (Join-Path $state ('originals/'+$upload.asset.id))).Hash -eq (Get-FileHash $source).Hash) 'committed original bytes survive restart'
  # Stationary descendant permissions: rejection must precede stop/snapshot/logging.
  $rollback=Join-Path $app 'rollback'
- Set-PrivateDirectoryAcl -Path $rollback
+ Set-PrivateDirectoryAcl -CreationHelper $creationHelper -Path $rollback
  $rollbackGuard=Join-Path $rollback 'guard.bin'
  [IO.File]::WriteAllText($rollbackGuard,'rollback guard')
  $logRoot=Join-Path $env:ProgramData 'ImmichCloneDiagnostics'
@@ -112,7 +123,7 @@ try {
  $installDiagnostic=Join-Path $app 'install-diagnostic.txt'
  function New-StateFixture([string]$Label) {
   $candidate=Join-Path $root ('case-'+$Label)
-  Set-PrivateDirectoryAcl -Path $candidate -ReaderSid $identity -ServiceAccess
+  Set-PrivateDirectoryAcl -CreationHelper $creationHelper -Path $candidate -ReaderSid $identity -ServiceAccess
   foreach($folder in @('originals','backups','nested')) {New-Item -ItemType Directory -Path (Join-Path $candidate $folder) | Out-Null}
   foreach($file in @('state-format.txt','catalog.db','access-code.txt','originals/original.bin','backups/backup.zip','nested/state.bin')) {
    [IO.File]::WriteAllText((Join-Path $candidate $file),'synthetic stationary fixture')
@@ -229,7 +240,7 @@ try {
  # Intended explicit rules and a complete protected directory remain compatible.
  $candidate=New-StateFixture 'normal-known-rules'
  $protected=Join-Path $candidate 'protected'
- Set-PrivateDirectoryAcl -Path $protected -ReaderSid $identity -ServiceAccess
+ Set-PrivateDirectoryAcl -CreationHelper $creationHelper -Path $protected -ReaderSid $identity -ServiceAccess
  [IO.File]::WriteAllText((Join-Path $protected 'safe.bin'),'safe protected fixture')
  $normal=Join-Path $candidate 'nested/state.bin'
  $a=Get-Acl -LiteralPath $normal
@@ -270,12 +281,12 @@ try {
  # Execute the exact audit using a real ordinary-user token. The normal tree
  # passes first; after a child becomes unreadable, enumeration/Get-Acl must fail.
  $denied=Join-Path $root 'audit-access-denied'
- Set-PrivateDirectoryAcl -Path $denied -ReaderSid $ordinarySid -ServiceAccess
+ Set-PrivateDirectoryAcl -CreationHelper $creationHelper -Path $denied -ReaderSid $ordinarySid -ServiceAccess
  $deniedChild=Join-Path $denied 'child';New-Item -ItemType Directory $deniedChild | Out-Null
  [IO.File]::WriteAllText((Join-Path $deniedChild 'safe.bin'),'audit access fixture')
  [StorageAccessProbe]::Impersonate($user,$password,[Action]{Assert-PrivateDirectoryTree -Path $denied -ReaderSid $ordinarySid -ServiceAccess -OwnerSid $identity})
  Assert $true 'ordinary-user audit positive control reads complete normal tree'
- Set-PrivateDirectoryAcl -Path $deniedChild
+ Set-PrivateDirectoryAcl -CreationHelper $creationHelper -Path $deniedChild
  $deniedAudit=$false
  try {[StorageAccessProbe]::Impersonate($user,$password,[Action]{Assert-PrivateDirectoryTree -Path $denied -ReaderSid $ordinarySid -ServiceAccess -OwnerSid $identity})} catch {$deniedAudit=$true}
  Assert $deniedAudit 'actual audit access failure is rejected rather than skipped'

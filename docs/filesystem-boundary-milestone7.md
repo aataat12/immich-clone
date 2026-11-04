@@ -239,3 +239,34 @@ user-PC action, charges or running workers/CI remain at this checkpoint.
 
 Next: native root creation/ACL application with explicit inheritance behavior,
 then remaining init/Setup operations and applicable complete release acceptance.
+
+
+## Private root creation candidate (bounded scope)
+
+This checkpoint only replaces path-based root creation in the management ACL
+function. Each missing component is created by relative NtCreateFile with the
+final protected DACL at birth: SYSTEM/Administrators full control, optional
+LocalService Modify, optional reader RX, including OICI inheritance. Actual
+descriptors are verified while every ancestor/new object stays held. Existing
+components are opened without ACL/byte changes. Invalid reader input is rejected
+before creation. Failure releases handles and retains safely created components;
+there is no pathname cleanup or fallback creation.
+
+**Existing-tree ACL normalization is not converted or claimed safe.** The existing
+PowerShell Set-Acl and verification remain, and require a distinct handle-bound
+descendant design. Microsoft documents automatic inheritance propagation for
+SetSecurityInfo; pinning only the root is insufficient justification for that
+conversion. No recursive ACL repair, new policy, dependency, feature or public
+release is introduced. SEC-03 remains open and counts remain4 closed/4 open.
+
+Production management calls must provide the staged exact-hash-pinned helper for
+root creation; disposable storage acceptance supplies the compiled helper too,
+including its ordinary-reader fixtures. Tests cover nested policies/inheritance,
+permissive-parent isolation, existing root preservation, links/non-directories,
+invalid reader, held ancestors and safe partial progress. Native and actual
+Setup/storage execution is pending; cross-compilation/vet alone is not acceptance.
+One user-authorized worker reviews and contributes independent root tests.
+
+API references: Microsoft [new-object security descriptors](https://learn.microsoft.com/en-us/windows/win32/secauthz/security-descriptors-for-new-objects),
+[NtCreateFile](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntcreatefile),
+and [SetSecurityInfo inheritance propagation](https://learn.microsoft.com/en-us/windows/win32/api/aclapi/nf-aclapi-setsecurityinfo).

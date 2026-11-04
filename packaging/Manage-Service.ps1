@@ -62,9 +62,9 @@ try {
     Assert-PrivateDirectoryTree -Path $logRoot -ReaderSid $identity -ServiceAccess
     Assert-PrivateDirectoryTree -Path $rollback -OwnerSid $identity
     $logIdentity = $identity
-    if (Test-Path -LiteralPath $DataDir) { Set-PrivateDirectoryAcl -Path $DataDir -ReaderSid $identity -ServiceAccess }
-    if (Test-Path -LiteralPath $rollback) { Set-PrivateDirectoryAcl -Path $rollback }
-    Set-PrivateDirectoryAcl -Path $logRoot -ReaderSid $logIdentity -ServiceAccess
+    if (Test-Path -LiteralPath $DataDir) { Set-PrivateDirectoryAcl -CreationHelper $BoundaryHelper -Path $DataDir -ReaderSid $identity -ServiceAccess }
+    if (Test-Path -LiteralPath $rollback) { Set-PrivateDirectoryAcl -CreationHelper $BoundaryHelper -Path $rollback }
+    Set-PrivateDirectoryAcl -CreationHelper $BoundaryHelper -Path $logRoot -ReaderSid $logIdentity -ServiceAccess
     # Verify actual inherited ACLs too; never assume the root change propagated.
     # A failure here can leave safe root ACL normalization, but no service stop,
     # diagnostics, snapshot or data-content mutation has happened.
@@ -80,7 +80,7 @@ try {
             $stage = 'snapshot previous installation'
             Diagnostic 'upgrade_prepare'
             Stop-Service $name
-            Set-PrivateDirectoryAcl -Path $rollback
+            Set-PrivateDirectoryAcl -CreationHelper $BoundaryHelper -Path $rollback
             Checked $BoundaryHelper @('-action','snapshot','-app-dir',$AppDir,'-data-dir',$DataDir)
         }
         Diagnostic 'installer_complete'
@@ -99,7 +99,7 @@ try {
     $stage = 'configure state ACL'
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
     Checked icacls @($AppDir,'/grant','*S-1-5-19:(OI)(CI)RX')
-    Set-PrivateDirectoryAcl -Path $DataDir -ReaderSid $identity -ServiceAccess
+    Set-PrivateDirectoryAcl -CreationHelper $BoundaryHelper -Path $DataDir -ReaderSid $identity -ServiceAccess
     $stage = 'initialize state'
     Checked $binary @('-mode','init','-data',$DataDir)
     if (!$owned) {
