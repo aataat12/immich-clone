@@ -3,9 +3,12 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
+	"golang.org/x/sys/windows"
 	"immichclone/internal/installerfiles"
+	"immichclone/internal/winfs"
 	"os"
 )
 
@@ -56,6 +59,20 @@ func main() {
 	}
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Installer file operation failed; completion not recorded.")
+		if *action == "audit-cleanup" {
+			if errors.Is(err, windows.STATUS_SHARING_VIOLATION) || errors.Is(err, windows.ERROR_SHARING_VIOLATION) {
+				os.Exit(32)
+			}
+			if errors.Is(err, windows.STATUS_ACCESS_DENIED) || errors.Is(err, windows.ERROR_ACCESS_DENIED) {
+				os.Exit(5)
+			}
+			if errors.Is(err, winfs.ErrUnsafeObject) {
+				os.Exit(2)
+			}
+			if errors.Is(err, installerfiles.ErrRefused) {
+				os.Exit(3)
+			}
+		}
 		os.Exit(1)
 	}
 	fmt.Println("Installer file set verified.")

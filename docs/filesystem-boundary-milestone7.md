@@ -832,3 +832,15 @@ with same service PID, unchanged metadata/registration/original/outside bytes.
 Normal custom uninstall returned nonzero, so this checkpoint is NOT accepted and
 forecast remains3. Add fixed-stage/numeric/boolean tracing only to locate the
 production failure; do not dump private log paths or weaken negative assertions.
+
+Diagnostic run41897729332/source6daa7e14/job126811632412 confirmed actual
+normal uninstall reaches directory_pin_ok and staged_payload_ok, then native
+audit_result1; service remained Running and every watched payload stayed present.
+A narrowly scoped root-only uninsNNN.dat/exe sharing-refusal audit can use held
+READ_CONTROL/READ_ATTRIBUTES metadata access, actual descriptor/type/single-link
+checks and identical nofollow/no-write/delete-sharing flags. This does not claim
+data-writer exclusion for Inno's own live journal/image, never deletes those
+metadata leaves, and is not a general payload sharing fallback. The normal strict
+read-data audit still runs first; all other paths and nonsharing errors refuse.
+Independent real-writer/unsafe-ACL positive/negative tests and actual Inno must
+prove this candidate. Fixed audit exit classes aid diagnosis without raw paths.

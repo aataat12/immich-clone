@@ -258,3 +258,87 @@ func TestCleanupAuditWithPersistentUninstallerDirectoryPin(t *testing.T) {
 	cleanupAssertData(t, data)
 	t.Log("PASS: read-only cleanup audit coexists with the uninstaller's persistent no-write/delete-sharing app-directory pin without requesting conflicting mutation authority")
 }
+
+func cleanupHeldWriter(t *testing.T, path string) windows.Handle {
+	t.Helper()
+	name, e := windows.UTF16PtrFromString(path)
+	if e != nil {
+		t.Fatal(e)
+	}
+	h, e := windows.CreateFile(name, windows.GENERIC_WRITE, windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE, nil, windows.OPEN_EXISTING, 0, 0)
+	if e != nil {
+		t.Fatal("required actual writer acquisition failed", e)
+	}
+	t.Cleanup(func() {
+		if e := windows.CloseHandle(h); e != nil {
+			t.Error(e)
+		}
+	})
+	return h
+}
+func TestCleanupAuditHeldInnoMetadataRetainsActualPolicyChecks(t *testing.T) {
+	for _, name := range []string{"unins000.dat", "unins001.exe"} {
+		t.Run(name, func(t *testing.T) {
+			app, data, _ := cleanupFixture(t)
+			path := filepath.Join(app, name)
+			if e := os.WriteFile(path, []byte("synthetic Inno-owned metadata bytes"), 0600); e != nil {
+				t.Fatal(e)
+			}
+			cleanupHeldWriter(t, path)
+			// Prove the normal read-data sharing acquisition really fails while the
+			// writer remains live; metadata success must not be a skipped fixture.
+			dir, e := winfs.OpenDirectory(app)
+			if e != nil {
+				t.Fatal(e)
+			}
+			f, e := dir.OpenFile(name, false)
+			if f != nil {
+				f.Close()
+			}
+			if ce := dir.Close(); ce != nil {
+				t.Fatal(ce)
+			}
+			if !errors.Is(e, windows.STATUS_SHARING_VIOLATION) {
+				t.Fatal("required actual journal data-read sharing refusal missing", e)
+			}
+			before := treeSD(t, path).String()
+			if e = AuditCleanup(app, data); e != nil {
+				t.Fatal("trusted root Inno metadata writer should permit metadata-only stationary audit", e)
+			}
+			if treeSD(t, path).String() != before {
+				t.Fatal("metadata audit changed journal descriptor")
+			}
+			cleanupAssertOld(t, app)
+			cleanupAssertData(t, data)
+			setPrivacyDescriptor(t, path, "D:P(A;;FA;;;SY)(A;;FA;;;BA)(A;;GW;;;BU)")
+			unsafeBefore := treeSD(t, path).String()
+			if e = AuditCleanup(app, data); e == nil {
+				t.Fatal("metadata-only fallback accepted actual untrusted journal writer ACL")
+			}
+			if treeSD(t, path).String() != unsafeBefore {
+				t.Fatal("refused metadata audit repaired unsafe descriptor")
+			}
+			cleanupAssertOld(t, app)
+			cleanupAssertData(t, data)
+			t.Log("PASS: actual root Inno metadata writer blocks normal data-read pins, trusted metadata-only audit succeeds, and actual unsafe mutation permission still refuses without ACL/code/library changes")
+		})
+	}
+}
+func TestCleanupAuditDoesNotExtendMetadataSharingException(t *testing.T) {
+	for _, name := range []string{`ai\nested é\unins000.dat`, "unins000.dat.exe", "unins00.dat", "immichclone.exe"} {
+		t.Run(name, func(t *testing.T) {
+			app, data, _ := cleanupFixture(t)
+			path := filepath.Join(app, name)
+			if e := os.WriteFile(path, []byte("held payload bytes"), 0600); e != nil {
+				t.Fatal(e)
+			}
+			cleanupHeldWriter(t, path)
+			if e := AuditCleanup(app, data); e == nil {
+				t.Fatal("root-only exact Inno metadata exception extended to a payload or lookalike name")
+			}
+			assertBytes(t, filepath.Join(app, "Manage-Service.ps1"), "managed-Manage-Service.ps1")
+			cleanupAssertData(t, data)
+			t.Log("PASS: actual held writer at nested/lookalike/payload name still forces audit refusal; Inno metadata compatibility is exact-root only")
+		})
+	}
+}

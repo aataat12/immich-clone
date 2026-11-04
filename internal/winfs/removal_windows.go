@@ -151,3 +151,34 @@ func (n *Removal) Close() (err error) {
 	}
 	return err
 }
+
+// OpenMetadataFile audits only security/type/link metadata on an existing leaf.
+// It intentionally does not request file-data sharing authority. It is reserved
+// for the uninstaller's own active metadata files, never payload/removal targets.
+func (d *Directory) OpenMetadataFile(name string) (*os.File, error) {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	if len(d.holds) == 0 {
+		return nil, os.ErrClosed
+	}
+	if !component(name) {
+		return nil, ErrUnsafeObject
+	}
+	u, e := windows.NewNTUnicodeString(name)
+	if e != nil {
+		return nil, e
+	}
+	oa := windows.OBJECT_ATTRIBUTES{RootDirectory: d.holds[len(d.holds)-1], ObjectName: u, Attributes: windows.OBJ_CASE_INSENSITIVE | windows.OBJ_DONT_REPARSE}
+	oa.Length = uint32(unsafe.Sizeof(oa))
+	var status windows.IO_STATUS_BLOCK
+	var h windows.Handle
+	e = windows.NtCreateFile(&h, windows.READ_CONTROL|windows.FILE_READ_ATTRIBUTES|windows.SYNCHRONIZE, &oa, &status, nil, 0, windows.FILE_SHARE_READ, windows.FILE_OPEN, windows.FILE_NON_DIRECTORY_FILE|windows.FILE_OPEN_REPARSE_POINT|windows.FILE_SYNCHRONOUS_IO_NONALERT, 0, 0)
+	if e != nil {
+		return nil, e
+	}
+	if e = checked(h, false); e != nil {
+		windows.CloseHandle(h)
+		return nil, e
+	}
+	return os.NewFile(uintptr(h), "uninstaller-metadata"), nil
+}

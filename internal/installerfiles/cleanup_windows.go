@@ -8,6 +8,7 @@ import (
 	"immichclone/internal/winfs"
 	"os"
 	"sort"
+	"strings"
 )
 
 // AuditCleanup is read-only, including application state. It precedes service
@@ -26,10 +27,10 @@ func AuditCleanup(app, data string) (err error) {
 	if e = disjointPayload(root, state); e != nil {
 		return e
 	}
-	return auditCleanupDirectory(root)
+	return auditCleanupDirectory(root, true)
 
 }
-func auditCleanupDirectory(d *winfs.Directory) (err error) {
+func auditCleanupDirectory(d *winfs.Directory, root bool) (err error) {
 	if e := trustedDirectory(d); e != nil {
 		return e
 	}
@@ -40,6 +41,9 @@ func auditCleanupDirectory(d *winfs.Directory) (err error) {
 	sort.Strings(names)
 	for _, name := range names {
 		f, e := d.OpenFile(name, false)
+		if root && uninstallerMetadataName(name) && (errors.Is(e, windows.STATUS_SHARING_VIOLATION) || errors.Is(e, windows.ERROR_SHARING_VIOLATION)) {
+			f, e = d.OpenMetadataFile(name)
+		}
 		if e == nil {
 			e = trustedFile(f)
 			ce := f.Close()
@@ -55,7 +59,7 @@ func auditCleanupDirectory(d *winfs.Directory) (err error) {
 		if e != nil {
 			return e
 		}
-		e = auditCleanupDirectory(child)
+		e = auditCleanupDirectory(child, false)
 		ce := child.Close()
 		if e != nil || ce != nil {
 			return errors.Join(e, ce)
@@ -70,6 +74,18 @@ func auditCleanupDirectory(d *winfs.Directory) (err error) {
 		return ErrRefused
 	}
 	return nil
+}
+func uninstallerMetadataName(name string) bool {
+	name = strings.ToLower(name)
+	if len(name) != 12 || name[:5] != "unins" || (name[8:] != ".dat" && name[8:] != ".exe") {
+		return false
+	}
+	for _, c := range name[5:8] {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
 }
 func missingCleanup(e error) bool {
 	return errors.Is(e, os.ErrNotExist) || errors.Is(e, windows.STATUS_OBJECT_NAME_NOT_FOUND) || errors.Is(e, windows.STATUS_OBJECT_PATH_NOT_FOUND)
