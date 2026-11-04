@@ -701,3 +701,25 @@ publication1, uninstall/cleanup1, integrated boundaries/races/offline modes1,
 combined genuine prior-release/full-provider/recovery closure1. SEC-03 remains
 open, security4 closed/4 open. No feature, provider, schema, dependency, version,
 release, cost, Group3 work or PC action. Keep0.1.39; Server does not certify Win10.
+
+### Setup payload publication candidate (not yet accepted)
+
+Replace only seven root payload files and recursive media/ai publication with
+held native relative opens/copy/digest/Sync; Inno extracts bundled source into its
+private temporary payload directory. Validate every source/destination and save
+all prior payload bytes before first overwrite. Exact held new files are removed
+and old files restored on checked mid-copy failure. A private complete publication
+receipt permits later Install-failure restoration of scripts/providers as well
+as the existing three-file catalog/access-code/runtime recovery. No service starts
+on publisher/restore failure; Prepare publication failure leaves prior service
+stopped rather than assuming recovery. Data-close failures have no completed
+receipt. Temporary recovery is not a crash/power-loss durable transaction; those
+interruption/recovery limits remain final integrated/combined acceptance work.
+Inno generated uninstall journal/executable, registry and shortcut writes remain
+built-in. Fixed seven filename UninstallDelete entries preserve prior removal
+behavior; no root wildcard. Uninstall boundary hardening remains next pass.
+Worker supplied independent aliases/sharing/partialcopy/fullcode restore/source
+shape/overlap/corrupt-backup tests, plus pre-CI empty-required-directory and
+missing-target-restore regressions. Cross-build passed. Actual Windows and real
+Setup gates pending: do not mark the Setup row complete from compilation alone.
+No dependency/provider/schema/version/release/cost or Group3 expansion.

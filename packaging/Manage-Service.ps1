@@ -2,7 +2,9 @@ param(
     [Parameter(Mandatory=$true)][ValidateSet('Prepare','Install','Uninstall')][string]$Action,
     [Parameter(Mandatory=$true)][string]$AppDir,
     [Parameter(Mandatory=$true)][string]$DataDir,
-    [string]$BoundaryHelper = ''
+    [string]$BoundaryHelper = '',
+    [string]$PayloadSource = '',
+    [string]$PayloadBackup = ''
 )
 $ErrorActionPreference = 'Stop'
 # Use the OS-provided Windows PowerShell modules even when setup is launched
@@ -93,6 +95,11 @@ try {
             Set-PrivateDirectoryAcl -CreationHelper $BoundaryHelper -Path $rollback
             Checked $BoundaryHelper @('-action','snapshot','-app-dir',$AppDir,'-data-dir',$DataDir)
         }
+        if ($PayloadSource -and $PayloadBackup) {
+            $stage = 'publish application payload'
+            Checked $BoundaryHelper @('-action','ensure-private-root','-root-dir',$PayloadBackup)
+            Checked $BoundaryHelper @('-action','publish-payload','-app-dir',$AppDir,'-source-dir',$PayloadSource,'-backup-dir',$PayloadBackup)
+        }
         Diagnostic 'installer_complete'
     exit 0
     }
@@ -165,13 +172,16 @@ try {
     if ($Action -eq 'Install' -and (Test-Path "$rollback/immichclone.exe")) {
         try {
             if (Get-Service $name -ErrorAction SilentlyContinue) { Stop-Service $name -Force -ErrorAction SilentlyContinue }
+            if ($PayloadBackup) {
+                Checked $BoundaryHelper @('-action','restore-payload','-app-dir',$AppDir,'-backup-dir',$PayloadBackup)
+            }
             Checked $BoundaryHelper @('-action','restore','-app-dir',$AppDir,'-data-dir',$DataDir)
             Start-Service $name
             Health
             Diagnostic 'rollback_complete'
             Write-Error 'Upgrade failed; previous service restored and healthy' -ErrorAction Continue
         } catch { Write-Error 'Installation failed; rollback requires recovery from retained backup' -ErrorAction Continue }
-    } elseif ($Action -eq 'Prepare' -and $owned) {
+    } elseif ($Action -eq 'Prepare' -and $owned -and $stage -ne 'publish application payload') {
         Start-Service $name -ErrorAction SilentlyContinue
     } elseif ($Action -eq 'Install' -and !$owned) {
         if (Get-Service $name -ErrorAction SilentlyContinue) { Stop-Service $name -ErrorAction SilentlyContinue; & sc.exe delete $name | Out-Null }

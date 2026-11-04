@@ -25,17 +25,19 @@ UninstallDisplayIcon={app}\immichclone.exe
 InfoBeforeFile=..\docs\prototype-notes.txt
 
 [Files]
-; Extracted before file publication; keep these first with solid compression.
-Source: "Manage-Service.ps1"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Storage-Security.ps1"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\dist\installer-files.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\dist\immichclone.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Export-Diagnostics.ps1"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\dist\THIRD-PARTY-LICENSES.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\docs\prototype-notes.txt"; DestDir: "{app}"; Flags: ignoreversion
-
-Source: "..\dist\media\*"; DestDir: "{app}\media"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\dist\ai\*"; DestDir: "{app}\ai"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Bootstrap only; normal Inno copying never writes application payload files.
+Source: "Manage-Service.ps1"; Flags: dontcopy
+Source: "Storage-Security.ps1"; Flags: dontcopy
+Source: "..\dist\installer-files.exe"; Flags: dontcopy
+Source: "Manage-Service.ps1"; DestDir: "{tmp}\payload"; Flags: dontcopy
+Source: "Storage-Security.ps1"; DestDir: "{tmp}\payload"; Flags: dontcopy
+Source: "..\dist\installer-files.exe"; DestDir: "{tmp}\payload"; Flags: dontcopy
+Source: "..\dist\immichclone.exe"; DestDir: "{tmp}\payload"; Flags: dontcopy
+Source: "Export-Diagnostics.ps1"; DestDir: "{tmp}\payload"; Flags: dontcopy
+Source: "..\dist\THIRD-PARTY-LICENSES.txt"; DestDir: "{tmp}\payload"; Flags: dontcopy
+Source: "..\docs\prototype-notes.txt"; DestDir: "{tmp}\payload"; Flags: dontcopy
+Source: "..\dist\media\*"; DestDir: "{tmp}\payload\media"; Flags: dontcopy recursesubdirs createallsubdirs
+Source: "..\dist\ai\*"; DestDir: "{tmp}\payload\ai"; Flags: dontcopy recursesubdirs createallsubdirs
 
 [Registry]
 Root: HKLM; Subkey: "Software\ImmichClone"; ValueType: string; ValueName: "State"; ValueData: "{code:GetState}"; Flags: uninsdeletekey
@@ -51,6 +53,14 @@ Name: "{group}\Export diagnostic log"; Filename: "{sys}\WindowsPowerShell\v1.0\p
 Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File ""{app}\Manage-Service.ps1"" -Action Uninstall -AppDir ""{app}"" -DataDir ""{code:GetState}"""; RunOnceId: "RemoveImmichService"; Flags: runhidden waituntilterminated
 
 [UninstallDelete]
+; Native-published fixed files retain removal behavior; no app-root wildcard.
+Type: files; Name: "{app}\Manage-Service.ps1"
+Type: files; Name: "{app}\Storage-Security.ps1"
+Type: files; Name: "{app}\installer-files.exe"
+Type: files; Name: "{app}\immichclone.exe"
+Type: files; Name: "{app}\Export-Diagnostics.ps1"
+Type: files; Name: "{app}\THIRD-PARTY-LICENSES.txt"
+Type: files; Name: "{app}\prototype-notes.txt"
 Type: filesandordirs; Name: "{app}\media"
 Type: filesandordirs; Name: "{app}\ai"
 Type: files; Name: "{app}\rollback\immichclone.exe"
@@ -123,7 +133,7 @@ function RunManagementFrom(ScriptPath, Action: String; var ResultCode: Integer):
 begin
   Result := Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
     '-NoProfile -NonInteractive -ExecutionPolicy Bypass -File "' + ScriptPath +
-    '" -Action ' + Action + ' -AppDir "' + ExpandConstant('{app}') + '" -DataDir "' + GetState('') + '" -BoundaryHelper "' + ExpandConstant('{tmp}\installer-files.exe') + '"',
+    '" -Action ' + Action + ' -AppDir "' + ExpandConstant('{app}') + '" -DataDir "' + GetState('') + '" -BoundaryHelper "' + ExpandConstant('{tmp}\installer-files.exe') + '" -PayloadSource "' + ExpandConstant('{tmp}\payload') + '" -PayloadBackup "' + ExpandConstant('{tmp}\payload-backup') + '"',
     '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
 end;
 
@@ -159,6 +169,7 @@ begin
        (CompareText(GetSHA256OfFile(ExpandConstant('{tmp}\installer-files.exe')),
          '{#BoundaryHelperSHA256}') <> 0) then
       exit;
+    ExtractTemporaryFiles('{tmp}\payload\*');
     { The script dot-sources its sibling helper from this extracted payload.
       Never execute the retained installed preparer before new validation. }
     Result := RunManagementFrom(ExpandConstant('{tmp}\Manage-Service.ps1'), 'Prepare', ResultCode);

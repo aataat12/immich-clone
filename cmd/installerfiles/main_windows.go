@@ -21,12 +21,18 @@ func main() {
 	root := flag.String("root-dir", "", "selected storage root")
 	reader := flag.String("reader-sid", "", "storage reader SID")
 	service := flag.Bool("service-access", false, "LocalService storage access")
+	source := flag.String("source-dir", "", "staged payload directory")
+	backup := flag.String("backup-dir", "", "private publication rollback directory")
 	flag.Parse()
 	if *result < -2147483648 || *result > 2147483647 {
 		os.Exit(1)
 	}
 	var err error
 	switch *action {
+	case "publish-payload":
+		err = installerfiles.PublishPayload(*app, *source, *backup)
+	case "restore-payload":
+		err = installerfiles.RestorePayload(*app, *backup)
 	case "grant-code-read":
 		err = installerfiles.GrantCodeReadAccess(*app)
 	case "normalize-private-tree":

@@ -170,6 +170,10 @@ try {
     Assert-PrivateDirectoryTree -Path (Join-Path $currentApp 'rollback') -OwnerSid $installerSid -VerifyInherited
     Assert $true 'actual Setup code read grant preserves admin-only rollback snapshots and access-code privacy'
     Assert ((Get-ItemProperty 'HKLM:\SOFTWARE\ImmichClone').State -eq $state) 'Setup retains real application data location'
+    $payloadNames = @('Manage-Service.ps1','Storage-Security.ps1','installer-files.exe','immichclone.exe','Export-Diagnostics.ps1','THIRD-PARTY-LICENSES.txt','prototype-notes.txt','media/preparation-probe.txt','ai/preparation-probe.txt')
+    $installedPayloadHashes = @{}
+    foreach ($leaf in $payloadNames) { $installedPayloadHashes[$leaf] = (Get-FileHash -LiteralPath (Join-Path $currentApp $leaf)).Hash }
+    Assert $true 'actual Setup publishes every fixed root and nested provider fixture through the native payload helper'
     # A stopped-service native ACL acquisition can still meet an unrelated held
     # writer. Refuse before permission writes, verify final policy, and restart
     # the prior service honestly rather than leaving a healthy installation down.
@@ -206,6 +210,7 @@ try {
     $rollbackAfterCount = @(Get-Content -LiteralPath $installerLog | Where-Object { $_ -match '"event":"rollback_complete"' }).Count
     Assert ($rollbackAfterCount -eq $rollbackBeforeCount+1) 'verified native restore completes before management reports rollback and service health'
     Assert ((Get-FileHash (Join-Path $currentApp 'immichclone.exe')).Hash -eq $priorBinaryHash -and (Get-FileHash (Join-Path $state 'access-code.txt')).Hash -eq $codeHash -and (Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash) 'actual failed Setup restores code and preserves access code and original bytes'
+    foreach ($leaf in $payloadNames) { Assert ((Get-FileHash -LiteralPath (Join-Path $currentApp $leaf)).Hash -eq $installedPayloadHashes[$leaf]) 'failed Setup retains verified prior scripts runtime and provider bytes' }
     $snapshotReady = Get-Content -LiteralPath (Join-Path $currentApp 'rollback/snapshot-ready.json') -Raw | ConvertFrom-Json
     Assert ($snapshotReady.Version -eq 1 -and @($snapshotReady.Files).Count -eq 3) 'real Setup rollback uses a complete three-file readiness receipt'
 
@@ -260,6 +265,7 @@ try {
     Wait-Health
     $process = Start-Process (Join-Path $currentApp 'unins000.exe') -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru
     Assert ($process.ExitCode -eq 0) 'disposable preparation installer uninstalls cleanly'
+    foreach ($leaf in $payloadNames) { Assert (!(Test-Path -LiteralPath (Join-Path $currentApp $leaf))) 'uninstall removes fixed native-published payload and provider fixture files' }
     Assert ((Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash) 'probe uninstall retains managed original bytes'
     # Use actual default Program Files inheritance too, rather than inferring
     # compatibility from a hand-protected temporary root.
@@ -300,6 +306,7 @@ try {
     $freshAsset = (Invoke-RestMethod 'http://127.0.0.1:2283/api/upload?name=fresh-fixture.bin' -Method Post -Headers @{'X-Immich-Request'='1'} -InFile $original -WebSession $freshSession).asset
     Assert ((Get-FileHash (Join-Path $freshState ('originals/'+$freshAsset.id))).Hash -eq $originalHash) 'LocalService-initialized fresh library accepts and preserves actual original bytes'
     $process = Start-Process (Join-Path $currentApp 'unins000.exe') -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru
+    foreach ($leaf in $payloadNames) { Assert (!(Test-Path -LiteralPath (Join-Path $currentApp $leaf))) 'Program Files uninstall removes native-published payload fixture files' }
     Assert ($process.ExitCode -eq 0 -and (Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash -and (Get-FileHash (Join-Path $freshState ('originals/'+$freshAsset.id))).Hash -eq $originalHash) 'Program Files uninstall preserves previous and fresh library original bytes'
 
 } finally {
