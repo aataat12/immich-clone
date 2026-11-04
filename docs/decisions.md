@@ -490,3 +490,18 @@
   not durable powerloss recovery; original3file remains, integrated interruptions
   and real-provider combined closure stay SEC03. Forecast4 to3; no release/cost,
   dependency/feature/Group3 expansion or Windows10 certification.
+
+- SEC03 uninstall: compiler-hash-verified staging of native helper/two scripts,
+  actual nofollow app directory-chain pins until Deinitialize, initialize-only
+  audit and post-confirmation cleanup. Remove path UninstallRun/Delete and
+  overwrite same-app logs to prevent legacy path-action retention. Native all-
+  target preflight then read/delete-only bottomup cleanup, preserve state and
+  unknown files, retain registration until deletion succeeds, truthful partial
+  failure. Actual active Inno journal sharing needed a root-only exact metadata
+  integrity audit after sharing refusal; never broaden payload sharing/policy.
+  Run41898776310/sourcec6d384e/job126815286190 passed native controls, actual
+  hostile refusals (samePID/journal/registration/original/outside), custom/fresh
+  removals, privacy/rollback and SEC01. Initial refusal/trace retained. Trusted
+  loaded-uninstaller integrity, actual metadata-leaf races/offline/interruption
+  limits and genuine prior-release/fullprovider recovery stay explicit original
+  SEC03 work. Forecast3 to2; no release, cost, Group3 or Win10 certification.

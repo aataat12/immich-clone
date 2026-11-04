@@ -73,17 +73,17 @@ proved that fresh read really is denied. Production policy was not weakened.
 
 User definition: one pass is a work session ending with completion/pause. Latest
 forecast was7 remaining, conditional on proof/integration; this completed ACL
-integration reduced it to6 remaining passes; initialization reduced it to5; the code-permission checkpoint reduced it to4; application payload publication below now reduces it to **3**, not a guarantee.
+integration reduced it to6 remaining passes; initialization reduced it to5; the code-permission checkpoint reduced it to4; application payload publication reduced it to3; bounded uninstall/cleanup below now reduces it to **2**, not a guarantee.
 
 | SEC-03 workstream | Current checkpoint | More passes, best estimate |
 |---|---|---:|
 | State/log/rollback existing-tree ACL handling | Integrated and focused Windows-validated | 0 |
 | Installer/explicit elevated initialization | Integrated and focused Windows-validated | 0 |
 | Setup application payload installation/replacement and code permission grant | Integrated and focused Windows-validated | 0 |
-| Uninstall/cleanup and remaining Inno metadata boundaries | Remaining | 1 |
-| Integrated races, offline commands and interruption handling | Remaining | 1 |
+| Uninstall/cleanup and Inno metadata directory pins/audit | Integrated and focused Windows-validated | 0 |
+| Integrated races/metadata-leaf boundaries, offline commands and interruptions | Remaining | 1 |
 | Combined prior-release/full-provider/recovery closure | Remaining | 1 |
-| Total | SEC-03 remains open | 3 |
+| Total | SEC-03 remains open | 2 |
 
 No worker/CI remains active. No new feature/provider/version/release, cost,
 Group3 work or PC action; keep published0.1.39. Security remains4 closed/4 open.
@@ -171,6 +171,30 @@ uninstall and fullprovider/interruption closure remain original SEC03 scope.
 No new dependency/provider/schema/version/release/cost, Group3 work or PC action.
 SEC03 open, security4 closed/4 open, keep0.1.39; Server does not certify Windows10.
 Worker and focused CI completed. Paused at this checkpoint.
+
+### Accepted native uninstall and cleanup checkpoint
+
+[Windows Server run41898776310](https://github.com/aataat12/immich-clone/actions/runs/41898776310)
+completed success, sourcec6d384eca9d675a5053f66e60d0354821fff1f61/job126815286190.
+Hash-verified staged bootstrap and persistent directory pins replace retained
+unchecked-script/path cleanup. Native selected held-target deletion preserves
+state/originals/unknown files; service registration is removed only after cleanup.
+Actual custom/fresh uninstall and modified-script/hardlink/real-writer refusals
+passed with unchanged prior service PID/metadata/original/outside bytes on refusal.
+Native audit/delete/late-name/overlap/persistent-pin and exact Inno metadata
+sharing compatibility controls, installation/rollback and SEC01 passed. First
+normal refusal was diagnosed and corrected without relaxing payload sharing or
+actual owner/DACL policy. Worker review/tests finished.
+[Exact evidence and scope](filesystem-boundary-milestone7.md#accepted-native-uninstall-and-cleanup-checkpoint).
+
+Forecast **3 to2 remaining passes**: integrated concurrent/metadata-leaf boundaries,
+offline modes and interruptions1; genuine prior-release/full-provider/recovery1.
+Inno loaded-uninstaller integrity is trusted, not retroactive tamper recovery;
+whole metadata-leaf concurrency and temporary fullcode/powerloss limits remain
+original SEC03 scope. Partial deletion does not promise transactional rollback.
+No new feature/dependency/provider/schema/version/release/cost or Group3 work.
+SEC03 open, security4 closed/4 open, keep0.1.39, no PC action. Server is not Win10.
+Worker and focused CI complete; paused at this checkpoint.
 
 ## Historical checkpoints (superseded where later acceptance applies)
 

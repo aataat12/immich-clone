@@ -964,3 +964,25 @@ First passing run41893555355/source33a76c5 was superseded after Install ordering
 and late-name controls. Full provider/prior-release, kill/powerloss, remaining
 metadata/uninstall/offline paths and Windows10 acceptance remain unproven by this
 bounded gate. See filesystem-boundary-milestone7.md for exact limits.
+
+## Native uninstall cleanup
+
+No new runtime/dependency. Existing Go/x/sys native read/DELETE handles and
+SetFileInformationByHandle disposition now remove actual held trees bottomup,
+with source/staged hash pins and Inno directory-chain pins. Pinned Inno6.7.4
+InitializeUninstall/usUninstall/Deinitialize gates and overwrite logging were
+compiled/executed; normal removal and refusal gating are actual evidence, not
+documentation-only assumptions. Official event/log semantics:
+https://jrsoftware.org/ishelp/topic_scriptevents.htm and
+https://jrsoftware.org/ishelp/topic_setup_uninstalllogmode.htm.
+Windows Server2022 run41898776310/sourcec6d384eca9d675a5053f66e60d0354821fff1f61/
+job126815286190 completed success: native selected cleanup/refusal/late-name/
+persistentpin and root Inno active-metadata writer/policy controls; actual
+modified bootstrap/hardlink/real-user-write refusals; custom/fresh uninstall
+removal/original and unrelated-file preservation; installation/rollback/SEC01.
+Exact metadata-only audit permits Inno's own active root journal/image without
+claiming data-sharing exclusion; payloads retain read/delete sharing pins and
+all owner/DACL checks. Prior run42e011ad failed normal audit, diagnostic6daa7e14
+located it before service stop; corrected source passed. Full metadata-leaf races,
+offline/interruption/durable fullprovider recovery and real prior-release gates
+remain original SEC03 scope. Server results do not certify Windows10.

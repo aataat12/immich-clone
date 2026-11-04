@@ -844,3 +844,66 @@ metadata leaves, and is not a general payload sharing fallback. The normal stric
 read-data audit still runs first; all other paths and nonsharing errors refuse.
 Independent real-writer/unsafe-ACL positive/negative tests and actual Inno must
 prove this candidate. Fixed audit exit classes aid diagnosis without raw paths.
+
+### Accepted native uninstall and cleanup checkpoint
+
+[Run41898776310](https://github.com/aataat12/immich-clone/actions/runs/41898776310)
+completed success on Windows Server2022, exact source
+c6d384eca9d675a5053f66e60d0354821fff1f61/job126815286190. Complete logs reach runner
+cleanup without error/failing tests. Both custom-folder and fresh Program Files
+actual uninstalls removed fixed payload/provider files, service/product registration
+and preserved prior/fresh library original bytes. Actual modified-script marker,
+hard-linked provider and ordinary-user-writable provider controls refused BEFORE
+service stop (same PID), registration/uninstaller journal changes, earlier payload
+deletion or outside/original-byte changes. Unknown root and rollback files stayed
+intact on normal removal. Independent native controls cover nested Unicode
+cleanup, actual aliases/ACL/writers, late-child refusal, physical role overlap and
+persistent external directory-pin compatibility. Existing installation/rollback/
+privacy and SEC01 suite also passed. Worker independent review/tests and local
+Windows cross-build/vet completed.
+
+Uninstaller bootstraps only exact compile-hash/type/single-link-verified helper
+and management/security scripts into private temp under source read pins, then
+holds and verifies staged copies. Never executes unchecked retained scripts.
+InitializeUninstall performs read-only staging/audit; actual destructive work
+runs at usUninstall after confirmation. Actual app/ancestor directories remain
+nofollow/read-sharing pinned through builtin metadata cleanup and Deinitialize.
+Whole-app read-only audit precedes service stop. Cleanup separately acquires ALL
+fixed7 root files, recursive media/ai and only fixed4 rollback files with read/
+DELETE authority before deletion; no DATA_WRITE, no write/delete sharing, no
+path-based recursive fallback. Delete/close children before parent, reject changed
+names/links/policy, preserve data/diagnostics/unknown root/rollback files. Only
+remove verified service registration after cleanup success. Failure after partial
+removal is not transactional and does not claim healthy restart; registration/
+service review may be required. Empty app/rollback directories intentionally remain.
+
+First run41897021430/source42e011ad/job126809153565 passed native and hostile
+controls but normal uninstall failed. Diagnostic run41897729332/source6daa7e14/
+job126811632412 proved directory pin/staging success and read-only audit refusal
+with service Running/all selected files retained. Compatibility correction is
+strictly root unins+3digits+.dat/.exe, ONLY after actual sharing refusal: relative
+metadata-only READ_CONTROL/READ_ATTRIBUTES access, same nofollow/type/single-link/
+owner/DACL rules. Independent actual held writers first prove normal DATA_READ
+acquisition fails; trusted metadata audit succeeds, actual unsafe mutation ACL
+still refuses with that writer live. Nested/lookalike names and all payload
+writers retain strict refusal. This is integrity auditing of Inno's active own
+journal/image, NOT a data-sharing pin or a payload-deletion exception.
+
+Remove path UninstallRun/Delete actions. Overwrite same-app Inno logs so legacy
+logged path actions cannot bypass native cleanup. Current fixed payload coverage
+and registry/icons remain; genuine0.1.39 upgrade/removal stays final combined
+validation (the current fixture represents current code, not a historical release).
+Inno still owns its journal/image/registry/icons. Trusted loaded-uninstaller
+integrity is a premise, not retroactive detection of an already-tampered loader.
+Persistent directory pins do not claim atomic exclusion of every metadata-leaf
+interleaving or retroactive revocation of pregranted admin authority. Those actual
+concurrent boundary/offline-command/interruption checks remain original SEC03
+integrated scope, not Group3. Earlier temporary fullcode/powerloss limits and
+real-provider acceptance remain open as previously recorded.
+
+Bounded uninstall/cleanup checkpoint complete; forecast **3 to2 remaining passes**:
+integrated races/metadata-leaf boundaries/offline modes/interruption handling1;
+combined genuine prior-release/full-provider/recovery closure1. SEC03 remains
+open, original security4 closed/4 open. No new dependency/provider/schema/version/
+release/cost, feature or Group3 work. Keep published0.1.39; no local PC action.
+Server execution does not certify Windows10. Worker/CI complete; paused here.
