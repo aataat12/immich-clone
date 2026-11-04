@@ -73,3 +73,8 @@ The [ZIP64 entry-count acceptance](backup-zip64-entry-count-acceptance.md) cross
 ## Actual extraction interruption checkpoint
 
 [Windows run 41743990678](https://github.com/aataat12/immich-clone/actions/runs/41743990678), source `e9666959d011f43c8734b1d2445fd05be5a2448a`, job `126292284233`, passed actual mid-original extraction cancellation and independent retry. Cancellation was triggered at 17,825,792 of 536,870,912 extracted bytes; no target/staging remained and the archive was unchanged. Default-budget retry with source state offline passed full regenerated/source/restored hashes, exact size, catalog alias and required secret checks. See [restore-interruption-acceptance.md](restore-interruption-acceptance.md). This is supervised context cancellation, not controller crash or power loss; no production change or new release was needed.
+
+
+## Next combined release: recovery instructions UI
+
+Implemented [offline per-archive recovery instructions](backup-recovery-ui.md) in Backups, with keyboard-accessible restore help and a Ready-only text download containing exact expected ZIP checksum/size. The first actual Windows Edge run [41745932733](https://github.com/aataat12/immich-clone/actions/runs/41745932733), source `57703d882beda971da5b06c3d87b53ca494860ee`, job `126298793482`, passed both real downloads, narrow layout, retained/discard behavior and independent actual CLI restore/verify from the downloaded ZIP with old state offline. This is standalone browser/CLI acceptance, not an installer release. Not available in installed 0.1.36; include in the next combined release without assigning a release number early.
