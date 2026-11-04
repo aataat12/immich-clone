@@ -25,7 +25,7 @@ type ACLNode struct {
 	children  map[string]bool
 }
 
-func aclChild(parent windows.Handle, name string) (h windows.Handle, directory bool, err error) {
+func aclChild(parent windows.Handle, name string, metadataFiles bool) (h windows.Handle, directory bool, err error) {
 	if !component(name) {
 		return 0, false, ErrUnsafeObject
 	}
@@ -36,7 +36,18 @@ func aclChild(parent windows.Handle, name string) (h windows.Handle, directory b
 	oa := windows.OBJECT_ATTRIBUTES{RootDirectory: parent, ObjectName: u, Attributes: windows.OBJ_CASE_INSENSITIVE | windows.OBJ_DONT_REPARSE}
 	oa.Length = uint32(unsafe.Sizeof(oa))
 	var status windows.IO_STATUS_BLOCK
-	e = windows.NtCreateFile(&h, windows.MAXIMUM_ALLOWED|windows.SYNCHRONIZE, &oa, &status, nil, 0, windows.FILE_SHARE_READ, windows.FILE_OPEN, windows.FILE_OPEN_REPARSE_POINT|windows.FILE_SYNCHRONOUS_IO_NONALERT, 0, 0)
+	access := uint32(windows.MAXIMUM_ALLOWED | windows.SYNCHRONIZE)
+	options := uint32(windows.FILE_OPEN_REPARSE_POINT | windows.FILE_SYNCHRONOUS_IO_NONALERT)
+	if metadataFiles {
+		access = windows.READ_CONTROL | windows.WRITE_DAC | windows.FILE_READ_ATTRIBUTES | windows.SYNCHRONIZE
+		options |= windows.FILE_NON_DIRECTORY_FILE
+	}
+	e = windows.NtCreateFile(&h, access, &oa, &status, nil, 0, windows.FILE_SHARE_READ, windows.FILE_OPEN, options, 0, 0)
+	if metadataFiles && e == windows.STATUS_FILE_IS_A_DIRECTORY {
+		// No file probe handle exists on this failure. Open the actual directory
+		// once with MAXIMUM_ALLOWED to suppress implicit child ACL propagation.
+		e = windows.NtCreateFile(&h, windows.MAXIMUM_ALLOWED|windows.SYNCHRONIZE, &oa, &status, nil, 0, windows.FILE_SHARE_READ, windows.FILE_OPEN, windows.FILE_OPEN_REPARSE_POINT|windows.FILE_SYNCHRONOUS_IO_NONALERT|windows.FILE_DIRECTORY_FILE, 0, 0)
+	}
 	if e != nil {
 		return 0, false, e
 	}
@@ -74,7 +85,14 @@ func aclNames(h windows.Handle) (_ []string, err error) {
 	}
 }
 
-func OpenACLTree(path string) (_ *ACLTree, err error) {
+func OpenACLTree(path string) (*ACLTree, error) { return openACLTree(path, false) }
+
+// OpenCodeACLTree uses metadata-only file authority so an executing helper can
+// update its own ACL without opening its image for data writes. Directories still
+// use MAXIMUM_ALLOWED; no path fallback or broader sharing is introduced.
+func OpenCodeACLTree(path string) (*ACLTree, error) { return openACLTree(path, true) }
+
+func openACLTree(path string, metadataFiles bool) (_ *ACLTree, err error) {
 	root, e := OpenACLDirectory(path)
 	if e != nil {
 		return nil, e
@@ -100,7 +118,7 @@ func OpenACLTree(path string) (_ *ACLTree, err error) {
 			if n.children[key] {
 				return nil, ErrUnsafeObject
 			}
-			h, dir, e := aclChild(n.handle, name)
+			h, dir, e := aclChild(n.handle, name, metadataFiles)
 			if e != nil {
 				return nil, e
 			}

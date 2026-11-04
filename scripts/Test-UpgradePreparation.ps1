@@ -167,6 +167,8 @@ try {
     Assert ((Get-FileHash (Join-Path $currentApp 'Manage-Service.ps1')).Hash -eq (Get-FileHash (Join-Path $source 'packaging/Manage-Service.ps1')).Hash -and (Get-FileHash (Join-Path $currentApp 'Storage-Security.ps1')).Hash -eq (Get-FileHash (Join-Path $source 'packaging/Storage-Security.ps1')).Hash) 'Setup installs exact candidate management and sibling helper bytes'
     Assert ((Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash -and (Get-FileHash (Join-Path $state 'access-code.txt')).Hash -eq $codeHash) 'bundled preparation preserves managed original and access code'
     Assert ((Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").StartName -eq 'NT AUTHORITY\LocalService') 'prepared service remains LocalService'
+    Assert-PrivateDirectoryTree -Path (Join-Path $currentApp 'rollback') -OwnerSid $installerSid -VerifyInherited
+    Assert $true 'actual Setup code read grant preserves admin-only rollback snapshots and access-code privacy'
     Assert ((Get-ItemProperty 'HKLM:\SOFTWARE\ImmichClone').State -eq $state) 'Setup retains real application data location'
     # A stopped-service native ACL acquisition can still meet an unrelated held
     # writer. Refuse before permission writes, verify final policy, and restart

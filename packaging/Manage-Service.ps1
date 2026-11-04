@@ -108,7 +108,7 @@ try {
     if ((Test-Path $DataDir) -and !(Test-Path "$DataDir/state-format.txt") -and @(Get-ChildItem -LiteralPath $DataDir -Force).Count -gt 0) { throw 'Refusing an unrelated nonempty data directory' }
     $stage = 'configure state ACL'
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
-    Checked icacls @($AppDir,'/grant','*S-1-5-19:(OI)(CI)RX')
+    Checked $BoundaryHelper @('-action','grant-code-read','-app-dir',$AppDir)
     Set-PrivateDirectoryAcl -CreationHelper $BoundaryHelper -Path $DataDir -ReaderSid $identity -ServiceAccess
     # Initialization happens in the existing LocalService startup before health,
     # never by executing the application with this elevated installer token.

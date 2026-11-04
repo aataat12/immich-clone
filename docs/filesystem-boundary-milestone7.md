@@ -537,3 +537,37 @@ prior-release/full-provider/recovery gates remain. No Windows10 certification,
 feature/provider/schema/version/release change, cost, local action or Group3 work.
 Worker/CI complete. Latest user-defined pass estimate drops6 to **5**: Setup2,
 uninstall1, integrated boundaries/races1, combined closure1. SEC-03 stays open.
+
+
+## Setup pass 1: held code permission grant candidate
+
+Replace only the remaining path-based icacls code-root LocalService RX grant with
+fixed native grant-code-read. Payload publication remains Setup pass2. Native
+traversal audits actual code owners/DACLs against unchanged SEC-02 trusted mutation
+policy before any write, retains every supported safe reader/CREATOR OWNER ACE,
+owner and protected bit, and adds only LS RX along uninterrupted unprotected
+inheritance chains. Existing protected descendants and their entire subtrees are
+left descriptor-identical: especially rollback catalog/access-code snapshots must
+never gain LS read rights. No new explicit grant is applied across that boundary.
+
+Directories use the accepted MAXIMUM_ALLOWED suppression of implicit child ACL
+propagation. Code files use metadata-only READ_CONTROL/WRITE_DAC/READ_ATTRIBUTES/
+SYNCHRONIZE handles with read sharing only, allowing an executing helper image
+without requesting data write/delete access. FILE_NON_DIRECTORY failure with the
+specific directory status selects a no-follow MAX directory open; successful
+handles are type/reparse/single-link checked. There is no pathname fallback or
+broader sharing. Existing state ACL mode still uses its unchanged full-file pins.
+
+Fresh descriptor/namespace checks before apply and exact grant/owner/protection
+checks plus fresh namespace validation after apply refuse stale plans/late names.
+Partial ACL failure is not transactional and no revocation of previously granted
+security-handle authority is implied. The action does not create/delete/publish
+payload bytes. Running-own-image, reader/creator-owner preservation, rollback
+privacy, unsafe writer/deny, real aliases and deterministic late-name tests are
+independently contributed by one authorized worker; actual Windows is pending.
+Actual Setup additionally audits rollback privacy after code permission grant.
+
+Scope stays first of the existing two Setup passes: code permissions now; Inno
+payload publication next. No new dependency/provider/schema/feature/version,
+public release, cost, PC action or Group3 investigation. Uninstall, other offline
+command boundaries/integrated races and full combined acceptance remain open.

@@ -27,6 +27,8 @@ func main() {
 	}
 	var err error
 	switch *action {
+	case "grant-code-read":
+		err = installerfiles.GrantCodeReadAccess(*app)
 	case "normalize-private-tree":
 		err = installerfiles.NormalizePrivateTree(*root, *reader, *service)
 	case "ensure-private-root":
