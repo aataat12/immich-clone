@@ -348,7 +348,7 @@ func restoreWorkerFailure(code uint32) error {
 }
 
 func readRestoreProgress(path string) ([]byte, error) {
-	f, e := os.Open(path)
+	f, e := openRestoreProgress(path)
 	if e != nil {
 		return nil, e
 	}

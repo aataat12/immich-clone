@@ -40,5 +40,19 @@ func TestRestoreProgressReadDuringDeleteAccessHandle(t *testing.T) {
 	if string(b) != "{\"Nonce\":\"handoff-nonce\",\"BaseBytes\":1}" {
 		t.Fatal("progress bytes changed")
 	}
+	if e = os.WriteFile(filepath.Join(stage, "catalog.db"), []byte("catalog fixture"), 0600); e != nil {
+		t.Fatal(e)
+	}
+	limits := RestoreLimits{MaxBytes: 1 << 20, MaxCatalogBytes: 1 << 20}
+	if e = checkRestoreCatalogProgress(stage, "handoff-nonce", limits); e != nil {
+		t.Fatal("catalog monitoring failed during handoff", e)
+	}
+	if e = checkRestoreCatalogProgress(stage, "wrong-nonce", limits); !errors.Is(e, ErrRestoreWorkerFailed) {
+		t.Fatal("nonce validation bypassed", e)
+	}
+	limits.MaxCatalogBytes = 1
+	if e = checkRestoreCatalogProgress(stage, "handoff-nonce", limits); !errors.Is(e, ErrRestoreBudget) {
+		t.Fatal("catalog limit bypassed", e)
+	}
 	t.Log("PASS: baseline os.Open gives sharing violation 32; production reader succeeds with delete-access handle live")
 }
