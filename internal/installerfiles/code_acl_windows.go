@@ -167,7 +167,10 @@ func grantCodeReadAccess(app string, beforeApply func() error) (err error) {
 			return e
 		}
 		p := plans[i]
-		if protected != p.protected || owner != p.owner || !sameCodeGrants(grants, p.after) {
+		// Windows may order inherited allow ACEs by ancestor origin. All ACEs
+		// were audited allow-only; compare the exact multiset, including duplicates,
+		// SID, mask and flags, without mistaking harmless ordering for a new grant.
+		if protected != p.protected || owner != p.owner || !sameCodeGrantSet(grants, p.after) {
 			return fmt.Errorf("%w: code grant verify root=%t directory=%t owner_same=%t protection_same=%t expected_aces=%d actual_aces=%d grants_same=%t grant_set_same=%t", ErrRefused, i == 0, n.Directory, owner == p.owner, protected == p.protected, len(p.after), len(grants), sameCodeGrants(grants, p.after), sameCodeGrantSet(grants, p.after))
 		}
 		if !p.propagate && sd.String() != p.descriptor {

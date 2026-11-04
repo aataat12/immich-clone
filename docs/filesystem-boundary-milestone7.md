@@ -604,3 +604,20 @@ Fixed-label/numeric verification diagnostics distinguish root/file, owner/protec
 and ACE equality/count/order without outputting SIDs or paths; Setup failure
 prints only fixed-schema installer diagnostic fields. Protection/preservation
 conditions are not relaxed pending actual evidence.
+
+
+### Reproduced inherited-order verification defect
+
+Run41878394759/sourcea096783b916b54b9ac5e8238cdbd4bafb1e1bb5c,
+job126744114489 reproduced the missing unprotected-root case. Final child-directory
+verification reported unchanged owner/protection and6 expected/6 actual ACEs,
+ordered equality false but exact grant multiset equality true. Actual Windows
+reorders inherited allow entries by origin when the root inherits from its parent.
+This is a production false rejection, not permission loss or outside mutation.
+
+Correct final comparison to exact multiset equality (SID/mask/flags and duplicate
+counts); only allow ACEs are accepted before and after. Owner/protection equality,
+exact untouched protected-subtree descriptors, every raw preservation assertion,
+pre-apply stale descriptor refusal and fresh namespace checks remain. No deny or
+unsupported rule is newly accepted and no extra grant may appear. Actual complete
+Setup regression must still pass before checkpoint acceptance.
