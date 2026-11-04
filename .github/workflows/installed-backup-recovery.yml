@@ -1,0 +1,35 @@
+name: Installed large backup crash and volume recovery
+on:
+  push:
+    paths:
+      - '.github/workflows/installed-backup-recovery.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  installed-recovery:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with:
+          go-version: '1.27.3'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: prototype-server-tested
+          path: accepted-installer
+          run-id: 41771361544
+          github-token: ${{ github.token }}
+      - name: Actual installed LocalService large archive and independent recovery
+        shell: pwsh
+        run: |
+          $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD='1'
+          npm install --prefix "$env:RUNNER_TEMP/backup-recovery-deps" --no-audit --no-fund playwright@1.62.1
+          if ($LASTEXITCODE -ne 0) { throw 'Browser tooling unavailable' }
+          $env:IMMICH_BROWSER_MODULE="$env:RUNNER_TEMP/backup-recovery-deps/node_modules/playwright"
+          ./scripts/Test-InstalledBackupRecovery.ps1
