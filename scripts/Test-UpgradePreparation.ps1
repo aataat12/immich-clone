@@ -56,6 +56,7 @@ exit 0
 $root = Join-Path $env:RUNNER_TEMP ('upgrade preparation '+[guid]::NewGuid().ToString('N')+' é')
 $repo = Split-Path $PSScriptRoot -Parent
 $currentApp = ''
+$programApp = ''
 $junction = ''
 $serviceOwned = $false
 $ordinaryUser = 'ICUpgrade'+[guid]::NewGuid().ToString('N').Substring(0,8)
@@ -169,6 +170,17 @@ try {
     # Execute the real candidate installer against an existing healthy service.
     # Opening a file for write is the standard-user positive control; no code
     # bytes are changed or arbitrary elevated payload executed.
+    $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+    $null = Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$code}|ConvertTo-Json) -WebSession $session
+    # Wait only for this fixture's existing preview to settle before comparing
+    # consistent logical exports. Do not read bbolt's live exclusively locked file.
+    for ($i=0;$i -lt 30;$i++) {
+        $listed = Invoke-RestMethod http://127.0.0.1:2283/api/assets -WebSession $session
+        $assetState = @($listed | Where-Object { $_.id -eq $asset.id })
+        if ($assetState.Count -eq 1 -and $assetState[0].preview -ne 'queued') { break }
+        Start-Sleep -Milliseconds 200
+    }
+    Assert ($assetState.Count -eq 1 -and $assetState[0].preview -ne 'queued') 'fixture preview settled before logical catalog preservation checks'
     $codeProbe = Join-Path $currentApp 'ai/trust-probe.exe'
     Copy-Item -LiteralPath $Binary -Destination $codeProbe
     foreach ($entry in @('', 'Manage-Service.ps1', 'ai/trust-probe.exe', 'media')) {
@@ -190,11 +202,11 @@ try {
             Assert ([UpgradeWriteProbe]::CanWrite($ordinaryUser,$ordinaryPassword,$writable)) 'real standard-user write positive control for unsafe code permissions'
             $pidBefore = (Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").ProcessId
             $binaryBefore = (Get-FileHash (Join-Path $currentApp 'immichclone.exe')).Hash
-            $catalogBefore = (Get-FileHash (Join-Path $state 'catalog.db')).Hash
+            $catalogBefore = (Invoke-WebRequest http://127.0.0.1:2283/api/export -WebSession $session -UseBasicParsing).Content
             $rollbackBefore = (Get-FileHash (Join-Path $currentApp 'rollback/catalog.db')).Hash
             Assert ((Run-Setup $currentApp $state) -ne 0) 'actual Setup refuses unsafe root script executable or provider permissions'
             Assert ((Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").ProcessId -eq $pidBefore) 'unsafe code refusal precedes service stop or restart'
-            Assert ((Get-FileHash (Join-Path $currentApp 'immichclone.exe')).Hash -eq $binaryBefore -and (Get-FileHash (Join-Path $state 'catalog.db')).Hash -eq $catalogBefore -and (Get-FileHash (Join-Path $currentApp 'rollback/catalog.db')).Hash -eq $rollbackBefore) 'unsafe code refusal preserves executable catalog and rollback bytes'
+            Assert ((Get-FileHash (Join-Path $currentApp 'immichclone.exe')).Hash -eq $binaryBefore -and (Invoke-WebRequest http://127.0.0.1:2283/api/export -WebSession $session -UseBasicParsing).Content -eq $catalogBefore -and (Get-FileHash (Join-Path $currentApp 'rollback/catalog.db')).Hash -eq $rollbackBefore) 'unsafe code refusal preserves executable consistent catalog export and rollback bytes'
         } finally {
             Set-Acl -LiteralPath $unsafe -AclObject $savedAcl
             if ($writable -and $writable.EndsWith('ordinary-write-control.bin')) { Remove-Item -LiteralPath $writable -Force -ErrorAction SilentlyContinue }
@@ -207,6 +219,18 @@ try {
     $process = Start-Process (Join-Path $currentApp 'unins000.exe') -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru
     Assert ($process.ExitCode -eq 0) 'disposable preparation installer uninstalls cleanly'
     Assert ((Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash) 'probe uninstall retains managed original bytes'
+    # Use actual default Program Files inheritance too, rather than inferring
+    # compatibility from a hand-protected temporary root.
+    $programApp = Join-Path $env:ProgramFiles ('ImmichClone-trust-'+[guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $programApp | Out-Null
+    Assert-TrustedCodeTree $programApp
+    $currentApp = $programApp
+    Assert ((Run-Setup $currentApp $state) -eq 0) 'actual Setup works with default Program Files code inheritance'
+    Wait-Health
+    Assert (![UpgradeWriteProbe]::CanWrite($ordinaryUser,$ordinaryPassword,(Join-Path $currentApp 'Manage-Service.ps1'))) 'Program Files installed helper denies actual standard-user modification'
+    $process = Start-Process (Join-Path $currentApp 'unins000.exe') -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru
+    Assert ($process.ExitCode -eq 0 -and (Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash) 'Program Files uninstall preserves managed original bytes'
+
 } finally {
     # Never remove an unrelated service/registration if this fixture did not own it.
     if ($serviceOwned) {
@@ -215,6 +239,7 @@ try {
     }
     if ($currentApp -and (Test-Path (Join-Path $currentApp 'unins000.exe'))) { $null = Start-Process (Join-Path $currentApp 'unins000.exe') -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru }
     if ($junction -and (Test-Path -LiteralPath $junction)) { [IO.Directory]::Delete($junction) }
+    if ($programApp -and (Test-Path -LiteralPath $programApp)) { Remove-Item -LiteralPath $programApp -Recurse -Force }
     if ($ordinaryCreated) { Remove-LocalUser -Name $ordinaryUser -ErrorAction SilentlyContinue }
     if (Test-Path -LiteralPath $root) { Remove-Item -LiteralPath $root -Recurse -Force }
 }

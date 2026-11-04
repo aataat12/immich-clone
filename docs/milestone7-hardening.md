@@ -98,3 +98,16 @@ directly and established that refusal before Setup. Positive fixtures now create
 explicit protected trusted-writer roots; hostile controls still deliberately grant
 a separate ordinary user's real write access. The production policy is unchanged.
 No failed run is release/closure evidence.
+
+Run [41801039834](https://github.com/aataat12/immich-clone/actions/runs/41801039834),
+source `1b3124d9bca22617fa9a05e7a5d5795b4bf53baa`, passed real Setup, preserved
+original/code/rollback snapshots, observed the real staged helper process and
+proved both extracted helpers refuse elevated and standard-user write opens.
+It then failed a new harness Get-FileHash on the live, exclusively locked bbolt
+catalog. That read is replaced with the service's consistent logical export;
+rollback snapshots and executable/original hashes remain byte comparisons. This
+is not a production storage defect or a relaxed unsafe-upgrade assertion.
+
+The code policy explicitly trusts Windows TrustedInstaller as an OS code writer,
+and acceptance additionally installs/uninstalls under actual Program Files
+inheritance. The prior temporary-root fixture is not presented as that evidence.

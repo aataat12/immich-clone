@@ -10,9 +10,9 @@ function Assert-TrustedCodeTree([string]$Path) {
     if (!$root.PSIsContainer) { throw 'Application code root must be a directory' }
     $trusted = @{'S-1-5-18'=$true; 'S-1-5-32-544'=$true}
     $trusted[[Security.Principal.WindowsIdentity]::GetCurrent().User.Value] = $true
+    # Windows servicing owns/writes protected Program Files descendants.
+    $trusted['S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464'] = $true
     $trustedOwners = @{} + $trusted
-    # Windows-owned Program Files folders can be owned by TrustedInstaller.
-    $trustedOwners['S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464'] = $true
     $pending = New-Object 'System.Collections.Generic.Stack[System.IO.FileSystemInfo]'
     $pending.Push($root)
     while ($pending.Count -gt 0) {
