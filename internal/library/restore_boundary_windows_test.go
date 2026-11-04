@@ -5,6 +5,7 @@ package library
 import (
 	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"immichclone/internal/winfs"
@@ -272,9 +273,26 @@ func TestRestoreBoundaryStaticInputAliasesAndWriterRefuse(t *testing.T) {
 				if e := exec.CommandContext(ctx, "cmd.exe", "/d", "/c", "mklink", "/J", p, outside).Run(); e != nil {
 					t.Fatal("required actual parent junction could not be created", e)
 				}
-				info, e := os.Lstat(p)
-				if e != nil || info.Mode()&os.ModeSymlink == 0 {
-					t.Fatal("junction positive reparse control missing", e)
+				u, e := windows.UTF16PtrFromString(p)
+				if e != nil {
+					t.Fatal(e)
+				}
+				h, e := windows.CreateFile(u, windows.FILE_READ_ATTRIBUTES, windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE, nil, windows.OPEN_EXISTING, windows.FILE_FLAG_BACKUP_SEMANTICS|windows.FILE_FLAG_OPEN_REPARSE_POINT, 0)
+				if e != nil {
+					t.Fatal("junction nofollow positive control open failed", e)
+				}
+				var info windows.ByHandleFileInformation
+				statErr := windows.GetFileInformationByHandle(h, &info)
+				buffer := make([]byte, 16<<10)
+				var returned uint32
+				tagErr := windows.DeviceIoControl(h, windows.FSCTL_GET_REPARSE_POINT, nil, 0, &buffer[0], uint32(len(buffer)), &returned, nil)
+				closeErr := windows.CloseHandle(h)
+				if statErr != nil || tagErr != nil || closeErr != nil {
+					t.Fatal("junction native positive control failed", errors.Join(statErr, tagErr, closeErr))
+				}
+				required := uint32(windows.FILE_ATTRIBUTE_REPARSE_POINT | windows.FILE_ATTRIBUTE_DIRECTORY)
+				if info.FileAttributes&required != required || returned < 8 || binary.LittleEndian.Uint32(buffer[:4]) != windows.IO_REPARSE_TAG_MOUNT_POINT {
+					t.Fatal("junction native mount-point positive control missing")
 				}
 				target = filepath.Join(p, "new library")
 			case "existing-directory":
