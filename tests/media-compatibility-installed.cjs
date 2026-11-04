@@ -16,8 +16,25 @@ const {chromium}=require(process.env.IMMICH_BROWSER_MODULE);
    const data=fs.readFileSync(path.join(root,f.name));assert.equal(crypto.createHash('sha256').update(data).digest('hex'),f.sha256);
    if(!restored){const r=await page.request.post('http://127.0.0.1:2283/api/upload?name='+encodeURIComponent(f.name),{headers:{'X-Immich-Request':'1'},data});assert(r.ok(),'Fixture import refused');const a=(await r.json()).asset;assert.equal(a.id,f.sha256)}
   }
-  await page.waitForFunction(async ids=>{const r=await fetch('/api/assets');if(!r.ok)return false;const assets=await r.json();return ids.every(id=>assets.some(a=>a.id===id&&a.preview!=='queued'))},ids,{timeout:90000});
-  const assets=await(await page.request.get('http://127.0.0.1:2283/api/assets')).json();
+  if(process.env.IMMICH_COMPAT_ASYNC_CONTROL==='1'){
+   const before=await(await page.request.get('http://127.0.0.1:2283/api/assets')).json();const queued=ids.filter(id=>before.some(a=>a.id===id&&a.preview==='queued')).length;assert(queued>0,'Old-wait control requires actual queued previews');
+   const started=Date.now(),old=await page.waitForFunction(async ids=>{const r=await fetch('/api/assets');if(!r.ok)return false;const assets=await r.json();return ids.every(id=>assets.some(a=>a.id===id&&a.preview!=='queued'))},ids,{timeout:5000});
+   assert.equal(await old.jsonValue(),false,'Pinned async-predicate control must demonstrate premature false completion');await old.dispose();
+   const after=await(await page.request.get('http://127.0.0.1:2283/api/assets')).json();assert(ids.some(id=>after.some(a=>a.id===id&&a.preview==='queued')),'Old async wait must return while previews remain queued');
+   console.log('CONTROL: old async wait returned false before readiness; '+queued+' actual previews queued before the call; '+(Date.now()-started)+'ms');
+  }
+  const deadline=Date.now()+90000,started=Date.now();let assets=null;
+  while(Date.now()<deadline){
+   const response=await page.request.get('http://127.0.0.1:2283/api/assets',{timeout:Math.max(1,Math.min(5000,deadline-Date.now()))});
+   if(response.status()!==429){
+    assert(response.ok(),'Catalog polling failed');const snapshot=await response.json();
+    for(const f of fixtures){const a=snapshot.find(a=>a.id===f.sha256);if(a&&a.preview==='failed')throw Error('Installed preview failed for public fixture '+f.name+': '+JSON.stringify({preview:a.preview,mime:a.mime,error:a.error}))}
+    if(ids.every(id=>snapshot.some(a=>a.id===id&&a.preview==='ready'))){assets=snapshot;break}
+   }
+   await new Promise(resolve=>setTimeout(resolve,250));
+  }
+  assert(assets,'Timed out waiting for all24 public-fixture previews to become ready');
+  if(process.env.IMMICH_COMPAT_ASYNC_CONTROL==='1')console.log('PASS: explicit catalog polling waited '+(Date.now()-started)+'ms for all24 actual ready previews');
   for(const f of fixtures){
    const a=assets.find(a=>a.id===f.sha256);assert(a&&a.preview==='ready','Installed preview not ready for public fixture '+f.name+': '+JSON.stringify(a?{preview:a.preview,mime:a.mime,error:a.error}:null));assert.equal(a.width,f.width);assert.equal(a.height,f.height);
    if(f.photo){assert.equal(a.photo.orientation,f.photo.orientation);for(const key of ['make','model','captured'])assert.equal(a.photo[key]||'',f.photo[key]);assert(!a.photo.warning)}
