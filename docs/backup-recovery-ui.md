@@ -1,6 +1,6 @@
 # Backups: offline recovery instructions
 
-Implemented for the next combined functional release; **not shipped in 0.1.36**. No new release/version has been assigned or installer published for this slice. No library format, dependency, restore budget or service configuration change.
+Shipped in **0.1.37-prototype** after combined installed acceptance; not available in 0.1.36. See [combined acceptance](release-0.1.37-acceptance.md). No library format, dependency, restore budget or service configuration change.
 
 ## User behavior
 
@@ -28,6 +28,6 @@ Harness: `tests/backup-recovery.cjs`; focused workflow: `.github/workflows/backu
 
 ## Remaining acceptance
 
-This is a standalone Windows binary/browser slice with independent CLI recovery, not installed LocalService/combined installer acceptance or Windows 10 proof. The test invokes the real CLI with generated paths; it does not execute all downloaded prose or automate a user maintenance window. Include this feature in the next combined release, update that build's Build Notes, and validate the installed path there. Existing 0.1.36 remains the published baseline.
+This is a standalone Windows binary/browser slice with independent CLI recovery, not installed LocalService/combined installer acceptance or Windows 10 proof. The test invokes the real CLI with generated paths; it does not execute all downloaded prose or automate a user maintenance window. The later combined 0.1.37 run passed the installed LocalService path and updated Build Notes. Published baseline is now 0.1.37.
 
 Physical storage outages, controller crashes and full-library endurance remain separate gates. Milestone 5 is still in progress. Security Group 2/3 work, the unexplained progress-read:32 issue and every-frame Full Scan remain paused/deferred. No local action or installation is requested for this development checkpoint.
