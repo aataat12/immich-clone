@@ -382,8 +382,8 @@ requires final permission audits on all roles; otherwise it remains stopped with
 recovery required. No snapshot/content writes occur in that ACL phase. Actual
 Setup refusal against an unrelated exclusive writer tests safe prior-service
 recovery. Native policy/failure tests run before actual Setup/SEC01 compatibility.
-Actual Windows integration execution is pending; cross-compilation/vet/review
-are preparation evidence. One authorized worker contributed independent tests.
+Actual Windows integration acceptance is recorded below; cross-compilation/vet/review
+alone are preparation evidence. One authorized worker contributed independent tests.
 
 Scope: state/log/rollback existing ACL normalization only; code-tree icacls grant
 remains in the already-known Setup/init path scope. Elevated init, remaining Setup
@@ -404,3 +404,46 @@ The correction establishes a shared read handle before applying the deny fixture
 then verifies exact bytes through that still-authorized handle after refusal.
 No production policy or assertion is weakened. Setup/SEC01 execution was skipped
 by the failed native gate; this run is not integration acceptance.
+
+
+## Accepted existing-tree ACL integration
+
+[Run41868231145](https://github.com/aataat12/immich-clone/actions/runs/41868231145),
+source `989fb085d0999da2493463e7323f77feaf78aeca`, job `126707927278`: **PASS**
+on Windows Server2022 x64. Primary inspected actual logs; one authorized worker
+reviewed integration and contributed independent tests and the fixture correction.
+
+Actual normalization preserved exact explicit directory/file ACE bytes and flags,
+protected descriptors, owners and original bytes; admin/service/ordinary-reader
+policy and future inheritance passed. Unsafe explicit/protected children, real
+directory/file reparses and hard links, deterministic late file/link publication
+and exclusive writer refusal all preserved earlier/outside ACLs and bytes. Released
+writer retry passed. The corrected deny fixture additionally required a fresh read
+permission failure while its preauthorized shared observer verified exact bytes.
+Both native packages/vet and earlier copy/readiness/privacy/alias/diagnostic/root
+controls passed. Namespace race control:2,000 writes,1,421 accepted/579 refused,
+210 actual link swaps; outside unchanged (one synthetic-runner interleaving).
+
+Production Inno/current runtime/minimal disposable providers passed real custom
+and Program Files preparation/install/uninstall. An unrelated exclusive writer
+caused actual Setup refusal during native ACL acquisition: root descriptor, code,
+access code and original bytes stayed unchanged; the safe prior service restarted
+only after final-policy verification and became healthy. Injected post-init failure
+then used verified snapshot restore, preserved originals/access code and reported
+healthy rollback despite refused linked optional note. The full prior SEC-01
+separate ordinary-user/storage-policy matrix and LocalService persistence passed.
+
+This completes the bounded state/log/rollback existing ACL conversion checkpoint,
+not the entire SEC-03 item or Windows10 acceptance. Code-tree permission grant is
+still in the known Setup/init scope. Partial normalization is not transactional;
+previously granted owner/WRITE_DAC authority is not retroactively revoked. No
+large-library resource/performance or whole-installer race certification. Remaining
+init/Setup/uninstall paths, actual integrated account races and genuine prior-
+release/full-provider/recovery acceptance remain. Published0.1.39 unchanged;
+security4 closed/4 open. No worker/CI left running or new user-PC action.
+
+User-defined pass projection: previous7, now **6 remaining**, consisting of
+init1; Setup/publication/code permissions2; uninstall1; integrated races1; combined
+closure1. Completed ACL integration0 more passes. Estimates may change only with
+explicitly identified evidence/rework, not silently decrementing or replenishing
+for conversation/status turns. Scope remains the original SEC-03 checklist.

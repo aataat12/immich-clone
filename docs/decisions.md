@@ -432,3 +432,19 @@
   Run41862213427/job126686818594 remained queued awaiting a Windows runner at the
   last observation; cross-compilation/vet/review do not establish behavior.
   No completed ACL subtask or reduction in security closure count is claimed.
+
+- November4: prior queued ACL proof passed run41862213427/source8adf2fa. Integrate
+  existing state/log/rollback permissions through held MAX trees, preserve exact
+  supported safe explicit ACEs and protected descendants, verify owner/protection
+  and inherited policy, reject reparses/hardlinks/late names before accepting.
+  Keep stationary all-root read-only audits before service stop; stop verified
+  service for native catalog-sharing compatibility. ACL-phase failure only
+  restarts after final policy audits, otherwise stopped/recovery required.
+  Run41868231145/source989fb085/job126707927278 passed native and real Setup/
+  sharing-recovery/rollback/SEC01 controls. First run's deny-fixture read failure
+  was fixed with preauthorized observer plus explicit fresh-read refusal proof;
+  no production policy/assertion weakening. Worker review/tests complete.
+  User defines passes as completion/pause sessions; latest7-pass forecast is now6
+  after this bounded ACL conversion. Remaining init1/Setup2/uninstall1/races1/
+  combined closure1; code-tree permission grant remains Setup/init scope. No
+  feature/Group3 expansion, new release/cost, whole SEC-03 or Windows10 claim.

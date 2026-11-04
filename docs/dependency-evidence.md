@@ -894,12 +894,28 @@ filesystem-boundary-milestone7.md. Existing-tree ACL normalization is unconverte
 no new distribution/runtime prerequisite, artifact release or Windows10 certification.
 
 
-## Held single-object ACL API proof — pending
+## Held single-object ACL API proof — accepted after initial queue
 
 Same pinned Go/x/sys/Windows APIs; no new dependency or product prerequisite.
 Source8adf2fa adds an isolated MAXIMUM_ALLOWED directory-open + SetSecurityInfo
 protected-DACL operation. Actual no-propagation/locked-child/inheritance and
 outside-target behavior must be proven before installer use. Independent review,
-Windows cross-compilation and vet passed. Run41862213427/job126686818594 is queued
-without a Windows runner at the latest observation: no execution/compatibility/
-SEC-03 completion claim. Existing installer ACL behavior remains unchanged.
+Windows cross-compilation and vet passed. The initial queued observation was superseded by inspected PASS logs for
+run41862213427/job126686818594 on Windows Server2022. Single-object suppression,
+child preservation/future inheritance and writer/refusal controls passed; this
+component alone did not establish installer integration or Windows10 acceptance.
+
+
+## Existing ACL normalization integrated
+
+Same Go/x/sys dependencies, no new service/runtime/provider/model. Actual held
+tree enumeration uses Go names-only Readdirnames on duplicated handles backed by
+GetFileInformationByHandleEx; no pathname enumeration fallback. Parent-first
+individual MAXIMUM_ALLOWED SetSecurityInfo updates preserve explicit ACEs and
+protected children, with re-enumeration/final actual-descriptor verification.
+Windows Server2022 run41868231145/source989fb085/job126707927278 passed native
+policy/refusal/late-name/alias controls, actual Setup sharing refusal with verified
+safe service restart, normal/failed-upgrade recovery and closed SEC-01 matrix.
+Independent worker review/tests complete. Full bounds, first fixture failure and
+remaining integrated/target gates: filesystem-boundary-milestone7.md. No new public
+installer or Windows10 certification; original SEC-03 remains open.
