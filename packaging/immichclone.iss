@@ -58,12 +58,12 @@ Type: dirifempty; Name: "{app}\rollback"
 
 [Code]
 var StatePage: TInputDirWizardPage; ManagementFailed: Boolean;
-    ManagementHandle, SecurityHandle: NativeInt;
+    ManagementHandle, SecurityHandle: Integer;
 
 function OpenReadLockedFile(Name: String; Access, Sharing: LongWord;
-  Security: NativeInt; Creation, Attributes: LongWord; Template: NativeInt): NativeInt;
+  Security: Integer; Creation, Attributes: LongWord; Template: Integer): Integer;
   external 'CreateFileW@kernel32.dll stdcall';
-function CloseLockedFile(Handle: NativeInt): Boolean;
+function CloseLockedFile(Handle: Integer): Boolean;
   external 'CloseHandle@kernel32.dll stdcall';
 
 procedure ClosePreparationHandles;

@@ -81,3 +81,10 @@ requires a normal protected custom upgrade and uninstall preservation. The prior
 closed descendant permission suite is retained as compatibility coverage. This is
 not the full real-provider/actual-prior-release SEC-08 gate. No new product version
 or release is assigned; Windows execution is pending until its receipt is added.
+
+First focused run [41799863387](https://github.com/aataat12/immich-clone/actions/runs/41799863387),
+source `8f3b02b081058c5b4480b133564ef7b8043edb3f`, failed at Inno compilation:
+the pinned 6.7.4 Pascal engine does not recognize NativeInt. PowerShell parsing and
+application build passed; no installer execution/closure was established. The
+Win32 Inno external handle declarations are corrected to Integer for this pinned
+32-bit Setup engine; the x64 application target is unchanged.

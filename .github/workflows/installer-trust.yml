@@ -3,6 +3,10 @@ on:
   push:
     paths:
       - '.github/workflows/installer-trust.yml'
+      - 'packaging/immichclone.iss'
+      - 'packaging/Manage-Service.ps1'
+      - 'packaging/Storage-Security.ps1'
+      - 'scripts/Test-UpgradePreparation.ps1'
   workflow_dispatch:
 permissions:
   contents: read
