@@ -114,3 +114,13 @@ Primary implementation references checked on 2026-11-02:
 - [Inno ExtractTemporaryFile](https://jrsoftware.org/ishelp/topic_isxfunc_extracttemporaryfile.htm)
 - [Inno preprocessor GetSHA256OfFile](https://jrsoftware.org/ishelp/topic_getsha256offile.htm)
 - [Inno Pascal GetSHA256OfFile](https://jrsoftware.org/ishelp/topic_isxfunc_getsha256offile.htm)
+
+
+## November 4 milestone 7 follow-up
+
+[Focused installer trust acceptance](installer-trust-milestone7.md) now executes
+real separate-user staging write denial, elevated staged-file sharing-lock denial,
+unsafe code-root/script/executable/provider refusal before service changes and
+protected custom/Program Files Setup. Both Prepare and Install use the new bundled
+payload. These newer results supersede the corresponding pending focused gates
+above, not the actual prior-release/full-provider/rollback or SEC-03 race gates.

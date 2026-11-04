@@ -361,3 +361,10 @@
   Begin with code-tree trust refusal and pinned new Setup management scripts.
   Focused real Inno/standard-user execution must precede any closure or downstream
   packaging claim. Keep all original security IDs and closure criteria unchanged.
+
+- November 4: milestone 7 installer code-trust implementation passed focused
+  production Inno/LocalService/standard-user/custom and Program Files acceptance
+  in 41801504714. Preserve exact limits in installer-trust-milestone7.md. Do not
+  mark SEC-02 complete before candidate combined prior-release/rollback gates,
+  or infer directory race/native isolation/input/final target closure. Continue
+  using 0.1.39 as the accepted published prototype; no new release produced.

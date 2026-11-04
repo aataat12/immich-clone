@@ -190,3 +190,12 @@ regressions. Wider security review remains open; no LAN/Internet exposure.
 The 0.1.37 preparation also corrects a deterministically reproduced Windows restore progress-file sharing conflict and adds bounded stage/numeric CLI failure detail. Reader access stays read-only and restore budgets/checksum checks remain unchanged. Earlier generic restore refusals were not individually diagnosed; combined installed acceptance still gates release.
 
 0.1.38 preparation: People & tags gains a catalog-snapshot index for review/search and references, invalidated by every committed write and rebuilt after reopen/restore. Page limits, name confirmation, correction persistence and thresholds remain unchanged. Milestone6's finite existing-format matrix adds executed camera EXIF/orientation, raster variants, first GIF/TIFF frame/page and video metadata edge cases without adding a provider or format. Larger-library/recognition measurements describe their finite public/synthetic fixtures; security Group2/3, RAW/HDR expansion, every-frame Full Scan and final Windows10 clean-machine/reboot/endurance acceptance remain deferred. Publication requires native-quality and combined installed acceptance.
+
+
+0.1.41 unpublished milestone7 candidate: Setup refuses application code folders
+that unrelated users or LocalService can modify, uses its new bundled management
+helper for Prepare and Install and pins both extracted helpers against writes
+through Setup exit. Unsafe code permissions are refused, not silently repaired.
+This candidate is not offered as a new installed release. Original open security
+items have resumed under milestone7; new Group3 investigations, Full Scan, paid
+signing and final Windows10/reboot acceptance remain deferred or incomplete.

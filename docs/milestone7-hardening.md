@@ -80,7 +80,8 @@ before stopping a healthy service or changing catalog/rollback/code bytes, then
 requires a normal protected custom upgrade and uninstall preservation. The prior
 closed descendant permission suite is retained as compatibility coverage. This is
 not the full real-provider/actual-prior-release SEC-08 gate. No new product version
-or release is assigned; Windows execution is pending until its receipt is added.
+or release is assigned. [Focused Windows execution passed](installer-trust-milestone7.md);
+full original-item closure still requires its remaining gates.
 
 First focused run [41799863387](https://github.com/aataat12/immich-clone/actions/runs/41799863387),
 source `8f3b02b081058c5b4480b133564ef7b8043edb3f`, failed at Inno compilation:
@@ -111,3 +112,22 @@ is not a production storage defect or a relaxed unsafe-upgrade assertion.
 The code policy explicitly trusts Windows TrustedInstaller as an OS code writer,
 and acceptance additionally installs/uninstalls under actual Program Files
 inheritance. The prior temporary-root fixture is not presented as that evidence.
+
+Accepted focused execution: [41801504714](https://github.com/aataat12/immich-clone/actions/runs/41801504714),
+source `df25e3ee6a0d085938a38d533fc05fb4f55e5f07`, job `126478120619`. Actual
+Setup/standard-user/root/script/executable/provider controls, pinned helpers,
+custom/Program Files installation, preservation and existing SEC-01 compatibility
+passed. Detailed evidence and explicit limits: installer-trust-milestone7.md.
+All five original open items remain open until their full gates pass.
+
+## Unpublished combined candidate gate
+
+Prepare 0.1.41 with genuine checksum-verified 0.1.39 as the prior installer and
+0.1.42 solely as the failed-upgrade injection package. 0.1.40 remains only the
+previous rollback fixture. Preserve providers/models/schema/budgets. The combined
+workflow's publication step is removed for this unfinished milestone: passing
+artifacts are cloud acceptance candidates, not an offered release. Build Notes
+marks milestone7 in progress and reflects the explicit security-resume decision.
+The fixture root now has explicit protected trusted-writer permissions rather
+than inheriting the disposable runner temp parent's permissive code ACLs; the
+separate hostile-root and normal Program Files controls remain required evidence.

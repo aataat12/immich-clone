@@ -1,5 +1,5 @@
 name: Application originals slice
-# Milestones4/5 combined delivery: serial preview drain with actual0.1.38 upgrade and prior focused volume/scale/backup acceptance.
+# Milestone7 unpublished installer-trust candidate: genuine0.1.39 upgrade and rollback, full providers and independent recovery.
 on:
   push:
     paths:
@@ -66,7 +66,7 @@ jobs:
         with:
           name: prototype-server-tested
           path: previous-installer
-          run-id: 41771361544
+          run-id: 41784610044
           github-token: ${{ github.token }}
       - name: Validate installer script syntax before lengthy acceptance
         shell: pwsh
@@ -133,20 +133,13 @@ jobs:
           name: synthetic-browser-evidence
           path: browser-evidence/*.png
           retention-days: 7
-      - name: Retain prototype installer only after all checks pass
+      - name: Retain unpublished milestone7 candidate only after all checks pass
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: prototype-server-tested
+          name: milestone7-server-tested-candidate
           path: |
-            dist/ImmichClone-0.1.39-prototype-x64-setup.exe
+            dist/ImmichClone-0.1.41-prototype-x64-setup.exe
             dist/SHA256SUMS.txt
           retention-days: 7
-      - name: Publish checked unsigned0.1.39 prototype
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          $releaseNotes=Join-Path $env:RUNNER_TEMP 'published-release-notes.txt'
-          ((Get-Content docs/release-0.1.39.md -Raw)+"`nCombined installer acceptance passed: https://github.com/aataat12/immich-clone/actions/runs/$env:GITHUB_RUN_ID`n") | Set-Content $releaseNotes -Encoding utf8
-          gh release create v0.1.39-prototype dist/ImmichClone-0.1.39-prototype-x64-setup.exe dist/SHA256SUMS.txt --repo aataat12/immich-clone --target $env:GITHUB_SHA --prerelease --title 'Immich Clone0.1.39 prototype' --notes-file $releaseNotes
-          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed' }
+      # This milestone candidate is retained only after all checks pass.
+      # Publication is deliberately absent until milestone acceptance is complete.
