@@ -463,3 +463,14 @@
   scenarios and other offline mode paths remain in combined/integrated review,
   not falsely certified or moved to Group3. Forecast6 to5 remaining passes. No
   new dependency, feature, release, cost or Windows10 claim.
+
+- SEC-03 code grant: replace path icacls with held native code-tree auditing and
+  DACL updates; preserve trusted readers/owners/protection and private protected
+  rollback subtrees. Real read-data sharing authority excludes data writers/rename
+  while permitting own running image. Preserve exact ALLOW grant multiset despite
+  Windows inherited-entry ordering; never admit deny/unsupported mutation policy.
+  Run41882276092/source802e097/job126757536563 passed native controls, actual
+  custom/fresh Setup, recovery and SEC01. Outgoing same-object hard-link names are
+  detected by link-count checks, not falsely claimed impossible or atomic. Full
+  interleavings/offline modes remain integrated scope. Payload publication remains
+  next; forecast5 to4 remaining passes. No release, dependency or Win10 claim.

@@ -73,17 +73,17 @@ proved that fresh read really is denied. Production policy was not weakened.
 
 User definition: one pass is a work session ending with completion/pause. Latest
 forecast was7 remaining, conditional on proof/integration; this completed ACL
-integration reduced it to6 remaining passes; initialization below now reduces it to **5**, not a guarantee.
+integration reduced it to6 remaining passes; initialization reduced it to5; the code-permission checkpoint below now reduces it to **4**, not a guarantee.
 
 | SEC-03 workstream | Current checkpoint | More passes, best estimate |
 |---|---|---:|
 | State/log/rollback existing-tree ACL handling | Integrated and focused Windows-validated | 0 |
 | Installer/explicit elevated initialization | Integrated and focused Windows-validated | 0 |
-| Setup file installation/replacement, including code permission grant | Remaining | 2 |
+| Setup file installation/replacement, including code permission grant | Code grant accepted; payload publication remains | 1 |
 | Uninstall/cleanup boundaries | Remaining | 1 |
 | Integrated real-account concurrent-replacement tests | Remaining | 1 |
 | Combined prior-release/full-provider/recovery closure | Remaining | 1 |
-| Total | SEC-03 remains open | 5 |
+| Total | SEC-03 remains open | 4 |
 
 No worker/CI remains active. No new feature/provider/version/release, cost,
 Group3 work or PC action; keep published0.1.39. Security remains4 closed/4 open.
@@ -110,6 +110,44 @@ paths remain explicitly in SEC-03 integrated boundary review; no blanket elevate
 CLI closure. Setup/code permissions2, uninstall1, integrated races/boundaries1,
 combined full-provider/prior-release/recovery1. Scope stays original SEC-03,
 security4 closed/4 open and published0.1.39 unchanged. Server is not Windows10.
+
+
+### SEC-03 code-permission checkpoint accepted
+
+Replaced the installer code-root path-based LocalService RX grant with native
+held-tree auditing and handle-based DACL updates. Preserve trusted reader ACEs,
+owners and protection; stop inheritance across protected descendants and their
+whole subtree so private rollback catalog/access-code snapshots remain unchanged.
+Code files request read-data plus security metadata, no data-write/delete, with
+read sharing only; real running-image compatibility is verified.
+
+[Run41882276092](https://github.com/aataat12/immich-clone/actions/runs/41882276092)
+completed successfully on Windows Server2022, source
+802e09733e31caa1a272400dbca4477b8b99c7e5/job126757536563. Complete logs verify
+native reader/private-rollback preservation, unsafe grants/aliases, actual rename
+and data-writer sharing refusals, late outgoing-alias detection before any DACL
+write, unchanged outside objects, running own image, and an unprotected inherited
+root. Actual custom and fresh Program Files Setup, LocalService initialization,
+upload/original preservation, injected failure/native rollback and SEC01 passed.
+Local Windows cross-build/vet passed; worker review/tests completed.
+
+Windows can publish a new hard-link name to the same held object: sharing does
+not freeze link count. Initial and before/after link-count checks refuse detected
+aliases; the tested late pre-apply alias refuses before every ACL write. These
+checks are not atomic with arbitrary later interleavings. No retroactive revocation
+of existing WRITE_DAC/owner authority is claimed. Final integrated race/offline-mode
+coverage remains open. For admitted ALLOW-only ACEs, post-write verification uses
+an exact SID/mask/flags multiset including duplicates because Windows may reorder
+inherited ALLOW entries; protected descriptors and stale-plan checks remain exact.
+Failed fixture assumptions and the reproduced ordering failure are retained in
+filesystem-boundary-milestone7.md; no production trust policy was weakened.
+
+This completes only the code-permission half of Setup. Inno payload publication
+is unchanged and remains next. Forecast **5 to4 remaining passes**: Setup payload
+publication1, uninstall/cleanup1, integrated boundaries/races/offline modes1,
+combined genuine prior-release/full-provider/recovery closure1. SEC-03 remains
+open, security4 closed/4 open. No feature, provider, schema, dependency, version,
+release, cost, Group3 work or PC action. Keep0.1.39; Server does not certify Win10.
 
 ## Historical checkpoints (superseded where later acceptance applies)
 

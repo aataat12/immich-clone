@@ -934,3 +934,13 @@ upload, post-initialization failure/rollback and SEC01 compatibility. Linux cmd
 tests and Windows build/vet passed. Exact test-only status correction, broader
 fixture scaffolding scope, other-offline-mode and final target/combined limitations
 are filesystem-boundary-milestone7.md. No new artifact or Windows10 certification.
+
+SEC-03 code-permission checkpoint adds no dependency. Existing x/sys native
+held-tree DACL API replaces code-root icacls. Windows Server2022 run41882276092,
+source802e09733e31caa1a272400dbca4477b8b99c7e5/job126757536563 completed success:
+actual read-data file sharing/own-image, alias and unsafe ACL refusals, preserved
+reader ACEs/private rollback, inherited root, custom/fresh Setup, recovery and
+SEC01. Real outgoing same-object hard links can be created and are detected by
+link-count validation; no atomic hard-link freeze claim. Exact scope, failed-test
+corrections and remaining publication/race/full-provider gates are recorded in
+filesystem-boundary-milestone7.md. Published0.1.39 and Windows10 limits unchanged.
