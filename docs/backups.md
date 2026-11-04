@@ -63,3 +63,8 @@ ENOSPC. Disk fault checks run early. Final acceptance above passed both fixes;
 no failed-run installer was published.
 Primary header-behavior source inspected:
 https://github.com/PowerShell/PowerShell/blob/master/src/Microsoft.PowerShell.Commands.Utility/commands/utility/WebCmdlet/Common/WebRequestPSCmdlet.Common.cs
+
+
+## Later bounded scale proofs
+
+The [ZIP64 entry-count acceptance](backup-zip64-entry-count-acceptance.md) crossed 65,535 entries with 65,536 tiny originals and an independent restore. The separate [large byte-volume acceptance](backup-large-volume-acceptance.md) created an actual 4,296,346,455-byte archive from two originals, exercised mid-copy cancellation/cleanup/retry, then independently restored with default budgets and full hash checks. Both passed on Windows Server 2022 without production changes. These library proofs do not establish installed large-library endurance, forced backup service termination, physical storage outage behavior or Windows 10 compatibility.
