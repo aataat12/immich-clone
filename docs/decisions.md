@@ -505,3 +505,17 @@
   loaded-uninstaller integrity, actual metadata-leaf races/offline/interruption
   limits and genuine prior-release/fullprovider recovery stay explicit original
   SEC03 work. Forecast3 to2; no release, cost, Group3 or Win10 certification.
+
+- SEC03 bounded entrypoints/stationary metadata: refuse elevated serve and
+  direct/non-LocalService service before diagnostics, unknown modes before IO;
+  read existing code through held nofollow single-link file without Store or
+  generation/logs. Native Prepare audits hardlink counts before metadata writes.
+  Run41905712864/sourcef8f1c0a/job126839683829 passed exact real no-write/read
+  controls, valid journal alias refusal before PID change, explicit post-health
+  rollback, real installs/removals/privacy/SEC01. Test-only status capture fixed
+  without product or assertion weakening. Preserve admin recovery workflow:
+  verify/backup/restore and pre-mainworker require proper held read/write designs,
+  not blanket elevated refusal. Persistent prewrite fullcode intent/mixed recovery
+  and concurrent metadata tests remain implementation, not merely validation.
+  Correct prior2-pass estimate to best5 (range5–7) original SEC03 passes; no
+  feature/Group3 expansion, new release/dependency/cost or Win10 certification.

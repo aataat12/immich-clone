@@ -986,3 +986,18 @@ all owner/DACL checks. Prior run42e011ad failed normal audit, diagnostic6daa7e14
 located it before service stop; corrected source passed. Full metadata-leaf races,
 offline/interruption/durable fullprovider recovery and real prior-release gates
 remain original SEC03 scope. Server results do not certify Windows10.
+
+## Entrypoint guards, existing-code read and stationary metadata
+
+No new dependency. Existing x/sys token/SCM-context APIs and winfs read handles
+are executed by actual Windows controls. Windows Server2022 run41905712864,
+sourcef8f1c0a1fbd7582b6fc54d2baa7294ca42fe58c5/job126839683829 completed success:
+elevated/direct/unknown early no-write aliases and missing paths, existing-code
+read without catalog/log initialization, valid journal hardlink outside-byte/PID
+preservation, explicit post-health rollback, LocalService installs/uninstalls
+and SEC01. Windows build/vet/Linux cmd tests passed; worker reviewed/tested.
+Initial run081a5f08 failed test-process exit capture; rerun changed only harness
+and docs, retaining exact assertions/product bytes. Admin recovery, pre-main
+worker, durable payload interruption and real metadata concurrency remain original
+SEC03 implementation gates. Corrected best additional passes5 (range5–7), not
+full integrated closure or Windows10 certification. See filesystem boundary record.

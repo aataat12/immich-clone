@@ -945,3 +945,54 @@ retains native process Handle before waiting, Refresh/Wait captures nonnull
 ExitCode and Dispose follows output read; exact exit1/refusal assertions remain.
 Failure-only diagnostics use match booleans/character counts, never code contents
 or raw error paths. Actual rerun decides whether this is harness-only.
+
+### Accepted entrypoint and stationary metadata checkpoint
+
+[Run41905712864](https://github.com/aataat12/immich-clone/actions/runs/41905712864)
+completed success on Windows Server2022, source
+f8f1c0a1fbd7582b6fc54d2baa7294ca42fe58c5/job126839683829. Complete logs reach cleanup
+with no errors. Real elevated init/serve/direct-service/unknown-mode direct,
+junction, hardlink and absent-path controls preserved every selected/outside
+byte and descriptor. show-code read a valid existing code despite a deliberately
+non-database catalog, with no store initialization or diagnostics; missing code,
+root junction and hardlinked leaf refused without generation/mutation. No access
+code values were printed in evidence. Actual installed LocalService startup,
+custom/fresh Setup, uninstall, privacy/original preservation and SEC01 passed.
+
+Native code audit in Prepare now refuses a real valid retained unins000.dat hard
+link BEFORE service stop or builtin overwrite: outside/selected journal hashes
+and actual service PID remain unchanged. This closes stationary alias checking,
+not concurrent post-Prepare substitution. Split optional-note alias early refusal
+from a separate actual injected rollback; exact installer_failed stage verify
+service health increased by one, proving the test reached health instead of
+passing on an earlier refusal. Native failure-note alias controls remain intact.
+
+First run41905055196/source081a5f08/job126837361941 failed the first preexisting
+init assertion after the test wrapper changed process waiting. Retaining native
+process Handle/Refresh/non-null exit capture fixed the harness; product bytes
+were unchanged for the rerun and exact exit/text/no-write assertions stayed.
+Windows build/vet, Linux command tests and worker independent review/tests done.
+No additional dependency/provider/schema/version/release/cost/feature/Group3 work.
+Keep0.1.39, no PC action; Server does not certify Windows10.
+
+This is a bounded integrated tranche, NOT completion of the old integrated row.
+The previous2-pass estimate undercounted unfinished implementation as validation.
+Do not silently break the published administrative restore/verify workflow with
+blanket elevated refusal: installer identity is RX, so existing read/write store
+cannot simply run unelevated. Current patch leaves admin verify/backup/restore
+and the pre-main restore worker unchanged; they remain open original SEC03 paths.
+
+Corrected best forecast **5 additional completion passes** (planning range5–7):
+1. Administrative verify/backup: true read-only Store/held catalog and original
+   reads, exclusive held archive creation/cleanup, compatible RX-user positives.
+2. Restore supervisor AND pre-main worker: held archive/parent, private-at-birth
+   stage, verified worker handoff and no-escape publication/cleanup.
+3. Persistent complete-payload intent synced BEFORE first overwrite, mixed/partial
+   byte recovery after actual helper/controller kill and restart/retry, preserving
+   the prior durable three-file snapshot until recovery is resolved.
+4. Actual separate-account installer/metadata concurrent substitution controls,
+   positive actor capabilities, protected outside bytes, normal install/recovery.
+5. Genuine0.1.39 prior-release/full-provider/rollback/recovery combined acceptance.
+These are the original SEC03 requirements decomposed, not added feature scope.
+A pass remains a session ending in completion/pause, not each worker or CI run.
+SEC03 open; security4 closed/4 open. Worker and CI complete; paused here.

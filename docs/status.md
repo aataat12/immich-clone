@@ -73,17 +73,18 @@ proved that fresh read really is denied. Production policy was not weakened.
 
 User definition: one pass is a work session ending with completion/pause. Latest
 forecast was7 remaining, conditional on proof/integration; this completed ACL
-integration reduced it to6 remaining passes; initialization reduced it to5; the code-permission checkpoint reduced it to4; application payload publication reduced it to3; bounded uninstall/cleanup below now reduces it to **2**, not a guarantee.
+integration reduced it to6 remaining passes; initialization reduced it to5; the code-permission checkpoint reduced it to4; application payload publication reduced it to3; bounded uninstall/cleanup reduced it to2. Residual implementation review below corrects that forecast to **5**, not a guarantee.
 
 | SEC-03 workstream | Current checkpoint | More passes, best estimate |
 |---|---|---:|
-| State/log/rollback existing-tree ACL handling | Integrated and focused Windows-validated | 0 |
-| Installer/explicit elevated initialization | Integrated and focused Windows-validated | 0 |
-| Setup application payload installation/replacement and code permission grant | Integrated and focused Windows-validated | 0 |
-| Uninstall/cleanup and Inno metadata directory pins/audit | Integrated and focused Windows-validated | 0 |
-| Integrated races/metadata-leaf boundaries, offline commands and interruptions | Remaining | 1 |
-| Combined prior-release/full-provider/recovery closure | Remaining | 1 |
-| Total | SEC-03 remains open | 2 |
+| State/log/rollback ACLs, initialization, Setup payload and uninstall | Focused Windows checkpoints accepted | 0 |
+| Command entrypoint guards, existing-code reads and stationary metadata aliases | Focused Windows checkpoint accepted | 0 |
+| Administrative verify/backup held read-only paths and archive output | Remaining | 1 |
+| Restore supervisor and pre-main worker path boundary | Remaining | 1 |
+| Durable full-payload intent and interrupted/mixed-copy recovery | Remaining | 1 |
+| Separate-account installer/metadata concurrency controls | Remaining | 1 |
+| Genuine prior-release/full-provider/recovery closure | Remaining | 1 |
+| Total | SEC-03 remains open; corrected forecast | 5 |
 
 No worker/CI remains active. No new feature/provider/version/release, cost,
 Group3 work or PC action; keep published0.1.39. Security remains4 closed/4 open.
@@ -195,6 +196,32 @@ original SEC03 scope. Partial deletion does not promise transactional rollback.
 No new feature/dependency/provider/schema/version/release/cost or Group3 work.
 SEC03 open, security4 closed/4 open, keep0.1.39, no PC action. Server is not Win10.
 Worker and focused CI complete; paused at this checkpoint.
+
+### Accepted command-entrypoint and stationary metadata tranche
+
+[Run41905712864](https://github.com/aataat12/immich-clone/actions/runs/41905712864)
+completed success, sourcef8f1c0a1fbd7582b6fc54d2baa7294ca42fe58c5/job126839683829.
+Elevated serve/direct service and unknown modes now refuse before file access;
+service requires actual SCM+LocalService. show-code reads existing held code,
+without Store.Open/code generation/log writes. Actual alias/no-write/read-positive
+matrices passed. Native Prepare audits stationary metadata hardlinks before
+builtin writes; actual valid journal alias preserved outside bytes and prior PID.
+Rollback test separately proves verified-health failure and recovery. Actual
+LocalService/custom/fresh install, uninstall, privacy/originals and SEC01 passed.
+Worker review/tests complete. One test-only process-exit capture fix retained
+all exact assertions and unchanged product bytes on rerun.
+[Evidence and residual implementation](filesystem-boundary-milestone7.md#accepted-entrypoint-and-stationary-metadata-checkpoint).
+
+Corrected best estimate **5 additional passes**, planning range5–7. Previous2
+undercounted implementation as validation. The table decomposes original SEC03:
+admin verify/backup1; restore supervisor/worker1; durable interrupted payload1;
+actual installer/metadata concurrency1; genuine prior-release/fullprovider1.
+Admin recovery commands remain supported and UNCHANGED pending safe hardening;
+blanket elevated refusal would break the published recovery workflow. Pre-main
+worker, temporary fullcode intent/recovery and concurrent metadata-leaf gaps
+remain open. This tranche does not close the full integrated row or SEC03.
+Security4 closed/4 open; keep0.1.39, no new feature/dependency/release/cost/Group3
+work or local action. Server is not Win10. Worker/CI finished; paused here.
 
 ## Historical checkpoints (superseded where later acceptance applies)
 
