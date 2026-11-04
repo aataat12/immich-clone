@@ -12,11 +12,14 @@ The user instructed proceeding with milestone 7 after the handoff pause.
 [Milestone 7 gates](milestone7-hardening.md) and the [manual update guide](update-guide.md)
 record permitted preparation, reused evidence and the remaining scope decision.
 The user subsequently explicitly approved resuming original SEC-02/03/05/06/08
-work. Group 3 investigations and paid signing remain deferred. Original count remains 3 closed / 5 open. The SEC-02 code-trust candidate passed
-[focused actual Setup/standard-user acceptance](installer-trust-milestone7.md);
-combined prior-release/rollback and the other original open gates remain. Signing is
+work. Group 3 investigations and paid signing remain deferred. Original count is now **4 closed / 4 open**. SEC-02 passed focused actual
+Setup/token controls and combined genuine prior-release/full-provider/rollback
+acceptance in an unpublished 0.1.41 candidate: [evidence](installer-trust-milestone7.md).
+SEC-03/05/06/08 remain open; milestone 7 is in progress. 0.1.39 is still the
+published prototype; no candidate installation is requested. Signing is
 unconfigured; no new costs, workers or product installer were introduced. A
-dedicated Windows Server installer gate passed; no broad release run was launched. Final Windows 10 clean-install/reboot/endurance acceptance remains open.
+dedicated focused gate and the combined Windows Server candidate gate passed.
+Candidate publication is disabled; this does not certify final Windows 10 acceptance. Final Windows 10 clean-install/reboot/endurance acceptance remains open.
 
 ## Historical checkpoints (superseded where later acceptance applies)
 

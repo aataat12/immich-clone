@@ -368,3 +368,11 @@
   mark SEC-02 complete before candidate combined prior-release/rollback gates,
   or infer directory race/native isolation/input/final target closure. Continue
   using 0.1.39 as the accepted published prototype; no new release produced.
+
+- November 4: genuine 0.1.39 to unpublished 0.1.41 combined installer/provider/
+  initial failure and later 0.1.42 rollback/independent restore acceptance passed
+  in 41802642179, source1c9d5e8. Candidate artifact ZIP and installer hashes were
+  independently verified against GitHub digest and packaged manifest. Together
+  with focused token/Setup controls this closes original SEC-02 in the candidate,
+  not SEC-03 races or final SEC-08 target/release acceptance. Status4 closed/4 open.
+  0.1.39 stays published; no new installer offered. Next gate is SEC-03.

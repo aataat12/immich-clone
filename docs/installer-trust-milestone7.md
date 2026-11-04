@@ -43,7 +43,7 @@ through the service's consistent export after the fixture's existing preview
 settles; it is not reported as a raw live-database hash. Executable, closed rollback
 snapshots and original/access-code comparisons retain their byte/hash assertions.
 
-## Limits and next gate
+## Focused-stage limits (combined follow-up below)
 
 **SEC-02 remains open**, pending the combined actual prior-release/full-provider
 upgrade and injected rollback gate with this candidate and its remaining related
@@ -61,3 +61,43 @@ setup, paid resource, worker or user-PC action is implied.
 
 Earlier failed compile/fixture/harness runs are recorded in
 [milestone 7](milestone7-hardening.md); they are not presented as passed acceptance.
+
+
+## Combined candidate acceptance and SEC-02 closure
+
+[Run 41802642179](https://github.com/aataat12/immich-clone/actions/runs/41802642179),
+source `1c9d5e8329759b6c26db8c63f8dea733066ac74b`, job `126481883239`: **PASS**,
+first combined execution of the unpublished 0.1.41 candidate, Windows Server 2022
+x64/LocalService/Edge. It installed the genuine checksum-verified 0.1.39 release,
+rejected an injected initial 0.1.41 failure and restored 0.1.39, upgraded to 0.1.41,
+then rejected injected 0.1.42 and restored 0.1.41. Originals, access code, names/tags,
+ready AI, sampled video observations, corrections and proposals survived. Full
+providers, installed payload privacy canaries, 24-image installed/read-only-restored
+matrix, backup downloads, independent restore with old state unavailable, restored
+reinstall and both uninstalls passed. Go tests/vet/current Windows-target scan and
+actual NTFS ENOSPC recovery passed within their declared coverage.
+
+Downloaded artifact `13308328311` (milestone7-server-tested-candidate) was independently
+verified: ZIP SHA256 `3faa5e8ac9877316486cc4cdc1482aa1ffa98a8bb3e0e6e4d4ab2524a238b273`;
+installer **104,203,207 bytes**, SHA256
+`e1f03e3f8a69caf9639ce2f4fa7860a576e065c5631af7dc3f8d6d68a05f4378`, matching
+its packaged SHA256SUMS.txt. The synthetic browser ZIP digest also matched; desktop
+and narrow Build Notes screenshots were inspected. Artifact retention is seven days;
+this is an unsigned unpublished candidate, not a new supported release.
+
+**SEC-02 is closed in this validated candidate**: bundled staged preparation and
+post-install management, actual staged-file token/sharing controls, unsafe static
+code-tree refusal, normal custom/Program Files acceptance and genuine previous-
+installer upgrade/failed rollback have implementation plus executed evidence.
+This closes the original safe-upgrade item within its stated boundary, not all
+installer security. Concurrent filesystem replacement/hard-link identity remains
+SEC-03; native authority SEC-05, remaining input review SEC-06 and final release/
+Windows 10 gates SEC-08 remain open. Installing administrator/OS compromise is not
+contained. Original status is now **4 closed / 4 open**: SEC-01/02/04/07 closed;
+SEC-03/05/06/08 open. Milestone 7 remains in progress. The next implementation gate
+is SEC-03 filesystem identity/race protection. No new Group 3 work, paid signing,
+worker or target-PC installation is authorized by this closure.
+
+Publication was removed from this candidate workflow. **0.1.39 remains the published
+prototype**; 0.1.41 is not offered for installation and 0.1.42 is only failure injection.
+Do not rerun the passing combined gate without a relevant change or failure.

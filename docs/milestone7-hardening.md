@@ -25,16 +25,15 @@ security deferrals. No workers or new charges are authorized.
 | Upgrade and rollback correctness | Actual 0.1.38 installer, injected initial failure, successful 0.1.39 upgrade, injected 0.1.40 rollback, independent restore/reinstall and uninstall preservation passed. [Acceptance](release-0.1.39-acceptance.md). | Functional correctness evidence exists; it does not close SEC-02 privilege/trust boundaries. |
 | Update procedure | [Manual update guide](update-guide.md) records verification, backup, same-folder upgrade and failure handling. No automatic updater is introduced. | Documentation prepared; next installer must pass acceptance for its actual source and previous release. |
 | Signing arrangements | Current release is unsigned. No certificate, signing account, identity validation or timestamp service has been configured or verified. Existing unsigned prototypes may continue within the user's prior bounded approval. | Final signing decision is open. No purchase or trusted-publisher claim. |
-| Safe upgrades: SEC-02 | Staging-token/custom-AppDir trust and remaining privileged installer boundaries. | Group 2 deferred; explicit scope decision needed before mitigation. |
-| Filesystem boundaries: SEC-03 | Concurrent junction/reparse replacement; static checks are insufficient. | Group 2 deferred; explicit scope decision needed before mitigation. |
-| Native isolation: SEC-05 | Same-token children retain service-readable authority beyond required input/scratch. | Group 2 deferred; explicit scope decision needed before mitigation. |
-| Remaining input review: SEC-06 | Full declared malformed media/filename/metadata/tag/catalog review, including parent Go decoding. | Group 2 deferred; explicit scope decision needed before investigation/mitigation. |
-| Release validation: SEC-08 | Final target/clean-install/reboot and broader acceptance gates; routine prototype gates are already covered above. | Open; extra security experiments remain deferred. Final target gates belong with milestone 8. |
+| Safe upgrades: SEC-02 | Staged helper token/sharing and static code trust controls plus genuine prior-release/full-provider/rollback passed. See installer-trust-milestone7.md. | Closed in validated unpublished candidate; SEC-03 races and SEC-08 final gates remain separate. |
+| Filesystem boundaries: SEC-03 | Concurrent junction/reparse replacement; static checks are insufficient. | Active under explicit milestone7 authorization; implementation/evidence remains. |
+| Native isolation: SEC-05 | Same-token children retain service-readable authority beyond required input/scratch. | Active under explicit milestone7 authorization; implementation/evidence remains. |
+| Remaining input review: SEC-06 | Full declared malformed media/filename/metadata/tag/catalog review, including parent Go decoding. | Active under explicit milestone7 authorization; review/mitigation remains. |
+| Release validation: SEC-08 | Final target/clean-install/reboot and broader acceptance gates; routine prototype gates are already covered above. | Open and authorized; final target gates remain with milestone 8. |
 
-The earlier deferral dispositions in the table are historical: the authorization
-above now permits the five original open items. Milestone 7 is **in progress, not delivered**. No release number is assigned.
-Original security status remains **3 closed / 5 open**: SEC-01/04/07 closed;
-SEC-02/03/05/06/08 open. Group 1 has no demonstrated open original item; all eight
+Milestone 7 is **in progress, not delivered**. No delivered release number is assigned.
+Current original security status is **4 closed / 4 open**: SEC-01/02/04/07 closed;
+SEC-03/05/06/08 open. SEC-02 is validated in the unpublished candidate. Group 1 has no demonstrated open original item; all eight
 are currently Group 2. New issues remain Group 3, record only.
 
 ## Original scope decision (now approved)
@@ -131,3 +130,15 @@ marks milestone7 in progress and reflects the explicit security-resume decision.
 The fixture root now has explicit protected trusted-writer permissions rather
 than inheriting the disposable runner temp parent's permissive code ACLs; the
 separate hostile-root and normal Program Files controls remain required evidence.
+
+
+## Current combined acceptance and original-item status
+
+[Combined run 41802642179](https://github.com/aataat12/immich-clone/actions/runs/41802642179),
+source `1c9d5e8329759b6c26db8c63f8dea733066ac74b`, passed actual prior-release
+upgrade, both failure/rollback paths, full providers, independent restore/reinstall
+and preservation. Candidate ZIP/installer checksums were independently verified.
+[Exact receipts and limits](installer-trust-milestone7.md#combined-candidate-acceptance-and-sec-02-closure).
+SEC-02 is closed in the validated unpublished candidate; SEC-03/05/06/08 remain
+open and authorized. Current count: **4 closed / 4 open**. Milestone7 remains in
+progress; next implementation gate is SEC-03. 0.1.39 remains the published prototype.

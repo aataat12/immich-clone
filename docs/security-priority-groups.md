@@ -37,13 +37,13 @@ against unknown vulnerabilities. No configuration/exposure expansion is authoriz
 | Original item | Classification | Action |
 |---|---|---|
 | SEC-01 Child-folder and file permissions | Group 2 | Existing completed protection retained; no further mitigation work. |
-| SEC-02 Safe upgrades | Group 2 | Paused. Local installer/staging/upgrade trust paths. |
-| SEC-03 Filesystem boundaries | Group 2 | Paused. Local junction/reparse replacement paths. |
+| SEC-02 Safe upgrades | Group 2 | Closed in validated unpublished milestone7 candidate; retain controls. See installer-trust-milestone7.md. |
+| SEC-03 Filesystem boundaries | Group 2 | Active in milestone7. Local junction/reparse replacement paths remain open. |
 | SEC-04 Hostile backup limits | Group 2 | Existing validated resource protections retained; no further mitigation work. |
-| SEC-05 Native worker isolation | Group 2 | Paused. Local/imported-media worker authority. |
-| SEC-06 Remaining input review | Group 2 | Paused under current authenticated local-import/catalog deployment. No demonstrated remote bypass. |
+| SEC-05 Native worker isolation | Group 2 | Active in milestone7. Local/imported-media worker authority remains open. |
+| SEC-06 Remaining input review | Group 2 | Active in milestone7 under current authenticated local-import/catalog deployment. No demonstrated remote bypass. |
 | SEC-07 Review closeout | Group 2 | Existing completed review retained; no broad new review. |
-| SEC-08 Release validation | Group 2 | Extra security mitigation/attack experiments paused. Normal feature delivery correctness tests remain. |
+| SEC-08 Release validation | Group 2 | Active in milestone7; candidate combined checks passed, final target/release gates remain open. |
 
 **Group 1 currently has no demonstrated open item from the original eight.**
 This is a reachability classification for the current deployment, not a claim
@@ -63,3 +63,13 @@ loopback binding and safe browser output; rerun applicable negative checks. Norm
 feature bounds, cancellation, immutable originals, schema/backup correctness and
 ordinary recovery remain engineering requirements, not a reason to restart the
 paused exhaustive Group 2 mitigation backlog. No claim that Group 2 issues are fixed.
+
+
+## Current original-item status — November 4
+
+SEC-02 now joins SEC-01/04/07 as closed after actual focused token/Setup and combined
+prior-release/full-provider/rollback acceptance; installer-trust-milestone7.md records
+exact scope. SEC-03/05/06/08 remain open and authorized for milestone7. The earlier
+November2 pause instructions above are superseded for those original open items by
+the explicit November4 authorization at the top; Group3 investigations and paid
+signing remain deferred. All original items retain their Group2 classification.

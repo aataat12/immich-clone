@@ -11,7 +11,8 @@ workers or new charges are authorized. Final target acceptance remains distinct.
 These are the original eight items. Keep these IDs and titles stable. New findings
 belong under the relevant item; genuinely additional work gets a new explicit ID,
 never a replacement list. A diagnostic or source review alone cannot close an item.
-Security scope progress: **3 closed, 5 open**. Original SEC-04 protection remains
+Security scope progress: **4 closed, 4 open**. SEC-02 closed in the validated
+unpublished milestone7 candidate; see installer-trust-milestone7.md. Original SEC-04 protection remains
 implemented/validated; the later normal-restore observation is separately recorded
 as deferred Group 3, not represented as a demonstrated security-limit failure.
 All original items are currently classified Group 2 under security-priority-groups.md;
@@ -25,7 +26,7 @@ of those findings is not implied. Release delivery is separately item 8.
 | ID | Original item | Status | Owner / completion requirement |
 |---|---|---|---|
 | SEC-01 | Child-folder and file permissions | Closed — implemented and Windows-validated | Inspect every application-owned state/log/rollback descendant and root ownership/DACL policy; unsafe explicit/protected/inherited configurations or unreadable ACL/enumeration must fail closed; never follow child links. Prove ordinary-user denial on correct trees, read-only refusal before mutations and final verification before service/content changes, unchanged originals and outside targets, and usable LocalService. No silent recursive permission/ownership rewrite. |
-| SEC-02 | Safe upgrades | Open | New bundled Prepare/Install helper, pinned extracted scripts and unsafe code-tree refusal passed actual Setup/standard-user/custom/Program Files acceptance: installer-trust-milestone7.md. Combined actual prior-release/full-provider upgrade and rollback with this candidate and related boundaries remain. |
+| SEC-02 | Safe upgrades | Closed — implemented and Windows-validated candidate | Actual staged-helper token/sharing denial, unsafe static code-tree refusal, protected custom/Program Files Setup and genuine 0.1.39-to-candidate/full-provider/injected rollback passed. See installer-trust-milestone7.md. Concurrent replacement remains SEC-03; final target/release gates remain SEC-08. |
 | SEC-03 | Filesystem boundaries | Open | Protect against concurrent junction/reparse replacement during privileged operations; static preflight does not close this item. |
 | SEC-04 | Hostile backup limits | Closed — security protections validated; Group 2 further mitigation paused | Aggregate/catalog/process protections remain enforced and passed hostile/valid controls. R-RESTORE-01 is separate deferred Group 3 reliability evidence; no root-cause fix is claimed. |
 | SEC-05 | Native worker isolation | Open | Enforce required-input/scratch-only authority; current Windows canaries confirm same-token secret/catalog/original access remains possible despite working resource limits. A probe is not a fix. |
@@ -119,3 +120,15 @@ R-RESTORE-01 is deferred in Group 3, with its failure and unknown cause preserve
 Original SEC-04's security controls are not shown as failed or undone by that
 normal restore refusal. No extra security work on Groups 2/3; 6A implementation
 continues. This is not an assertion that normal restoration can never fail.
+
+
+## Current combined acceptance and original-item status
+
+[Combined run 41802642179](https://github.com/aataat12/immich-clone/actions/runs/41802642179),
+source `1c9d5e8329759b6c26db8c63f8dea733066ac74b`, passed actual prior-release
+upgrade, both failure/rollback paths, full providers, independent restore/reinstall
+and preservation. Candidate ZIP/installer checksums were independently verified.
+[Exact receipts and limits](installer-trust-milestone7.md#combined-candidate-acceptance-and-sec-02-closure).
+SEC-02 is closed in the validated unpublished candidate; SEC-03/05/06/08 remain
+open and authorized. Current count: **4 closed / 4 open**. Milestone7 remains in
+progress; next implementation gate is SEC-03. 0.1.39 remains the published prototype.
