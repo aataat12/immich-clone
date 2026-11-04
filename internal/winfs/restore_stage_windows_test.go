@@ -143,7 +143,7 @@ func TestRestoreStageExclusivePublishAndRemoval(t *testing.T) {
 	}
 	t.Log("PASS: exclusive protected stage pins its identity, refuses overwrite, publishes relative Unicode name without identity change and removes selected held tree bottom-up")
 }
-func TestRestoreProgressRelativeRenameAndSharedRead(t *testing.T) {
+func TestRestoreProgressStrictClosedWriterHandoff(t *testing.T) {
 	base := t.TempDir()
 	parent, e := OpenDirectory(base)
 	if e != nil {
@@ -166,7 +166,7 @@ func TestRestoreProgressRelativeRenameAndSharedRead(t *testing.T) {
 	parent = shared
 	defer parent.Close()
 	d := s.Directory()
-	f, e := d.CreateExclusiveFile("progress.part", restorePrimitiveSD(t))
+	f, e := d.CreateExclusiveFile("progress.json", restorePrimitiveSD(t))
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -177,16 +177,18 @@ func TestRestoreProgressRelativeRenameAndSharedRead(t *testing.T) {
 	if e = f.Sync(); e != nil {
 		t.Fatal(e)
 	}
-	if e = d.RenameFileNoReplace(f, "progress.json"); e != nil {
-		t.Fatal(e)
-	}
 	if strict, e := d.OpenFile("progress.json", false); e == nil {
 		strict.Close()
-		t.Fatal("strict source read unexpectedly shared live publication DELETE handle")
+		t.Fatal("strict progress read unexpectedly shared live creation handle")
+	} else if !errors.Is(e, windows.STATUS_SHARING_VIOLATION) && !errors.Is(e, windows.ERROR_SHARING_VIOLATION) {
+		t.Fatal("strict progress reader failed for unexpected reason", e)
 	}
-	read, e := d.OpenSharedReadFile("progress.json")
+	if e = f.Close(); e != nil {
+		t.Fatal(e)
+	}
+	read, e := d.OpenFile("progress.json", false)
 	if e != nil {
-		t.Fatal("progress read could not coexist with live DELETE publication handle", e)
+		t.Fatal("closed immutable progress handoff unavailable", e)
 	}
 	b := make([]byte, 64)
 	n, e := read.Read(b)
@@ -194,15 +196,11 @@ func TestRestoreProgressRelativeRenameAndSharedRead(t *testing.T) {
 	if e != nil || ce != nil || string(b[:n]) != "bounded progress bytes" {
 		t.Fatal("relative progress read changed bytes", e, ce)
 	}
-	collision, e := d.CreateExclusiveFile("existing.json", restorePrimitiveSD(t))
-	if e != nil {
-		t.Fatal(e)
+	if collision, e := d.CreateExclusiveFile("progress.json", restorePrimitiveSD(t)); e == nil {
+		collision.Close()
+		t.Fatal("exclusive progress creation replaced published record")
 	}
-	collision.Close()
-	if e = d.RenameFileNoReplace(f, "existing.json"); e == nil {
-		t.Fatal("relative file publication replaced target")
-	}
-	t.Log("PASS: fixed progress rename is no-replace; shared read survives live DELETE publication handle without weakening strict source-reader sharing")
+	t.Log("PASS: strict progress reader refuses live creation handle, reads synced closed record and FILE_CREATE refuses overwrite")
 }
 
 // Mount-point buffer: REPARSE_DATA_BUFFER's 8-byte header, 8-byte mount-point

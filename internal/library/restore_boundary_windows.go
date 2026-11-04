@@ -338,8 +338,8 @@ func restorePlatform(ctx context.Context, archive, target string, l RestoreLimit
 	return nil
 }
 func (b *restoreBoundary) progress(nonce string, l RestoreLimits) error {
-	f, e := b.stage.Directory().OpenSharedReadFile(restoreProgressName)
-	if offlineMissing(e) {
+	f, e := b.stage.Directory().OpenFile(restoreProgressName, false)
+	if offlineMissing(e) || errors.Is(e, windows.STATUS_SHARING_VIOLATION) || errors.Is(e, windows.ERROR_SHARING_VIOLATION) {
 		return errRestoreProgressNotReady
 	}
 	if e != nil {

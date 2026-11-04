@@ -67,7 +67,7 @@ func (f *restoreHandleFS) Create(entry string) (*os.File, error) {
 }
 func (f *restoreHandleFS) Progress(nonce string, base uint64) (err error) {
 	d := f.stage.Directory()
-	file, e := d.CreateExclusiveFile(restoreProgressName+".part", f.sd)
+	file, e := d.CreateExclusiveFile(restoreProgressName, f.sd)
 	if e != nil {
 		return e
 	}
@@ -82,7 +82,7 @@ func (f *restoreHandleFS) Progress(nonce string, base uint64) (err error) {
 	if e = file.Sync(); e != nil {
 		return e
 	}
-	return d.RenameFileNoReplace(file, restoreProgressName)
+	return nil
 }
 func (f *restoreHandleFS) Check(l RestoreLimits) error {
 	names, e := f.stage.Directory().Names()

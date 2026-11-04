@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"immichclone/internal/winfs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -158,6 +159,64 @@ func TestRestoreBoundaryArchiveBesideDestination(t *testing.T) {
 		t.Fatal("sibling recovery changed held archive", e)
 	}
 	t.Log("PASS: archive inside selected destination parent remains byte-identical while independently verified sibling recovery publishes")
+}
+
+func TestRestoreBoundaryProgressWaitsForClosedWriter(t *testing.T) {
+	parent, e := winfs.OpenDirectory(t.TempDir())
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer parent.Close()
+	sd, _, e := restorePrivateDescriptor()
+	if e != nil {
+		t.Fatal(e)
+	}
+	stage, e := parent.CreateExclusiveDirectory("progress-stage", sd)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer stage.Close()
+	defer stage.Remove()
+	catalog, e := stage.Directory().CreateExclusiveFile("catalog.db", sd)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if _, e = catalog.Write([]byte{0}); e != nil {
+		t.Fatal(e)
+	}
+	if e = catalog.Close(); e != nil {
+		t.Fatal(e)
+	}
+	progress, e := stage.Directory().CreateExclusiveFile(restoreProgressName, sd)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer progress.Close()
+	nonce := strings.Repeat("a", 64)
+	if _, e = progress.WriteString(`{"Nonce":"` + nonce); e != nil {
+		t.Fatal(e)
+	}
+	b := restoreBoundary{stage: stage}
+	limits := RestoreLimits{MaxBytes: 1024, MaxCatalogBytes: 512}
+	if e = b.progress(nonce, limits); !errors.Is(e, errRestoreProgressNotReady) {
+		t.Fatal("partial live progress was consumed", e)
+	}
+	if _, e = progress.WriteString(`","BaseBytes":0}`); e != nil {
+		t.Fatal(e)
+	}
+	if e = progress.Sync(); e != nil {
+		t.Fatal(e)
+	}
+	if e = b.progress(nonce, limits); !errors.Is(e, errRestoreProgressNotReady) {
+		t.Fatal("complete but live progress was consumed", e)
+	}
+	if e = progress.Close(); e != nil {
+		t.Fatal(e)
+	}
+	if e = b.progress(nonce, limits); e != nil {
+		t.Fatal("closed valid progress was refused", e)
+	}
+	t.Log("PASS: supervisor never reads partial or complete progress from a live writer; synced closed record passes nonce and catalog bounds")
 }
 
 func TestRestoreBoundaryStaticInputAliasesAndWriterRefuse(t *testing.T) {
