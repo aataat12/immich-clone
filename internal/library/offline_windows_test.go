@@ -41,6 +41,47 @@ func offlineSnapshot(t *testing.T, root string) map[string]offlineObserved {
 		if e != nil {
 			return e
 		}
+		u, e := windows.UTF16PtrFromString(path)
+		if e != nil {
+			return e
+		}
+		attributes, e := windows.GetFileAttributes(u)
+		if e != nil {
+			return e
+		}
+		if attributes&windows.FILE_ATTRIBUTE_REPARSE_POINT != 0 {
+			// Go does not classify every Windows mount point as a symlink.
+			// Snapshot the held reparse object itself, never its target bytes.
+			h, e := windows.CreateFile(u, windows.READ_CONTROL|windows.FILE_READ_ATTRIBUTES, windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE, nil, windows.OPEN_EXISTING, windows.FILE_FLAG_BACKUP_SEMANTICS|windows.FILE_FLAG_OPEN_REPARSE_POINT, 0)
+			if e != nil {
+				return e
+			}
+			defer windows.CloseHandle(h)
+			var info windows.ByHandleFileInformation
+			if e = windows.GetFileInformationByHandle(h, &info); e != nil {
+				return e
+			}
+			if info.FileAttributes&windows.FILE_ATTRIBUTE_REPARSE_POINT == 0 {
+				return errors.New("snapshot reparse object changed")
+			}
+			sd, e := windows.GetSecurityInfo(h, windows.SE_FILE_OBJECT, windows.OWNER_SECURITY_INFORMATION|windows.DACL_SECURITY_INFORMATION)
+			if e != nil {
+				return e
+			}
+			buffer := make([]byte, 16<<10)
+			var returned uint32
+			if e = windows.DeviceIoControl(h, windows.FSCTL_GET_REPARSE_POINT, nil, 0, &buffer[0], uint32(len(buffer)), &returned, nil); e != nil {
+				return e
+			}
+			if returned < 8 || returned > uint32(len(buffer)) {
+				return errors.New("snapshot reparse data incomplete")
+			}
+			out[rel] = offlineObserved{Descriptor: sd.String(), Link: hex.EncodeToString(buffer[:returned]), Directory: info.FileAttributes&windows.FILE_ATTRIBUTE_DIRECTORY != 0}
+			if d.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
 		sd, e := windows.GetNamedSecurityInfo(path, windows.SE_FILE_OBJECT, windows.OWNER_SECURITY_INFORMATION|windows.DACL_SECURITY_INFORMATION)
 		if e != nil {
 			return e
