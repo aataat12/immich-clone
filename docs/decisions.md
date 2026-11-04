@@ -343,3 +343,15 @@
   model identity remains shared with supported still photos; sampling policy
   has its own versioned field, allowing compatible review-only name suggestions
   without automatic naming/tracking. Full-frame coverage remains out of scope.
+
+
+- November 4, 2026 (America/Chicago): user reported the combined 0.1.39 regression
+  passed every exercised check, then instructed proceeding with milestone 7.
+  Preserve local NOT TESTED items; see validation-0.1.39.md. Reuse actual 0.1.39
+  installer/rollback/payload/restore acceptance instead of repeating green CI.
+  Milestone 7 preparation and manual update procedure are in milestone7-hardening.md
+  and update-guide.md. Group 2/3 security deferrals are not silently revoked by the
+  generic milestone instruction. Before resuming original SEC-02/03/05/06/08
+  mitigation or extra security experiments, obtain the explicit scope decision.
+  Closed SEC-01/04/07 remain closed. Signing remains unconfigured and prototypes
+  unsigned; no certificate/account purchase, new workers or new costs authorized.

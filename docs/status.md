@@ -1,5 +1,27 @@
 # Current status
 
+## November 4, 2026: 0.1.39 local regression accepted; milestone 7 started
+
+Current published prototype is **0.1.39**. The user reported all exercised combined
+0.1.38/0.1.39 checks passed, with no failures. Existing sampled-video results show
+12/12 timestamped positions; this is not a fresh inference execution or an
+explanation of an older video failure. [Exact tested/untested scope](validation-0.1.39.md#combined-user-result).
+Accepted cloud source/run/checksum: [0.1.39 acceptance](release-0.1.39-acceptance.md).
+
+The user instructed proceeding with milestone 7 after the handoff pause.
+[Milestone 7 gates](milestone7-hardening.md) and the [manual update guide](update-guide.md)
+record permitted preparation, reused evidence and the remaining scope decision.
+Group 2/3 security mitigation remains deferred; general milestone authorization
+has not silently lifted it. Original count remains 3 closed / 5 open. Signing is
+unconfigured; no new costs, workers, installer or CI run were introduced for this
+preparation. Final Windows 10 clean-install/reboot/endurance acceptance remains open.
+
+## Historical checkpoints (superseded where later acceptance applies)
+
+The chronological snapshots below are retained as history. Their old current/
+next-release/held-candidate wording does not override the 0.1.37/0.1.38/0.1.39
+acceptance records or reopen already resolved bounded defects.
+
 **Target Windows10 validation of0.1.30: sampled video FAIL, cause unknown.**
 User confirmed version/data, dismissal/restore, photo context, authentication and
 normal page navigation. HEIC AI and narrow layout were not exercised. One existing

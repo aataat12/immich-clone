@@ -1,0 +1,46 @@
+# Milestone 7: installer, security and update hardening
+
+Started November 4, 2026 (America/Chicago), after the user accepted the exercised
+combined 0.1.38/0.1.39 functional checks and instructed proceeding with milestone 7.
+This authorizes milestone work; it does not silently revoke the explicit Group 2/3
+security deferrals. No workers or new charges are authorized.
+
+## Completion gates and current evidence
+
+| Gate | Evidence / remaining work | Disposition |
+|---|---|---|
+| Accepted starting point | Published 0.1.39 source `1be1d013529635e96043549c7cb80c0f76d38a3a`; combined run [41784610044](https://github.com/aataat12/immich-clone/actions/runs/41784610044). November 4 read-only GitHub check reconfirmed completed/success, matching release target and installer asset digest/size. | Existing evidence reused; no rerun or new package. |
+| Local functional regression | [Combined user result](validation-0.1.39.md#combined-user-result). All exercised checks passed; omitted checks remain NOT TESTED. | Recorded; final target acceptance remains separate. |
+| Dependency provenance and servicing | Existing [dependency evidence](dependency-evidence.md), preparation scripts and [review closeout](security-review-closeout.md) retain exact source, models, hashes, licenses and static-runtime replacement obligations. The accepted run checked Go dependencies. | Reused dated evidence, not a fresh advisory audit. Broad renewed review remains deferred. |
+| Diagnostic privacy | Existing fixed-schema logging, offline export and installed synthetic access-code/media canary checks passed in the accepted combined run. `internal/diagnostics/log.go`, `packaging/Export-Diagnostics.ps1` and `scripts/Test-Installer.ps1` were inspected for this inventory. | Existing bounded evidence retained; no claim of exhaustive privacy certification or new security closure. |
+| Upgrade and rollback correctness | Actual 0.1.38 installer, injected initial failure, successful 0.1.39 upgrade, injected 0.1.40 rollback, independent restore/reinstall and uninstall preservation passed. [Acceptance](release-0.1.39-acceptance.md). | Functional correctness evidence exists; it does not close SEC-02 privilege/trust boundaries. |
+| Update procedure | [Manual update guide](update-guide.md) records verification, backup, same-folder upgrade and failure handling. No automatic updater is introduced. | Documentation prepared; next installer must pass acceptance for its actual source and previous release. |
+| Signing arrangements | Current release is unsigned. No certificate, signing account, identity validation or timestamp service has been configured or verified. Existing unsigned prototypes may continue within the user's prior bounded approval. | Final signing decision is open. No purchase or trusted-publisher claim. |
+| Safe upgrades: SEC-02 | Staging-token/custom-AppDir trust and remaining privileged installer boundaries. | Group 2 deferred; explicit scope decision needed before mitigation. |
+| Filesystem boundaries: SEC-03 | Concurrent junction/reparse replacement; static checks are insufficient. | Group 2 deferred; explicit scope decision needed before mitigation. |
+| Native isolation: SEC-05 | Same-token children retain service-readable authority beyond required input/scratch. | Group 2 deferred; explicit scope decision needed before mitigation. |
+| Remaining input review: SEC-06 | Full declared malformed media/filename/metadata/tag/catalog review, including parent Go decoding. | Group 2 deferred; explicit scope decision needed before investigation/mitigation. |
+| Release validation: SEC-08 | Final target/clean-install/reboot and broader acceptance gates; routine prototype gates are already covered above. | Open; extra security experiments remain deferred. Final target gates belong with milestone 8. |
+
+Milestone 7 is **in progress, not delivered**. No release number is assigned.
+Original security status remains **3 closed / 5 open**: SEC-01/04/07 closed;
+SEC-02/03/05/06/08 open. Group 1 has no demonstrated open original item; all eight
+are currently Group 2. New issues remain Group 3, record only.
+
+## Concrete scope decision
+
+The next uncompleted installer-hardening work is SEC-02, followed by SEC-03;
+SEC-05/06 and extra SEC-08 security checks also require lifting their deferral.
+Ask whether milestone 7 should now resume these five original open items, or
+retain the deferral and hold milestone 7 incomplete after its permitted evidence
+and procedure work. Do not treat silence as approval, reopen closed items, begin
+new Group 3 investigations or buy signing/infrastructure services.
+
+## Preparation verification
+
+November 4: clean starting workspace and remote head both matched acceptance-record
+commit `380ad2e76504da30e87487cd59ff0da36e34ca84`. Current workflow triggers and
+publication steps were inspected. Documentation-only changes do not justify a new
+installer/full CI run. No application, installer, workflow, dependency, schema,
+provider or shipped Build Notes changed. The installed page continues to describe
+the accepted 0.1.39 build; the repository roadmap tracks subsequent work.
