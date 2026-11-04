@@ -332,3 +332,14 @@ The focused filesystem workflow supplies this primitive proof; a filesystem-only
 commit skips the larger Setup gate. No dependency, feature, provider, version,
 public installer or Group3 work is added. SEC-03 remains open.
 Reference: Microsoft [SetSecurityInfo](https://learn.microsoft.com/en-us/windows/win32/api/aclapi/nf-aclapi-setsecurityinfo).
+
+
+### First ACL proof execution status
+
+Source `8adf2fa91371a3ca502b2f0c7637b27893a4cf84`,
+[run41862213427](https://github.com/aataat12/immich-clone/actions/runs/41862213427),
+job126686818594: **QUEUED**, no Windows runner assigned at latest observation.
+The separate larger installer gate was deliberately skipped. Worker review and
+independent controls, Windows cross-compilation and vet passed; actual execution
+remains required and must be recorded after logs are inspected. No installer
+operation conversion or completed ACL proof is claimed.

@@ -892,3 +892,14 @@ controls; separate ordinary-user reads/writes were denied by creation alone.
 Actual Setup/rollback and existing SEC-01 compatibility passed. Scope/evidence:
 filesystem-boundary-milestone7.md. Existing-tree ACL normalization is unconverted;
 no new distribution/runtime prerequisite, artifact release or Windows10 certification.
+
+
+## Held single-object ACL API proof — pending
+
+Same pinned Go/x/sys/Windows APIs; no new dependency or product prerequisite.
+Source8adf2fa adds an isolated MAXIMUM_ALLOWED directory-open + SetSecurityInfo
+protected-DACL operation. Actual no-propagation/locked-child/inheritance and
+outside-target behavior must be proven before installer use. Independent review,
+Windows cross-compilation and vet passed. Run41862213427/job126686818594 is queued
+without a Windows runner at the latest observation: no execution/compatibility/
+SEC-03 completion claim. Existing installer ACL behavior remains unchanged.

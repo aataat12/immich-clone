@@ -56,6 +56,25 @@ remains explicitly unconverted; next is that bounded change, followed by remaini
 init/Setup/full acceptance gates. No feature scope expansion or Group3 work.
 SEC-03 remains open,4 closed/4 open; keep0.1.39 with no local action/new release.
 
+### SEC-03 existing-tree ACL pass 1: Windows execution pending
+
+The user defines a pass as one work session ending in a completion/pause update.
+Of the six remaining SEC-03 workstreams, existing-tree ACL handling is in progress:
+its isolated held-object ACL API and independent controls are prepared, reviewed,
+Windows-cross-compiled and vetted. Actual behavior is unverified: source8adf2fa,
+[focused run41862213427](https://github.com/aataat12/immich-clone/actions/runs/41862213427),
+job126686818594 was queued without a Windows runner at the latest observation.
+Do not mark this proof or the ACL subtask complete until actual logs are reviewed.
+No installer ACL call site/policy changed. The worker finished review/tests; the
+GitHub job is pending, not assistant background continuation. No PC action needed.
+
+Remaining SEC-03 workstreams: existing-tree ACL normalization; elevated init;
+Setup publication; uninstall/cleanup; integrated real-account races; combined
+prior-release/full-provider/recovery closure. Earlier planning estimate:8 additional
+passes, approximate6–12 overall, with ACL handling estimated2; this queued attempt
+does not establish a completed ACL pass. Current count remains4 closed/4 open,
+published0.1.39 unchanged. No Group3 work or feature expansion.
+
 ## Historical checkpoints (superseded where later acceptance applies)
 
 The chronological snapshots below are retained as history. Their old current/

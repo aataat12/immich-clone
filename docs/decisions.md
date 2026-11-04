@@ -422,3 +422,13 @@
   run41849734950/source db37f6c/job126642511204 passed native, separate ordinary-user
   creation-only, actual Setup/rollback and existing SEC-01 controls. Worker completed
   review/tests. SEC-03 remains open; no new release, cost or Windows10 claim.
+
+- November4: for existing-tree ACL work, prove the documented MAXIMUM_ALLOWED
+  SetSecurityInfo no-child-propagation contract by actual execution before any
+  installer dependency. Parent chain stays pinned; leaf opens once at final access
+  to avoid self-conflicting sharing locks. Independent unlocked/locked-child,
+  protected-child, outside-symlink, future-inheritance and writer-refusal controls
+  are required. Source8adf2fa is isolated and not called by production helper.
+  Run41862213427/job126686818594 remained queued awaiting a Windows runner at the
+  last observation; cross-compilation/vet/review do not establish behavior.
+  No completed ACL subtask or reduction in security closure count is claimed.
