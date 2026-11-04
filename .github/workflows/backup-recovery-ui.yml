@@ -1,0 +1,37 @@
+name: Backup recovery instructions browser acceptance
+on:
+  push:
+    paths:
+      - '.github/workflows/backup-recovery-ui.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  recovery-ui:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with:
+          go-version: '1.27.3'
+      - name: Execute focused backup regressions and build standalone app
+        shell: pwsh
+        run: |
+          go test -mod=readonly -count=1 ./internal/web -run 'TestManagedBackup'
+          if ($LASTEXITCODE -ne 0) { throw 'Backup regressions failed' }
+          go build -mod=readonly -o "$env:RUNNER_TEMP/recovery-ui.exe" ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'App build failed' }
+      - name: Exercise Edge help, instructions and ZIP downloads, offline restore and verification
+        shell: pwsh
+        run: |
+          $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD='1'
+          npm install --prefix "$env:RUNNER_TEMP/recovery-ui-deps" --no-audit --no-fund playwright@1.62.1
+          if ($LASTEXITCODE -ne 0) { throw 'Browser harness setup failed' }
+          $env:IMMICH_BROWSER_MODULE="$env:RUNNER_TEMP/recovery-ui-deps/node_modules/playwright"
+          $env:IMMICH_RECOVERY_BINARY="$env:RUNNER_TEMP/recovery-ui.exe"
+          node tests/backup-recovery.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Recovery browser acceptance failed' }
