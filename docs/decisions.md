@@ -401,3 +401,12 @@
   independent controls. Retain source/runtime/placeholder limits in the evidence;
   no original SEC-03 closure, public release or Win10 certification. Next checkpoint
   is remaining privileged root/ACL/diagnostic operations. No workers remain active.
+
+- November4: native installer diagnostic integration passed run41846533710,
+  source7f4b99b/job126631387368 on Windows Server2022. Keep fixed label/numeric
+  schema and existing private access policy, audit actual held descriptors and
+  both rotation leaves before mutation, copy/sync previous before current reset.
+  Optional failure-note refusal must not suppress recovery; actual hard-linked
+  note/Setup failure proved outside-byte preservation and healthy verified rollback.
+  Worker review/independent tests complete. No new dependency/release/Win10
+  claim or SEC-03 closure; remaining root/ACL/init/Setup gates stay open.

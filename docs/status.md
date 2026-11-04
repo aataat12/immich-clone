@@ -33,6 +33,17 @@ SEC-03 remains open for root/ACL, logging, initialization, Inno publication/unin
 and full combined release gates. Count stays4 closed/4 open. No new installer or
 PC action is requested. This checkpoint is complete; no workers/CI are left running.
 
+### SEC-03 diagnostic checkpoint
+
+Installer log append/rotation and sanitized failure-note writes now use the staged
+native helper with held actual directories/files and descriptor policy checks.
+Focused Windows Server2022 run41846533710/source7f4b99b passed independent native
+controls, real Setup failure with hard-linked note refusal and healthy rollback,
+existing snapshots and SEC-01 compatibility. [Exact evidence](filesystem-boundary-milestone7.md#accepted-focused-diagnostic-integration).
+The worker completed review/tests; no workers or CI remain active. SEC-03 stays
+open for root/ACL, initialization, remaining Setup paths and full combined gates.
+Count remains4 closed/4 open; keep0.1.39, no PC action or new release.
+
 ## Historical checkpoints (superseded where later acceptance applies)
 
 The chronological snapshots below are retained as history. Their old current/

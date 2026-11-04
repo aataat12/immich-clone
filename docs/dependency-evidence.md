@@ -865,3 +865,16 @@ Go scan now include this executable (their full release execution remains pendin
 volume-GUID names use existing Windows APIs. Cross-compilation/vet and focused actual helper/privacy/alias plus production Setup
 execution passed in run41842717775/source d74c6ee; see filesystem-boundary-milestone7.md
 for exact operation evidence and remaining nonconverted paths/full release gates. These APIs do not establish Windows10 behavior from Server.
+
+
+## Native installer diagnostic integration
+
+No dependency/version/runtime change: the same staged Go/x/sys helper now writes
+fixed-label installer diagnostics through validated handles. First focused actual
+Windows Server2022 acceptance41846533710, source7f4b99b, job126631387368 passed
+append/rotation/privacy/alias/oversize controls and real Inno failed-Setup recovery
+when the optional failure note was a hard link. Outside bytes, original/code hashes,
+health and completion order passed; existing native and SEC-01 suites passed.
+Worker review/tests complete. Exact bounds and remaining root/ACL/init/Setup/full
+release/Windows10 gates: filesystem-boundary-milestone7.md. No public artifact
+or new end-user prerequisite; this does not close original SEC-03.

@@ -200,9 +200,42 @@ records; this is not transactional logging. There is no pathname rename fallback
 The failure note contains only stage/result, audits actual code mutation rights,
 and is best effort so refusal cannot suppress installer recovery.
 
-One user-authorized worker independently reviews and tests this slice. Native
-Windows execution, including an actual failed Setup with a hard-linked failure
-note, is pending. Cross-compilation/vet do not establish acceptance. Root/ACL
+One user-authorized worker independently reviews and tests this slice. Actual
+Windows acceptance is recorded below; cross-compilation/vet alone do not establish acceptance. Root/ACL
 creation/propagation, initialization, Inno publication/deletion and final combined
 release gates remain outside this conversion. SEC-03 remains open; 4 closed /
 4 open, published0.1.39 unchanged. No new dependency, release or PC action.
+
+
+## Accepted focused diagnostic integration
+
+[Run41846533710](https://github.com/aataat12/immich-clone/actions/runs/41846533710),
+source `7f4b99b3cb7f9749bda5c09e5ce9dcdfb16a24e6`, job `126631387368`: **PASS**
+on Windows Server2022 x64, first focused execution. The authorized worker completed
+independent review and tests; the primary agent inspected the actual job logs.
+
+Native append/schema/time/signed-code, exact bounded rotation, hard-linked
+current/previous/note refusal, actual root/leaf privacy and code mutation-rights
+refusal, unknown labels, oversized log and missing-root refusal passed. Snapshot,
+readiness, actual descriptor and DOS-alias regressions also passed. Both packages
+passed vet. The underlying namespace test completed 200 held rename refusals and
+2,000 concurrent writes (1,283 accepted / 717 refused / 371 actual link swaps),
+outside sentinel unchanged; counts describe one disposable-runner interleaving.
+
+Production Inno compiled and executed with the current runtime and minimal
+disposable provider placeholders. An actual post-initialization Setup failure
+encountered a hard-linked optional failure note: outside bytes stayed unchanged,
+verified restore returned a healthy service, and one new rollback_complete event
+was appended. Code/access-code/original hashes and readiness passed. Staged helper
+locks, separate real standard-user trust tests, protected custom/default Program
+Files install/uninstall and the existing SEC-01 permission suite passed.
+
+No genuine prior-version/full-provider combined release or Windows10 certification
+is claimed. Diagnostic rotation is bounded copy/sync, not atomic logging; failure
+may lose log records but must not suppress recovery. Root/ACL creation/propagation,
+elevated initialization, Inno publication/deletion/uninstall and final combined
+recovery gates remain. SEC-03 stays open, 4 closed / 4 open. No new release,
+user-PC action, charges or running workers/CI remain at this checkpoint.
+
+Next: native root creation/ACL application with explicit inheritance behavior,
+then remaining init/Setup operations and applicable complete release acceptance.
