@@ -937,3 +937,11 @@ substitution, and combined genuine prior0.1.39/full-provider recovery. Temp fina
 receipt currently cannot recover mixed partial payload after hard kill. Previous
 two-pass forecast undercounted implementation; do not call this tranche full
 integrated closure or silently remove these requirements from SEC03.
+
+First tranche run41905055196/source081a5f08/job126837361941 stopped at the first
+existing init exact-refusal assertion after independent tests switched to bounded
+Start-Process waiting. Product init guard/text were unchanged. Test wrapper now
+retains native process Handle before waiting, Refresh/Wait captures nonnull
+ExitCode and Dispose follows output read; exact exit1/refusal assertions remain.
+Failure-only diagnostics use match booleans/character counts, never code contents
+or raw error paths. Actual rerun decides whether this is harness-only.

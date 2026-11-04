@@ -37,13 +37,24 @@ function Run-GuardedMode([string]$Mode,[string]$State,[string]$Logs) {
  $out=Join-Path $root ('output-'+$script:attempt+'.txt')
  $err=Join-Path $root ('error-'+$script:attempt+'.txt')
  $process=Start-Process -FilePath $Binary -ArgumentList @('-mode',$Mode,'-data',('"'+$State+'"'),'-logs',('"'+$Logs+'"')) -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
- if(!$process.WaitForExit(10000)) { $process.Kill();$process.WaitForExit();throw 'Guarded application mode failed to return within the bounded test timeout' }
- $process.WaitForExit()
- return @{Code=$process.ExitCode;Output=[IO.File]::ReadAllText($out);Error=[IO.File]::ReadAllText($err)}
+ # Windows PowerShell can discard the exit status of a fast Start-Process
+ # child unless its native process handle is retained before waiting.
+ $null=$process.Handle
+ try {
+  if(!$process.WaitForExit(10000)) { $process.Kill();$process.WaitForExit();throw 'Guarded application mode failed to return within the bounded test timeout' }
+  $process.Refresh()
+  $process.WaitForExit()
+  $status=$process.ExitCode
+  if($null -eq $status){throw 'Guarded application process completed without a captured exit status'}
+  return @{Code=$status;Output=[IO.File]::ReadAllText($out);Error=[IO.File]::ReadAllText($err)}
+ } finally { $process.Dispose() }
 }
 function Refused([string]$State,[string]$Logs,[string]$Label,[string]$Mode='init',[string]$Expected=$refusal) {
  $result=Run-GuardedMode $Mode $State $Logs
  $text=($result.Output+$result.Error).Trim()
+ if($result.Code -ne 1 -or $text -ne $Expected) {
+  Write-Host ('Guard diagnostic: exit_expected='+[bool]($result.Code -eq 1)+' text_expected='+[bool]($text -eq $Expected)+' stdout_characters='+$result.Output.Length+' stderr_characters='+$result.Error.Length)
+ }
  Assert ($result.Code -eq 1 -and $text -eq $Expected) $Label
 }
 
