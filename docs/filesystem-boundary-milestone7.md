@@ -571,3 +571,18 @@ Scope stays first of the existing two Setup passes: code permissions now; Inno
 payload publication next. No new dependency/provider/schema/feature/version,
 public release, cost, PC action or Group3 investigation. Uninstall, other offline
 command boundaries/integrated races and full combined acceptance remain open.
+
+
+### First code-grant Windows result
+
+Run41876888789/sourcef387a87fb831e9cbab5dd54b3dcd7a19c6abde5e,
+job126738580681 failed only the inherit-only-writer negative fixture on a regular
+file. All preserved-reader/creator-owner/rollback, actual running-own-image,
+ordinary/service writer/deny, alias and late-name controls passed. Source policy
+already inspects non-CREATOR-OWNER inherit-only mutation grants. The corrected
+fixture uses a real protected directory and first requires GetSecurityInfo to
+show actual OICI+inherit-only BU mutation authority before candidate invocation.
+This avoids assuming an inapplicable regular-file inheritance rule survived the
+Windows ACL setter. No source-policy change or preservation assertion weakening.
+Actual Setup/SEC01 gate was skipped on native failure; no integration acceptance
+is claimed for that run.

@@ -162,7 +162,12 @@ func TestCodeReadGrantUnsafeMutationRefusesBeforeWrites(t *testing.T) {
 		t.Run(kind, func(t *testing.T) {
 			root, child, file := codeACLFixture(t)
 			bad := filepath.Join(child, "z-unsafe.bin")
-			if e := os.WriteFile(bad, []byte("unsafe code bytes"), 0600); e != nil {
+			if kind == "inherit-only-writer" {
+				bad = filepath.Join(child, "z-unsafe-directory")
+				if e := os.Mkdir(bad, 0700); e != nil {
+					t.Fatal(e)
+				}
+			} else if e := os.WriteFile(bad, []byte("unsafe code bytes"), 0600); e != nil {
 				t.Fatal(e)
 			}
 			switch kind {
@@ -171,7 +176,27 @@ func TestCodeReadGrantUnsafeMutationRefusesBeforeWrites(t *testing.T) {
 			case "service-writer":
 				setPrivacyDescriptor(t, bad, "D:P(A;;FA;;;SY)(A;;FA;;;BA)(A;;GW;;;LS)")
 			case "inherit-only-writer":
-				setPrivacyDescriptor(t, bad, "D:P(A;;FA;;;SY)(A;;FA;;;BA)(A;OIIO;GW;;;BU)")
+				// Inherit-only mutation is meaningful on a directory. Windows
+				// may discard an inapplicable IO rule on a regular file, so
+				// require the actual hostile grant before invoking candidate.
+				setPrivacyDescriptor(t, bad, "D:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICIIO;GW;;;BU)")
+				acl, _, e := treeSD(t, bad).DACL()
+				if e != nil || acl == nil {
+					t.Fatal("inherit-only directory fixture DACL missing", e)
+				}
+				found := false
+				for i := uint32(0); i < uint32(acl.AceCount); i++ {
+					var ace *windows.ACCESS_ALLOWED_ACE
+					if e = windows.GetAce(acl, i, &ace); e != nil {
+						t.Fatal(e)
+					}
+					if ace.Header.AceType == windows.ACCESS_ALLOWED_ACE_TYPE && ace.Header.AceFlags&8 != 0 && ace.Header.AceFlags&3 == 3 && (*windows.SID)(unsafe.Pointer(&ace.SidStart)).String() == "S-1-5-32-545" && uint32(ace.Mask)&0x500d0156 != 0 {
+						found = true
+					}
+				}
+				if !found {
+					t.Fatal("required actual inherit-only untrusted mutation grant not established")
+				}
 			case "deny":
 				setPrivacyDescriptor(t, bad, "D:P(A;;FA;;;SY)(A;;FA;;;BA)(D;;GW;;;BU)")
 			}
