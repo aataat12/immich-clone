@@ -639,8 +639,28 @@ Add FILE_READ_DATA to security-metadata file access (still no DATA_WRITE/DELETE)
 retaining read sharing only. No actual content I/O is added. This parallels the
 already-established directory FILE_LIST_DIRECTORY sharing correction. Independent
 positive-control tests now require rename/write/hardlink ability before the hold,
-actual held rename/write/new-hardlink refusals and no outside alias, release/retry,
+actual held rename/write refusals, changed-link-count refusal after new alias publication, release/retry,
 and refusal of a preexisting data writer without ACL/byte changes. The own-image
 test remains required to prove executing-code compatibility with the corrected
 read authority. This is the existing SEC-03 leaf-pin requirement, not extra scope.
 Reference: Microsoft [CreateFile sharing and attribute requests](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew).
+
+
+### Actual file-pin semantics
+
+Run41880659953/source201b7cd514317ae0f6ca4fad0ef39c1c3607e7d0,
+job126751969984 passed actual file rename and data-write sharing refusals, existing
+code/rollback/inheritance and running-image controls. The newly added test failed
+its overstrong assumption that Windows would also prevent any new hard-link name.
+A fresh outside alias to the SAME held managed object can be published; it does
+not replace that selected object with an unrelated pre-existing outside object.
+No claim is made that sharing freezes link count or revokes metadata authority.
+
+Retain initial incoming-hardlink refusal, actual file identity/namespace pins and
+before/after link-count checks. Correct tests require actual outgoing publication,
+changed-count Validate refusal with unchanged object ACL/bytes, release/removal/
+retry, plus production pre-apply outgoing-link refusal before ANY ACL write with
+unchanged old code/root/outside-sentinel ACLs and bytes. Rename/data-writer/incoming
+link assertions remain; protected rollback is still skipped exactly. Full incoming
+replacement/interleaving matrix remains integrated race/closure work, not silently
+claimed by this bounded grant. Product code is unchanged by this test correction.

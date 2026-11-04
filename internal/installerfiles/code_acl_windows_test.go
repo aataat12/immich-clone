@@ -449,6 +449,10 @@ func TestCodeACLFilePinsAndWriterRefusal(t *testing.T) {
 	if e = windows.CloseHandle(writer); e != nil {
 		t.Fatal(e)
 	}
+	pinBefore := map[string]string{}
+	for _, p := range []string{root, child, file} {
+		pinBefore[p] = treeSD(t, p).String()
+	}
 	held, e := winfs.OpenCodeACLTree(root)
 	if e != nil {
 		t.Fatal(e)
@@ -465,16 +469,46 @@ func TestCodeACLFilePinsAndWriterRefusal(t *testing.T) {
 	} else if !errors.Is(e, windows.ERROR_SHARING_VIOLATION) {
 		t.Fatal("code write refusal did not establish actual sharing conflict", e)
 	}
-	if e = os.Link(file, alias); e == nil {
-		_ = held.Close()
-		_ = os.Remove(alias)
-		t.Fatal("held code file accepted a newly published outside hard link")
+	// Windows permits publishing another name for the SAME held object. That
+	// is not replacement by a preexisting outside object, but the changed link
+	// count must make validation refuse before an ACL operation is accepted.
+	if e = os.Link(file, alias); e != nil {
+		t.Fatal("required outward hard-link publication while held failed", e)
 	}
-	if _, e = os.Stat(alias); !os.IsNotExist(e) {
-		t.Fatal("refused hard-link publication left an outside alias", e)
+	aliasInfo, e = os.Stat(alias)
+	if e != nil || !os.SameFile(originalInfo, aliasInfo) {
+		t.Fatal("outward hard link did not select held object", e)
+	}
+	if e = held.Validate(); !errors.Is(e, winfs.ErrUnsafeObject) {
+		t.Fatal("validation did not refuse actual held-object link-count change", e)
+	}
+	for p, want := range pinBefore {
+		if treeSD(t, p).String() != want {
+			t.Fatal("outward-link validation changed a code ACL")
+		}
+	}
+	if treeSD(t, alias).String() != pinBefore[file] {
+		t.Fatal("outward alias descriptor differs from unchanged held object")
 	}
 	assertBytes(t, file, "retained code bytes")
+	assertBytes(t, alias, "retained code bytes")
 	if e = held.Close(); e != nil {
+		t.Fatal(e)
+	}
+	// Delete sharing may prevent unlink while held. Remove after release, then
+	// require a fresh acquisition and validation to recover with one link again.
+	if e = os.Remove(alias); e != nil {
+		t.Fatal(e)
+	}
+	recovered, e := winfs.OpenCodeACLTree(root)
+	if e != nil {
+		t.Fatal("removed outward alias should permit acquisition", e)
+	}
+	if e = recovered.Validate(); e != nil {
+		recovered.Close()
+		t.Fatal("removed outward alias should restore validation", e)
+	}
+	if e = recovered.Close(); e != nil {
 		t.Fatal(e)
 	}
 	if e = os.Rename(file, moved); e != nil {
@@ -518,5 +552,67 @@ func TestCodeACLFilePinsAndWriterRefusal(t *testing.T) {
 	if e = retry.Close(); e != nil {
 		t.Fatal(e)
 	}
-	t.Log("PASS: held code files refuse actual rename, data-write opens and new outside hard links; release permits rename; existing data writer forces sharing refusal without ACL/byte changes and release permits retry")
+	t.Log("PASS: held code files refuse rename and data-write opens; actual outgoing hard-link publication changes link count and is refused by validation without ACL/byte changes; removal/reacquisition recovers; existing writer forces sharing refusal and release permits retry")
+}
+
+func TestCodeReadGrantLateOutgoingAliasRefusedBeforeWrite(t *testing.T) {
+	root, child, file := codeACLFixture(t)
+	outside := t.TempDir()
+	alias := filepath.Join(outside, "new-outgoing-alias")
+	sentinel := filepath.Join(outside, "preexisting-sentinel")
+	if e := os.WriteFile(sentinel, []byte("preexisting outside bytes"), 0600); e != nil {
+		t.Fatal(e)
+	}
+	if _, e := os.Stat(alias); !os.IsNotExist(e) {
+		t.Fatal("outgoing alias fixture must start absent", e)
+	}
+	before := map[string]string{}
+	for _, p := range []string{root, child, file, outside, sentinel} {
+		before[p] = treeSD(t, p).String()
+	}
+	called, published := false, false
+	e := grantCodeReadAccess(root, func() error {
+		called = true
+		if e := os.Link(file, alias); e != nil {
+			return e
+		}
+		published = true
+		return nil
+	})
+	if !called || !published {
+		t.Fatal("required outgoing alias publication after planning was not exercised", e)
+	}
+	if !errors.Is(e, winfs.ErrUnsafeObject) {
+		t.Fatal("late outgoing alias was not refused by actual link-count validation", e)
+	}
+	sourceInfo, e := os.Stat(file)
+	if e != nil {
+		t.Fatal(e)
+	}
+	aliasInfo, e := os.Stat(alias)
+	if e != nil || !os.SameFile(sourceInfo, aliasInfo) {
+		t.Fatal("new alias must select exactly the held managed object", e)
+	}
+	for p, want := range before {
+		if treeSD(t, p).String() != want {
+			t.Fatal("late outgoing alias refusal changed any planned or preexisting outside ACL")
+		}
+	}
+	if treeSD(t, alias).String() != before[file] {
+		t.Fatal("new outgoing alias did not retain exact original managed-object descriptor")
+	}
+	assertBytes(t, file, "retained code bytes")
+	assertBytes(t, alias, "retained code bytes")
+	assertBytes(t, sentinel, "preexisting outside bytes")
+	if e = os.Remove(alias); e != nil {
+		t.Fatal(e)
+	}
+	if e = GrantCodeReadAccess(root); e != nil {
+		t.Fatal("removing late outgoing alias must permit ordinary grant retry", e)
+	}
+	assertBytes(t, sentinel, "preexisting outside bytes")
+	if treeSD(t, sentinel).String() != before[sentinel] {
+		t.Fatal("retry changed preexisting outside object descriptor")
+	}
+	t.Log("PASS: real outgoing alias created after code-grant planning refers to the held managed object; link-count validation refuses before every ACL write, preserves preexisting outside/managed ACLs and bytes, and removal permits retry")
 }
