@@ -474,3 +474,19 @@
   detected by link-count checks, not falsely claimed impossible or atomic. Full
   interleavings/offline modes remain integrated scope. Payload publication remains
   next; forecast5 to4 remaining passes. No release, dependency or Win10 claim.
+
+- SEC03 Setup payload checkpoint: use bundled temporary extraction and native
+  fixed-root/media/ai publication during Install, not Prepare, with all-target
+  preflight, disk-backed complete-code snapshots, verified copies and receipt
+  after data closes. Checked copy failure restores held prior bytes; completed
+  Install-failure recovery restores payload before old3file/state and Health.
+  Unverifiable close/receipt/recovery leaves service stopped. Explicit fixed seven
+  uninstall names preserve native-created file removal; Inno metadata/hostile
+  cleanup remain next. Run41894239272/source30fa427/job126799357326 passed native
+  distinct-old/new fullcode recovery/alias/late-name/writer controls and actual
+  minimal custom/fresh Setup, rollback, removal and SEC01. Worker review found
+  three pre-CI defects, receipt/close ordering and an avoidable Prepare window;
+  corrected and tested without weakening assertions. Temp fullcode snapshots are
+  not durable powerloss recovery; original3file remains, integrated interruptions
+  and real-provider combined closure stay SEC03. Forecast4 to3; no release/cost,
+  dependency/feature/Group3 expansion or Windows10 certification.

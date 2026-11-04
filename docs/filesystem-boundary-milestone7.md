@@ -735,3 +735,66 @@ root filenames. An added deterministic late source-name control must refuse
 before first copy. Fresh Install failures attempt exact new-payload rollback
 after stopping/removing only their service. These changes await actual focused
 Windows acceptance; the original four remaining-pass forecast is unchanged yet.
+
+### Accepted Setup application-payload publication checkpoint
+
+[Run41894239272](https://github.com/aataat12/immich-clone/actions/runs/41894239272)
+completed success on Windows Server2022 with exact source
+30fa427021139265791f36a14409130adb13b4b9/job126799357326. Complete logs have no
+error/failing test and reach runner cleanup. The preceding source33a76c5,
+run41893555355/job126796949908, also passed native/real Setup/SEC01; review then
+moved publication into Install and added the late-source control, requiring the
+accepted rerun. No unchanged green full-provider gate was repeated.
+
+Native payload publication covers exactly seven root files and recursive media/ai
+files from the bundled temporary source. Held relative directories/leaves reject
+reparses, hard links, unsafe actual mutation ACLs/owners, overlapping roles and
+preexisting writers; all targets are audited before old bytes are truncated.
+Global source/target namespace and actual-object checks run before copies and
+before completion. Original user data is not in the payload set. Sync/digest
+checks verify new bytes; data handles close before successful private receipt.
+
+Independent Windows tests use different prior/candidate script/runtime/provider
+bytes: full recovery restores every prior file, removes newly-created payload
+files via held DELETE handles, preserves unrelated files, and checked mid-copy
+injection restores the held prior set. Corrupted backups, missing restore targets,
+empty-directory masquerading as required rootfile, actual unsafe ACLs, real file/
+directory links and writer handles refuse before earlier byte changes. A real
+late source filename published after inventory is refused before the first copy.
+Normal actual custom/fresh Program Files Inno installs, rollback of the installed
+fixture, access-code/original/private-snapshot preservation and existing SEC01
+passed. Fixed native-published rootfiles and fixture provider files were actually
+removed on both normal uninstalls while originals stayed intact. These are minimal
+disposable provider fixtures; actual full-provider/prior-release acceptance remains
+in the final combined gate. Worker independent tests/review and local Windows
+cross-build/vet completed.
+
+Inno only extracts payload source; native publication runs inside the checked
+Install path before code permissions/service start, so pre-PostInstall Inno errors
+do not replace the application payload. A completed fullcode receipt enables
+Install-failure payload restore BEFORE prior catalog/access-code/runtime restore
+and any health claim. Copy-phase checked errors restore through retained handles.
+A close/receipt failure or unverifiable recovery leaves the service stopped;
+no automatic healthy recovery is claimed for these cases. Fresh failed Install
+attempts restore of its exact created payload after its service is stopped/deleted.
+New empty directories may remain after refusal/recovery; no path-based fallback
+or recursive error cleanup is introduced.
+
+Scope limits remain explicit: the fullcode backup is in Setup temporary storage,
+not a durable all-provider power-loss/crash transaction. The original durable
+three-file rollback remains; kill/power-loss/other interruption and full-provider
+recovery closure stay in original SEC03 integrated/combined scope. Link-count and
+namespace checks do not claim atomic protection against every interleaving or
+retroactive revocation of pregranted administrative authority. Inno-generated
+uninstaller journal/executable, registry and shortcuts remain built-in; their
+boundary review and uninstall/cleanup hardening are still next. Fixed seven
+UninstallDelete names preserve removal behavior without an app-root wildcard;
+normal removal acceptance does not close the hostile-uninstall boundary.
+
+This completes the bounded application payload installation/replacement checkpoint.
+Forecast **4 to3 remaining passes**: uninstall/cleanup and remaining Inno metadata
+boundaries1; integrated races/offline commands/interruption handling1; combined
+real prior-release/full-provider/recovery validation1. No Group3 reclassification,
+new dependency/provider/schema/version/release/cost or local PC action. SEC03
+stays open, security4 closed/4 open, published0.1.39 unchanged. Server is not
+Windows10 certification. Worker and focused CI finished; paused at this checkpoint.

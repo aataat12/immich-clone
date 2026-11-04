@@ -73,17 +73,17 @@ proved that fresh read really is denied. Production policy was not weakened.
 
 User definition: one pass is a work session ending with completion/pause. Latest
 forecast was7 remaining, conditional on proof/integration; this completed ACL
-integration reduced it to6 remaining passes; initialization reduced it to5; the code-permission checkpoint below now reduces it to **4**, not a guarantee.
+integration reduced it to6 remaining passes; initialization reduced it to5; the code-permission checkpoint reduced it to4; application payload publication below now reduces it to **3**, not a guarantee.
 
 | SEC-03 workstream | Current checkpoint | More passes, best estimate |
 |---|---|---:|
 | State/log/rollback existing-tree ACL handling | Integrated and focused Windows-validated | 0 |
 | Installer/explicit elevated initialization | Integrated and focused Windows-validated | 0 |
-| Setup file installation/replacement, including code permission grant | Code grant accepted; payload publication remains | 1 |
-| Uninstall/cleanup boundaries | Remaining | 1 |
-| Integrated real-account concurrent-replacement tests | Remaining | 1 |
+| Setup application payload installation/replacement and code permission grant | Integrated and focused Windows-validated | 0 |
+| Uninstall/cleanup and remaining Inno metadata boundaries | Remaining | 1 |
+| Integrated races, offline commands and interruption handling | Remaining | 1 |
 | Combined prior-release/full-provider/recovery closure | Remaining | 1 |
-| Total | SEC-03 remains open | 4 |
+| Total | SEC-03 remains open | 3 |
 
 No worker/CI remains active. No new feature/provider/version/release, cost,
 Group3 work or PC action; keep published0.1.39. Security remains4 closed/4 open.
@@ -148,6 +148,29 @@ publication1, uninstall/cleanup1, integrated boundaries/races/offline modes1,
 combined genuine prior-release/full-provider/recovery closure1. SEC-03 remains
 open, security4 closed/4 open. No feature, provider, schema, dependency, version,
 release, cost, Group3 work or PC action. Keep0.1.39; Server does not certify Win10.
+
+
+### Accepted Setup application-payload publication checkpoint
+
+[Windows Server run41894239272](https://github.com/aataat12/immich-clone/actions/runs/41894239272)
+completed success, source30fa427021139265791f36a14409130adb13b4b9/job126799357326.
+Native held-directory/leaf publication now installs exactly seven rootfiles and
+media/ai. All targets are audited before overwrite; complete-code byte snapshots
+support checked copy/Install-failure recovery before old3file/state restore/Health.
+Independent distinct-prior/candidate recovery, newfile deletion, unsafe ACL/link/
+writer/shape/overlap/corruptbackup/missingtarget and late-name controls passed.
+Actual minimal custom/fresh Setup, fixture rollback, fixed native-file uninstall
+tracking, originals/privacy and SEC01 passed. Worker review/tests completed.
+[Exact evidence and limits](filesystem-boundary-milestone7.md#accepted-setup-application-payload-publication-checkpoint).
+
+Forecast **4 to3 remaining passes**: uninstall/remaining Inno metadata1; integrated
+races/offline commands/interruption handling1; combined genuine prior-release/
+full-provider/recovery1. Temp fullcode snapshots do not prove durable power-loss
+transactions. Inno-generated metadata/registry/shortcuts remain built-in; hostile
+uninstall and fullprovider/interruption closure remain original SEC03 scope.
+No new dependency/provider/schema/version/release/cost, Group3 work or PC action.
+SEC03 open, security4 closed/4 open, keep0.1.39; Server does not certify Windows10.
+Worker and focused CI completed. Paused at this checkpoint.
 
 ## Historical checkpoints (superseded where later acceptance applies)
 

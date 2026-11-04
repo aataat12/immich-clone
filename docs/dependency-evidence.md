@@ -944,3 +944,23 @@ SEC01. Real outgoing same-object hard links can be created and are detected by
 link-count validation; no atomic hard-link freeze claim. Exact scope, failed-test
 corrections and remaining publication/race/full-provider gates are recorded in
 filesystem-boundary-milestone7.md. Published0.1.39 and Windows10 limits unchanged.
+
+## Setup native payload publication
+
+No new runtime/dependency. Existing Go/x/sys NtCreateFile held leaves now include
+DELETE for exact newlycreated-payload rollback, with SetFileInformationByHandle
+FileDispositionInfo exercised by actual Windows recovery tests. Native inventory
+uses held Readdirnames; source and all destination policies/aliases/sharing are
+validated before old-byte truncation. Pinned Inno6.7.4 dontcopy temporary extraction
+and explicit fixed UninstallDelete names were proven by actual compilation/install/
+removal, not inferred from package availability. Official semantics:
+https://jrsoftware.org/ishelp/topic_isxfunc_extracttemporaryfiles.htm and
+https://jrsoftware.org/ishelp/topic_uninstalldeletesection.htm.
+Windows Server2022 run41894239272/source30fa427021139265791f36a14409130adb13b4b9/
+job126799357326 completed success: independent distinct-code full recovery, real
+links/unsafe ACLs/writers, corrupted/missing recovery sources, late name refusal,
+custom/fresh actual Setup, fixture rollback/removal/original/privacy and SEC01.
+First passing run41893555355/source33a76c5 was superseded after Install ordering
+and late-name controls. Full provider/prior-release, kill/powerloss, remaining
+metadata/uninstall/offline paths and Windows10 acceptance remain unproven by this
+bounded gate. See filesystem-boundary-milestone7.md for exact limits.
