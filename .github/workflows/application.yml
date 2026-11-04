@@ -1,5 +1,5 @@
 name: Application originals slice
-# Managed-copy queue acceptance includes installer recovery, not just compilation.
+# Combined recovery acceptance includes the Windows progress-file sharing fix.
 on:
   push:
     paths:
