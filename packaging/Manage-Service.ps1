@@ -95,11 +95,6 @@ try {
             Set-PrivateDirectoryAcl -CreationHelper $BoundaryHelper -Path $rollback
             Checked $BoundaryHelper @('-action','snapshot','-app-dir',$AppDir,'-data-dir',$DataDir)
         }
-        if ($PayloadSource -and $PayloadBackup) {
-            $stage = 'publish application payload'
-            Checked $BoundaryHelper @('-action','ensure-private-root','-root-dir',$PayloadBackup)
-            Checked $BoundaryHelper @('-action','publish-payload','-app-dir',$AppDir,'-source-dir',$PayloadSource,'-backup-dir',$PayloadBackup)
-        }
         Diagnostic 'installer_complete'
     exit 0
     }
@@ -113,6 +108,11 @@ try {
     if ([IO.Path]::GetFullPath($AppDir).TrimEnd('\') -eq [IO.Path]::GetFullPath($DataDir).TrimEnd('\')) { throw 'State and installation directories must differ' }
     foreach ($component in ($DataDir -split '[\\/]')) { if ($component -ieq 'Dropbox') { throw 'Application state cannot be inside a sync folder' } }
     if ((Test-Path $DataDir) -and !(Test-Path "$DataDir/state-format.txt") -and @(Get-ChildItem -LiteralPath $DataDir -Force).Count -gt 0) { throw 'Refusing an unrelated nonempty data directory' }
+        if ($PayloadSource -and $PayloadBackup) {
+            $stage = 'publish application payload'
+            Checked $BoundaryHelper @('-action','ensure-private-root','-root-dir',$PayloadBackup)
+            Checked $BoundaryHelper @('-action','publish-payload','-app-dir',$AppDir,'-source-dir',$PayloadSource,'-backup-dir',$PayloadBackup)
+        }
     $stage = 'configure state ACL'
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
     Checked $BoundaryHelper @('-action','grant-code-read','-app-dir',$AppDir)
@@ -181,10 +181,13 @@ try {
             Diagnostic 'rollback_complete'
             Write-Error 'Upgrade failed; previous service restored and healthy' -ErrorAction Continue
         } catch { Write-Error 'Installation failed; rollback requires recovery from retained backup' -ErrorAction Continue }
-    } elseif ($Action -eq 'Prepare' -and $owned -and $stage -ne 'publish application payload') {
+    } elseif ($Action -eq 'Prepare' -and $owned) {
         Start-Service $name -ErrorAction SilentlyContinue
     } elseif ($Action -eq 'Install' -and !$owned) {
         if (Get-Service $name -ErrorAction SilentlyContinue) { Stop-Service $name -ErrorAction SilentlyContinue; & sc.exe delete $name | Out-Null }
+        if ($PayloadBackup) {
+            try { Checked $BoundaryHelper @('-action','restore-payload','-app-dir',$AppDir,'-backup-dir',$PayloadBackup) } catch { Write-Warning 'Fresh payload recovery requires administrator review' }
+        }
     }
     Write-Error 'Installation action failed. User data was not deleted.' -ErrorAction Continue
     exit 1

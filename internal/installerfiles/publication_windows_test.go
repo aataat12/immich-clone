@@ -297,3 +297,28 @@ func TestPayloadUntrustedActualMutationGrantRefusesBeforeTruncation(t *testing.T
 	}
 	t.Log("PASS: actual untrusted source/destination code mutation grants refuse before any old code truncation or descriptor repair")
 }
+
+func TestPayloadLateSourceNameRefusesBeforeFirstCopy(t *testing.T) {
+	app, source, backup, _ := publicationFixture(t)
+	late := filepath.Join(source, `ai\nested é\late-source.bin`)
+	called := false
+	e := publishPayload(app, source, backup, func(i int) error {
+		if i != 0 || called {
+			return nil
+		}
+		called = true
+		return os.WriteFile(late, []byte("late staged source bytes"), 0600)
+	})
+	if !called {
+		t.Fatal("late source publication hook was not exercised")
+	}
+	assertBytes(t, late, "late staged source bytes")
+	if e == nil {
+		t.Fatal("source inventory addition after planning was accepted")
+	}
+	publicationAssertSet(t, app, "prior-")
+	if _, e := os.Stat(filepath.Join(app, `ai\nested é\late-source.bin`)); !errors.Is(e, os.ErrNotExist) {
+		t.Fatal("late unplanned source was published to application", e)
+	}
+	t.Log("PASS: actual source name added after closed inventory is detected before the first code copy, preserves all prior bytes, and is never published")
+}

@@ -723,3 +723,15 @@ shape/overlap/corrupt-backup tests, plus pre-CI empty-required-directory and
 missing-target-restore regressions. Cross-build passed. Actual Windows and real
 Setup gates pending: do not mark the Setup row complete from compilation alone.
 No dependency/provider/schema/version/release/cost or Group3 expansion.
+
+Pre-CI review moved publication into Install before code permissions rather than
+Prepare: an ordinary Inno error before PostInstall must not replace application
+payload and lose its temporary fullcode backup. Prepare retains only prior
+snapshot/stop behavior. Completed payload publication receipt follows data-handle
+close; checked copy failures use held automatic restore, close/receipt errors
+leave service stopped without claiming automatic recovery. Restore uses existing
+only targets, refuses missing live paths before writes and requires all fixed
+root filenames. An added deterministic late source-name control must refuse
+before first copy. Fresh Install failures attempt exact new-payload rollback
+after stopping/removing only their service. These changes await actual focused
+Windows acceptance; the original four remaining-pass forecast is unchanged yet.

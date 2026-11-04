@@ -587,5 +587,10 @@ func RestorePayload(app, backup string) (err error) {
 			return ErrRefused
 		}
 	}
+	for _, name := range payloadRootNames {
+		if !seen[strings.ToLower(name)] {
+			return ErrRefused
+		}
+	}
 	return p.restoreHeld()
 }
