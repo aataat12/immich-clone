@@ -48,6 +48,8 @@ type Asset struct {
 	Error           string        `json:"error,omitempty"`
 }
 type Store struct {
+	reviewIndex *organizationIndex // protected by gate; derived from committed catalog state
+
 	analysisStill          func(context.Context, string) (image.Image, int, int, error)
 	videoInfo              func(context.Context, string) (media.Clip, error)
 	videoFrame             func(context.Context, string, int64) (image.Image, media.Sample, error)

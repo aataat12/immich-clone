@@ -582,55 +582,15 @@ func (s *Store) OrganizationFilteredPage(after, faceAfter, query string, dismiss
 	out.Available = s.recognitionAvailable.Load()
 	out.MediaAvailable = s.mediaAnalysisAvailable.Load()
 	e := s.db.View(func(tx *bolt.Tx) error {
-		assets := map[string]Asset{}
-		if e := tx.Bucket([]byte("assets")).ForEach(func(k, v []byte) error {
-			var a Asset
-			if e := json.Unmarshal(v, &a); e != nil {
-				return e
-			}
-			assets[string(k)] = a
-			return nil
-		}); e != nil {
-			return e
+		index, err := s.organizationIndexFor(tx)
+		if err != nil {
+			return err
 		}
-		names := map[string]bool{}
-		namesByAsset := map[string][]string{}
-		type reference struct {
-			f StoredFace
-			l FaceLabel
-		}
-		var all []reference
-		if e := tx.Bucket([]byte(facesBucket)).ForEach(func(k, v []byte) error {
-			var f StoredFace
-			if e := json.Unmarshal(v, &f); e != nil {
-				return e
-			}
-			if !validFace(f, string(k)) {
-				return ErrOrganizationInput
-			}
-			a, ok := assets[f.AssetID]
-			if !ok || a.Hidden {
-				return nil
-			}
-			var l FaceLabel
-			e := readJSON(tx.Bucket([]byte(labelsBucket)), f.ID, &l)
-			if e != nil && !errors.Is(e, os.ErrNotExist) {
-				return e
-			}
-			if l.Name != "" && !l.Dismissed {
-				names[l.Name] = true
-				namesByAsset[f.AssetID] = append(namesByAsset[f.AssetID], l.Name)
-			}
-			all = append(all, reference{f, l})
-			return nil
-		}); e != nil {
-			return e
-		}
-		for name := range names {
-			out.Names = append(out.Names, name)
-		}
-		sort.Strings(out.Names)
-		for _, r := range all {
+		assets := index.assets
+		out.Names = append(out.Names, index.names...)
+		lowerQuery := strings.ToLower(query)
+		start := sort.Search(len(index.faces), func(i int) bool { return index.faces[i].f.ID > faceAfter })
+		for _, r := range index.faces[start:] {
 			if r.l.Dismissed != dismissed {
 				continue
 			}
@@ -640,8 +600,12 @@ func (s *Store) OrganizationFilteredPage(after, faceAfter, query string, dismiss
 			if unnamed && r.l.Name != "" {
 				continue
 			}
-			view := FaceView{SampleUS: r.f.SampleUS, Dismissed: r.l.Dismissed, ID: r.f.ID, AssetID: r.f.AssetID, AssetName: assets[r.f.AssetID].Name, Box: r.f.Box, Name: r.l.Name, CanUndo: r.l.CanUndo}
-			if query != "" && !strings.Contains(strings.ToLower(view.Name), strings.ToLower(query)) && !strings.Contains(strings.ToLower(view.AssetName), strings.ToLower(query)) {
+			view := FaceView{SampleUS: r.f.SampleUS, Dismissed: r.l.Dismissed, ID: r.f.ID, AssetID: r.f.AssetID, AssetName: assets[r.f.AssetID].Name, Box: append([]float64(nil), r.f.Box...), Name: r.l.Name, CanUndo: r.l.CanUndo}
+			if view.SampleUS != nil {
+				position := *view.SampleUS
+				view.SampleUS = &position
+			}
+			if query != "" && !strings.Contains(strings.ToLower(view.Name), lowerQuery) && !strings.Contains(strings.ToLower(view.AssetName), lowerQuery) {
 				continue
 			}
 			if len(out.Faces) >= 100 {
@@ -649,34 +613,11 @@ func (s *Store) OrganizationFilteredPage(after, faceAfter, query string, dismiss
 				break
 			}
 			if view.Name == "" && !view.Dismissed {
-				scores := map[string]float64{}
-				for _, ref := range all {
-					if ref.l.Dismissed || ref.l.Name == "" || !recognition.CompatibleEmbeddings(ref.f.Provider, r.f.Provider) || len(ref.f.Embedding) != 128 || len(r.f.Embedding) != 128 {
-						continue
-					}
-					score := 0.
-					for i, v := range r.f.Embedding {
-						score += v * ref.f.Embedding[i]
-					}
-					if score > scores[ref.l.Name] {
-						scores[ref.l.Name] = score
-					}
+				var subject StoredFace
+				if err := readJSON(tx.Bucket([]byte(facesBucket)), r.f.ID, &subject); err != nil {
+					return err
 				}
-				best, runner := 0., 0.
-				for name, score := range scores {
-					if score > best {
-						runner = best
-						best = score
-						view.Suggestion = name
-					} else if score > runner {
-						runner = score
-					}
-				}
-				if best < .363 || best-runner < .05 {
-					view.Suggestion = ""
-				} else {
-					view.Score = math.Min(1, best)
-				}
+				view.Suggestion, view.Score = suggestReviewFace(subject, index.references)
 			}
 			out.Faces = append(out.Faces, view)
 		}
@@ -689,6 +630,9 @@ func (s *Store) OrganizationFilteredPage(after, faceAfter, query string, dismiss
 			}
 		}
 		for ; k != nil; k, v = cursor.Next() {
+			if lowerQuery != "" && !strings.Contains(index.searchByAsset[string(k)], lowerQuery) {
+				continue
+			}
 			var a Asset
 			if e := json.Unmarshal(v, &a); e != nil {
 				return e
@@ -724,20 +668,6 @@ func (s *Store) OrganizationFilteredPage(after, faceAfter, query string, dismiss
 				}
 			}
 			record.Analysis.Objects = visible
-			match := query == "" || strings.Contains(strings.ToLower(a.Name), strings.ToLower(query))
-			for _, name := range namesByAsset[a.ID] {
-				if strings.Contains(strings.ToLower(name), strings.ToLower(query)) {
-					match = true
-				}
-			}
-			for _, tag := range append(append([]string{}, record.Tags...), record.Analysis.Objects...) {
-				if strings.Contains(strings.ToLower(tag), strings.ToLower(query)) {
-					match = true
-				}
-			}
-			if !match {
-				continue
-			}
 			if len(out.Assets) >= 50 {
 				out.After = out.Assets[len(out.Assets)-1].Asset.ID
 				break
