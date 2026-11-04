@@ -19,7 +19,7 @@ const {chromium}=require(process.env.IMMICH_BROWSER_MODULE);
   await page.waitForFunction(async ids=>{const r=await fetch('/api/assets');if(!r.ok)return false;const assets=await r.json();return ids.every(id=>assets.some(a=>a.id===id&&a.preview!=='queued'))},ids,{timeout:90000});
   const assets=await(await page.request.get('http://127.0.0.1:2283/api/assets')).json();
   for(const f of fixtures){
-   const a=assets.find(a=>a.id===f.sha256);assert(a&&a.preview==='ready','Installed preview not ready');assert.equal(a.width,f.width);assert.equal(a.height,f.height);
+   const a=assets.find(a=>a.id===f.sha256);assert(a&&a.preview==='ready','Installed preview not ready for public fixture '+f.name+': '+JSON.stringify(a?{preview:a.preview,mime:a.mime,error:a.error}:null));assert.equal(a.width,f.width);assert.equal(a.height,f.height);
    if(f.photo){assert.equal(a.photo.orientation,f.photo.orientation);for(const key of ['make','model','captured'])assert.equal(a.photo[key]||'',f.photo[key]);assert(!a.photo.warning)}
    const pixels=await page.evaluate(async id=>{
     const img=new Image();img.src='/api/assets/'+id+'/preview';await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error('Preview unavailable'))});
@@ -30,6 +30,6 @@ const {chromium}=require(process.env.IMMICH_BROWSER_MODULE);
    const r=await page.request.get('http://127.0.0.1:2283/api/assets/'+f.sha256+'/original');assert(r.ok());assert.equal(crypto.createHash('sha256').update(await r.body()).digest('hex'),f.sha256);
   }
   assert.deepEqual(errors,[]);if(restored)assert.deepEqual(writes,[],'Restored checks must not issue mutations or repair uploads');
-  console.log('PASS: '+(restored?'independently restored read-only matrix without repair uploads':'actual installed LocalService import matrix')+'; previews/original downloads for24 independent image fixtures; three public reduced camera EXIF samples, eight orientations/date priority, progressive/CMYK JPEG, PNG variants, BMP, GIF first frame, four compressed/multipage TIFF first pages,12MP JPEG; exact geometry/metadata/pixels/original SHA256');
+  console.log('PASS: '+(restored?'independently restored read-only matrix without repair uploads':(process.env.IMMICH_COMPAT_BINARY?'standalone production serve import matrix':'actual installed LocalService import matrix'))+'; previews/original downloads for24 independent image fixtures; three public reduced camera EXIF samples, eight orientations/date priority, progressive/CMYK JPEG, PNG variants, BMP, GIF first frame, four compressed/multipage TIFF first pages,12MP JPEG; exact geometry/metadata/pixels/original SHA256');
  }finally{await browser.close()}
 })().catch(e=>{console.error(e.message);process.exit(1)});
