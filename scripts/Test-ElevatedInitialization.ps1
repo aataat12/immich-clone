@@ -34,19 +34,27 @@ function Snapshot([string]$Path) {
 }
 function Run-GuardedMode([string]$Mode,[string]$State,[string]$Logs) {
  $script:attempt++
- $out=Join-Path $root ('output-'+$script:attempt+'.txt')
- $err=Join-Path $root ('error-'+$script:attempt+'.txt')
- $process=Start-Process -FilePath $Binary -ArgumentList @('-mode',$Mode,'-data',('"'+$State+'"'),'-logs',('"'+$Logs+'"')) -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
- # Windows PowerShell can discard the exit status of a fast Start-Process
- # child unless its native process handle is retained before waiting.
- $null=$process.Handle
+ # Start-Process -PassThru can lose a fast child's native handle before it
+ # constructs its returned Process wrapper. Start through Process itself so
+ # that the creation handle, exit status and redirected streams stay owned.
+ $process=New-Object Diagnostics.Process
+ $start=New-Object Diagnostics.ProcessStartInfo
+ $start.FileName=$Binary
+ $start.Arguments=(@('-mode',$Mode,'-data',('"'+$State+'"'),'-logs',('"'+$Logs+'"')) -join ' ')
+ $start.UseShellExecute=$false
+ $start.CreateNoWindow=$true
+ $start.RedirectStandardOutput=$true
+ $start.RedirectStandardError=$true
+ $process.StartInfo=$start
  try {
+  if(!$process.Start()){throw 'Guarded application process could not start'}
+  $stdout=$process.StandardOutput.ReadToEndAsync()
+  $stderr=$process.StandardError.ReadToEndAsync()
   if(!$process.WaitForExit(10000)) { $process.Kill();$process.WaitForExit();throw 'Guarded application mode failed to return within the bounded test timeout' }
-  $process.Refresh()
   $process.WaitForExit()
   $status=$process.ExitCode
   if($null -eq $status){throw 'Guarded application process completed without a captured exit status'}
-  return @{Code=$status;Output=[IO.File]::ReadAllText($out);Error=[IO.File]::ReadAllText($err)}
+  return @{Code=$status;Output=$stdout.GetAwaiter().GetResult();Error=$stderr.GetAwaiter().GetResult()}
  } finally { $process.Dispose() }
 }
 function Refused([string]$State,[string]$Logs,[string]$Label,[string]$Mode='init',[string]$Expected=$refusal) {
