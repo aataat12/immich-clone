@@ -1,0 +1,104 @@
+From f273a230fdd04d155d1ca0ccbe9e551295a47451 Mon Sep 17 00:00:00 2001
+From: Adel-Ayoub <adelayoub.maaziz@gmail.com>
+Date: Mon, 6 Jul 2026 01:51:40 +0100
+Subject: [PATCH 1/2] core: fix use-after-scope when Mat::mul() is given a
+ scalar
+
+---
+ modules/core/src/matrix_expressions.cpp |  9 ++++++-
+ modules/core/test/test_operations.cpp   | 31 +++++++++++++++++++++++++
+ 2 files changed, 39 insertions(+), 1 deletion(-)
+
+diff --git a/modules/core/src/matrix_expressions.cpp b/modules/core/src/matrix_expressions.cpp
+index 86acab9d9308..5118ae223f03 100644
+--- a/modules/core/src/matrix_expressions.cpp
++++ b/modules/core/src/matrix_expressions.cpp
+@@ -1738,8 +1738,15 @@ MatExpr Mat::mul(InputArray m, double scale) const
+ {
+     CV_INSTRUMENT_REGION();
+ 
++    Mat b = m.getMat();
++    // A MATX-kind argument (a scalar bound to _InputArray(const double&), a Matx or a Vec)
++    // is a non-owning view of caller stack memory that the returned MatExpr can outlive,
++    // so snapshot it. See https://github.com/opencv/opencv/issues/23577
++    if( m.isMatx() )
++        b = b.clone();
++
+     MatExpr e;
+-    MatOp_Bin::makeExpr(e, '*', *this, m.getMat(), scale);
++    MatOp_Bin::makeExpr(e, '*', *this, b, scale);
+     return e;
+ }
+ 
+diff --git a/modules/core/test/test_operations.cpp b/modules/core/test/test_operations.cpp
+index 5486bbb39e78..335623194cbb 100644
+--- a/modules/core/test/test_operations.cpp
++++ b/modules/core/test/test_operations.cpp
+@@ -1561,6 +1561,37 @@ TEST(Core_MatExpr, empty_check_15760)
+     EXPECT_THROW(Mat c = Mat().cross(Mat()), cv::Exception);
+ }
+ 
++// https://github.com/opencv/opencv/issues/23577
++// A scalar passed to Mat::mul() binds to _InputArray(const double&), i.e. to a temporary
++// double on the caller's stack. The returned MatExpr used to keep a Mat header pointing at
++// that stack slot after it died. The helpers are called through volatile function pointers
++// so they cannot be inlined, which makes the stale-stack read deterministic.
++MatExpr makeScalarMulExpr(const Mat& m, double scale)
++{
++    return m.mul(scale);
++}
++
++void overwriteStackFrame()
++{
++    volatile double buf[256];
++    for (int i = 0; i < 256; i++)
++        buf[i] = -1.0;
++    (void)buf;
++}
++
++TEST(Core_MatExpr, mul_scalar_use_after_scope_23577)
++{
++    MatExpr (*volatile makeExprFn)(const Mat&, double) = makeScalarMulExpr;
++    void (*volatile overwriteFn)() = overwriteStackFrame;
++
++    Mat m(2, 3, CV_32FC1, Scalar::all(3.0f));
++    MatExpr e = makeExprFn(m, 7.0);
++    overwriteFn();
++    Mat res = e;
++
++    EXPECT_EQ(0, cvtest::norm(res, Mat(2, 3, CV_32FC1, Scalar::all(21.0f)), NORM_INF));
++}
++
+ TEST(Core_Arithm, scalar_handling_19599)  // https://github.com/opencv/opencv/issues/19599 (OpenCV 4.x+ only)
+ {
+     Mat a(1, 1, CV_32F, Scalar::all(1));
+
+From 203e6ae4219b8c3189a2ed34233a274b45fcf43c Mon Sep 17 00:00:00 2001
+From: Adel-Ayoub <adelayoub.maaziz@gmail.com>
+Date: Mon, 6 Jul 2026 07:52:20 +0100
+Subject: [PATCH 2/2] core: snapshot all non-Mat/UMat operands in Mat::mul()
+
+---
+ modules/core/src/matrix_expressions.cpp | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/modules/core/src/matrix_expressions.cpp b/modules/core/src/matrix_expressions.cpp
+index 5118ae223f03..afd4ee747b94 100644
+--- a/modules/core/src/matrix_expressions.cpp
++++ b/modules/core/src/matrix_expressions.cpp
+@@ -1739,10 +1739,11 @@ MatExpr Mat::mul(InputArray m, double scale) const
+     CV_INSTRUMENT_REGION();
+ 
+     Mat b = m.getMat();
+-    // A MATX-kind argument (a scalar bound to _InputArray(const double&), a Matx or a Vec)
+-    // is a non-owning view of caller stack memory that the returned MatExpr can outlive,
+-    // so snapshot it. See https://github.com/opencv/opencv/issues/23577
+-    if( m.isMatx() )
++    // Unless the argument is a refcounted Mat/UMat, the header returned by getMat() may be
++    // a non-owning view of caller memory (e.g. a scalar bound to _InputArray(const double&),
++    // a Matx or a Vec) that the returned MatExpr can outlive, so snapshot it.
++    // See https://github.com/opencv/opencv/issues/23577
++    if( !m.isMat() && !m.isUMat() )
+         b = b.clone();
+ 
+     MatExpr e;

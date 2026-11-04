@@ -1,5 +1,5 @@
 name: Application originals slice
-# Managed-copy queue acceptance includes installer recovery, not just compilation.
+# Milestone7 unpublished installer-trust candidate: genuine0.1.39 upgrade and rollback, full providers and independent recovery.
 on:
   push:
     paths:
@@ -28,13 +28,16 @@ on:
       - 'tests/backup.cjs'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
   actions: read
 concurrency:
   group: application-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   application:
+    # Focused installer-trust commits use their dedicated real-Setup gate first.
+    # Do not rebuild or attempt to republish the existing release for those commits.
+    if: ${{ !contains(github.event.head_commit.message, '[installer-trust]') }}
     runs-on: windows-2022
     timeout-minutes: 22
     env:
@@ -57,14 +60,22 @@ jobs:
         with:
           name: experimental-native-ai-build-not-accepted
           path: native-ai-candidate
-          run-id: 41363876953
+          run-id: 41551816976
           github-token: ${{ github.token }}
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: prototype-server-tested
           path: previous-installer
-          run-id: 41398447659
+          run-id: 41784610044
           github-token: ${{ github.token }}
+      - name: Validate installer script syntax before lengthy acceptance
+        shell: pwsh
+        run: |
+          foreach ($file in @('scripts/Build-Installer.ps1','scripts/Test-Installer.ps1','scripts/Test-Application.ps1')) {
+            $tokens=$null;$parseErrors=$null
+            $null=[Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file),[ref]$tokens,[ref]$parseErrors)
+            if ($parseErrors.Count -gt 0) { throw ($file+': '+($parseErrors.Message -join '; ')) }
+          }
       - name: Verify dependency checksums and execute storage, recovery and HTTP tests
         shell: pwsh
         run: |
@@ -74,6 +85,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Tests failed' }
           go vet ./internal/... ./cmd/immichclone
           if ($LASTEXITCODE -ne 0) { throw 'Vet failed' }
+      - name: Check Windows Go dependency vulnerabilities
+        shell: pwsh
+        run: ./scripts/Test-GoSecurity.ps1
       - name: Execute ENOSPC recovery on bounded disposable NTFS volumes
         shell: pwsh
         run: ./scripts/Test-FullDisk.ps1
@@ -83,13 +97,34 @@ jobs:
           npm install --prefix "$env:RUNNER_TEMP/browser-deps" --no-audit --no-fund playwright@1.62.1
           if ($LASTEXITCODE -ne 0) { throw 'Browser test dependency acquisition failed' }
           $env:IMMICH_BROWSER_MODULE = "$env:RUNNER_TEMP/browser-deps/node_modules/playwright"
+          "IMMICH_BROWSER_MODULE=$env:IMMICH_BROWSER_MODULE" >> $env:GITHUB_ENV
           $env:IMMICH_BROWSER_OUTPUT = "$env:GITHUB_WORKSPACE/browser-evidence"
           New-Item -ItemType Directory $env:IMMICH_BROWSER_OUTPUT | Out-Null
           ./scripts/Test-Application.ps1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12.10'
+          architecture: x64
+      - name: Prepare public installed6A acceptance fixtures
+        shell: pwsh
+        run: |
+          $root=Join-Path $env:RUNNER_TEMP 'installed6A'
+          New-Item -ItemType Directory $root -Force | Out-Null
+          python -m pip install --only-binary=:all: --require-hashes --no-deps -r experiments/media-ai/requirements.txt --disable-pip-version-check
+          if ($LASTEXITCODE -ne 0) { throw 'Fixture tooling failed' }
+          python -B experiments/media-ai/prepare.py $root
+          if ($LASTEXITCODE -ne 0) { throw 'Fixture generation failed' }
+          ./experiments/media-ai/prepare.ps1 -Root $root
+          "IMMICH_6A_FIXTURES=$root" >> $env:GITHUB_ENV
+          $compatRoot=Join-Path $env:RUNNER_TEMP 'installed-media-compatibility'
+          python -B experiments/media-compatibility/prepare.py $compatRoot
+          if ($LASTEXITCODE -ne 0) { throw 'Independent media compatibility fixtures failed' }
+          "IMMICH_COMPAT_FIXTURES=$compatRoot" >> $env:GITHUB_ENV
       - name: Build pinned installer and test install upgrade rollback and uninstall
         shell: pwsh
         run: |
           ./scripts/Build-Installer.ps1
+          $env:IMMICH_BROWSER_OUTPUT = Join-Path $env:GITHUB_WORKSPACE 'browser-evidence'
           ./scripts/Test-Installer.ps1
       - name: Retain synthetic browser evidence
         if: always()
@@ -98,11 +133,13 @@ jobs:
           name: synthetic-browser-evidence
           path: browser-evidence/*.png
           retention-days: 7
-      - name: Retain prototype installer only after all checks pass
+      - name: Retain unpublished milestone7 candidate only after all checks pass
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: prototype-server-tested
+          name: milestone7-server-tested-candidate
           path: |
-            dist/ImmichClone-0.1.25-prototype-x64-setup.exe
+            dist/ImmichClone-0.1.41-prototype-x64-setup.exe
             dist/SHA256SUMS.txt
           retention-days: 7
+      # This milestone candidate is retained only after all checks pass.
+      # Publication is deliberately absent until milestone acceptance is complete.

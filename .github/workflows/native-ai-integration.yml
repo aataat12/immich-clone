@@ -1,0 +1,69 @@
+name: NR-01 application integration (no installer)
+on:
+  push:
+    paths:
+      - '.github/workflows/native-ai-integration.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  application:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with:
+          go-version: '1.27.3'
+      - name: Require the accepted exact native source run
+        shell: pwsh
+        run: |
+          $r = Invoke-RestMethod 'https://api.github.com/repos/aataat12/immich-clone/actions/runs/41551816976'
+          if ($r.conclusion -ne 'success' -or $r.head_sha -ne '6e0a38d748e22ea04bb6b8571cb4b373b022e42d') { throw 'Native component acceptance missing' }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: experimental-media-source-and-binaries
+          path: media-candidate
+          run-id: 41346172469
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: experimental-native-ai-build-not-accepted
+          path: native-ai-candidate
+          run-id: 41551816976
+          github-token: ${{ github.token }}
+      - name: Verify modules, preservation and integrated code
+        shell: pwsh
+        run: |
+          go mod verify
+          if ($LASTEXITCODE -ne 0) { throw 'Module verification failed' }
+          go test -count=50 -timeout=120s ./internal/library -run '^TestCancelledMediaJobSurvivesRestartAndRestore$'
+          if ($LASTEXITCODE -ne 0) { throw 'Repeated HEIC restore recovery failed' }
+          go test -v -count=1 -timeout=240s ./internal/... ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'Integrated tests failed' }
+          go vet ./internal/... ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'Vet failed' }
+      - name: Scan actual native checkpoint and current Go target
+        shell: pwsh
+        run: |
+          python scripts/Check-ArtifactPrivacy.py native-ai-candidate
+          if ($LASTEXITCODE -ne 0) { throw 'Native checkpoint scan failed' }
+          ./scripts/Test-GoSecurity.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Go security scan failed' }
+      - name: Actual candidate-version LocalService browser, inference, model recovery and independent restoration
+        shell: pwsh
+        run: |
+          node --version
+          if ($LASTEXITCODE -ne 0) { throw 'Browser test runtime absent' }
+          npm install --prefix "$env:RUNNER_TEMP/nr01-browser-deps" --no-audit --no-fund playwright@1.62.1
+          if ($LASTEXITCODE -ne 0) { throw 'Browser dependency failed' }
+          $env:IMMICH_BROWSER_MODULE = "$env:RUNNER_TEMP/nr01-browser-deps/node_modules/playwright"
+          $env:IMMICH_BROWSER_OUTPUT = "$env:RUNNER_TEMP/nr01-browser-evidence"
+          New-Item -ItemType Directory $env:IMMICH_BROWSER_OUTPUT -Force | Out-Null
+          ./scripts/Test-Application.ps1 -Version 'nr01-candidate-prototype'
+          if ($LASTEXITCODE -ne 0) { throw 'Application integration failed' }

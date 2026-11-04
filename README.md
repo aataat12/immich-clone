@@ -21,12 +21,8 @@ HEIC/video previews, browsing, reversible hide/restore, exact original downloads
 JSON export and verified independent backup restoration. It includes private
 bounded diagnostic export with no automatic upload. See
 [prototype limitations](docs/prototype-notes.txt) and [bulk-import milestones](docs/bulk-import.md).
-Current priority is [people/object AI feasibility](docs/ai-feasibility.md); further
-import work is deferred. Server-side source scanning, bulk-import recovery/paging, AI and mobile features
-are not implemented. Never put personal machine reports, media or paths in
-public issues or artifacts.
+Current delivery baseline is [0.1.39-prototype](https://github.com/aataat12/immich-clone/releases/tag/v0.1.39-prototype). Supported HEIC AI, sampled video AI, additive reanalysis and batch Hidden Media actions are implemented. Folder import, durable resume and pagination are available; server-side source-folder scanning and mobile features remain excluded or unavailable. See the [current roadmap](docs/roadmap.md), [backup evidence](docs/backups.md) and [independent recovery guide](docs/recovery-guide.md). The guide restores to a new folder; it does not switch the live library.
 
-[Server-tested 0.1.13 prototype](https://github.com/aataat12/immich-clone/actions/runs/41357496504)
-and [local Windows 10 checkpoint instructions](docs/local-validation.md).
-The user-facing local check prints pass/fail only and sends no machine report.
-See status for later candidates and the limits of user-reported local evidence.
+Milestone2's active People review/search/native-quality scope and Milestone6's declared media-format/metadata/resource scope shipped in0.1.38 after [combined installed acceptance](docs/release-0.1.38-acceptance.md). Deferred security work is not closed by that functional delivery. Milestones4/5 bounded cloud delivery shipped in0.1.39: serial preview throughput, mixed import/restart/hash checks, mounted-volume recovery and installed large backup/independent restore, after [combined acceptance](docs/release-0.1.39-acceptance.md). Every-frame Full Scan and incremental/scheduled backups remain deferred. No Windows 10 certification, final clean-machine/reboot acceptance or full-library endurance claim is made. Keep personal machine reports, media and paths out of public issues and artifacts.
+
+The earlier [local checkpoint instructions](docs/local-validation.md) print pass/fail only and send no machine report. They are historical bounded checks, not final Windows 10 acceptance.

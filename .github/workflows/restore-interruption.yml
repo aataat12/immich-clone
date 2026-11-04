@@ -1,0 +1,27 @@
+name: Restore mid-extraction interruption and retry
+on:
+  push:
+    paths:
+      - '.github/workflows/restore-interruption.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  restore-interruption:
+    runs-on: windows-2022
+    timeout-minutes: 8
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      IMMICH_RESTORE_INTERRUPTION: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with:
+          go-version: '1.27.3'
+      - name: Cancel after actual partial original extraction, verify cleanup and retry independently
+        shell: pwsh
+        run: |
+          $env:IMMICH_RESTORE_TEMP=$env:RUNNER_TEMP
+          go test -mod=readonly -v -count=1 -timeout=4m ./internal/library -run '^TestActualRestoreCancellationDuringExtractionAndRetry$'
+          if ($LASTEXITCODE -ne 0) { throw 'Interrupted restore acceptance failed' }

@@ -277,3 +277,278 @@
   not_requested, allowing active inference to finish. Skip failed/ready/queued work
   and preserve manual corrections; no automatic retry or naming. Missing provider
   leaves batch work waiting. Build Notes ships offline with the actual release.
+
+
+- 2026-11-02 user authorized two bounded security workers while the primary agent
+  resumes People functionality coding. Installer/ACL and native-isolation reviews
+  have separate owned artifacts; no unrestricted delegation or release bypass.
+- False-face dismissal is an additive face-label correction, not detection/original
+  deletion. Exclude dismissed faces from active review and name suggestions, retain
+  names/undo history, and provide a separate restore view. Existing full-catalog
+  backups/JSON export retain the correction. No provider rerun or new dependency.
+
+- 2026-11-02 continued user-authorized parallel work: separate security workers
+  own staged-upgrade preparation and a native-child access canary experiment.
+  Primary People work applies unnamed/search filters before pagination; reference
+  candidates remain independent of the displayed face filter. No release bypass.
+
+- 2026-11-02 user requires complete original security items, not partial probes.
+  Keep the original eight stable IDs in security-worklist.md. Two authorized
+  workers jointly own SEC-01 implementation and independent Windows negative/
+  normal controls; only reviewed passing completion evidence closes the item.
+
+- 2026-11-02 user authorized four workers for two complete original items:
+  SEC-04 and SEC-07, each with implementation plus independent verification.
+  No partial probe or reassigned unfinished review counts as closure. Main agent
+  handles People previous-page navigation and integration. No release bypass.
+
+- SEC-04/07 closure follows full combined Windows execution 41547447887 and
+  independent review, not source readiness. Original tracker is 3 closed / 5 open.
+  NR-01 from the completed review blocks release until the native provider is
+  patched/replaced and actual parity/hostile/integration checks pass; no risk
+  acceptance or silent codec/model removal. People Previous navigation remains
+  held for the combined release, with no installer/version/main change.
+
+- 2026-11-03: prioritize NR-01 with hash-pinned upstream backports to the exact
+  retained 4.12.0 source; six reviewed production fixes apply cleanly locally.
+  Require actual API/model/LocalService execution before provider selection.
+  Add HEIC/video AI as milestone 6A without renumbering original milestones.
+  Initial video scope is explicitly bounded sampled frames, not all-frame or
+  automatic identity merging; feasibility must establish policy before shipping.
+
+- NR-01 native and actual application acceptance passed with new immutable
+  provider 15d1c2ca7ef3. Preserve prior ready provenance and user corrections;
+  no automatic rerun or installer/version/main publication.
+- Reopen original SEC-04 for R-RESTORE-01: one valid restore refused in a later
+  run, cause unconfirmed despite 50 Windows repetitions/full app restores then
+  passing. Keep fixed IDs and explicit evidence; no policy/test weakening or
+  unsupported claim of a root-cause fix. No user PC action needed.
+
+- November 2, 2026 America/Chicago user priority amendment: mitigate Group 1
+  Internet-reachable app/component attack surfaces alongside 6A; pause other
+  Group 2 mitigation. Retain controls/findings without falsely closing them.
+  This supersedes all-backlog-before-6A ordering. Normal immutable originals,
+  recovery and honest compatibility/dependency execution gates remain.
+
+- User clarification: Groups 1/2 classify only the original eight; newly found
+  issues go in passive Group 3 with no investigation time. Current evidence
+  establishes no open Group 1 exploit among the eight; all eight Group 2.
+  Continue 6A functional implementation. Separate R-RESTORE-01 reliability from
+  proven SEC-04 bounds; no claim to have explained or fixed the refusal.
+
+- Milestone6A candidate freezes initial sampled coverage at up to12 evenly spaced
+  source-relative targets, excludes the end, stores actual decoded timestamps and
+  skips duplicate timestamps. Each frame commits one checkpoint; pause/cancel
+  preserves completed observations and finishes an in-flight frame. Existing
+  model identity remains shared with supported still photos; sampling policy
+  has its own versioned field, allowing compatible review-only name suggestions
+  without automatic naming/tracking. Full-frame coverage remains out of scope.
+
+
+- November 4, 2026 (America/Chicago): user reported the combined 0.1.39 regression
+  passed every exercised check, then instructed proceeding with milestone 7.
+  Preserve local NOT TESTED items; see validation-0.1.39.md. Reuse actual 0.1.39
+  installer/rollback/payload/restore acceptance instead of repeating green CI.
+  Milestone 7 preparation and manual update procedure are in milestone7-hardening.md
+  and update-guide.md. Group 2/3 security deferrals are not silently revoked by the
+  generic milestone instruction. Before resuming original SEC-02/03/05/06/08
+  mitigation or extra security experiments, obtain the explicit scope decision.
+  Closed SEC-01/04/07 remain closed. Signing remains unconfigured and prototypes
+  unsigned; no certificate/account purchase, new workers or new costs authorized.
+
+- November 4: user explicitly approved resuming original SEC-02/03/05/06/08.
+  Group 3 investigations and paid signing remain deferred; no workers or new costs.
+  Begin with code-tree trust refusal and pinned new Setup management scripts.
+  Focused real Inno/standard-user execution must precede any closure or downstream
+  packaging claim. Keep all original security IDs and closure criteria unchanged.
+
+- November 4: milestone 7 installer code-trust implementation passed focused
+  production Inno/LocalService/standard-user/custom and Program Files acceptance
+  in 41801504714. Preserve exact limits in installer-trust-milestone7.md. Do not
+  mark SEC-02 complete before candidate combined prior-release/rollback gates,
+  or infer directory race/native isolation/input/final target closure. Continue
+  using 0.1.39 as the accepted published prototype; no new release produced.
+
+- November 4: genuine 0.1.39 to unpublished 0.1.41 combined installer/provider/
+  initial failure and later 0.1.42 rollback/independent restore acceptance passed
+  in 41802642179, source1c9d5e8. Candidate artifact ZIP and installer hashes were
+  independently verified against GitHub digest and packaged manifest. Together
+  with focused token/Setup controls this closes original SEC-02 in the candidate,
+  not SEC-03 races or final SEC-08 target/release acceptance. Status4 closed/4 open.
+  0.1.39 stays published; no new installer offered. Next gate is SEC-03.
+
+- November4: SEC-03 component gate passed Windows run41836459908, source0a08a79.
+  Open each component relative to a held directory, use real FILE_LIST_DIRECTORY
+  access for sharing pins, reject links/unsafe names on opened files before writes.
+  Real NTFS copy and adversarial namespace controls passed; initial metadata-only
+  handle and unexercised-racer failures remain recorded. No installer integration
+  or original-item closure is inferred. Current count stays4 closed/4 open.
+  User permits checkpoint handoffs awaiting a response; next work is installer
+  ACL/snapshot/rollback integration, without new charges, workers or local tests.
+
+- November4: user permits one worker for SEC-03 integration review and independent
+  privacy/alias controls. Integrate the verified winfs primitive through one fixed
+  three-file installer helper operation, preserving preflight ACL policy and
+  staged exact-hash/no-write/delete-sharing trust. Require completion receipts,
+  actual-file private descriptors, physical-root overlap checks and fail-closed
+  partial recovery. No whole SEC-03 closure or new product release from this slice.
+
+- November4: source d74c6ee passed first focused Windows installer integration
+  run41842717775/job126618212032. Actual fixed-set snapshot/verified restore,
+  partial-copy refusal, private actual-handle policies, real DOS alias controls,
+  three staged payload mutation denials, injected Setup rollback and existing
+  SEC-01 compatibility passed. The authorized worker reviewed and contributed
+  independent controls. Retain source/runtime/placeholder limits in the evidence;
+  no original SEC-03 closure, public release or Win10 certification. Next checkpoint
+  is remaining privileged root/ACL/diagnostic operations. No workers remain active.
+
+- November4: native installer diagnostic integration passed run41846533710,
+  source7f4b99b/job126631387368 on Windows Server2022. Keep fixed label/numeric
+  schema and existing private access policy, audit actual held descriptors and
+  both rotation leaves before mutation, copy/sync previous before current reset.
+  Optional failure-note refusal must not suppress recovery; actual hard-linked
+  note/Setup failure proved outside-byte preservation and healthy verified rollback.
+  Worker review/independent tests complete. No new dependency/release/Win10
+  claim or SEC-03 closure; remaining root/ACL/init/Setup gates stay open.
+
+- November4: user requested continued development with scope/drift prevention and
+  allowed one worker. Bound this checkpoint to native private-root creation only:
+  existing-tree ACL normalization is a separate gate because inheritable
+  SetSecurityInfo can propagate to descendants. Do not use a root-only handle as
+  proof of safe recursive ACL mutation or introduce protected-child policy drift.
+  Missing components receive final protected policy in relative NtCreateFile;
+  verify while held, leave existing components untouched, retain safe progress
+  after errors without pathname cleanup/fallback. First focused actual Windows
+  run41849734950/source db37f6c/job126642511204 passed native, separate ordinary-user
+  creation-only, actual Setup/rollback and existing SEC-01 controls. Worker completed
+  review/tests. SEC-03 remains open; no new release, cost or Windows10 claim.
+
+- November4: for existing-tree ACL work, prove the documented MAXIMUM_ALLOWED
+  SetSecurityInfo no-child-propagation contract by actual execution before any
+  installer dependency. Parent chain stays pinned; leaf opens once at final access
+  to avoid self-conflicting sharing locks. Independent unlocked/locked-child,
+  protected-child, outside-symlink, future-inheritance and writer-refusal controls
+  are required. Source8adf2fa is isolated and not called by production helper.
+  Run41862213427/job126686818594 remained queued awaiting a Windows runner at the
+  last observation; cross-compilation/vet/review do not establish behavior.
+  No completed ACL subtask or reduction in security closure count is claimed.
+
+- November4: prior queued ACL proof passed run41862213427/source8adf2fa. Integrate
+  existing state/log/rollback permissions through held MAX trees, preserve exact
+  supported safe explicit ACEs and protected descendants, verify owner/protection
+  and inherited policy, reject reparses/hardlinks/late names before accepting.
+  Keep stationary all-root read-only audits before service stop; stop verified
+  service for native catalog-sharing compatibility. ACL-phase failure only
+  restarts after final policy audits, otherwise stopped/recovery required.
+  Run41868231145/source989fb085/job126707927278 passed native and real Setup/
+  sharing-recovery/rollback/SEC01 controls. First run's deny-fixture read failure
+  was fixed with preauthorized observer plus explicit fresh-read refusal proof;
+  no production policy/assertion weakening. Worker review/tests complete.
+  User defines passes as completion/pause sessions; latest7-pass forecast is now6
+  after this bounded ACL conversion. Remaining init1/Setup2/uninstall1/races1/
+  combined closure1; code-tree permission grant remains Setup/init scope. No
+  feature/Group3 expansion, new release/cost, whole SEC-03 or Windows10 claim.
+
+- November4: eliminate elevated installer initialization by using already-proven
+  LocalService startup before health; no new store/bootstrap implementation.
+  Explicit Windows elevated -mode init (or failed elevation query) refuses before
+  diagnostics/state writes. Move injected failure after Health so rollback still
+  follows real initialization. Six disposable fixtures bootstrap empty roots via
+  their existing services; five explicitly mkdir diagnostics before grants.
+  Run41873094251/sourceb31f1aa/job126725226588 passed independent token/alias
+  refusal controls, fresh LocalService-owned metadata/directories, unchanged
+  command log, actual Setup/rollback/original preservation and SEC01 suite.
+  First run's test-only missing success exit was corrected without changing
+  candidate exit1/refusal assertions. Worker review/tests done. Broad fixture
+  scenarios and other offline mode paths remain in combined/integrated review,
+  not falsely certified or moved to Group3. Forecast6 to5 remaining passes. No
+  new dependency, feature, release, cost or Windows10 claim.
+
+- SEC-03 code grant: replace path icacls with held native code-tree auditing and
+  DACL updates; preserve trusted readers/owners/protection and private protected
+  rollback subtrees. Real read-data sharing authority excludes data writers/rename
+  while permitting own running image. Preserve exact ALLOW grant multiset despite
+  Windows inherited-entry ordering; never admit deny/unsupported mutation policy.
+  Run41882276092/source802e097/job126757536563 passed native controls, actual
+  custom/fresh Setup, recovery and SEC01. Outgoing same-object hard-link names are
+  detected by link-count checks, not falsely claimed impossible or atomic. Full
+  interleavings/offline modes remain integrated scope. Payload publication remains
+  next; forecast5 to4 remaining passes. No release, dependency or Win10 claim.
+
+- SEC03 Setup payload checkpoint: use bundled temporary extraction and native
+  fixed-root/media/ai publication during Install, not Prepare, with all-target
+  preflight, disk-backed complete-code snapshots, verified copies and receipt
+  after data closes. Checked copy failure restores held prior bytes; completed
+  Install-failure recovery restores payload before old3file/state and Health.
+  Unverifiable close/receipt/recovery leaves service stopped. Explicit fixed seven
+  uninstall names preserve native-created file removal; Inno metadata/hostile
+  cleanup remain next. Run41894239272/source30fa427/job126799357326 passed native
+  distinct-old/new fullcode recovery/alias/late-name/writer controls and actual
+  minimal custom/fresh Setup, rollback, removal and SEC01. Worker review found
+  three pre-CI defects, receipt/close ordering and an avoidable Prepare window;
+  corrected and tested without weakening assertions. Temp fullcode snapshots are
+  not durable powerloss recovery; original3file remains, integrated interruptions
+  and real-provider combined closure stay SEC03. Forecast4 to3; no release/cost,
+  dependency/feature/Group3 expansion or Windows10 certification.
+
+- SEC03 uninstall: compiler-hash-verified staging of native helper/two scripts,
+  actual nofollow app directory-chain pins until Deinitialize, initialize-only
+  audit and post-confirmation cleanup. Remove path UninstallRun/Delete and
+  overwrite same-app logs to prevent legacy path-action retention. Native all-
+  target preflight then read/delete-only bottomup cleanup, preserve state and
+  unknown files, retain registration until deletion succeeds, truthful partial
+  failure. Actual active Inno journal sharing needed a root-only exact metadata
+  integrity audit after sharing refusal; never broaden payload sharing/policy.
+  Run41898776310/sourcec6d384e/job126815286190 passed native controls, actual
+  hostile refusals (samePID/journal/registration/original/outside), custom/fresh
+  removals, privacy/rollback and SEC01. Initial refusal/trace retained. Trusted
+  loaded-uninstaller integrity, actual metadata-leaf races/offline/interruption
+  limits and genuine prior-release/fullprovider recovery stay explicit original
+  SEC03 work. Forecast3 to2; no release, cost, Group3 or Win10 certification.
+
+- SEC03 bounded entrypoints/stationary metadata: refuse elevated serve and
+  direct/non-LocalService service before diagnostics, unknown modes before IO;
+  read existing code through held nofollow single-link file without Store or
+  generation/logs. Native Prepare audits hardlink counts before metadata writes.
+  Run41905712864/sourcef8f1c0a/job126839683829 passed exact real no-write/read
+  controls, valid journal alias refusal before PID change, explicit post-health
+  rollback, real installs/removals/privacy/SEC01. Test-only status capture fixed
+  without product or assertion weakening. Preserve admin recovery workflow:
+  verify/backup/restore and pre-mainworker require proper held read/write designs,
+  not blanket elevated refusal. Persistent prewrite fullcode intent/mixed recovery
+  and concurrent metadata tests remain implementation, not merely validation.
+  Correct prior2-pass estimate to best5 (range5–7) original SEC03 passes; no
+  feature/Group3 expansion, new release/dependency/cost or Win10 certification.
+
+- SEC03 administrative verify/backup: preserve admin and RX-user recovery use
+  with existing-only ReadOnly store, native held source leaves/catalog fd hook,
+  direct Tx.WriteTo ZIP instead of source staging and no diagnostics/repair.
+  Preserve source/count/size/pending-delete/config bounds; compare actual blob
+  size, serialize metadata reads. New archive is FILE_CREATE private at birth,
+  held-parent/physical source exclusion, handle-only failed-output cleanup and
+  truthful incomplete-close reporting. Run41913488167/source348dd18/job126866916248
+  passed native tests, actual admin installed source and ordinary RX copy commands,
+  immutable source/ACL/namespace/log checks, ZIPpermissions/checksums, independent
+  restore/verify and Setup/uninstall/rollback/SEC01. Two workers complete. Initial
+  product checks passed but fixture ACLreapply cleanup failed; isolate RXclone
+  instead of mutating installed ACLs, retain+expand exact assertions. Same row
+  completes; forecast5 to4, unchanged remaining restore/durable/races/combined
+  rows. No new dependency/provider/schema/release/cost, Group3 or Win10 claim.
+
+
+- SEC03 restore: preserve administrative recovery through held nofollow archive,
+  exclusive private stage/derived paths and inherited pipe/handle worker protocol;
+  refuse legacy self-authorized path requests before file access. Keep strict
+  parent pin until protected DELETE-held stage guarantees nonempty parent, then
+  identity-check limited final-parent sharing needed for native no-replace rename.
+  Actual FSCTL empty-positive/nonempty-refusal proves reparse protection; archive
+  ancestor pins may close after strict selected file is held. Use private fixed
+  progress FILE_CREATE + sync/close and strict read, never live partial acceptance.
+  Retain catalog/ZIP/original checks and existing hard resource/reaping controls;
+  held inventory cleanup refuses unsafe late aliases with truthful private residue.
+  Run41922662936/source39d7a2e/job126898869323 passes native/boundary/resource tests,
+  actual admin recovery, Setup/rollback/uninstall and permission compatibility.
+  Correct native sharing conflicts and test-only fast-process/junction snapshot
+  defects without reducing assertions; two workers reviewed/tested. Same restore
+  row closes, forecast4 to3, remaining durable/races/combined rows unchanged.
+  No new release/dependency/provider/cost/Group3 or Windows10 certification.

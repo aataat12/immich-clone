@@ -54,6 +54,8 @@ func New(dir string) *Provider {
 	return p
 }
 
+func (p *Provider) Available() bool { return p.available }
+
 type stream struct {
 	Index         int
 	CodecType     string `json:"codec_type"`
@@ -123,6 +125,14 @@ func dimensions(b []byte) (w, h int, selector string, err error) {
 	return
 }
 func (p *Provider) Thumbnail(parent context.Context, path string) (image.Image, int, int, error) {
+	return p.decodeFrame(parent, path, 320, nil, nil)
+}
+
+// AnalysisFrame reconstructs the complete supported still, not its browsing thumbnail.
+func (p *Provider) AnalysisFrame(parent context.Context, path string) (image.Image, int, int, error) {
+	return p.decodeFrame(parent, path, 960, nil, nil)
+}
+func (p *Provider) decodeFrame(parent context.Context, path string, edge int, seekUS *int64, metadata []byte) (image.Image, int, int, error) {
 	if !p.available {
 		return nil, 0, 0, ErrUnavailable
 	}
@@ -130,7 +140,13 @@ func (p *Provider) Thumbnail(parent context.Context, path string) (image.Image, 
 	defer cancel()
 	run := func(name string, args ...string) ([]byte, error) {
 		started := time.Now()
-		r, e := Run(ctx, filepath.Join(p.dir, name), args, nil)
+		var r Result
+		var e error
+		if name == "ffmpeg.exe" && edge == 960 {
+			r, e = runLimited(ctx, filepath.Join(p.dir, name), args, nil, 3<<20)
+		} else {
+			r, e = Run(ctx, filepath.Join(p.dir, name), args, nil)
+		}
 		stage := "media_decode"
 		if name == "ffprobe.exe" {
 			stage = "media_probe"
@@ -147,7 +163,10 @@ func (p *Provider) Thumbnail(parent context.Context, path string) (image.Image, 
 		}
 		return r.Output, nil
 	}
-	b, e := run("ffprobe.exe", "-v", "error", "-max_alloc", "67108864", "-probesize", "8388608", "-analyzeduration", "5000000", "-protocol_whitelist", "file,pipe", "-show_streams", "-show_stream_groups", "-of", "json", path)
+	b, e := metadata, error(nil)
+	if b == nil {
+		b, e = run("ffprobe.exe", "-v", "error", "-max_alloc", "67108864", "-probesize", "8388608", "-analyzeduration", "5000000", "-protocol_whitelist", "file,pipe", "-show_streams", "-show_stream_groups", "-of", "json", path)
+	}
 	if e != nil {
 		return nil, 0, 0, e
 	}
@@ -155,19 +174,28 @@ func (p *Provider) Thumbnail(parent context.Context, path string) (image.Image, 
 	if e != nil {
 		return nil, 0, 0, e
 	}
-	args := []string{"-hide_banner", "-loglevel", "error", "-nostdin", "-max_alloc", "67108864", "-threads", "1", "-filter_threads", "1", "-filter_complex_threads", "1", "-protocol_whitelist", "file,pipe", "-i", path}
-	if strings.HasPrefix(selector, "[") {
-		args = append(args, "-filter_complex", selector+"scale=320:320:force_original_aspect_ratio=decrease[thumb]", "-map", "[thumb]")
-	} else {
-		args = append(args, "-map", selector, "-vf", "scale=320:320:force_original_aspect_ratio=decrease")
+	args := []string{"-hide_banner", "-loglevel", "error", "-nostdin", "-max_alloc", "67108864", "-threads", "1", "-filter_threads", "1", "-filter_complex_threads", "1", "-protocol_whitelist", "file,pipe"}
+	if seekUS != nil {
+		args = append(args, "-ss", fmt.Sprintf("%.6f", float64(*seekUS)/1e6), "-seek_timestamp", "1")
 	}
+	args = append(args, "-i", path)
+	filter := fmt.Sprintf("scale=%d:%d:force_original_aspect_ratio=decrease", edge, edge)
+	if edge == 960 {
+		filter = "scale='min(960,iw)':'min(960,ih)':force_original_aspect_ratio=decrease"
+	}
+	if strings.HasPrefix(selector, "[") {
+		args = append(args, "-filter_complex", selector+filter+"[thumb]", "-map", "[thumb]")
+	} else {
+		args = append(args, "-map", selector, "-vf", filter)
+	}
+
 	args = append(args, "-an", "-sn", "-dn", "-frames:v", "1", "-threads", "1", "-c:v", "bmp", "-f", "image2pipe", "pipe:1")
 	b, e = run("ffmpeg.exe", args...)
 	if e != nil {
 		return nil, 0, 0, e
 	}
 	cfg, _, e := image.DecodeConfig(bytes.NewReader(b))
-	if e != nil || cfg.Width <= 0 || cfg.Height <= 0 || cfg.Width > 320 || cfg.Height > 320 {
+	if e != nil || cfg.Width <= 0 || cfg.Height <= 0 || cfg.Width > edge || cfg.Height > edge {
 		return nil, 0, 0, errors.New("invalid media thumbnail")
 	}
 	img, _, e := image.Decode(bytes.NewReader(b))

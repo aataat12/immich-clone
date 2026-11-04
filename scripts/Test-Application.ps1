@@ -1,9 +1,12 @@
+param([ValidatePattern('^[A-Za-z0-9][A-Za-z0-9.+-]{0,63}$')][string]$Version='0.1.41-prototype')
 $ErrorActionPreference = 'Stop'
 $root = Join-Path $env:RUNNER_TEMP ('immich-app-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory $root | Out-Null
 $binary = Join-Path $root 'immichclone.exe'
 $state = Join-Path $root 'state'
 $name = 'ImmichClone'
+$priorExpectedBuild=$env:IMMICH_EXPECTED_BUILD
+$env:IMMICH_EXPECTED_BUILD=$Version
 function Checked([string]$exe,[string[]]$arguments) { & $exe @arguments; if ($LASTEXITCODE -ne 0) { throw "$exe failed: $LASTEXITCODE" } }
 function Assert([bool]$condition,[string]$message) { if (!$condition) { throw $message }; Write-Output "PASS: $message" }
 function Login {
@@ -13,14 +16,17 @@ function Login {
 }
 try {
     ./scripts/Prepare-MediaProvider.ps1 -Destination (Join-Path $root 'media/ffmpeg-8.1.3-7eb77d88e2e9')
-    ./scripts/Prepare-AIProvider.ps1 -Destination (Join-Path $root 'ai/opencv-4.12.0-a83dcef02ebe')
-    Checked go @('build','-trimpath','-ldflags','-X main.version=0.1.25-prototype','-o',$binary,'./cmd/immichclone')
-    Checked $binary @('-mode','init','-data',$state)
+    ./scripts/Prepare-AIProvider.ps1 -Destination (Join-Path $root 'ai/opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3')
+    Checked go @('build','-trimpath','-ldflags',("-X main.version=$Version"),'-o',$binary,'./cmd/immichclone')
+    $env:IMMICH_NAV_BINARY=$binary
+    try { Checked node @('tests/hidden-navigation.cjs') } finally { Remove-Item Env:IMMICH_NAV_BINARY -ErrorAction SilentlyContinue }
+    New-Item -ItemType Directory -Path $state | Out-Null
     Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)RX')
     Checked icacls @($state,'/grant','*S-1-5-19:(OI)(CI)M')
     $credential = [PSCredential]::new('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))
     New-Service -Name $name -BinaryPathName ('"'+$binary+'" -mode service -data "'+$state+'"') -Credential $credential | Out-Null
     $diagnosticRoot = Join-Path $env:ProgramData 'ImmichCloneDiagnostics'
+    New-Item -ItemType Directory -Force -Path $diagnosticRoot | Out-Null
     Checked icacls @($diagnosticRoot,'/grant','*S-1-5-19:(OI)(CI)M')
     Start-Service $name
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'actual application starts as LocalService'
@@ -114,7 +120,7 @@ try {
     }
     if ($env:IMMICH_BROWSER_MODULE) {
         Stop-Service $name
-        $aiModel=Join-Path $root 'ai/opencv-4.12.0-a83dcef02ebe/sface.onnx'
+        $aiModel=Join-Path $root 'ai/opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3/sface.onnx'
         Move-Item $aiModel ($aiModel+'.held')
         Start-Service $name;Login
         $org=Invoke-RestMethod http://127.0.0.1:2283/api/organization -WebSession $session
@@ -206,6 +212,7 @@ try {
     Assert (!$diagnostic.Contains($root) -and !$diagnostic.Contains('synthetic.png') -and !$diagnostic.Contains((Get-Content "$state/access-code.txt" -Raw).Trim())) 'support log omits state paths media names and access code'
     Write-Output 'Application slice complete on Server 2022; Windows 10 remains untested.'
 } finally {
+    $env:IMMICH_EXPECTED_BUILD=$priorExpectedBuild
     if (Get-Service $name -ErrorAction SilentlyContinue) { Stop-Service $name -Force -ErrorAction Continue; Checked sc.exe @('delete',$name) }
     Remove-Item $root -Recurse -Force -ErrorAction Continue
 }

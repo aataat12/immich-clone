@@ -5,7 +5,6 @@ package media
 import (
 	"context"
 	"errors"
-	"fmt"
 	"golang.org/x/sys/windows"
 	"io"
 	"os"
@@ -19,7 +18,13 @@ const jobListAttribute = 0x0002000d // PROC_THREAD_ATTRIBUTE_JOB_LIST, Windows 1
 
 var errOutputLimit = errors.New("child output exceeds limit")
 
-func Run(ctx context.Context, exe string, args []string, onStart func(uint32)) (result Result, err error) {
+func Run(ctx context.Context, exe string, args []string, onStart func(uint32)) (Result, error) {
+	return runLimited(ctx, exe, args, onStart, OutputLimit)
+}
+func runLimited(ctx context.Context, exe string, args []string, onStart func(uint32), outputLimit int64) (result Result, err error) {
+	if outputLimit < 1 || outputLimit > 3<<20 {
+		return result, errors.New("invalid child output allowance")
+	}
 	if !filepath.IsAbs(exe) {
 		return result, errors.New("absolute executable required")
 	}
@@ -106,8 +111,8 @@ func Run(ctx context.Context, exe string, args []string, onStart func(uint32)) (
 	}
 	readDone := make(chan readResult, 1)
 	go func() {
-		b, e := io.ReadAll(io.LimitReader(r, OutputLimit+1))
-		if len(b) > OutputLimit {
+		b, e := io.ReadAll(io.LimitReader(r, outputLimit+1))
+		if int64(len(b)) > outputLimit {
 			e = errOutputLimit
 			_ = windows.TerminateJobObject(job, 1)
 		}
@@ -152,7 +157,7 @@ func Run(ctx context.Context, exe string, args []string, onStart func(uint32)) (
 		return result, e
 	}
 	if code != 0 {
-		return result, fmt.Errorf("child exit code %d", code)
+		return result, &ChildExitError{Code: code}
 	}
 	result.Output = read.b
 	return result, nil

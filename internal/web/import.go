@@ -5,6 +5,7 @@ import (
 	"errors"
 	"immichclone/internal/library"
 	"io"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,10 +15,15 @@ import (
 type deadlineReader struct {
 	r          io.Reader
 	controller *http.ResponseController
+	idle       time.Duration
 }
 
 func (d deadlineReader) Read(p []byte) (int, error) {
-	_ = d.controller.SetReadDeadline(time.Now().Add(60 * time.Second))
+	idle := d.idle
+	if idle <= 0 {
+		idle = 60 * time.Second
+	}
+	_ = d.controller.SetReadDeadline(time.Now().Add(idle))
 	return d.r.Read(p)
 }
 func (s *Server) importHTTP(w http.ResponseWriter, r *http.Request) bool {
@@ -90,21 +96,30 @@ func (s *Server) importHTTP(w http.ResponseWriter, r *http.Request) bool {
 		}
 		r.Body = http.MaxBytesReader(w, r.Body, library.MaxUpload)
 		controller := http.NewResponseController(w)
-		defer controller.SetReadDeadline(time.Time{})
-		entry, e := s.Store.PutImport(r.Context(), parts[0], index, deadlineReader{r.Body, controller})
+		entry, e := s.Store.PutImport(r.Context(), parts[0], index, deadlineReader{r.Body, controller, s.copyIdle})
 		if e != nil {
 			status := 500
+			var max *http.MaxBytesError
+			if errors.Is(e, library.ErrTooLarge) || errors.As(e, &max) {
+				status = http.StatusRequestEntityTooLarge
+			}
 			if errors.Is(e, library.ErrImportConflict) {
 				status = 409
 			}
 			if errors.Is(e, library.ErrImportInput) {
 				status = 400
 			}
+			var timeout net.Error
+			if errors.As(e, &timeout) && timeout.Timeout() {
+				status = http.StatusRequestTimeout
+			}
+			w.Header().Set("Connection", "close")
 			jsonBody := map[string]any{"error": "Import file failed; check receipt and retry. Committed originals retained.", "entry": entry}
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(status)
 			json.NewEncoder(w).Encode(jsonBody)
 		} else {
+			_ = controller.SetReadDeadline(time.Time{})
 			jsonResponse(w, entry)
 		}
 		return true

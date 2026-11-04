@@ -37,6 +37,21 @@ func TestOrganizationOriginalsCorrectionsAndIndependentRestore(t *testing.T) {
 	if e != nil || len(page.Faces) != 1 || page.Assets[0].Analysis.Status != "ready" {
 		t.Fatal("analysis publication", e)
 	}
+	// Retain real prior-provider provenance rather than relabeling ready results.
+	legacyProvider := "opencv-4.12.0-zlib-1.3.2-cb35f0ccb3e3-bgr960-v1"
+	if legacyProvider == recognition.AnalysisID {
+		t.Fatal("upgrade fixture must use a prior provider")
+	}
+	if e = s.db.Update(func(tx *bolt.Tx) error {
+		var ready Analysis
+		if e := readJSON(tx.Bucket([]byte(analysisBucket)), a.ID, &ready); e != nil {
+			return e
+		}
+		ready.Provider = legacyProvider
+		return writeJSON(tx.Bucket([]byte(analysisBucket)), a.ID, ready)
+	}); e != nil {
+		t.Fatal(e)
+	}
 	id := page.Faces[0].ID
 	if e = s.LabelFaces([]string{id}, "Review Person"); e != nil {
 		t.Fatal(e)
@@ -102,7 +117,7 @@ func TestOrganizationOriginalsCorrectionsAndIndependentRestore(t *testing.T) {
 	}
 	defer restored.Close()
 	page, e = restored.OrganizationPage("", "", "")
-	if e != nil || len(page.Faces) != 2 || len(page.Names) != 2 || len(page.Assets[0].Tags) != 2 || len(page.Assets[0].Analysis.Objects) != 1 {
+	if e != nil || len(page.Faces) != 2 || len(page.Names) != 2 || len(page.Assets[0].Tags) != 2 || len(page.Assets[0].Analysis.Objects) != 1 || page.Assets[0].Analysis.Provider != legacyProvider {
 		t.Fatal("independent restore lost organization", e)
 	}
 	for _, f := range page.Faces {

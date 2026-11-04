@@ -27,7 +27,7 @@ var global struct {
 }
 var sequence atomic.Uint64
 var events = map[string]bool{"recognition": true, "startup": true, "shutdown": true, "service": true, "http": true, "upload": true, "preview": true, "backup": true, "restore": true, "verify": true, "logging": true}
-var stages = map[string]bool{"ai_provider_verify": true, "ai_process": true, "begin": true, "complete": true, "catalog_open": true, "access_code": true, "listen": true, "ready": true, "stop": true, "failed": true, "original_write": true, "preview_generate": true, "media_provider_verify": true, "media_probe": true, "media_decode": true, "archive_write": true, "archive_restore": true, "integrity": true, "running": true, "requested": true, "assets": true, "login": true, "export": true, "original": true, "view": true, "retry": true, "hide": true, "unhide": true, "diagnostics": true, "health": true, "ui": true, "unknown": true}
+var stages = map[string]bool{"ai_provider_verify": true, "ai_process": true, "ai_reanalysis": true, "ai_faces": true, "ai_objects": true, "begin": true, "complete": true, "catalog_open": true, "access_code": true, "listen": true, "ready": true, "stop": true, "failed": true, "original_write": true, "preview_generate": true, "media_provider_verify": true, "media_probe": true, "media_decode": true, "archive_write": true, "archive_restore": true, "integrity": true, "running": true, "requested": true, "assets": true, "login": true, "export": true, "original": true, "view": true, "retry": true, "hide": true, "unhide": true, "diagnostics": true, "health": true, "ui": true, "unknown": true}
 var safeVersion = regexp.MustCompile(`^\d+\.\d+\.\d+(?:-[a-z]+)?$`)
 
 func DefaultDir() string {
@@ -60,6 +60,10 @@ func Root() string { global.Lock(); defer global.Unlock(); return global.root }
 func classify(e error) (string, int64) {
 	if e == nil {
 		return "none", 0
+	}
+	var child interface{ NativeExitCode() uint32 }
+	if errors.As(e, &child) {
+		return "native_child_exit", int64(child.NativeExitCode())
 	}
 	var native syscall.Errno
 	errors.As(e, &native)

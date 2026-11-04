@@ -2,7 +2,11 @@ name: Bounded native Windows AI worker
 on:
   push:
     paths:
+      - '.gitattributes'
       - 'experiments/native-ai/worker/**'
+      - 'experiments/native-ai/security-patches/**'
+      - 'experiments/native-ai/main_windows.go'
+      - 'experiments/native-ai/zlib-check/**'
       - 'experiments/native-ai/build.ps1'
       - '.github/workflows/native-ai.yml'
   workflow_dispatch:
@@ -30,12 +34,15 @@ jobs:
           name: experimental-native-ai-build-not-accepted
           path: |
             native-ai-candidate/ai-worker.exe
+            native-ai-candidate/native-security-check.exe
+            native-ai-candidate/opencv-security-patches.json
             native-ai-candidate/opencv-module-sources.zip
             native-ai-candidate/*.txt
             native-ai-candidate/*.cpp
             native-ai-candidate/*.ps1
             native-ai-candidate/*.log
             native-ai-candidate/*.patch
+            native-ai-candidate/zlib-1.3.2-source.tar.gz
             native-ai-candidate/notices/**
           retention-days: 7
   service:
@@ -68,7 +75,7 @@ jobs:
           function Checked([string]$exe,[string[]]$a) { & $exe @a; if ($LASTEXITCODE -ne 0) { throw 'Native AI operation failed' } }
           $root = Join-Path $env:ProgramData 'Immich Native AI 試験'
           New-Item -ItemType Directory $root | Out-Null
-          Copy-Item native-ai-candidate/ai-worker.exe $root
+          Copy-Item native-ai-candidate/ai-worker.exe,native-ai-candidate/native-security-check.exe $root
           if ((Get-FileHash "$root/ai-worker.exe").Hash -ne (Get-FileHash native-ai-candidate/ai-worker.exe).Hash) { throw 'Worker copy integrity failed' }
           $python = (Get-Command python).Source
           Checked $python @('-B','experiments/ai-probe/prepare.py',$root)

@@ -1,0 +1,82 @@
+name: Milestone 7 focused installer trust
+on:
+  push:
+    paths:
+      - '.github/workflows/installer-trust.yml'
+      - 'packaging/immichclone.iss'
+      - 'packaging/Manage-Service.ps1'
+      - 'packaging/Storage-Security.ps1'
+      - 'scripts/Test-UpgradePreparation.ps1'
+      - 'internal/installerfiles/**'
+      - 'internal/winfs/**'
+      - 'cmd/installerfiles/**'
+      - 'cmd/immichclone/init_*.go'
+      - 'cmd/immichclone/main.go'
+      - 'cmd/immichclone/existing_code*.go'
+      - 'cmd/immichclone/offline_command.go'
+      - 'internal/library/offline*.go'
+      - 'internal/library/restore*.go'
+      - 'internal/library/store.go'
+      - 'internal/library/backup.go'
+      - 'scripts/Test-ElevatedInitialization.ps1'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  installer-trust:
+    # Isolated ACL API proofs use the smaller filesystem gate, not real Setup.
+    if: ${{ !contains(github.event.head_commit.message, '[filesystem-only]') }}
+    runs-on: windows-2022
+    timeout-minutes: 12
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Parse changed management and acceptance scripts
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($file in @('packaging/Storage-Security.ps1','packaging/Manage-Service.ps1','scripts/Test-UpgradePreparation.ps1','scripts/Test-ElevatedInitialization.ps1','scripts/Test-Application.ps1','scripts/Test-MediaAIApplication.ps1','scripts/Test-MixedImport.ps1','scripts/Test-ImportSourceLoss.ps1','scripts/Test-ImportDestinationLoss.ps1')) {
+            $tokens=$null;$errors=$null
+            $null=[Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file),[ref]$tokens,[ref]$errors)
+            if ($errors.Count) { throw 'PowerShell parser refused candidate' }
+          }
+      - name: Build current runtime for disposable installer fixtures
+        shell: pwsh
+        run: |
+          go mod verify
+          if ($LASTEXITCODE -ne 0) { throw 'Module verification failed' }
+          go build -trimpath -o "$env:RUNNER_TEMP/trust-app.exe" ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'Application build failed' }
+      - name: Refuse elevated initialization before filesystem mutation
+        shell: powershell
+        run: |
+          ./scripts/Test-ElevatedInitialization.ps1 -Binary "$env:RUNNER_TEMP/trust-app.exe"
+          if ($LASTEXITCODE -ne 0) { throw 'Elevated initialization refusal failed' }
+      - name: Execute native installer snapshot and partial-failure controls
+        shell: pwsh
+        run: |
+          go test -mod=readonly -v -count=1 -timeout=120s ./internal/winfs ./internal/installerfiles
+          if ($LASTEXITCODE -ne 0) { throw 'Installer file-set controls failed' }
+          go test -mod=readonly -v -count=1 -timeout=120s ./internal/library -run '^TestOffline'
+          if ($LASTEXITCODE -ne 0) { throw 'Read-only offline filesystem controls failed' }
+          go test -mod=readonly -v -count=1 -timeout=180s ./internal/library -run '^TestRestore'
+          if ($LASTEXITCODE -ne 0) { throw 'Restore boundary and resource controls failed' }
+          go vet ./internal/library ./internal/winfs ./internal/installerfiles ./cmd/installerfiles ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'Installer file-set vet failed' }
+      - name: Actual Inno setup and separate standard-user trust controls
+        shell: powershell
+        run: |
+          ./scripts/Test-UpgradePreparation.ps1 -Binary "$env:RUNNER_TEMP/trust-app.exe"
+          if ($LASTEXITCODE -ne 0) { throw 'Installed code trust acceptance failed' }
+      - name: Retain closed permission-policy compatibility
+        shell: powershell
+        run: |
+          ./scripts/Test-StorageSecurity.ps1 -Binary "$env:RUNNER_TEMP/trust-app.exe"
+          if ($LASTEXITCODE -ne 0) { throw 'Existing storage permission compatibility failed' }

@@ -735,3 +735,289 @@ artifact ZIP SHA256 cbbccb47d52ea91b9a4b259f76bd8fcdb67b69b79288e0cf19220d0b4256
 Both verified. Seven-day artifacts; unsigned prototype. Source remains in PR #1
 pending main-merge authorization. No target Windows 10/broad quality/endurance
 claim; no full-library import or reboot requested.
+
+
+## Security candidate 0.1.27 — 2026-11-02
+
+No installed dependency/model/native-provider change. govulncheck v1.9.0 was
+acquired as a checksum-verified Go build/test tool, not added to app go.mod.
+Windows-targeted source/symbol scan against cmd/immichclone returned zero findings
+using database https://vuln.go.dev, timestamp 2026-10-27T21:16:18Z; actual Windows
+runner scan passed as well. This excludes C/C++, installer tools and unknown
+vulnerabilities. Selective current native advisory review and remaining zlib/
+static-runtime servicing gates are in security-baseline.md; no blanket clearance.
+
+[41469530044](https://github.com/aataat12/immich-clone/actions/runs/41469530044),
+source 19b049ffeb7902fe4509a0c50a83b3c754901c8d, job 125359889950 passed actual
+Windows socket-deadline regression and the full existing service/browser/native/
+restore/ENOSPC/0.1.25-upgrade/failed-upgrade rollback/reinstall/uninstall chain.
+Installer 102607252 bytes SHA256
+cffb19c052ac17cac30c62f845225cc6e30868f8d14389dc9e7ffd75876312ff
+retrieved and verified against manifest; package ZIP digest verified separately.
+Build Notes screenshots inspected. Unsigned prototype candidate; broader security
+milestone, target Windows 10 and extended reliability remain unaccepted.
+
+## Native compression servicing candidate — zlib 1.3.2
+
+Official source https://zlib.net/zlib-1.3.2.tar.gz, SHA256
+bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16;
+upstream zlib license retained unchanged with the archive. Static MSVC /MT build
+replaces OpenCV's bundled 1.3.1 via explicit external include/library selection;
+OpenCV 4.12.0, protobuf parser backport and the three model hashes stay unchanged.
+No new end-user DLL, interpreter, GPU or SDK requirement. CRT remains statically
+embedded and requires rebuilt/retested providers for servicing.
+
+[41483644241](https://github.com/aataat12/immich-clone/actions/runs/41483644241),
+source 30fc135bc0f6bd1d5af40ddaed17527caf91e219: build 125408169198 and
+LocalService 125411689735 passed. Real zlib version/roundtrip/inflateCopy/malformed
+operations passed on cloud Linux and Windows before downstream compilation.
+Worker reports linked zlib 1.3.2; no fallback old zlib library and PE imports only
+kernel32.dll. Native face/object inference, Python-reference minimum embedding
+cosine 0.9999996401, four malformed frames, model/cancellation recovery and restart
+under LocalService with Unicode/space paths passed. Input hashes unchanged;
+peak commitment 271380480 within the 536870912-byte job cap.
+
+Artifact 13161790873 ZIP SHA256 verified:
+6bb2cbe69687501b0323f1d40fe1419109cf083e40bae219cb03f029f5986d3c.
+7365120-byte ai-worker.exe SHA256 matched manifest:
+cb35f0ccb3e38a6120a6f84fe91d17beaa719f9dcb9329c192b2c885bfb121ba.
+Replacement source digest, notices, static import and version evidence inspected.
+Native candidate archive credential-signature scan passed (4269 scan items,
+72776961 bytes). This is isolated component acceptance, not app/installer
+integration or Windows 10 certification. Existing installed provider ID/hash
+remains unchanged until separately integrated and accepted in the broader release.
+
+
+## zlib 1.3.2 worker integrated in 0.1.29
+
+Use immutable provider opencv-4.12.0-zlib-1.3.2-cb35f0ccb3e3 with the previously
+accepted cb35f0cc... binary and unchanged models. Packaging verifies replacement
+source SHA256, source/license/version evidence and worker hash, without rebuilding
+native code. [41487369408](https://github.com/aataat12/immich-clone/actions/runs/41487369408),
+source f2242c2942caf1cc923a1ea7ad708900a8a3ad5a, job 125421140599 passed installed
+native inference, old-ready-result/name/tag preservation, failed cross-provider
+recovery to the actual 0.1.27 executable/provider, upgrade/rollback, independent
+restore/reinstall, private-canary payload checks and real NTFS full-disk recovery.
+Installed scan: 28454 items / 384104155 bytes, selected signatures/canaries only.
+Installer 104117297 bytes SHA256
+646a47acc8ac77751c8343202d12c09eff0a754fd0731f976b0b7e8fc9dcea66 verified;
+package ZIP SHA256 458c02d6b316f8054d068565a5815159e20a197472d3e6161812f1e535416493.
+Screenshots inspected. No new end-user prerequisite, model update or schema change.
+Clean Windows 10, new-worker target inference, wider security and long endurance
+remain distinct gates; this is an unsigned cloud-accepted prototype.
+
+
+## NR-01 OpenCV servicing — 2026-11-03
+
+Retain OpenCV 4.12.0 base, models and preprocessing; apply six hash-pinned official
+production backports (28272/28446/28579/28581/28959/29447), plus the separately
+recorded project single-plane mean correction required by unchanged numeric
+oracles. Exact patches/source provenance, hash and execution are opencv-nr01.md.
+Native run41551816976/build125641002773/service125643646910 passed 64 API cases,
+core controls, actual model parity/malformed/model loss/cancellation/restart under
+LocalService. Compiler MSVC19.44.35229/v14314.44.35207; static /MT, CPU SSE2,
+only kernel32 import. Static runtime servicing remains a provider rebuild gate.
+
+New worker SHA256 15d1c2ca7ef3f526b34ac4823f9337c51280ad171ddf43df4f3af5d8128a7c58,
+7365120 bytes; provider opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3.
+Artifact13192746922 ZIP SHA256
+2d420cb78acd8d9d170eeac9952f0c669d34cac6a8e071228ee8af4ee3d7c3ea verified.
+Actual signature scan:4291 inputs/members,61531095 bytes; not complete privacy
+or unknown-vulnerability proof. Regression executable excluded from app packaging.
+
+Application [41554459739](https://github.com/aataat12/immich-clone/actions/runs/41554459739), source
+ae1fbc3011de33df9a1c25594b6f9864f535bdb8, job125649834966 passed actual selected-worker
+service/browser/inference/model recovery and independent original/organization
+restoration. No installer/version/main merge, no Windows10 or broad accuracy
+certification. R-RESTORE-01 remains unexplained and original SEC-04 is reopened;
+other full release/upgrade/rollback/input/isolation gates remain unchanged.
+
+
+## Milestone6A existing-provider execution
+
+No new product dependency. FFmpeg8.1.3 provider7eb77d88e2e9 and accepted patched
+OpenCV provider15d1c2ca7ef3 supply bounded960px still/video analysis frames.
+Actual LocalService/restart feasibility41559260341 (sourcee95958bc9f24a1e56cdd5e47cce2248f80440d2a,
+job125665621103) passed single/grid12MP HEIC reference comparisons (minimum
+embedding cosine0.9966728075891548), known video PTS/content, H264/HEVC,
+rotation/VFR/short clips, cancellation, malformed/no-video refusal and immutable
+fixture checks. Tolerances preceded execution; no empty-grid substitute.
+
+Actual application/Edge acceptance41564920558, source9c15c56dba52481f98d8b255e98303f6ce29af7b,
+job125684028344 passed HEIC inference, sampled H264 frame observations and browser
+controls, service restart, original downloads and independent restored derived
+crop/context regeneration. Exact scope and remaining delivery gates are
+heic-video-ai.md. Server2022 evidence does not establish Windows10 compatibility.
+Python/Pillow/pillow-heif and the fixture encoder are cloud test tooling only;
+none is packaged as a new user dependency. Native models/binaries unchanged.
+The earlier SEC04 reopening statement above is superseded by the original-eight
+classification in security-priority-groups.md; no Group2/3 investigation here.
+
+
+## SEC-03 installer file helper candidate — November 4
+
+`cmd/installerfiles` reuses pinned Go1.27.3 and x/sys0.49.0, Windows x64,
+CGO=0/GOAMD64=v1. It is a bundled fixed-action executable, not an end-user SDK,
+new service, listener, user account, runtime download or native provider/model.
+Existing Go/x/sys distribution notices apply. Inno verifies its compiled payload
+hash and pins the staged bytes; the configured installed-payload canary inventory and Windows
+Go scan now include this executable (their full release execution remains pending). Actual held-object descriptors and normalized
+volume-GUID names use existing Windows APIs. Cross-compilation/vet and focused actual helper/privacy/alias plus production Setup
+execution passed in run41842717775/source d74c6ee; see filesystem-boundary-milestone7.md
+for exact operation evidence and remaining nonconverted paths/full release gates. These APIs do not establish Windows10 behavior from Server.
+
+
+## Native installer diagnostic integration
+
+No dependency/version/runtime change: the same staged Go/x/sys helper now writes
+fixed-label installer diagnostics through validated handles. First focused actual
+Windows Server2022 acceptance41846533710, source7f4b99b, job126631387368 passed
+append/rotation/privacy/alias/oversize controls and real Inno failed-Setup recovery
+when the optional failure note was a hard link. Outside bytes, original/code hashes,
+health and completion order passed; existing native and SEC-01 suites passed.
+Worker review/tests complete. Exact bounds and remaining root/ACL/init/Setup/full
+release/Windows10 gates: filesystem-boundary-milestone7.md. No public artifact
+or new end-user prerequisite; this does not close original SEC-03.
+
+
+## Private storage root creation integration
+
+No dependency/version/runtime change. Existing NtCreateFile now supplies a protected
+security descriptor while creating each missing directory relative to held parent
+handles; IO_STATUS_BLOCK distinguishes newly created objects for verification.
+Focused Server2022 execution41849734950/source db37f6c/job126642511204 passed
+exact root/child inheritance, protected creation under permissive parent, existing
+ACL/byte preservation, real symlink refusal, held-ancestor and partial-progress
+controls; separate ordinary-user reads/writes were denied by creation alone.
+Actual Setup/rollback and existing SEC-01 compatibility passed. Scope/evidence:
+filesystem-boundary-milestone7.md. Existing-tree ACL normalization is unconverted;
+no new distribution/runtime prerequisite, artifact release or Windows10 certification.
+
+
+## Held single-object ACL API proof — accepted after initial queue
+
+Same pinned Go/x/sys/Windows APIs; no new dependency or product prerequisite.
+Source8adf2fa adds an isolated MAXIMUM_ALLOWED directory-open + SetSecurityInfo
+protected-DACL operation. Actual no-propagation/locked-child/inheritance and
+outside-target behavior must be proven before installer use. Independent review,
+Windows cross-compilation and vet passed. The initial queued observation was superseded by inspected PASS logs for
+run41862213427/job126686818594 on Windows Server2022. Single-object suppression,
+child preservation/future inheritance and writer/refusal controls passed; this
+component alone did not establish installer integration or Windows10 acceptance.
+
+
+## Existing ACL normalization integrated
+
+Same Go/x/sys dependencies, no new service/runtime/provider/model. Actual held
+tree enumeration uses Go names-only Readdirnames on duplicated handles backed by
+GetFileInformationByHandleEx; no pathname enumeration fallback. Parent-first
+individual MAXIMUM_ALLOWED SetSecurityInfo updates preserve explicit ACEs and
+protected children, with re-enumeration/final actual-descriptor verification.
+Windows Server2022 run41868231145/source989fb085/job126707927278 passed native
+policy/refusal/late-name/alias controls, actual Setup sharing refusal with verified
+safe service restart, normal/failed-upgrade recovery and closed SEC-01 matrix.
+Independent worker review/tests complete. Full bounds, first fixture failure and
+remaining integrated/target gates: filesystem-boundary-milestone7.md. No new public
+installer or Windows10 certification; original SEC-03 remains open.
+
+
+## Installer initialization through LocalService
+
+No new dependency, service, account, launcher, schema or runtime download. Existing
+LocalService startup performs store/access-code initialization before health;
+installer no longer runs elevated offline init. Existing x/sys TokenElevation
+query guards Windows elevated explicit init before any diagnostic/state access.
+Windows Server2022 run41873094251/sourceb31f1aa/job126725226588 passed actual
+elevated no-write direct/junction/hard-link controls, fresh Program Files install
+with actual LocalService metadata/directory owners, unchanged commands log, usable
+upload, post-initialization failure/rollback and SEC01 compatibility. Linux cmd
+tests and Windows build/vet passed. Exact test-only status correction, broader
+fixture scaffolding scope, other-offline-mode and final target/combined limitations
+are filesystem-boundary-milestone7.md. No new artifact or Windows10 certification.
+
+SEC-03 code-permission checkpoint adds no dependency. Existing x/sys native
+held-tree DACL API replaces code-root icacls. Windows Server2022 run41882276092,
+source802e09733e31caa1a272400dbca4477b8b99c7e5/job126757536563 completed success:
+actual read-data file sharing/own-image, alias and unsafe ACL refusals, preserved
+reader ACEs/private rollback, inherited root, custom/fresh Setup, recovery and
+SEC01. Real outgoing same-object hard links can be created and are detected by
+link-count validation; no atomic hard-link freeze claim. Exact scope, failed-test
+corrections and remaining publication/race/full-provider gates are recorded in
+filesystem-boundary-milestone7.md. Published0.1.39 and Windows10 limits unchanged.
+
+## Setup native payload publication
+
+No new runtime/dependency. Existing Go/x/sys NtCreateFile held leaves now include
+DELETE for exact newlycreated-payload rollback, with SetFileInformationByHandle
+FileDispositionInfo exercised by actual Windows recovery tests. Native inventory
+uses held Readdirnames; source and all destination policies/aliases/sharing are
+validated before old-byte truncation. Pinned Inno6.7.4 dontcopy temporary extraction
+and explicit fixed UninstallDelete names were proven by actual compilation/install/
+removal, not inferred from package availability. Official semantics:
+https://jrsoftware.org/ishelp/topic_isxfunc_extracttemporaryfiles.htm and
+https://jrsoftware.org/ishelp/topic_uninstalldeletesection.htm.
+Windows Server2022 run41894239272/source30fa427021139265791f36a14409130adb13b4b9/
+job126799357326 completed success: independent distinct-code full recovery, real
+links/unsafe ACLs/writers, corrupted/missing recovery sources, late name refusal,
+custom/fresh actual Setup, fixture rollback/removal/original/privacy and SEC01.
+First passing run41893555355/source33a76c5 was superseded after Install ordering
+and late-name controls. Full provider/prior-release, kill/powerloss, remaining
+metadata/uninstall/offline paths and Windows10 acceptance remain unproven by this
+bounded gate. See filesystem-boundary-milestone7.md for exact limits.
+
+## Native uninstall cleanup
+
+No new runtime/dependency. Existing Go/x/sys native read/DELETE handles and
+SetFileInformationByHandle disposition now remove actual held trees bottomup,
+with source/staged hash pins and Inno directory-chain pins. Pinned Inno6.7.4
+InitializeUninstall/usUninstall/Deinitialize gates and overwrite logging were
+compiled/executed; normal removal and refusal gating are actual evidence, not
+documentation-only assumptions. Official event/log semantics:
+https://jrsoftware.org/ishelp/topic_scriptevents.htm and
+https://jrsoftware.org/ishelp/topic_setup_uninstalllogmode.htm.
+Windows Server2022 run41898776310/sourcec6d384eca9d675a5053f66e60d0354821fff1f61/
+job126815286190 completed success: native selected cleanup/refusal/late-name/
+persistentpin and root Inno active-metadata writer/policy controls; actual
+modified bootstrap/hardlink/real-user-write refusals; custom/fresh uninstall
+removal/original and unrelated-file preservation; installation/rollback/SEC01.
+Exact metadata-only audit permits Inno's own active root journal/image without
+claiming data-sharing exclusion; payloads retain read/delete sharing pins and
+all owner/DACL checks. Prior run42e011ad failed normal audit, diagnostic6daa7e14
+located it before service stop; corrected source passed. Full metadata-leaf races,
+offline/interruption/durable fullprovider recovery and real prior-release gates
+remain original SEC03 scope. Server results do not certify Windows10.
+
+## Entrypoint guards, existing-code read and stationary metadata
+
+No new dependency. Existing x/sys token/SCM-context APIs and winfs read handles
+are executed by actual Windows controls. Windows Server2022 run41905712864,
+sourcef8f1c0a1fbd7582b6fc54d2baa7294ca42fe58c5/job126839683829 completed success:
+elevated/direct/unknown early no-write aliases and missing paths, existing-code
+read without catalog/log initialization, valid journal hardlink outside-byte/PID
+preservation, explicit post-health rollback, LocalService installs/uninstalls
+and SEC01. Windows build/vet/Linux cmd tests passed; worker reviewed/tested.
+Initial run081a5f08 failed test-process exit capture; rerun changed only harness
+and docs, retaining exact assertions/product bytes. Admin recovery, pre-main
+worker, durable payload interruption and real metadata concurrency remain original
+SEC03 implementation gates. Corrected best additional passes5 (range5–7), not
+full integrated closure or Windows10 certification. See filesystem boundary record.
+
+## Administrative read-only verification and backup
+
+No new dependency. Existing bbolt1.4.3 ReadOnly+OpenFile consumes actual held
+Windows read-only catalog handle; actual mapping/shared lock and default-zero
+Tx.WriteTo reusing fd were executed in native tests and ordinary RX-user CLI.
+ZIP catalog streams directly, no source temp; existing x/sys NtCreateFile
+FILE_CREATE supplies final private DACL and exclusive-name create, not OPEN_IF.
+Windows Server2022 run41913488167/source348dd18b790fcc47e6ccf5228a723be7f0fbd125/
+job126866916248 completed success: complete source immutability, real input/output
+aliases/writers, unsupported state, private/exclusive output, bounded integrity
+failures/exact cleanup, independent ZIP/restore; actual admin installed source and
+separate RX-only source-copy verify/backup, archive ACL/checksums, preserved
+administrator recovery, remaining Setup/uninstall/rollback/SEC01. First run017b5130
+passed product checks but failed fixture ACLrestore; accepted fixture avoids
+installed ACLmutation without product changes or weaker checks. Existing automatic
+catalog baseline41912052098 passed. Native tests/cross-build/vet and Linux baseline
+backup checks passed; two worker reviews/tests done. Full untrusted restore,
+durable installer interruption, metadata races and genuine release/providers
+remain original SEC03 rows. Published0.1.39 unchanged; not Win10 certification.

@@ -15,6 +15,7 @@ import (
 	_ "image/jpeg"
 	"image/png"
 	"immichclone/internal/diagnostics"
+	"immichclone/internal/media"
 	"immichclone/internal/recognition"
 	"io"
 	"net/http"
@@ -47,6 +48,15 @@ type Asset struct {
 	Error           string        `json:"error,omitempty"`
 }
 type Store struct {
+	offline     *offlineState
+	reviewIndex *organizationIndex // protected by gate; derived from committed catalog state
+
+	analysisStill          func(context.Context, string) (image.Image, int, int, error)
+	videoInfo              func(context.Context, string) (media.Clip, error)
+	videoFrame             func(context.Context, string, int64) (image.Image, media.Sample, error)
+	mediaAnalysisAvailable atomic.Bool
+	mediaAnalysisGate      chan struct{}
+
 	root                 string
 	db                   *bolt.DB
 	gate                 sync.Mutex
@@ -56,7 +66,7 @@ type Store struct {
 	activeAnalysis       string
 	mediaPreview         func(context.Context, string) (image.Image, int, int, error)
 	recognizer           func(context.Context, image.Image, string) (recognition.Result, error)
-	recognitionAvailable bool
+	recognitionAvailable atomic.Bool
 }
 
 func Open(root string) (*Store, error) {
@@ -106,7 +116,7 @@ func Open(root string) (*Store, error) {
 	if e != nil {
 		return nil, e
 	}
-	s := &Store{root: root, db: db}
+	s := &Store{root: root, db: db, mediaAnalysisGate: make(chan struct{}, 1)}
 	e = db.Update(func(tx *bolt.Tx) error {
 		for _, n := range []string{"meta", "assets"} {
 			if _, e := tx.CreateBucketIfNotExists([]byte(n)); e != nil {
@@ -119,6 +129,9 @@ func Open(root string) (*Store, error) {
 			return errors.New("unsupported schema; refusing migration")
 		}
 		if e := b.Put([]byte("schema"), []byte("1")); e != nil {
+			return e
+		}
+		if e := initDeletions(tx); e != nil {
 			return e
 		}
 		// Derived index: rebuild from authoritative asset status on every open.
@@ -188,9 +201,16 @@ func Open(root string) (*Store, error) {
 			}
 		}
 	}
+	s.recoverDeletions()
 	return s, nil
 }
-func (s *Store) Close() error                 { return s.db.Close() }
+func (s *Store) Close() error {
+	e := s.db.Close()
+	if s.offline != nil {
+		e = errors.Join(e, s.offline.close())
+	}
+	return e
+}
 func (s *Store) Original(id string) string    { return filepath.Join(s.root, "originals", id) }
 func (s *Store) PreviewPath(id string) string { return filepath.Join(s.root, "previews", id+".png") }
 func validID(id string) bool {
@@ -307,6 +327,9 @@ func (s *Store) putWithPath(name, relative string, r io.Reader, size int64, expe
 		return a, false, errors.New("empty files are not accepted")
 	}
 	id := hex.EncodeToString(h.Sum(nil))
+	if s.deletionPending(id) {
+		return a, false, ErrDeletionPending
+	}
 	if (size >= 0 && n != size) || (expected != "" && id != expected) {
 		return a, false, ErrImportConflict
 	}
@@ -564,6 +587,9 @@ func (s *Store) Retry(id string) error {
 	return s.save(a)
 }
 func (s *Store) Verify() (result error) {
+	if s.offline != nil {
+		return s.verifyOffline()
+	}
 	started := time.Now()
 	defer func() { diagnostics.Record("verify", "integrity", result, 0, 0, time.Since(started)) }()
 	s.gate.Lock()

@@ -1,0 +1,71 @@
+From f86bdfcff461bba3463a0cc906564df859a63227 Mon Sep 17 00:00:00 2001
+From: Abhishek Gola <abhishek.gola@bigvisionllc.com>
+Date: Mon, 22 Dec 2025 17:19:32 +0530
+Subject: [PATCH] fixed heap buffer overflow issue
+
+---
+ modules/dnn/src/layers/nary_eltwise_layers.cpp | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/modules/dnn/src/layers/nary_eltwise_layers.cpp b/modules/dnn/src/layers/nary_eltwise_layers.cpp
+index 348252d6fd5c..68c76906c604 100644
+--- a/modules/dnn/src/layers/nary_eltwise_layers.cpp
++++ b/modules/dnn/src/layers/nary_eltwise_layers.cpp
+@@ -466,8 +466,8 @@ class NaryEltwiseLayerImpl CV_FINAL : public NaryEltwiseLayer
+         int nplanes = std::accumulate(shape.begin(), shape.end() - 1, 1, std::multiplies<int>());
+ 
+         if (nplanes == 1) { // parallelize within the plane
+-            AutoBuffer<char> buf_ptrs(steps.size());
+-            auto ptrs = (char**)buf_ptrs.data();
++            AutoBuffer<char*> buf_ptrs(steps.size());
++            char** ptrs = buf_ptrs.data();
+             ptrs[0] = out;
+             for (int i = 0; i < ninputs; i++) {
+                 ptrs[i+1] = (char*)inp[i];
+@@ -481,7 +481,7 @@ class NaryEltwiseLayerImpl CV_FINAL : public NaryEltwiseLayer
+                         ptr[i] = op(ptr1[i], ptr2[i]);
+                     }
+                     for (int j = 2; j < ninputs; j++) {
+-                        int dpj = steps[j + 1].back();
++                        size_t dpj = steps[j + 1].back() / sizeof(T);
+                         const T* ptrj = (const T*)(ptrs[j + 1]);
+                         if (dpj == 1) {
+                             for (int i = r.start; i < r.end; i++) {
+@@ -500,7 +500,7 @@ class NaryEltwiseLayerImpl CV_FINAL : public NaryEltwiseLayer
+                     }
+                     ptr = tmp;
+                     for (int j = 2; j < ninputs; j++) {
+-                        int dpj = steps[j + 1].back();
++                        size_t dpj = steps[j + 1].back() / sizeof(T);
+                         const T* ptr_j = (const T*)(ptrs[j + 1]);
+                         for (int i = r.start; i < r.end; i++, ptr += dp, ptr_j += dpj) {
+                             *ptr = saturate_cast<T>(op(*ptr, *ptr_j) * scale);
+@@ -512,8 +512,8 @@ class NaryEltwiseLayerImpl CV_FINAL : public NaryEltwiseLayer
+             parallel_for_(Range(0, plane_size), worker, nstripes);
+         } else { // parallelize across the plane
+             auto worker = [&](const Range &r) {
+-                AutoBuffer<char> buf_ptrs(steps.size());
+-                auto ptrs = (char**)buf_ptrs.data();
++                AutoBuffer<char*> buf_ptrs(steps.size());
++                char** ptrs = buf_ptrs.data();
+                 for (int plane_idx = r.start; plane_idx < r.end; plane_idx++) {
+                     ptrs[0] = out;
+                     for (int i = 0; i < ninputs; i++) ptrs[i+1] = (char*)inp[i];
+@@ -535,7 +535,7 @@ class NaryEltwiseLayerImpl CV_FINAL : public NaryEltwiseLayer
+                             ptr[i] = saturate_cast<T>(op(ptr1[i], ptr2[i]) * scale);
+                         }
+                         for (int j = 2; j < ninputs; j++) {
+-                            int dpj = steps[j + 1].back();
++                            size_t dpj = steps[j + 1].back() / sizeof(T);
+                             const T* ptrj = (const T*)(ptrs[j + 1]);
+                             if (dpj == 1) {
+                                 for (int i = 0; i < plane_size; i++) {
+@@ -554,7 +554,7 @@ class NaryEltwiseLayerImpl CV_FINAL : public NaryEltwiseLayer
+                         }
+                         ptr = tmp;
+                         for (int j = 2; j < ninputs; j++) {
+-                            int dpj = steps[j + 1].back();
++                            size_t dpj = steps[j + 1].back() / sizeof(T);
+                             const T* ptrj = (const T*)(ptrs[j + 1]);
+                             for (int i = 0; i < plane_size; i++, ptr += dp, ptrj += dpj) {
+                                 *ptr = op(*ptr, saturate_cast<T>(*ptrj * scale));

@@ -3,6 +3,7 @@ package web
 import (
 	"encoding/json"
 	"errors"
+	"image/png"
 	"immichclone/internal/library"
 	"io"
 	"net/http"
@@ -51,7 +52,7 @@ func (s *Server) organizationHTTP(w http.ResponseWriter, r *http.Request) bool {
 	}
 
 	if r.URL.Path == "/api/organization" && r.Method == "GET" {
-		result, e := s.Store.OrganizationPage(r.URL.Query().Get("after"), r.URL.Query().Get("face_after"), r.URL.Query().Get("q"))
+		result, e := s.Store.OrganizationFilteredPage(r.URL.Query().Get("after"), r.URL.Query().Get("face_after"), r.URL.Query().Get("q"), r.URL.Query().Get("dismissed") == "1", r.URL.Query().Get("unnamed") == "1")
 		if e != nil {
 			http.Error(w, "review catalog unavailable", 400)
 		} else {
@@ -80,6 +81,16 @@ func (s *Server) organizationHTTP(w http.ResponseWriter, r *http.Request) bool {
 			http.NotFound(w, r)
 			return true
 		}
+		if parts[1] == "context" && r.Method == "GET" {
+			img, e := s.Store.FaceContext(r.Context(), parts[0])
+			if e != nil {
+				http.Error(w, "Saved video frame unavailable; original remains downloadable", 409)
+			} else {
+				w.Header().Set("Content-Type", "image/png")
+				_ = png.Encode(w, img)
+			}
+			return true
+		}
 		if parts[1] == "crop" && r.Method == "GET" {
 			path, e := s.Store.FaceCrop(parts[0])
 			if e != nil {
@@ -87,6 +98,20 @@ func (s *Server) organizationHTTP(w http.ResponseWriter, r *http.Request) bool {
 			} else {
 				w.Header().Set("Content-Type", "image/png")
 				http.ServeFile(w, r, path)
+			}
+			return true
+		}
+		if parts[1] == "dismiss" && r.Method == "POST" {
+			var input struct {
+				Restore bool `json:"restore"`
+			}
+			if !organizationInput(w, r, &input) {
+				return true
+			}
+			if e := s.Store.DismissFace(parts[0], input.Restore); e != nil {
+				http.Error(w, "face review change failed", 400)
+			} else {
+				jsonResponse(w, map[string]bool{"saved": true})
 			}
 			return true
 		}
@@ -109,8 +134,28 @@ func (s *Server) assetOrganization(w http.ResponseWriter, r *http.Request, id, a
 	}
 	var e error
 	switch action {
+	case "reanalysis":
+		var input struct {
+			Action string `json:"action"`
+		}
+		if !organizationInput(w, r, &input) {
+			return true
+		}
+		if input.Action == "apply" {
+			e = s.Store.ApplyReanalysis(r.Context(), id)
+		} else {
+			e = s.Store.ControlReanalysis(id, input.Action)
+		}
 	case "analyze":
 		e = s.Store.QueueAnalysis(id)
+	case "video-analysis":
+		var input struct {
+			Action string `json:"action"`
+		}
+		if !organizationInput(w, r, &input) {
+			return true
+		}
+		e = s.Store.ControlVideoAnalysis(id, input.Action)
 	case "tags":
 		var input struct {
 			Tags []string `json:"tags"`

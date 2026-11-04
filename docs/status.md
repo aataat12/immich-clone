@@ -1,68 +1,519 @@
 # Current status
 
-Authoritative requirements: `../Immich_Clone_Project_Requirements.md` including the
-Server-first amendment. No new charges, parallel agents or publication of personal
-machine reports, private paths/media/inventories or raw support logs. Synthetic/
-public licensed fixtures only. CI timestamps are UTC.
+## November 4, 2026: 0.1.39 local regression accepted; milestone 7 started
 
-## Current prototype: 0.1.23 backup capacity/progress
+Current published prototype is **0.1.39**. The user reported all exercised combined
+0.1.38/0.1.39 checks passed, with no failures. Existing sampled-video results show
+12/12 timestamped positions; this is not a fresh inference execution or an
+explanation of an older video failure. [Exact tested/untested scope](validation-0.1.39.md#combined-user-result).
+Accepted cloud source/run/checksum: [0.1.39 acceptance](release-0.1.39-acceptance.md).
 
-[Source 66a698d](https://github.com/aataat12/immich-clone/commit/66a698d066c437219c6e1b23fe8dbd5ed01ad577),
-[acceptance run 41398447659](https://github.com/aataat12/immich-clone/actions/runs/41398447659),
-job 125124797979 passed on Windows Server 2022. No new dependency, native worker/
-model, original layout or backup schema. ZIP stays compatible with existing Restore.
+The user instructed proceeding with milestone 7 after the handoff pause.
+[Milestone 7 gates](milestone7-hardening.md) and the [manual update guide](update-guide.md)
+record permitted preparation, reused evidence and the remaining scope decision.
+The user subsequently explicitly approved resuming original SEC-02/03/05/06/08
+work. Group 3 investigations and paid signing remain deferred. Original count is now **4 closed / 4 open**. SEC-02 passed focused actual
+Setup/token controls and combined genuine prior-release/full-provider/rollback
+acceptance in an unpublished 0.1.41 candidate: [evidence](installer-trust-milestone7.md).
+SEC-03/05/06/08 remain open; milestone 7 is in progress. 0.1.39 is still the
+published prototype; no candidate installation is requested. Signing is
+unconfigured; no new costs or published product installer were introduced. A
+dedicated focused gate and the combined Windows Server candidate gate passed.
+Candidate publication is disabled; this does not certify final Windows 10 acceptance. Final Windows 10 clean-install/reboot/endurance acceptance remains open.
 
-Backups page now provides conservative same-volume free-space preflight, persisted
-service-job status, progress/cancel, complete checksum read-back, archive SHA256,
-retained repeated/range download and explicit temporary-copy discard. A new job
-cannot overwrite the retained ready archive. Originals and downloaded copies are
-unaffected by discard. Jobs survive page closure; service shutdown/restart marks
-active work interrupted and removes incomplete candidates. Unknown/corrupt job
-state disables backups without deleting completed files or disabling the library.
-Archive creation serializes library writes; browsing/status/cancel stay available.
-Read-back/hash happen after releasing the write gate. See backups.md.
+### SEC-03 installer copy checkpoint
 
-Actual acceptance:
-- Linux race/vet and Windows actual snapshot/ZIP/read-back/restore, cancellation,
-  budget/truncation, authentication/origin, unknown-state and retained-file guards.
-- Edge/LocalService: cancellation while a partial upload holds the library write
-  gate; status remains responsive. Create/read-back/hash/download, retained range
-  requests before and after service restart, Home navigation, explicit discard,
-  original/downloaded-copy preservation and diagnostic privacy passed.
-- Both the legacy complete download and the browser-downloaded managed archive
-  were restored independently to new locations. With old state unavailable,
-  original SHA256, names/tags/import receipts and regenerated face crops passed.
-- Real NTFS ENOSPC: original/import test retains its 96MiB volume; backup gets a
-  separate 192MiB fixture to fit its conservative reserve. Space disappears after
-  preflight, copy fails without publishing a partial, preflight rejects the full
-  volume, freeing space allows retry and full archive checksum read-back.
-- Actual accepted 0.1.21 installer upgrade to 0.1.23, injected failed 0.1.24 upgrade
-  rollback, restricted service, reinstall/uninstall/restore and existing 600-image,
-  121-image browser paging, AI/media/import regressions passed.
+The fixed three-file snapshot/rollback helper now uses held directories/files,
+checks actual private descriptors and physical role overlap, and publishes readiness
+only after byte verification/Sync/Close. Focused Windows run41842717775 passed native
+failure/privacy/alias controls, real production Setup injected failure/recovery,
+protected custom/Program Files and existing SEC-01 compatibility. [Exact evidence](filesystem-boundary-milestone7.md#accepted-focused-installer-copy-integration).
+One user-authorized worker independently reviewed the integration and added tests.
+SEC-03 remains open for root/ACL, logging, initialization, Inno publication/uninstall
+and full combined release gates. Count stays4 closed/4 open. No new installer or
+PC action is requested. This checkpoint is complete; no workers/CI are left running.
 
-[Installer artifact](https://github.com/aataat12/immich-clone/actions/runs/41398447659/artifacts/13120556502):
-`ImmichClone-0.1.23-prototype-x64-setup.exe`, 102593297 bytes, SHA256
-`ca713b421b963c0ef645fd8479ce5999c32b5a70e04abd0110f9266779722828`.
-Retrieved ZIP SHA256 `d6982bcc3459c64123638aaad43a544c31409945fbbd566345aedc6e174b6c3b`
-and executable verified against included checksums. Browser artifact 13120586550
-ZIP verified and backup desktop/narrow screenshots inspected. Unsigned prototype,
-7-day artifact retention. Server evidence does not certify clean Windows 10.
+### SEC-03 diagnostic checkpoint
 
-Two acceptance-harness failures were resolved before publication: PowerShell's
-reused Range header contaminated a later full download (now isolated and HTTP 200
-asserted), and the backup fixture was initially too small to pass its own reserve.
-No failed-run installer was published. Details in backups.md/dependency-evidence.md.
+Installer log append/rotation and sanitized failure-note writes now use the staged
+native helper with held actual directories/files and descriptor policy checks.
+Focused Windows Server2022 run41846533710/source7f4b99b passed independent native
+controls, real Setup failure with hard-linked note refusal and healthy rollback,
+existing snapshots and SEC-01 compatibility. [Exact evidence](filesystem-boundary-milestone7.md#accepted-focused-diagnostic-integration).
+The worker completed review/tests; no workers or CI remain active. SEC-03 stays
+open for root/ACL, initialization, remaining Setup paths and full combined gates.
+Count remains4 closed/4 open; keep0.1.39, no PC action or new release.
+
+### SEC-03 private-root creation checkpoint
+
+Missing installer storage components now receive protected private permissions
+at native creation through held parents. Focused Server2022 run41849734950,
+source db37f6c, passed creation/inheritance/link/partial-failure controls, real
+ordinary-user denial before ACL normalization, actual Setup rollback and existing
+SEC-01 compatibility. [Exact evidence](filesystem-boundary-milestone7.md#accepted-focused-private-root-creation).
+Worker review/tests complete; no workers/CI active. Existing-tree ACL normalization
+remains explicitly unconverted; next is that bounded change, followed by remaining
+init/Setup/full acceptance gates. No feature scope expansion or Group3 work.
+SEC-03 remains open,4 closed/4 open; keep0.1.39 with no local action/new release.
+
+### SEC-03 existing-tree ACL integration accepted
+
+The prior queued proof has passed: run41862213427/source8adf2fa/job126686818594.
+State/log/rollback ACL normalization is now integrated through audited held trees
+with preserved explicit ACEs, protected descendants, owners and data; fresh
+namespace checks detect late additions. Native and production Setup/storage
+acceptance passed [run41868231145](https://github.com/aataat12/immich-clone/actions/runs/41868231145),
+source989fb085d0999da2493463e7323f77feaf78aeca, job126707927278.
+Actual unrelated-writer refusal restarted the safe prior service after verification;
+failed-upgrade rollback, ordinary-user denial and the full SEC-01 suite passed.
+[Exact evidence/limits](filesystem-boundary-milestone7.md#accepted-existing-tree-acl-integration).
+The first integration run failed only a denied-fixture fresh read assertion; the
+corrected preauthorized observer retained all ACL/byte assertions and the rerun
+proved that fresh read really is denied. Production policy was not weakened.
+
+User definition: one pass is a work session ending with completion/pause. Latest
+forecast was7 remaining, conditional on proof/integration; this completed ACL
+integration reduced it to6 remaining passes; initialization reduced it to5; the code-permission checkpoint reduced it to4; application payload publication reduced it to3; bounded uninstall/cleanup reduced it to2. Residual implementation review below corrected that forecast to5; accepted verify/backup reduced it to4; accepted restore below reduces it to **3**, not a guarantee.
+
+| SEC-03 workstream | Current checkpoint | More passes, best estimate |
+|---|---|---:|
+| State/log/rollback ACLs, initialization, Setup payload and uninstall | Focused Windows checkpoints accepted | 0 |
+| Command entrypoint guards, existing-code reads and stationary metadata aliases | Focused Windows checkpoint accepted | 0 |
+| Administrative verify/backup held read-only paths and archive output | Focused Windows checkpoint accepted | 0 |
+| Restore supervisor and pre-main worker path boundary | Focused Windows checkpoint accepted | 0 |
+| Durable full-payload intent and interrupted/mixed-copy recovery | Remaining | 1 |
+| Separate-account installer/metadata concurrency controls | Remaining | 1 |
+| Genuine prior-release/full-provider/recovery closure | Remaining | 1 |
+| Total | SEC-03 remains open | 3 |
+
+No worker/CI remains active. No new feature/provider/version/release, cost,
+Group3 work or PC action; keep published0.1.39. Security remains4 closed/4 open.
+Windows Server results do not certify Windows10.
+
+### SEC-03 initialization checkpoint accepted
+
+Installer uses existing LocalService startup to initialize before health, rather
+than invoking elevated -mode init. Explicit Windows elevated init now refuses
+before diagnostics/state access, including identity-query failure.
+[Run41873094251](https://github.com/aataat12/immich-clone/actions/runs/41873094251),
+sourceb31f1aaf2b76ee681aa464714ca8c9f5c96d0cb1/job126725226588 passed actual
+elevated direct/junction/hard-link refusal, fresh Program Files state creation
+with LocalService file/directory ownership, unchanged command log, actual upload,
+post-start failure/verified rollback and existing permission controls.
+[Exact scope/limits](filesystem-boundary-milestone7.md#accepted-initialization-checkpoint).
+Worker review/tests finished. One test-status plumbing correction retained every
+negative assertion. Five broad fixture diagnostic-directory scaffolding additions
+were reviewed; their full scenarios await combined acceptance. Product code bytes
+match the accepted source. No workers/CI active, release or PC action.
+
+Previous forecast6 now **5 remaining passes**. Other offline command filesystem
+paths remain explicitly in SEC-03 integrated boundary review; no blanket elevated
+CLI closure. Setup/code permissions2, uninstall1, integrated races/boundaries1,
+combined full-provider/prior-release/recovery1. Scope stays original SEC-03,
+security4 closed/4 open and published0.1.39 unchanged. Server is not Windows10.
+
+
+### SEC-03 code-permission checkpoint accepted
+
+Replaced the installer code-root path-based LocalService RX grant with native
+held-tree auditing and handle-based DACL updates. Preserve trusted reader ACEs,
+owners and protection; stop inheritance across protected descendants and their
+whole subtree so private rollback catalog/access-code snapshots remain unchanged.
+Code files request read-data plus security metadata, no data-write/delete, with
+read sharing only; real running-image compatibility is verified.
+
+[Run41882276092](https://github.com/aataat12/immich-clone/actions/runs/41882276092)
+completed successfully on Windows Server2022, source
+802e09733e31caa1a272400dbca4477b8b99c7e5/job126757536563. Complete logs verify
+native reader/private-rollback preservation, unsafe grants/aliases, actual rename
+and data-writer sharing refusals, late outgoing-alias detection before any DACL
+write, unchanged outside objects, running own image, and an unprotected inherited
+root. Actual custom and fresh Program Files Setup, LocalService initialization,
+upload/original preservation, injected failure/native rollback and SEC01 passed.
+Local Windows cross-build/vet passed; worker review/tests completed.
+
+Windows can publish a new hard-link name to the same held object: sharing does
+not freeze link count. Initial and before/after link-count checks refuse detected
+aliases; the tested late pre-apply alias refuses before every ACL write. These
+checks are not atomic with arbitrary later interleavings. No retroactive revocation
+of existing WRITE_DAC/owner authority is claimed. Final integrated race/offline-mode
+coverage remains open. For admitted ALLOW-only ACEs, post-write verification uses
+an exact SID/mask/flags multiset including duplicates because Windows may reorder
+inherited ALLOW entries; protected descriptors and stale-plan checks remain exact.
+Failed fixture assumptions and the reproduced ordering failure are retained in
+filesystem-boundary-milestone7.md; no production trust policy was weakened.
+
+This completes only the code-permission half of Setup. Inno payload publication
+is unchanged and remains next. Forecast **5 to4 remaining passes**: Setup payload
+publication1, uninstall/cleanup1, integrated boundaries/races/offline modes1,
+combined genuine prior-release/full-provider/recovery closure1. SEC-03 remains
+open, security4 closed/4 open. No feature, provider, schema, dependency, version,
+release, cost, Group3 work or PC action. Keep0.1.39; Server does not certify Win10.
+
+
+### Accepted Setup application-payload publication checkpoint
+
+[Windows Server run41894239272](https://github.com/aataat12/immich-clone/actions/runs/41894239272)
+completed success, source30fa427021139265791f36a14409130adb13b4b9/job126799357326.
+Native held-directory/leaf publication now installs exactly seven rootfiles and
+media/ai. All targets are audited before overwrite; complete-code byte snapshots
+support checked copy/Install-failure recovery before old3file/state restore/Health.
+Independent distinct-prior/candidate recovery, newfile deletion, unsafe ACL/link/
+writer/shape/overlap/corruptbackup/missingtarget and late-name controls passed.
+Actual minimal custom/fresh Setup, fixture rollback, fixed native-file uninstall
+tracking, originals/privacy and SEC01 passed. Worker review/tests completed.
+[Exact evidence and limits](filesystem-boundary-milestone7.md#accepted-setup-application-payload-publication-checkpoint).
+
+Forecast **4 to3 remaining passes**: uninstall/remaining Inno metadata1; integrated
+races/offline commands/interruption handling1; combined genuine prior-release/
+full-provider/recovery1. Temp fullcode snapshots do not prove durable power-loss
+transactions. Inno-generated metadata/registry/shortcuts remain built-in; hostile
+uninstall and fullprovider/interruption closure remain original SEC03 scope.
+No new dependency/provider/schema/version/release/cost, Group3 work or PC action.
+SEC03 open, security4 closed/4 open, keep0.1.39; Server does not certify Windows10.
+Worker and focused CI completed. Paused at this checkpoint.
+
+### Accepted native uninstall and cleanup checkpoint
+
+[Windows Server run41898776310](https://github.com/aataat12/immich-clone/actions/runs/41898776310)
+completed success, sourcec6d384eca9d675a5053f66e60d0354821fff1f61/job126815286190.
+Hash-verified staged bootstrap and persistent directory pins replace retained
+unchecked-script/path cleanup. Native selected held-target deletion preserves
+state/originals/unknown files; service registration is removed only after cleanup.
+Actual custom/fresh uninstall and modified-script/hardlink/real-writer refusals
+passed with unchanged prior service PID/metadata/original/outside bytes on refusal.
+Native audit/delete/late-name/overlap/persistent-pin and exact Inno metadata
+sharing compatibility controls, installation/rollback and SEC01 passed. First
+normal refusal was diagnosed and corrected without relaxing payload sharing or
+actual owner/DACL policy. Worker review/tests finished.
+[Exact evidence and scope](filesystem-boundary-milestone7.md#accepted-native-uninstall-and-cleanup-checkpoint).
+
+Forecast **3 to2 remaining passes**: integrated concurrent/metadata-leaf boundaries,
+offline modes and interruptions1; genuine prior-release/full-provider/recovery1.
+Inno loaded-uninstaller integrity is trusted, not retroactive tamper recovery;
+whole metadata-leaf concurrency and temporary fullcode/powerloss limits remain
+original SEC03 scope. Partial deletion does not promise transactional rollback.
+No new feature/dependency/provider/schema/version/release/cost or Group3 work.
+SEC03 open, security4 closed/4 open, keep0.1.39, no PC action. Server is not Win10.
+Worker and focused CI complete; paused at this checkpoint.
+
+### Accepted command-entrypoint and stationary metadata tranche
+
+[Run41905712864](https://github.com/aataat12/immich-clone/actions/runs/41905712864)
+completed success, sourcef8f1c0a1fbd7582b6fc54d2baa7294ca42fe58c5/job126839683829.
+Elevated serve/direct service and unknown modes now refuse before file access;
+service requires actual SCM+LocalService. show-code reads existing held code,
+without Store.Open/code generation/log writes. Actual alias/no-write/read-positive
+matrices passed. Native Prepare audits stationary metadata hardlinks before
+builtin writes; actual valid journal alias preserved outside bytes and prior PID.
+Rollback test separately proves verified-health failure and recovery. Actual
+LocalService/custom/fresh install, uninstall, privacy/originals and SEC01 passed.
+Worker review/tests complete. One test-only process-exit capture fix retained
+all exact assertions and unchanged product bytes on rerun.
+[Evidence and residual implementation](filesystem-boundary-milestone7.md#accepted-entrypoint-and-stationary-metadata-checkpoint).
+
+Corrected best estimate **5 additional passes**, planning range5–7. Previous2
+undercounted implementation as validation. The table decomposes original SEC03:
+admin verify/backup1; restore supervisor/worker1; durable interrupted payload1;
+actual installer/metadata concurrency1; genuine prior-release/fullprovider1.
+Admin recovery commands remain supported and UNCHANGED pending safe hardening;
+blanket elevated refusal would break the published recovery workflow. Pre-main
+worker, temporary fullcode intent/recovery and concurrent metadata-leaf gaps
+remain open. This tranche does not close the full integrated row or SEC03.
+Security4 closed/4 open; keep0.1.39, no new feature/dependency/release/cost/Group3
+work or local action. Server is not Win10. Worker/CI finished; paused here.
+
+### Accepted administrative verify/backup checkpoint
+
+[Run41913488167](https://github.com/aataat12/immich-clone/actions/runs/41913488167)
+completed success, source348dd18b790fcc47e6ccf5228a723be7f0fbd125/job126866916248.
+Read-only existing-store/held catalog+original reads replace offline initialization;
+ZIP catalog streams directly without source staging. Archive is exclusive/private
+at creation; errors clean only its held new file, with truthful incomplete-close/
+cleanup reporting. No source/log/schema/index changes. Normal browser/service
+backup path remains. Native real aliases/writers/bounds/privatearchive/failure/
+no-generation and independent restore controls passed. Administrator commands on
+actual installed source and real RX-only account commands on verified library
+copy passed with exact source/ACL/namespace/no-log checks; ZIP private permissions,
+manifest hashes and independent administrator restore/verify also passed.
+Two workers finished review/tests. Test-only permission teardown was isolated
+into a copy without product or assertion weakening. Actual remaining Setup/
+uninstall/rollback/privacy/SEC01 and automatic existing catalog baseline passed.
+[Exact evidence/limits](filesystem-boundary-milestone7.md#accepted-administrative-verify-and-backup-checkpoint).
+
+Same tracked row complete; best additional passes **5 to4**. Four remaining rows
+are unchanged: restore supervisor/pre-main-worker1, durable interrupted payload1,
+actual metadata/installer concurrency1, genuine prior-release/fullprovider1.
+Trusted recovery compatibility here does not close the separate untrusted restore
+boundary. SEC03 stays open, security4 closed/4 open. No feature/dependency/provider/
+schema/version/release/cost/Group3 expansion or PC action; keep0.1.39. Server is
+not Win10 certification. All CI/workers done; paused here.
+
+### Accepted restore supervisor and pre-main worker checkpoint
+
+[Run41922662936](https://github.com/aataat12/immich-clone/actions/runs/41922662936)
+completed success, source39d7a2e6f05086d5c329326749c0efa53d82f375/job126898869323.
+Windows restore now holds the selected nofollow archive, creates exclusive private
+staging and passes archive/stage capabilities over an inherited pipe to the bounded
+same-image child. Public legacy path-request invocation refuses before file access.
+Private stage/derived directories exist before extraction, with privileged owner
+for elevated recovery. Publication is held native no-replace; cleanup inventories
+held descendants and reports retained private staging if safety cannot be proved.
+Existing ZIP/checksum/catalog validation, budgets, hard stop/reaping and recovery
+metadata behavior passed. Sibling ZIP recovery, live progress writer exclusion,
+actual junction/link/hardlink/writer refusal, forged invocation, late target and
+late unsafe cleanup passed. Native nonempty-parent reparse protection has an actual
+FSCTL positive control. Actual administrator recovery from a separate RX user's
+backup, Setup/rollback/uninstall and closed permission-policy compatibility passed.
+Two workers completed focused code review/tests. Initial native sharing conflicts
+were corrected; test-only process/junction snapshot defects were corrected without
+weakening exit/status/refusal/preservation assertions. Automatically triggered
+catalog baseline41922663060 also passed.
+[Exact evidence and limits](filesystem-boundary-milestone7.md#accepted-restore-supervisor-and-pre-main-worker-checkpoint).
+
+Same tracked row complete; best additional passes **4 to3**. The three remaining
+rows are unchanged: durable full-payload interrupted recovery1; separate-account
+installer/metadata concurrency1; genuine prior-release/full-provider/recovery1.
+SEC03 remains open, security4 closed/4 open. No feature/dependency/provider/schema/
+version/release/cost/Group3 expansion or PC action; keep0.1.39. Windows Server2022
+execution does not certify Windows10. All CI/workers complete; paused here.
+
+## Historical checkpoints (superseded where later acceptance applies)
+
+The chronological snapshots below are retained as history. Their old current/
+next-release/held-candidate wording does not override the 0.1.37/0.1.38/0.1.39
+acceptance records or reopen already resolved bounded defects.
+
+**Target Windows10 validation of0.1.30: sampled video FAIL, cause unknown.**
+User confirmed version/data, dismissal/restore, photo context, authentication and
+normal page navigation. HEIC AI and narrow layout were not exercised. One existing
+MP4 queued then failed with generic local AI task error and0/0 coverage. Do not
+claim6A target acceptance or a root-cause fix. Local candidate corrects obsolete
+HEIC/video help, retains known targets after first-sample failure, and adds fixed
+AI task stages plus numeric native exit codes to private-safe diagnostics.
+Previous controls are hidden on the first page by design (100 faces/50 photos
+per page) and appear after forward navigation; user pagination remains partial.
+Need private app diagnostics and nonidentifying clip dimensions/duration to
+narrow native failure; no personal media or raw support files in this repository.
+No replacement installer has been published for this report.
+
+
+**Released0.1.30-prototype**: [installer/release](https://github.com/aataat12/immich-clone/releases/tag/v0.1.30-prototype).
+Combined acceptance [41569614980](https://github.com/aataat12/immich-clone/actions/runs/41569614980),
+source042547e877f0c8957b7029ff6aa6d4ad4da9f8b0, job125699201968, passed on
+Windows Server2022/Edge. Actual original0.1.29 Setup was hash-verified and installed;
+failed cross-provider upgrade recovered0.1.29, successful upgrade deployed0.1.30,
+installed6A HEIC/video execution passed, injected0.1.31 failure recovered0.1.30
+including sampled observations/corrections, and independent restore/reinstall
+regenerated HEIC/face/frame context. Full suite/vet/dependency, real NTFS full-disk,
+normal browser/session/CSP and payload-canary checks passed. Full Scan deferred.
+Installer104160014 bytes; SHA256 ec78e9d62b4d462f3b1448310dad1cbda30cf278509af20426bbdcd49018a007.
+Public release is an unsigned prerelease. Windows10 local acceptance is next;
+no clean-machine/reboot/endurance or full compatibility certification. Existing
+Group2/3 mitigation remains paused, original security counts unchanged. Older
+held-candidate/next-installer statements below are historical.
+
+
+6A failure-recovery checkpoint passed [41567782811](https://github.com/aataat12/immich-clone/actions/runs/41567782811),
+source718eab96aa5ef281524de492498757d8b74469b3, job125693367010. Actual
+LocalService/Edge checks covered unavailable-decoder startup, runtime decoder loss/
+HEIC retry, denied derived-crop writes, missing SFace/retry and forced service death
+after observing an active native child. Completed sample records, face IDs, names/
+tags and original SHA256s survived; the child was reaped and queued work completed
+after restart without duplicate timestamps. Final independent restore/crop/context
+regeneration passed for2 clips/3 HEICs. No full-disk or Windows10 certification
+is implied. Full Scan proposal is recorded but deferred beyond6A.
+Next: update normal installer acceptance from the old0.1.27 fixture to the actual
+installed0.1.29 baseline, then validate the combined candidate/rollback. No new
+installer/version/main publication and no user action needed for this checkpoint.
+
+
+Milestone6A functional candidate passed focused Windows Server2022 LocalService/
+Edge acceptance [41564920558](https://github.com/aataat12/immich-clone/actions/runs/41564920558),
+source9c15c56dba52481f98d8b255e98303f6ce29af7b, job125684028344.
+Actual single/grid12MP HEIC face inference, persistent video pause/restart/cancel/
+resume, 12 sampled positions with timestamped face/cup observations, saved frame
+viewing, desktop/narrow overflow, original SHA256 downloads and independent
+restore/crop/context regeneration passed. New mock job regressions also passed on
+Windows; local full Go suite/vet and focused race tests passed. Shared model
+identity retains review-only still/video suggestions; policy is stored separately.
+No runtime dependency was added and no native rebuild was required.
+No installer/version/main publication or Windows10 certification. Remaining6A
+feature/release gates are heic-video-ai.md; older planned-only statements below
+are historical. Group2/3 security work remains paused.
+
+
+Latest classification clarification: only original SEC-01..08 belong in Groups
+1/2; all are currently Group 2 under the recorded loopback-only deployment.
+No demonstrated open Group 1 item; no further Group 2 mitigation work. Additional
+R-RESTORE-01/NR-01/Node platform observations are recorded in Group 3 without new
+work. Original SEC-04 security protection remains validated; the unrelated normal
+restore observation is not claimed fixed. Current security count3 closed/5 open;
+prior combined reopening statements below are superseded by this classification.
+Milestone 6A implementation continues; see security-priority-groups.md.
+
+
+Current user direction (November 2, America/Chicago): active security work is
+Group 1 remote Internet reachability introduced by this app/components. Other
+Group 2 mitigation is paused, with findings retained; security-priority-groups.md
+is authoritative. No confirmed open Group 1 exploit is demonstrated in current
+records. Milestone 6A implementation proceeds: bounded full HEIC analysis frames
+and actual-PTS video extraction are being executed before job/UI integration.
+
+
+2026-11-03: NR-01 technical remediation is implemented and accepted in the held
+application candidate: six pinned upstream OpenCV fixes plus a separately recorded
+single-plane mean correction. Actual native/API/model/LocalService/restart evidence
+is opencv-nr01.md. Application [41554459739](https://github.com/aataat12/immich-clone/actions/runs/41554459739), source
+ae1fbc3011de33df9a1c25594b6f9864f535bdb8, job 125649834966 passed real model/browser,
+missing-provider/model recovery, names/tags/original preservation and independent
+restores. The old installed build is unchanged; no installer/version/main merge.
+
+HEIC/video AI is explicitly planned as milestone 6A in both roadmap and Build Notes,
+with heic-video-ai.md acceptance. Existing 320px HEIC thumbnails are not an AI
+analysis-frame implementation. No HEIC/video AI feature is claimed delivered.
+Next functionality focus after this servicing is bounded analysis-frame feasibility.
+
+R-RESTORE-01: original SEC-04 is reopened for one observed valid-restore refusal
+in 41553917677 (media cancellation/restart/restore test). Cause is unconfirmed.
+Fixed private-safe stage/OS-code diagnostics were added without weakening limits;
+20 focused Linux repetitions, 50 Windows repetitions, the full suite and actual
+application CLI independent restores subsequently passed. That is revalidation,
+not a root-cause fix. Investigate before release; see restore-revalidation.md.
+Current fixed list: **2 closed / 6 open**, SEC-01/07 closed. Earlier closure
+statements below are historical checkpoints, not the current SEC-04 disposition.
+
+Four authorized workers completed original SEC-04 hostile backup limits and
+SEC-07 review closeout, each with implementation and independent verification.
+Combined Windows Server 2022/Edge acceptance [41547447887](https://github.com/aataat12/immich-clone/actions/runs/41547447887),
+source 1f1cdb912b223634dec0350e58e9ae86b11893b0, job 125626387613, passed in full.
+At that historical checkpoint the fixed original list had **3 closed / 5 open**: SEC-01, SEC-04, SEC-07 closed;
+SEC-02, SEC-03, SEC-05, SEC-06, SEC-08 open. No item renaming or partial-probe closure.
+See security-worklist.md, security-restore-limits.md and security-review-closeout.md.
+
+Restore limits cover full ZIP/catalog work in a supervised worker, strict copied-byte
+budgets, finite wall/committed-memory limits, growth detection and unpublished-failure
+cleanup. Actual Windows memory-positive/excess controls, cancellation/reaping,
+hostile catalogs, CLI default/explicit valid old-format restoration and seven
+low-budget refusals passed. Catalog monitoring is not an atomic disk quota.
+Review closeout completes threat/advisory/control/servicing coverage; it found
+NR-01, an OpenCV NaryEltwise/core-safety release blocker requiring provider
+remediation and actual validation under SEC-06/08. Review closure does not fix or
+accept that risk, and native child filesystem isolation remains SEC-05.
+
+Primary functionality adds independent Previous faces / Previous photos navigation.
+Actual Edge checks passed with 102 persisted synthetic faces and 52 synthetic
+originals: prior-page identity, independent cursors, selection and filter resets.
+All five pages, desktop/narrow, CSP/session and existing People corrections passed.
+See people-review-navigation.md. No user-media enlargement or product installer.
+No Windows 10 certification, main merge or release/version change.
+
+People candidate adds photo context from active/dismissed face review without
+mutating data. See people-photo-context.md; Windows Server 2022/Edge acceptance
+passed (41535508518), including desktop/narrow and error/close behavior.
+
+People filtering candidate: server-side unnamed filtering and accurate search/
+face continuation. Linux race/full tests/vet and Windows Server 2022/Edge acceptance passed
+(41525562509). See people-review-paging.md. User-authorized workers completed
+staged-Setup preparation and native-child authority probes, with exact evidence in
+security-upgrade-preparation.md and security-worker-canary.md. The former passed
+its focused Setup fixture; the latter proves same-token state access remains
+allowed despite working resource limits. Wider security gates remain open.
+
+People candidate: reversible false-face dismissal/restoration preserving names,
+undo history, tags, analysis and originals. Linux focused race/full tests/vet
+passed; Windows Server 2022/Edge acceptance passed (41519696666), including
+actual dismissal/reload/restore. See face-dismissal.md. Security worker source reviews are in
+security-installer-review.md and security-worker-isolation-review.md; neither
+claims new runtime evidence or clears the outstanding security release gates.
+
+Next-release candidate: 64 accepted TCP connection cap and rolling sixty-second
+response write-idle bound. Linux real-socket race tests/vet passed; focused Windows
+validation passed on Windows Server 2022/Edge (41501827158). See
+security-baseline.md S-008. No installer/version changed.
+
+Next-release restore candidate: validate the complete manifest/ZIP integrity and
+reject noncanonical or special-file archive entries before extraction. Linux
+negative/valid-restore tests and vet passed; Windows Server 2022/Edge validation
+passed (41510214737, S-009). Next security review: parent-folder/reparse and ACL
+boundaries, aggregate archive/catalog work and native isolation.
+
+Next-release installer candidate replaces root DACLs instead of retaining unknown
+explicit grants and preflights reparse components. Disposable Windows acceptance
+passed on Windows Server 2022 (41513726020, S-010): ordinary-user access checks,
+junction preservation, actual production helper/LocalService upload and restart.
+Bundled new preparation now passes actual Setup/junction/current-runtime
+LocalService execution (41525562509). Child ACL/owner/inheritance auditing is now implemented and tested as SEC-01.
+Writable custom AppDir, concurrent races, staging-token access and actual old-package full upgrade/rollback
+remain gates before packaging. No release installer/version changed.
+
+## Current cloud-accepted prototype: 0.1.29
+
+[Acceptance 41487369408](https://github.com/aataat12/immich-clone/actions/runs/41487369408),
+source f2242c2942caf1cc923a1ea7ad708900a8a3ad5a, job 125421140599 passed Windows
+Server 2022. Bundles explicit login/sign-out/current-session revocation, rolling
+copy-idle and admission safeguards, legacy export overlap limits, responsive AI
+status and the verified static zlib 1.3.2 worker. Model weights/schema unchanged.
+Provider directory: opencv-4.12.0-zlib-1.3.2-cb35f0ccb3e3; old immutable provider
+remains available for rollback, not selected by the new executable.
+
+Actual restricted-service browser/native/backup/import/paging tests passed, plus
+old 0.1.27 inference/names/tags retained without rerun, failed cross-provider
+rollback back to 0.1.27/old worker, successful 0.1.29 upgrade, actual new-worker
+inference on a distinct original, installed-payload code/private-marker scan,
+0.1.30 failed-upgrade rollback, independent restore/reinstall, original hashes
+and real NTFS full-disk recovery. Linux tests/vet passed. No dependency install.
+
+Artifact 13161554725 retrieved; installer 104117297 bytes SHA256
+646a47acc8ac77751c8343202d12c09eff0a754fd0731f976b0b7e8fc9dcea66
+matches manifest. ZIP SHA256
+458c02d6b316f8054d068565a5815159e20a197472d3e6161812f1e535416493
+verified. Browser artifact 13162742432 ZIP verified; login-narrow, People-narrow
+and Build Notes desktop screenshots inspected. Unsigned prototype, seven-day
+artifacts. Source remains on work/security-baseline/PR #2; no main merge claimed.
+
+User-reported 0.1.29 local version/data, sign-out/confirmation, wrong-code
+rejection, manual unlock, refresh persistence and five-page desktop/CSP checks
+passed, with no observed failures. Updated native inference and narrow layout
+were not tested; see local-validation.md. No repeat of passed checks requested.
+Do not enlarge the library merely to force AI inference: use an already
+unprocessed photo if available, otherwise leave new-provider Windows 10 inference
+pending for normal use. No full-library import or reboot requested. Broader
+security/People milestone, clean Windows 10, long endurance and wider resource/
+storage/isolation review remain open. Server success is not certification.
+
+## Working boundaries
+
+Authoritative requirements: ../Immich_Clone_Project_Requirements.md including the
+Server-first amendment. No new charges. User authorized two bounded security workers alongside People
+feature development on 2026-11-02; release security gates remain. Never publish private
+machine details, media/inventories/paths or raw support logs. Public/synthetic
+fixtures only. Ask the user before a security mitigation conflicts with the agreed
+plan. Repository visibility remains unchanged; decision deferred. CI time is UTC.
+Older acceptance checkpoints remain in Git history and dependency-evidence.md.
 
 ## User-reported Windows 10 checkpoints
 
 0.1.15: all twelve People/tag review-flow checks passed; original-photo comparison,
-not newly reported SHA256 proof. 0.1.17: Bulk import worked well. 0.1.17-to-0.1.19:
-both Home controls, desktop/narrow layout, actual version and preservation of
-photos/names/tags/import history passed. 0.1.21: all requested gallery checks passed,
-no observed problems. These are limited functional reports, not broad recognition,
-endurance or clean-PC certification. No raw private reports retained. No repeat of
-completed checks or reboot requested. Small 0.1.23 backup-page validation is next;
-keep the ZIP private because it contains originals and the access code.
+not newly reported SHA256 proof. 0.1.17: Bulk import worked well. 0.1.19: Home
+navigation, desktop/narrow layout/version and data preservation passed. 0.1.21:
+requested gallery checks passed. 0.1.25: backups, Build Notes and 87/87 eligible
+photos completed with names/tags/data retained; desktop passed, narrow not repeated
+and new-import follow-up not tested. 0.1.27: version/upgrade, five-page browser/CSP,
+desktop and focused existing media/organization/import/backup/Build Notes passed;
+authentication-flow checks were unavailable because controls were missing.
+
+0.1.29: user-reported version/upgrade and existing photos/names/tags/ready AI,
+pagination/import history passed; sign-out confirmation, incorrect-code rejection,
+manual re-login and authenticated refresh/navigation passed. All five pages and
+AI batch status worked at desktop width without blocking JavaScript/CSP errors.
+No failures observed. Updated runtime inference was not tested (no eligible
+unprocessed photo); unsupported video remains outside still-photo AI. Narrow
+layout was not tested because that viewport was unavailable in the test surface.
+Do not repeat passed checks or enlarge the library solely for testing. Native Windows 10 inference can wait for an already
+unprocessed photo from normal use. These reports do not certify broad recognition,
+clean-PC prerequisites, endurance or reboot startup. Reboot remains at final gate.
+No raw private reports retained. See local-validation.md for the recorded result and remaining scope.
 
 ## Preserved gallery/import/AI baseline
 
@@ -80,35 +531,6 @@ native worker/model/licensing checks are reused; no source rebuild of providers.
 
 ## Next milestones and remaining limits
 
-0.1.25 is cloud-accepted on review branch work/bulk-ai-acceptance, source
-d558f7c35c66e3169c73af3b19b71167d16d1dd0. Full Windows Server 2022 run
-[41406051070](https://github.com/aataat12/immich-clone/actions/runs/41406051070),
-job 125148201437 passed: actual native bulk inference, durable controls and
-restart/restore bookkeeping, names/tags, JSON export, Build Notes/Home desktop
-and narrow navigation, optional-model failure/recovery, original hashes,
-independent restores, real NTFS ENOSPC, actual 0.1.23 upgrade, failed-upgrade
-rollback and uninstall/reinstall checks. Linux race/vet and membership export
-regressions passed. No new provider/model/dependency. Local 0.1.25 validation
-is pending; no full-library import or reboot requested.
-
-Installer artifact 13123837527: ImmichClone-0.1.25-prototype-x64-setup.exe,
-102605388 bytes, SHA256
-e88a3fee85da9ecc3efe574b844ab534c5254d9cb1ea455e6d78338e8763bf00.
-Retrieved ZIP SHA256 cbbccb47d52ea91b9a4b259f76bd8fcdb67b69b79288e0cf19220d0b425684fe
-and executable verified. Prior matching Build Notes desktop/narrow screenshots
-were inspected; final synthetic-browser artifact 13123443482 is retained.
-Unsigned prototype; seven-day artifact retention. Server is not Windows 10
-certification. Full remaining acceptance: roadmap.md.
-
-Acceptance found and fixed raw batch-member states incorrectly emitted as
-json.RawMessage, making /api/export empty. Regression tests cover pending,
-cancelled, ready and failed states while excluding embeddings. The missing-model
-harness then needed a fresh unprocessed fixture (bulk processing already completed
-the old one) and a height above the existing 32-pixel provider minimum. The final
-64x48 PNG verifies failure, original download hash and recovery independently.
-No failed-run installer was published. Direct main publication was blocked by
-automatic approval review; PR #1 remains pending explicit merge authorization.
-
 1. Large-container/ZIP64 size and throughput, longer actual mixed-media endurance,
    and storage-disconnect recovery remain open before full real-library import.
    Web backups still stage a complete archive plus catalog/reserve in application
@@ -118,8 +540,8 @@ automatic approval review; PR #1 remains pending explicit merge authorization.
    128 sessions and one active copy lease. Resume retransfers accepted bytes for
    SHA256 receipts; no metadata-only skip or partial-file continuation. See bulk-import.md.
 3. People/tag scalability and wider family/age/profile quality remain separate
-   gates. Native still-image AI only; HEIC/video AI, face dismissal and ready
-   reanalysis remain deferred. See ai-feasibility.md.
+   gates. Native still-image AI only; HEIC/video AI is planned in milestone 6A; ready reanalysis remains deferred. Face dismissal and
+   photo context have accepted next-release candidates; they are not shipped. See ai-feasibility.md.
 4. Hidden Media local-location GUI and deliberate permanent managed-copy deletion
    with recovery remain queued: hidden-media.md. No deletion implemented.
 5. Clean Windows 10 prerequisites, final reboot/startup, security/signing remain

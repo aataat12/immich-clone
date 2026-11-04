@@ -1,0 +1,51 @@
+From 01320ab612299e801be7d4bf5b58362c091bf979 Mon Sep 17 00:00:00 2001
+From: Alexander Smorkalov <alexander.smorkalov@opencv.ai>
+Date: Fri, 27 Feb 2026 09:30:16 +0300
+Subject: [PATCH] Fixed cv::mul overflow for U16 type.
+
+---
+ modules/core/src/arithm.simd.hpp  |  9 +++++++++
+ modules/core/test/test_arithm.cpp | 12 ++++++++++++
+ 2 files changed, 21 insertions(+)
+
+diff --git a/modules/core/src/arithm.simd.hpp b/modules/core/src/arithm.simd.hpp
+index 3b8ab1c48b2c..00e3fe21a4b3 100644
+--- a/modules/core/src/arithm.simd.hpp
++++ b/modules/core/src/arithm.simd.hpp
+@@ -1437,6 +1437,15 @@ struct op_mul
+     { return saturate_cast<T1>(a * b); }
+ };
+ 
++template<typename Tvec>
++struct op_mul<uint16_t, Tvec>
++{
++    static inline Tvec r(const Tvec& a, const Tvec& b)
++    { return v_mul(a, b); }
++    static inline uint16_t r(uint16_t a, uint16_t b)
++    { return saturate_cast<uint16_t>(static_cast<uint32_t>(a) * static_cast<uint32_t>(b)); }
++};
++
+ template<typename T1, typename T2, typename Tvec>
+ struct op_mul_scale
+ {
+diff --git a/modules/core/test/test_arithm.cpp b/modules/core/test/test_arithm.cpp
+index 3a7a54a050ea..8f5632673faa 100644
+--- a/modules/core/test/test_arithm.cpp
++++ b/modules/core/test/test_arithm.cpp
+@@ -3411,4 +3411,16 @@ TEST_P(Core_LUT, accuracy_multi2)
+ 
+ INSTANTIATE_TEST_CASE_P(/**/, Core_LUT, testing::Combine( LutIdxType::all(), LutMatType::all()));
+ 
++TEST(Core_Arithm, mul_overflow_28557)
++{
++    uint16_t data[] = {5000, 60000, 5000, 60000, 5000, 60000};
++    cv::Mat m(1, 6, CV_16U, data);
++    cv::Mat res = m.mul(m);
++
++    for (int i = 0; i < 6; i++)
++    {
++        EXPECT_EQ(65535, res.at<uint16_t>(0, i));
++    }
++}
++
+ }} // namespace

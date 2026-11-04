@@ -1,0 +1,25 @@
+From b201018a25f412d97bda98e2a63ddd8a633b415e Mon Sep 17 00:00:00 2001
+From: Erellu <71142033+Erellu@users.noreply.github.com>
+Date: Thu, 22 Jan 2026 13:26:02 +0100
+Subject: [PATCH] Fix UB in cv::error when breakOnError set to true
+
+Fixes #28436.
+Replaces a nullptr dereference (unguaranteed to cause a SEGFAULT) by `std::terminate` which will call the current `std::terminate_handler` and then SIGARBT.
+---
+ modules/core/src/system.cpp | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/modules/core/src/system.cpp b/modules/core/src/system.cpp
+index ef9facd4f116..11d29fa846ea 100644
+--- a/modules/core/src/system.cpp
++++ b/modules/core/src/system.cpp
+@@ -1282,8 +1282,7 @@ void error( const Exception& exc )
+ 
+     if(breakOnError)
+     {
+-        static volatile int* p = 0;
+-        *p = 0;
++        std::terminate();
+     }
+ 
+     throw exc;

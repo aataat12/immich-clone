@@ -1,4 +1,4 @@
-IMMICH CLONE 0.1.23 - EARLY TEST BUILD
+IMMICH CLONE 0.1.36 - EARLY TEST BUILD
 
 This unsigned prototype is not a validated release. Windows Server 2022 testing
 does not establish Windows 10 compatibility. Do not bulk-import a real library yet.
@@ -117,7 +117,7 @@ CPU worker with a 512MiB process cap. Select detected faces to name or reassign;
 clear a name to leave unknown, undo the last name edit, or mark a missed face.
 Suggested matches require confirmation and can be wrong. Custom tags are separate
 from the 80-class COCO object suggestions and searchable with filenames/names.
-No automatic person merging/naming, face dismissal or ready-result reanalysis yet.
+No automatic person merging/naming. False-face dismissal/restore and explicit additive ready-result reanalysis are available; automatic detection replacement remains unavailable.
 HEIC/video AI and broad family/age/profile quality are unaccepted. Original bytes
 are never changed. Hidden items are excluded from this review page.
 
@@ -167,3 +167,35 @@ Archive creation serializes library writes; browsing/status/cancel remain usable
 A complete archive plus snapshot/reserve must fit in application storage, and the
 browser download destination needs additional space. No external-destination
 picker, incremental backup, automatic retention or full-library acceptance yet.
+
+Security hardening candidate: exact embedded-script policy and access guard
+regressions. Wider security review remains open; no LAN/Internet exposure.
+
+6A: supported8-bit single/grid HEIC local AI; explicit per-video analysis of up to12 evenly spaced sample positions with actual timestamps, pause/cancel/resume and saved corrections. Every-frame Full Scan remains deferred. Existing ready results are preserved.
+
+0.1.31 feedback: corrected supported-format help; retain a known video sampling plan after a first-sample inference error; separate face/object diagnostic stages with numeric process exit codes; Previous controls remain visible and disabled on the first page. No automatic retry or forced reanalysis.
+
+0.1.32: review-only name suggestions compare proven compatible serviced native providers while keeping original provenance and thresholds. People uses an explicit dark body background.
+
+0.1.33: explicit review-first additive reanalysis for completed supported photos and sampled videos. Prepare separately, then Apply or Discard. Existing detections, names, tags and dismissals remain; overlapping detections are skipped. Pause/resume and proposals persist across restart and backup. No automatic rerun, renaming, detection replacement or Full Scan.
+
+0.1.34: Hidden Media managed location/copy, reversible restore, explicitly confirmed permanent managed-copy deletion with durable cleanup retry and conflict preservation. New deletion refuses storage below a 16 MiB free-space floor. Earlier backups and external sources remain untouched. The 4 GiB upload limit remains; oversized interrupted requests now report HTTP 413. Installer acceptance passed before publication.
+
+0.1.35: Hidden Media has an explicit Home button, toggle-off behavior and matching heading. Bulk import explains unavailable sources and saved receipt conflicts and clears stale messages on retry. A 240-file mixed PNG/HEIC/MP4/MOV crash/resume and independent restore checkpoint passed in cloud tests; milestone 4 remains in progress. No format, provider or file-size limit changed.
+
+0.1.36: Hidden Media has Select this page, cross-page selection, Restore selected and confirmed permanent deletion of selected managed copies. Partial results distinguish completed, pending cleanup, failed and unattempted items. The toggle reads Show Hidden Media / Hide Hidden Media; the extra Home button is removed. Selections clear on leaving the view or reloading. Existing individual recovery and original-preservation protections remain.
+
+
+0.1.37: Backups includes expandable restore help and a Ready-only recovery-instructions download with that archive's expected SHA256 and size. The text explains offline restore into a new folder and separate original verification. Instructions do not contain the access code, execute commands, switch the installed library or replace existing data. Download the ZIP separately and retain it privately. Windows Server scale/recovery tests do not establish final Windows 10 or full-library endurance acceptance.
+The 0.1.37 preparation also corrects a deterministically reproduced Windows restore progress-file sharing conflict and adds bounded stage/numeric CLI failure detail. Reader access stays read-only and restore budgets/checksum checks remain unchanged. Earlier generic restore refusals were not individually diagnosed; combined installed acceptance still gates release.
+
+0.1.38 preparation: People & tags gains a catalog-snapshot index for review/search and references, invalidated by every committed write and rebuilt after reopen/restore. Page limits, name confirmation, correction persistence and thresholds remain unchanged. Milestone6's finite existing-format matrix adds executed camera EXIF/orientation, raster variants, first GIF/TIFF frame/page and video metadata edge cases without adding a provider or format. Larger-library/recognition measurements describe their finite public/synthetic fixtures; security Group2/3, RAW/HDR expansion, every-frame Full Scan and final Windows10 clean-machine/reboot/endurance acceptance remain deferred. Publication requires native-quality and combined installed acceptance.
+
+
+0.1.41 unpublished milestone7 candidate: Setup refuses application code folders
+that unrelated users or LocalService can modify, uses its new bundled management
+helper for Prepare and Install and pins both extracted helpers against writes
+through Setup exit. Unsafe code permissions are refused, not silently repaired.
+This candidate is not offered as a new installed release. Original open security
+items have resumed under milestone7; new Group3 investigations, Full Scan, paid
+signing and final Windows10/reboot acceptance remain deferred or incomplete.

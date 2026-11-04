@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"golang.org/x/image/draw"
 	"image"
 	"immichclone/internal/diagnostics"
@@ -20,12 +21,12 @@ import (
 	"time"
 )
 
-const ProviderID = "opencv-4.12.0-a83dcef02ebe"
+const ProviderID = "opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3"
 const AnalysisID = ProviderID + "-bgr960-v1"
 
 var ErrUnavailable = errors.New("local AI provider unavailable; originals remain available")
 var hashes = map[string]string{
-	"ai-worker.exe": "a83dcef02ebef33beccea8a3b21b88ed2bc18b298040f592be31ee9e72191ec6",
+	"ai-worker.exe": "15d1c2ca7ef3f526b34ac4823f9337c51280ad171ddf43df4f3af5d8128a7c58",
 	"yunet.onnx":    "8f2383e4dd3cfbb4553ea8718107fc0423210dc964f9f4280604804ed2552fa4",
 	"sface.onnx":    "0ba9fbfa01b5270c96627c4ef784da859931e02f04419c829e83484087c34e79",
 	"yolox.onnx":    "c5c2d13e59ae883e6af3b45daea64af4833a4951c92d116ec270d9ddbe998063",
@@ -217,6 +218,7 @@ func (p *Provider) Analyze(ctx context.Context, img image.Image, staging string)
 		if e = ctx.Err(); e != nil {
 			return Result{}, e
 		}
+		startedTask := time.Now()
 		child, cancel := context.WithTimeout(ctx, 30*time.Second)
 		r, err := media.Run(child, filepath.Join(p.dir, "ai-worker.exe"), []string{task, p.dir, f.Name()}, nil)
 		cancel()
@@ -224,12 +226,16 @@ func (p *Provider) Analyze(ctx context.Context, img image.Image, staging string)
 			return Result{}, ctx.Err()
 		}
 		if err != nil {
-			return Result{}, errors.New("local AI task failed; retry after checking the provider")
+			diagnostics.Record("recognition", "ai_"+task, err, 0, 0, time.Since(startedTask))
+			return Result{}, fmt.Errorf("local AI %s task failed; check diagnostics before retrying", task)
 		}
 		var part Result
 		if json.Unmarshal(r.Output, &part) != nil || Validate(part, img.Bounds().Dx(), img.Bounds().Dy()) != nil {
-			return Result{}, errors.New("local AI response rejected")
+			rejected := errors.New("local AI response rejected")
+			diagnostics.Record("recognition", "ai_"+task, rejected, 0, 0, time.Since(startedTask))
+			return Result{}, fmt.Errorf("local AI %s response rejected", task)
 		}
+		diagnostics.Record("recognition", "ai_"+task, nil, 0, 0, time.Since(startedTask))
 		if task == "faces" {
 			result.Faces = part.Faces
 		} else {

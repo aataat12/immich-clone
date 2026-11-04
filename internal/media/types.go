@@ -1,6 +1,9 @@
 package media
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 const MemoryLimit = 512 << 20
 const OutputLimit = 1 << 20
@@ -13,3 +16,9 @@ type Result struct {
 	Peak   uintptr
 	PID    uint32
 }
+
+// ChildExitError exposes only a numeric process result, never stderr or paths.
+type ChildExitError struct{ Code uint32 }
+
+func (e *ChildExitError) Error() string          { return fmt.Sprintf("child exit code %d", e.Code) }
+func (e *ChildExitError) NativeExitCode() uint32 { return e.Code }

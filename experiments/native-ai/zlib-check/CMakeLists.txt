@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.20)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+project(ZlibOperationCheck LANGUAGES C CXX)
+find_package(ZLIB 1.3.2 EXACT REQUIRED)
+add_executable(zlib-check zlib-smoke.cpp)
+target_compile_features(zlib-check PRIVATE cxx_std_17)
+target_link_libraries(zlib-check PRIVATE ZLIB::ZLIB)

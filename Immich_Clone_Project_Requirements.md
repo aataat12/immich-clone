@@ -1,3 +1,17 @@
+## SEC-03 worker amendment — November 4, 2026
+
+The user permitted a worker for the next development checkpoint. One bounded
+worker per explicitly authorized checkpoint reviews SEC-03 integration and contributes independent tests;
+this does not authorize extra workers, new charges or Group3 investigations.
+
+## Milestone 7 authorization — November 4, 2026 (America/Chicago)
+
+The user explicitly approved resuming the five original open items SEC-02,
+SEC-03, SEC-05, SEC-06 and SEC-08 for milestone 7. This supersedes their Group 2
+work deferral, not their classification or closure criteria. SEC-01/04/07 remain
+closed; Group 3 investigations and paid signing remain deferred. No parallel
+workers or new charges are authorized. Final target acceptance remains distinct.
+
 ## Authorized execution amendment — November 1, 2026
 
 The user explicitly authorized developing and validating on the available cloud
@@ -118,3 +132,17 @@ Report blockers promptly and identify the smallest action needed to unblock prog
 Do not promise unattended continuation or later notification unless an actual mechanism has been established. Background workers report through this conversation unless a separate communication mechanism is explicitly available.
 
 Do not drift into unrelated features, local setup requests, or cosmetic polishing while core compatibility and reliability blockers remain unresolved.
+
+## User priority amendment — November 2, 2026 (America/Chicago)
+
+Proceed with milestone 6A HEIC/video AI implementation alongside Group 1 security
+mitigation: Internet-exploitable attack surfaces created on the user's machine
+by the app or its installed supporting components. Pause other Group 2 security
+mitigation for later; retain findings and implemented controls. This supersedes
+prior ordering requiring the entire security backlog before feature development.
+Normal original preservation, recovery, representative dependency execution and
+truthful release/Windows 10 acceptance remain. See docs/security-priority-groups.md.
+
+Clarification: Groups 1 and 2 classify only original SEC-01..SEC-08. Newly
+identified issues are Group 3, recorded without investigation or mitigation time.
+Only Group 1 receives security work time; 6A functional implementation continues.

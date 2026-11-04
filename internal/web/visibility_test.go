@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http/httptest"
+	"path/filepath"
 	"testing"
 )
 
@@ -50,5 +51,47 @@ func TestActualBuildAndProtectedVisibility(t *testing.T) {
 	a, _ = s.Store.Get(a.ID)
 	if a.Hidden {
 		t.Fatal("unhide not persisted")
+	}
+}
+
+func TestHiddenManagedLocation(t *testing.T) {
+	s, c := setup(t)
+	a, _, e := s.Store.Put("<private-looking>.txt", bytes.NewBufferString("synthetic location original"))
+	if e != nil {
+		t.Fatal(e)
+	}
+	path := "/api/assets/" + a.ID + "/managed-location"
+	if w := request(s, "GET", path, "", nil); w.Code != 401 {
+		t.Fatal("unauthenticated location", w.Code)
+	}
+	if w := request(s, "GET", path, "", c); w.Code != 409 {
+		t.Fatal("visible asset location exposed", w.Code)
+	}
+	if e = s.Store.SetHidden(a.ID, true); e != nil {
+		t.Fatal(e)
+	}
+	w := request(s, "GET", path, "", c)
+	var result struct{ Path, Name string }
+	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &result) != nil {
+		t.Fatal(w.Code, w.Body.String())
+	}
+	expected, e := filepath.Abs(s.Store.Original(a.ID))
+	if e != nil || result.Path != expected || result.Name != a.Name {
+		t.Fatal("wrong managed location")
+	}
+	if w.Header().Get("Cache-Control") != "no-store" {
+		t.Fatal("location cached")
+	}
+	if w = request(s, "POST", path, `{}`, c); w.Code != 404 {
+		t.Fatal("location accepts write", w.Code)
+	}
+	if e = s.Store.SetHidden(a.ID, false); e != nil {
+		t.Fatal(e)
+	}
+	if w = request(s, "GET", path, "", c); w.Code != 409 {
+		t.Fatal("location remained accessible after restore")
+	}
+	if w = request(s, "GET", "/api/assets/"+a.ID+"/original", "", c); w.Body.String() != "synthetic location original" {
+		t.Fatal("original changed")
 	}
 }
