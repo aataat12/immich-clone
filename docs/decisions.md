@@ -534,3 +534,21 @@
   instead of mutating installed ACLs, retain+expand exact assertions. Same row
   completes; forecast5 to4, unchanged remaining restore/durable/races/combined
   rows. No new dependency/provider/schema/release/cost, Group3 or Win10 claim.
+
+
+- SEC03 restore: preserve administrative recovery through held nofollow archive,
+  exclusive private stage/derived paths and inherited pipe/handle worker protocol;
+  refuse legacy self-authorized path requests before file access. Keep strict
+  parent pin until protected DELETE-held stage guarantees nonempty parent, then
+  identity-check limited final-parent sharing needed for native no-replace rename.
+  Actual FSCTL empty-positive/nonempty-refusal proves reparse protection; archive
+  ancestor pins may close after strict selected file is held. Use private fixed
+  progress FILE_CREATE + sync/close and strict read, never live partial acceptance.
+  Retain catalog/ZIP/original checks and existing hard resource/reaping controls;
+  held inventory cleanup refuses unsafe late aliases with truthful private residue.
+  Run41922662936/source39d7a2e/job126898869323 passes native/boundary/resource tests,
+  actual admin recovery, Setup/rollback/uninstall and permission compatibility.
+  Correct native sharing conflicts and test-only fast-process/junction snapshot
+  defects without reducing assertions; two workers reviewed/tested. Same restore
+  row closes, forecast4 to3, remaining durable/races/combined rows unchanged.
+  No new release/dependency/provider/cost/Group3 or Windows10 certification.

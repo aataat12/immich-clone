@@ -73,18 +73,18 @@ proved that fresh read really is denied. Production policy was not weakened.
 
 User definition: one pass is a work session ending with completion/pause. Latest
 forecast was7 remaining, conditional on proof/integration; this completed ACL
-integration reduced it to6 remaining passes; initialization reduced it to5; the code-permission checkpoint reduced it to4; application payload publication reduced it to3; bounded uninstall/cleanup reduced it to2. Residual implementation review below corrected that forecast to5; accepted verify/backup below reduces it to **4**, not a guarantee.
+integration reduced it to6 remaining passes; initialization reduced it to5; the code-permission checkpoint reduced it to4; application payload publication reduced it to3; bounded uninstall/cleanup reduced it to2. Residual implementation review below corrected that forecast to5; accepted verify/backup reduced it to4; accepted restore below reduces it to **3**, not a guarantee.
 
 | SEC-03 workstream | Current checkpoint | More passes, best estimate |
 |---|---|---:|
 | State/log/rollback ACLs, initialization, Setup payload and uninstall | Focused Windows checkpoints accepted | 0 |
 | Command entrypoint guards, existing-code reads and stationary metadata aliases | Focused Windows checkpoint accepted | 0 |
 | Administrative verify/backup held read-only paths and archive output | Focused Windows checkpoint accepted | 0 |
-| Restore supervisor and pre-main worker path boundary | Remaining | 1 |
+| Restore supervisor and pre-main worker path boundary | Focused Windows checkpoint accepted | 0 |
 | Durable full-payload intent and interrupted/mixed-copy recovery | Remaining | 1 |
 | Separate-account installer/metadata concurrency controls | Remaining | 1 |
 | Genuine prior-release/full-provider/recovery closure | Remaining | 1 |
-| Total | SEC-03 remains open | 4 |
+| Total | SEC-03 remains open | 3 |
 
 No worker/CI remains active. No new feature/provider/version/release, cost,
 Group3 work or PC action; keep published0.1.39. Security remains4 closed/4 open.
@@ -248,6 +248,35 @@ Trusted recovery compatibility here does not close the separate untrusted restor
 boundary. SEC03 stays open, security4 closed/4 open. No feature/dependency/provider/
 schema/version/release/cost/Group3 expansion or PC action; keep0.1.39. Server is
 not Win10 certification. All CI/workers done; paused here.
+
+### Accepted restore supervisor and pre-main worker checkpoint
+
+[Run41922662936](https://github.com/aataat12/immich-clone/actions/runs/41922662936)
+completed success, source39d7a2e6f05086d5c329326749c0efa53d82f375/job126898869323.
+Windows restore now holds the selected nofollow archive, creates exclusive private
+staging and passes archive/stage capabilities over an inherited pipe to the bounded
+same-image child. Public legacy path-request invocation refuses before file access.
+Private stage/derived directories exist before extraction, with privileged owner
+for elevated recovery. Publication is held native no-replace; cleanup inventories
+held descendants and reports retained private staging if safety cannot be proved.
+Existing ZIP/checksum/catalog validation, budgets, hard stop/reaping and recovery
+metadata behavior passed. Sibling ZIP recovery, live progress writer exclusion,
+actual junction/link/hardlink/writer refusal, forged invocation, late target and
+late unsafe cleanup passed. Native nonempty-parent reparse protection has an actual
+FSCTL positive control. Actual administrator recovery from a separate RX user's
+backup, Setup/rollback/uninstall and closed permission-policy compatibility passed.
+Two workers completed focused code review/tests. Initial native sharing conflicts
+were corrected; test-only process/junction snapshot defects were corrected without
+weakening exit/status/refusal/preservation assertions. Automatically triggered
+catalog baseline41922663060 also passed.
+[Exact evidence and limits](filesystem-boundary-milestone7.md#accepted-restore-supervisor-and-pre-main-worker-checkpoint).
+
+Same tracked row complete; best additional passes **4 to3**. The three remaining
+rows are unchanged: durable full-payload interrupted recovery1; separate-account
+installer/metadata concurrency1; genuine prior-release/full-provider/recovery1.
+SEC03 remains open, security4 closed/4 open. No feature/dependency/provider/schema/
+version/release/cost/Group3 expansion or PC action; keep0.1.39. Windows Server2022
+execution does not certify Windows10. All CI/workers complete; paused here.
 
 ## Historical checkpoints (superseded where later acceptance applies)
 

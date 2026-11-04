@@ -1102,3 +1102,84 @@ does NOT close the untrusted restore path boundary. Those are original SEC03
 obligations, not new features or Group3 work. No dependency/provider/schema/version/
 release/cost or local PC action. SEC03 open, security4 closed/4 open; keep0.1.39.
 Server results do not certify Windows10. Paused at this checkpoint.
+
+
+## Accepted restore supervisor and pre-main worker checkpoint
+
+Focused [run41922662936](https://github.com/aataat12/immich-clone/actions/runs/41922662936)
+completed **success** on disposable Windows Server2022, source
+`39d7a2e6f05086d5c329326749c0efa53d82f375`, job126898869323. Full job logs and
+terminal run conclusion were checked. This closes the same restore row, not SEC03.
+
+Supervisor pins the destination chain strictly before creating an exclusive,
+protected stage. Elevated stage/files use Administrators ownership and BA/SYSTEM
+private grants; non-elevated recovery uses its caller's private policy. Originals,
+staging, previews and faces directories exist privately before the worker reads
+ZIP input. The nofollow single-link archive is held read-only; redundant archive
+ancestor pins are released only after that file is secured, permitting archive and
+new recovery destination to share a parent without reopening the archive by path.
+
+Native directory rename needs target-directory WRITE sharing. The final parent's
+sharing changes only after a protected, DELETE-pinned stage makes it persistently
+nonempty; old/new parent identities are checked while both are held. All ancestors
+and final parent still deny DELETE sharing. Real FSCTL_SET_REPARSE_POINT succeeds
+on an empty control, strict empty-parent pin excludes a writer, and the held-stage
+parent rejects actual reparse conversion with DIRECTORY_NOT_EMPTY while retaining
+identity. Stage publication is native relative no-replace with before/after object
+identity checks. Existing and late-created targets remain unchanged. Failure
+cleanup inventories/checks all held descendants before deleting; an unsafe late
+alias produces explicit ErrRestoreCleanup and retained private staging, with no
+outside change or claimed successful cleanup.
+
+The pre-main Windows worker refuses the old caller-authored request-file protocol
+before filesystem access. New requests use a bounded anonymous inherited pipe,
+explicit inherited stage/archive handles and identities. Same-image parent and
+actual immediate job limits are checked before consuming the request; unknown or
+trailing JSON is rejected. Stage owner/DACL/path/identity and archive single-link
+identity are checked before ZIP parsing. The existing hard memory/process/output/
+time/cancellation/reaping limits remain. This is a resource-bounded worker with
+checked filesystem capabilities, not a restricted-token sandbox.
+
+Extraction retains the existing fixed-name allowlist, manifest/CRC/SHA256, actual
+copy bounds, structural catalog checks, original verification and preview retry
+behavior. Payload files are FILE_CREATE with private owner/DACL at birth. Store
+initialization runs only inside this prepared private stage with all fixed paths
+already created. Fixed private progress is synced/closed before its strict reader
+can open it: live sharing conflicts mean not-ready, never partial JSON acceptance;
+a valid bounded nonce/catalog-size record remains mandatory after confirmed reap.
+CLI restore dispatch precedes diagnostics initialization and retains absolute
+recovery destination/cloud-sync refusal. Existing recovery remains usable.
+
+Actual tests passed: private-before-extraction controls; source/archive byte/ACL/
+namespace preservation; independent restored originals; ZIP beside destination;
+real symlink, hardlink, junction and preheld writer refusals; existing/late target
+preservation; forged old and v2 invocations; unsafe cleanup retention; partial/live
+progress exclusion; archive/catalog/entry/metadata/expansion bounds; corrupt/cyclic
+catalog cleanup; timeout/output/hard memory/cancellation/reaping controls. The
+existing actual administrator CLI recovery from a separate RX user's verified
+backup passed along with Setup, rollback, uninstall and SEC01 compatibility. Local
+Windows cross-build/vet and focused Linux restore baseline tests also passed. Two
+authorized workers supplied independent review/native and boundary tests.
+
+Intermediate evidence retained: sourcebb87cd6/run41919391293 failed both native
+rename sharing controls; source8c77451/run41920376499 passed directory publication
+and real reparse protection but failed progress rename sharing. These product
+conflicts led to the current ordered-parent and strict closed-progress handoffs.
+Source8bb334d/run41920973110 stopped at an existing PowerShell fast-process null
+exit-status fixture; Process.Start now owns the creation handle and streams while
+preserving exact exit/text/timeout/snapshot assertions. Sourceb46ceed/run41921399375
+passed product/resource controls but failed junction fixture Go-mode detection;
+source07beb1e/run41921938087 passed native junction detection but its old snapshot
+helper tried reading a junction as a file. Native nofollow snapshots now retain
+actual reparse object owner/DACL/raw data and independent outside hashes, without
+traversing or omitting it. Accepted rerun passes the full unchanged requirements.
+The final automatically triggered catalog baseline41922663060 passed; no scale
+implementation was added. All CI and workers are complete.
+
+Best forecast **4 to3 additional passes**. Original remaining rows are unchanged:
+durable full-payload prewrite intent/interrupted mixed-copy recovery1;
+separate-account installer/metadata concurrency1; genuine prior-release/full-provider/
+recovery combined closure1. No new feature, provider, dependency, schema, product
+version, release, cost, Group3 work or local PC action. SEC03 remains open and
+security4 closed/4 open; keep published0.1.39. Server execution does not certify
+Windows10. Paused at this checkpoint.
