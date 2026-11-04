@@ -39,7 +39,7 @@ $created=$false
 $serviceAttempted=$false
 try {
  New-Item -ItemType Directory $root | Out-Null
- Native icacls @($root,'/grant','*S-1-1-0:(OI)(CI)RX','*S-1-5-19:(OI)(CI)RX')
+ Native icacls @($root,'/inheritance:r','/grant:r','*S-1-5-18:(OI)(CI)F','*S-1-5-32-544:(OI)(CI)F',('*'+$identity+':(OI)(CI)F'),'*S-1-1-0:(OI)(CI)RX','*S-1-5-19:(OI)(CI)RX')
  New-LocalUser -Name $user -Password (ConvertTo-SecureString $password -AsPlainText -Force) -AccountNeverExpires | Out-Null
  $created=$true
  $ordinarySid=(Get-LocalUser -Name $user).SID.Value

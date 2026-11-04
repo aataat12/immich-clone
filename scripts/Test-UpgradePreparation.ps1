@@ -89,7 +89,8 @@ try {
     $ordinaryCreated = $true
     Add-LocalGroupMember -SID 'S-1-5-32-545' -Member $ordinaryUser
     $ordinarySid = (Get-LocalUser -Name $ordinaryUser).SID.Value
-    Native icacls @($root,'/grant','*S-1-5-32-545:(OI)(CI)RX')
+    $installerSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+    Native icacls @($root,'/inheritance:r','/grant:r','*S-1-5-18:(OI)(CI)F','*S-1-5-32-544:(OI)(CI)F',('*'+$installerSid+':(OI)(CI)F'),'*S-1-5-32-545:(OI)(CI)RX','*S-1-5-19:(OI)(CI)RX')
     Native icacls @($root,'/grant','*S-1-5-19:(OI)(CI)RX')
     if (!$Compiler) {
         $compilerSetup = Join-Path $root 'innosetup-6.7.4.exe'

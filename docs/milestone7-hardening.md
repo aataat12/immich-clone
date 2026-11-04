@@ -88,3 +88,13 @@ the pinned 6.7.4 Pascal engine does not recognize NativeInt. PowerShell parsing 
 application build passed; no installer execution/closure was established. The
 Win32 Inno external handle declarations are corrected to Integer for this pinned
 32-bit Setup engine; the x64 application target is unchanged.
+
+Focused runs [41800266109](https://github.com/aataat12/immich-clone/actions/runs/41800266109)
+and [41800691811](https://github.com/aataat12/immich-clone/actions/runs/41800691811)
+compiled the production installer and passed static-junction refusal/preservation.
+The positive fixture inherited an untrusted writer from the disposable temporary
+parent and was correctly refused. The latter run called the exact code audit
+directly and established that refusal before Setup. Positive fixtures now create
+explicit protected trusted-writer roots; hostile controls still deliberately grant
+a separate ordinary user's real write access. The production policy is unchanged.
+No failed run is release/closure evidence.
