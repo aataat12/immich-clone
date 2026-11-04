@@ -551,9 +551,10 @@ left descriptor-identical: especially rollback catalog/access-code snapshots mus
 never gain LS read rights. No new explicit grant is applied across that boundary.
 
 Directories use the accepted MAXIMUM_ALLOWED suppression of implicit child ACL
-propagation. Code files use metadata-only READ_CONTROL/WRITE_DAC/READ_ATTRIBUTES/
-SYNCHRONIZE handles with read sharing only, allowing an executing helper image
-without requesting data write/delete access. FILE_NON_DIRECTORY failure with the
+propagation. Code files use READ_DATA plus READ_CONTROL/WRITE_DAC/READ_ATTRIBUTES/
+SYNCHRONIZE with read sharing only, allowing an executing helper image without
+requesting data write/delete access. READ_DATA makes Windows enforce sharing pins;
+the ACL action performs no file-content read/write. FILE_NON_DIRECTORY failure with the
 specific directory status selects a no-follow MAX directory open; successful
 handles are type/reparse/single-link checked. There is no pathname fallback or
 broader sharing. Existing state ACL mode still uses its unchanged full-file pins.
@@ -621,3 +622,25 @@ exact untouched protected-subtree descriptors, every raw preservation assertion,
 pre-apply stale descriptor refusal and fresh namespace checks remain. No deny or
 unsupported rule is newly accepted and no extra grant may appear. Actual complete
 Setup regression must still pass before checkpoint acceptance.
+
+
+### Code-file sharing correction before acceptance
+
+Run41878981926/source11372bd9f48fc850181f11c79ab63a06a89a0e2c,
+job126746208775 has complete execution logs through runner cleanup with every
+native/custom/fresh Program Files/rollback/SEC01 check passed and no error marker.
+The API listing still showed queued, so no terminal metadata status is inferred.
+The unprotected inherited-root regression passed after exact allow-grant multiset
+verification. No whole-checkpoint acceptance yet: final boundary review identified
+that security/attribute-only file access does not establish the required sharing
+pin. Earlier code tests checked ACL/content preservation but not held-file rename.
+
+Add FILE_READ_DATA to security-metadata file access (still no DATA_WRITE/DELETE),
+retaining read sharing only. No actual content I/O is added. This parallels the
+already-established directory FILE_LIST_DIRECTORY sharing correction. Independent
+positive-control tests now require rename/write/hardlink ability before the hold,
+actual held rename/write/new-hardlink refusals and no outside alias, release/retry,
+and refusal of a preexisting data writer without ACL/byte changes. The own-image
+test remains required to prove executing-code compatibility with the corrected
+read authority. This is the existing SEC-03 leaf-pin requirement, not extra scope.
+Reference: Microsoft [CreateFile sharing and attribute requests](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew).

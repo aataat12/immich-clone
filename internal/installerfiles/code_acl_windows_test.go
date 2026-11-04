@@ -4,6 +4,7 @@ package installerfiles
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"os"
 	"os/exec"
@@ -12,6 +13,7 @@ import (
 	"unsafe"
 
 	"golang.org/x/sys/windows"
+	"immichclone/internal/winfs"
 )
 
 func codeACLFixture(t *testing.T) (root, child, file string) {
@@ -407,4 +409,114 @@ func TestCodeReadGrantUnprotectedInheritedRoot(t *testing.T) {
 	}
 	assertBytes(t, file, "inherited code bytes")
 	t.Log("PASS: unprotected code root with real inherited trusted-writer/reader/creator-owner policy preserves inherited ACE bytes, owners and unprotected flags while granting only intended LocalService RX")
+}
+
+func TestCodeACLFilePinsAndWriterRefusal(t *testing.T) {
+	root, child, file := codeACLFixture(t)
+	moved := file + ".moved"
+	if e := os.Rename(file, moved); e != nil {
+		t.Fatal("required file rename positive control failed", e)
+	}
+	if e := os.Rename(moved, file); e != nil {
+		t.Fatal(e)
+	}
+	alias := filepath.Join(t.TempDir(), "new-hardlink")
+	if e := os.Link(file, alias); e != nil {
+		t.Fatal("required hard-link publication positive control failed", e)
+	}
+	originalInfo, e := os.Stat(file)
+	if e != nil {
+		t.Fatal(e)
+	}
+	aliasInfo, e := os.Stat(alias)
+	if e != nil || !os.SameFile(originalInfo, aliasInfo) {
+		t.Fatal("positive hard-link control did not select the same object", e)
+	}
+	if e = os.Remove(alias); e != nil {
+		t.Fatal(e)
+	}
+	name, e := windows.UTF16PtrFromString(file)
+	if e != nil {
+		t.Fatal(e)
+	}
+	openWriter := func() (windows.Handle, error) {
+		return windows.CreateFile(name, windows.GENERIC_WRITE, windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE, nil, windows.OPEN_EXISTING, 0, 0)
+	}
+	writer, e := openWriter()
+	if e != nil {
+		t.Fatal("required data-write open positive control failed", e)
+	}
+	if e = windows.CloseHandle(writer); e != nil {
+		t.Fatal(e)
+	}
+	held, e := winfs.OpenCodeACLTree(root)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer held.Close()
+	if e = os.Rename(file, moved); e == nil {
+		_ = held.Close()
+		_ = os.Rename(moved, file)
+		t.Fatal("held code file renamed")
+	}
+	if h, e := openWriter(); e == nil {
+		windows.CloseHandle(h)
+		t.Fatal("held code file accepted a data-write handle")
+	} else if !errors.Is(e, windows.ERROR_SHARING_VIOLATION) {
+		t.Fatal("code write refusal did not establish actual sharing conflict", e)
+	}
+	if e = os.Link(file, alias); e == nil {
+		_ = held.Close()
+		_ = os.Remove(alias)
+		t.Fatal("held code file accepted a newly published outside hard link")
+	}
+	if _, e = os.Stat(alias); !os.IsNotExist(e) {
+		t.Fatal("refused hard-link publication left an outside alias", e)
+	}
+	assertBytes(t, file, "retained code bytes")
+	if e = held.Close(); e != nil {
+		t.Fatal(e)
+	}
+	if e = os.Rename(file, moved); e != nil {
+		t.Fatal("released code tree failed to release file rename pin", e)
+	}
+	if e = os.Rename(moved, file); e != nil {
+		t.Fatal(e)
+	}
+	before := map[string]string{}
+	for _, p := range []string{root, child, file} {
+		before[p] = treeSD(t, p).String()
+	}
+	writer, e = openWriter()
+	if e != nil {
+		t.Fatal("existing writer control failed", e)
+	}
+	blocked, openErr := winfs.OpenCodeACLTree(root)
+	if blocked != nil {
+		blocked.Close()
+	}
+	closeErr := windows.CloseHandle(writer)
+	if closeErr != nil {
+		t.Fatal(closeErr)
+	}
+	if openErr == nil {
+		t.Fatal("code tree accepted a preexisting data-write handle")
+	}
+	if !errors.Is(openErr, windows.STATUS_SHARING_VIOLATION) && !errors.Is(openErr, windows.ERROR_SHARING_VIOLATION) {
+		t.Fatal("existing code writer refusal did not establish sharing conflict", openErr)
+	}
+	for p, want := range before {
+		if treeSD(t, p).String() != want {
+			t.Fatal("existing writer refusal changed a code descriptor")
+		}
+	}
+	assertBytes(t, file, "retained code bytes")
+	retry, e := winfs.OpenCodeACLTree(root)
+	if e != nil {
+		t.Fatal("released code writer should permit tree acquisition", e)
+	}
+	if e = retry.Close(); e != nil {
+		t.Fatal(e)
+	}
+	t.Log("PASS: held code files refuse actual rename, data-write opens and new outside hard links; release permits rename; existing data writer forces sharing refusal without ACL/byte changes and release permits retry")
 }

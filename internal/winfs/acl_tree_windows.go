@@ -39,7 +39,7 @@ func aclChild(parent windows.Handle, name string, metadataFiles bool) (h windows
 	access := uint32(windows.MAXIMUM_ALLOWED | windows.SYNCHRONIZE)
 	options := uint32(windows.FILE_OPEN_REPARSE_POINT | windows.FILE_SYNCHRONOUS_IO_NONALERT)
 	if metadataFiles {
-		access = windows.READ_CONTROL | windows.WRITE_DAC | windows.FILE_READ_ATTRIBUTES | windows.SYNCHRONIZE
+		access = windows.FILE_READ_DATA | windows.READ_CONTROL | windows.WRITE_DAC | windows.FILE_READ_ATTRIBUTES | windows.SYNCHRONIZE
 		options |= windows.FILE_NON_DIRECTORY_FILE
 	}
 	e = windows.NtCreateFile(&h, access, &oa, &status, nil, 0, windows.FILE_SHARE_READ, windows.FILE_OPEN, options, 0, 0)
@@ -87,9 +87,10 @@ func aclNames(h windows.Handle) (_ []string, err error) {
 
 func OpenACLTree(path string) (*ACLTree, error) { return openACLTree(path, false) }
 
-// OpenCodeACLTree uses metadata-only file authority so an executing helper can
-// update its own ACL without opening its image for data writes. Directories still
-// use MAXIMUM_ALLOWED; no path fallback or broader sharing is introduced.
+// OpenCodeACLTree uses read-data plus security metadata authority so Windows
+// enforces sharing pins while an executing helper can update its own ACL without
+// opening its image for data writes/delete. No file bytes are read by this API.
+// Directories use MAXIMUM_ALLOWED; no path fallback or broader sharing exists.
 func OpenCodeACLTree(path string) (*ACLTree, error) { return openACLTree(path, true) }
 
 func openACLTree(path string, metadataFiles bool) (_ *ACLTree, err error) {
