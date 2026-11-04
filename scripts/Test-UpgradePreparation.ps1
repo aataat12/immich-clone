@@ -3,6 +3,7 @@ param(
     [string]$Compiler = ''
 )
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot '../packaging/Storage-Security.ps1')
 $ProgressPreference = 'SilentlyContinue'
 function Assert([bool]$Condition,[string]$Label) { if (!$Condition) { throw $Label }; Write-Host "PASS: $Label" }
 function Native([string]$Exe,[string[]]$Arguments) { & $Exe @Arguments | Out-Null; if ($LASTEXITCODE -ne 0) { throw 'Preparation probe native operation failed' } }
@@ -23,6 +24,8 @@ function Run-Setup([string]$Application,[string]$State,[switch]$ObserveStaging) 
                 $match = [regex]::Match($child.CommandLine,'-File "([^"\r\n]+Manage-Service\.ps1)"')
                 if (!$match.Success) { continue }
                 $staged = $match.Groups[1].Value
+                Assert-TrustedCodeTree (Split-Path $staged -Parent)
+                Assert $true 'actual staging directory passes the production code trust audit'
                 # No paths/command lines are printed. Check both exact extracted
                 # helpers against writes by even the current elevated account.
                 foreach ($file in @($staged,(Join-Path (Split-Path $staged -Parent) 'Storage-Security.ps1'))) {
@@ -152,7 +155,9 @@ try {
     $asset = (Invoke-RestMethod 'http://127.0.0.1:2283/api/upload?name=fixture.bin' -Method Post -Headers @{'X-Immich-Request'='1'} -InFile $original -WebSession $session).asset
     $originalHash = (Get-FileHash $original).Hash
     $priorBinaryHash = (Get-FileHash (Join-Path $currentApp 'immichclone.exe')).Hash
-    Assert ((Run-Setup $currentApp $state) -eq 0) 'actual Setup succeeds using bundled preparation against existing LocalService state'
+    Assert-TrustedCodeTree $currentApp
+    Assert $true 'existing application passes the production code trust audit'
+    Assert ((Run-Setup $currentApp $state -ObserveStaging) -eq 0) 'actual Setup succeeds using bundled preparation against existing LocalService state'
     Wait-Health
     Assert (!(Test-Path (Join-Path $currentApp 'retained-preparer-ran.txt'))) 'successful preparation never executes retained old helper'
     Assert ((Get-FileHash (Join-Path $currentApp 'rollback/immichclone.exe')).Hash -eq $priorBinaryHash -and (Get-FileHash (Join-Path $currentApp 'rollback/access-code.txt')).Hash -eq $codeHash -and (Test-Path (Join-Path $currentApp 'rollback/catalog.db'))) 'bundled preparation snapshots real prior binary catalog and access code'
