@@ -5,6 +5,7 @@ package installerfiles
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -228,11 +229,34 @@ func TestNormalizeACLUnsafeDescendantRefusesBeforeAnyMutation(t *testing.T) {
 			if e := os.WriteFile(bad, []byte("unsafe fixture bytes"), 0600); e != nil {
 				t.Fatal(e)
 			}
+			// Establish read authority before the hostile deny ACE. GENERIC_WRITE
+			// denies SYNCHRONIZE too, so a later ordinary pathname read cannot
+			// verify bytes. Broad sharing keeps this observer from preventing
+			// the native MAXIMUM_ALLOWED open or masking its ACL-policy refusal.
+			u, e := windows.UTF16PtrFromString(bad)
+			if e != nil {
+				t.Fatal(e)
+			}
+			h, e := windows.CreateFile(u, windows.GENERIC_READ,
+				windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE,
+				nil, windows.OPEN_EXISTING, 0, 0)
+			if e != nil {
+				t.Fatal(e)
+			}
+			reader := os.NewFile(uintptr(h), "preauthorized-fixture-reader")
+			defer func() {
+				if e := reader.Close(); e != nil {
+					t.Error(e)
+				}
+			}()
 			switch kind {
 			case "explicit-read":
 				treeSetUnprotected(t, bad, "D:(A;;GR;;;WD)")
 			case "explicit-deny":
 				treeSetUnprotected(t, bad, "D:(D;;GW;;;WD)")
+				if _, e := os.ReadFile(bad); !os.IsPermission(e) {
+					t.Fatal("hostile deny control did not deny a fresh pathname read", e)
+				}
 			case "protected-read":
 				setPrivacyDescriptor(t, bad, "D:P(A;;FA;;;SY)(A;;FA;;;BA)(A;;GR;;;WD)")
 			case "protected-incomplete":
@@ -251,7 +275,10 @@ func TestNormalizeACLUnsafeDescendantRefusesBeforeAnyMutation(t *testing.T) {
 				}
 			}
 			assertBytes(t, file, "retained original bytes")
-			assertBytes(t, bad, "unsafe fixture bytes")
+			body, e := io.ReadAll(reader)
+			if e != nil || string(body) != "unsafe fixture bytes" {
+				t.Fatal("unsafe descendant refusal changed bytes through held read observer", e)
+			}
 		})
 	}
 	t.Log("PASS: unsafe explicit/protected descendant policies refuse before root or earlier-child ACL mutation and preserve all bytes")

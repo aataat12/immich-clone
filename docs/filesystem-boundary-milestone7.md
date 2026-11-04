@@ -390,3 +390,17 @@ remains in the already-known Setup/init path scope. Elevated init, remaining Set
 publication/deletion, uninstall, integrated real-account races and full combined
 prior-release/provider/recovery remain open. No new policy, dependency/provider,
 feature/version/release, cost, PC action or Group3 work. SEC-03 stays open.
+
+
+### First normalization integration run
+
+Run41867449513/source20df119b628ec4ebe49ebce4a43ff308d9b05e40,
+job126705239534 failed the independent explicit-deny test's post-refusal
+ordinary os.ReadFile assertion. Its GW deny also denies SYNCHRONIZE, so a fresh
+GENERIC_READ open cannot read despite unchanged bytes. Raw root/child/unsafe
+descriptor preservation assertions and all other native normalization/explicit
+preservation/protected/inheritance/alias/late-publication/sharing controls passed.
+The correction establishes a shared read handle before applying the deny fixture,
+then verifies exact bytes through that still-authorized handle after refusal.
+No production policy or assertion is weakened. Setup/SEC01 execution was skipped
+by the failed native gate; this run is not integration acceptance.
