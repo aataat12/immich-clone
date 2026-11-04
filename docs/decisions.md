@@ -355,3 +355,9 @@
   mitigation or extra security experiments, obtain the explicit scope decision.
   Closed SEC-01/04/07 remain closed. Signing remains unconfigured and prototypes
   unsigned; no certificate/account purchase, new workers or new costs authorized.
+
+- November 4: user explicitly approved resuming original SEC-02/03/05/06/08.
+  Group 3 investigations and paid signing remain deferred; no workers or new costs.
+  Begin with code-tree trust refusal and pinned new Setup management scripts.
+  Focused real Inno/standard-user execution must precede any closure or downstream
+  packaging claim. Keep all original security IDs and closure criteria unchanged.

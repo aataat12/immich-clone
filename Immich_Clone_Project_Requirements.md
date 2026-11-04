@@ -1,3 +1,11 @@
+## Milestone 7 authorization — November 4, 2026 (America/Chicago)
+
+The user explicitly approved resuming the five original open items SEC-02,
+SEC-03, SEC-05, SEC-06 and SEC-08 for milestone 7. This supersedes their Group 2
+work deferral, not their classification or closure criteria. SEC-01/04/07 remain
+closed; Group 3 investigations and paid signing remain deferred. No parallel
+workers or new charges are authorized. Final target acceptance remains distinct.
+
 ## Authorized execution amendment — November 1, 2026
 
 The user explicitly authorized developing and validating on the available cloud

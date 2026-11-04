@@ -44,6 +44,11 @@ function Health {
     throw 'Installed service did not become healthy'
 }
 try {
+    # During Setup this script/helper come from the new bundled payload. Refuse
+    # writable retained code before any log/ACL write, service stop or snapshot.
+    $stage = 'audit code permissions'
+    Assert-TrustedCodeTree $PSScriptRoot
+    Assert-TrustedCodeTree $AppDir
     Assert-NoReparsePath $AppDir
     Assert-NoReparsePath $DataDir
     Assert-NoReparsePath $logRoot

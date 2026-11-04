@@ -1,5 +1,14 @@
 # Milestone 7: installer, security and update hardening
 
+## Milestone 7 authorization — November 4, 2026 (America/Chicago)
+
+The user explicitly approved resuming the five original open items SEC-02,
+SEC-03, SEC-05, SEC-06 and SEC-08 for milestone 7. This supersedes their Group 2
+work deferral, not their classification or closure criteria. SEC-01/04/07 remain
+closed; Group 3 investigations and paid signing remain deferred. No parallel
+workers or new charges are authorized. Final target acceptance remains distinct.
+
+
 Started November 4, 2026 (America/Chicago), after the user accepted the exercised
 combined 0.1.38/0.1.39 functional checks and instructed proceeding with milestone 7.
 This authorizes milestone work; it does not silently revoke the explicit Group 2/3
@@ -22,12 +31,13 @@ security deferrals. No workers or new charges are authorized.
 | Remaining input review: SEC-06 | Full declared malformed media/filename/metadata/tag/catalog review, including parent Go decoding. | Group 2 deferred; explicit scope decision needed before investigation/mitigation. |
 | Release validation: SEC-08 | Final target/clean-install/reboot and broader acceptance gates; routine prototype gates are already covered above. | Open; extra security experiments remain deferred. Final target gates belong with milestone 8. |
 
-Milestone 7 is **in progress, not delivered**. No release number is assigned.
+The earlier deferral dispositions in the table are historical: the authorization
+above now permits the five original open items. Milestone 7 is **in progress, not delivered**. No release number is assigned.
 Original security status remains **3 closed / 5 open**: SEC-01/04/07 closed;
 SEC-02/03/05/06/08 open. Group 1 has no demonstrated open original item; all eight
 are currently Group 2. New issues remain Group 3, record only.
 
-## Concrete scope decision
+## Original scope decision (now approved)
 
 The next uncompleted installer-hardening work is SEC-02, followed by SEC-03;
 SEC-05/06 and extra SEC-08 security checks also require lifting their deferral.
@@ -44,3 +54,30 @@ publication steps were inspected. Documentation-only changes do not justify a ne
 installer/full CI run. No application, installer, workflow, dependency, schema,
 provider or shipped Build Notes changed. The installed page continues to describe
 the accepted 0.1.39 build; the repository roadmap tracks subsequent work.
+
+
+## SEC-02 code-trust candidate
+
+The management helper now audits the application code tree's ACLs/owners before
+logs, ACL changes, service stop or snapshots. Unrelated users and LocalService
+may read/execute code but may not hold data/append/EA/attribute/delete/delete-child/
+DACL/owner or generic write/all rights. Null DACLs, unsupported ACEs, untrusted
+owners and reparse children are refused. Inherit-only grants are checked too.
+SYSTEM, administrators and the current installing identity remain trusted; this
+does not establish a boundary against the installing administrator's own account.
+No automatic repair of an untrusted existing code tree is performed.
+
+Actual Setup now invokes the extracted new helper for both Prepare and Install.
+Read-only handles opened without write/delete sharing pin both extracted scripts
+from before checksum verification through Setup exit. These are file-specific
+sharing locks, not a claim of complete directory/ancestor race resistance.
+SEC-03 remains open.
+
+The focused Windows workflow compiles the production Inno script with explicit
+nondeliverable minimal providers, runs actual Setup, proves separate standard-user
+write access on unsafe root/script/executable/provider fixtures, requires refusal
+before stopping a healthy service or changing catalog/rollback/code bytes, then
+requires a normal protected custom upgrade and uninstall preservation. The prior
+closed descendant permission suite is retained as compatibility coverage. This is
+not the full real-provider/actual-prior-release SEC-08 gate. No new product version
+or release is assigned; Windows execution is pending until its receipt is added.

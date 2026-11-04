@@ -11,8 +11,9 @@ Accepted cloud source/run/checksum: [0.1.39 acceptance](release-0.1.39-acceptanc
 The user instructed proceeding with milestone 7 after the handoff pause.
 [Milestone 7 gates](milestone7-hardening.md) and the [manual update guide](update-guide.md)
 record permitted preparation, reused evidence and the remaining scope decision.
-Group 2/3 security mitigation remains deferred; general milestone authorization
-has not silently lifted it. Original count remains 3 closed / 5 open. Signing is
+The user subsequently explicitly approved resuming original SEC-02/03/05/06/08
+work. Group 3 investigations and paid signing remain deferred. Original count remains 3 closed / 5 open; the SEC-02 code-trust candidate is
+awaiting focused Windows execution. Signing is
 unconfigured; no new costs, workers, installer or CI run were introduced for this
 preparation. Final Windows 10 clean-install/reboot/endurance acceptance remains open.
 

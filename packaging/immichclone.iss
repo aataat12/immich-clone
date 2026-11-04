@@ -58,6 +58,28 @@ Type: dirifempty; Name: "{app}\rollback"
 
 [Code]
 var StatePage: TInputDirWizardPage; ManagementFailed: Boolean;
+    ManagementHandle, SecurityHandle: NativeInt;
+
+function OpenReadLockedFile(Name: String; Access, Sharing: LongWord;
+  Security: NativeInt; Creation, Attributes: LongWord; Template: NativeInt): NativeInt;
+  external 'CreateFileW@kernel32.dll stdcall';
+function CloseLockedFile(Handle: NativeInt): Boolean;
+  external 'CloseHandle@kernel32.dll stdcall';
+
+procedure ClosePreparationHandles;
+begin
+  if (ManagementHandle <> 0) and (ManagementHandle <> -1) then
+    CloseLockedFile(ManagementHandle);
+  if (SecurityHandle <> 0) and (SecurityHandle <> -1) then
+    CloseLockedFile(SecurityHandle);
+  ManagementHandle := 0;
+  SecurityHandle := 0;
+end;
+
+procedure DeinitializeSetup;
+begin
+  ClosePreparationHandles;
+end;
 
 function GetState(Param: String): String;
 begin
@@ -101,7 +123,8 @@ end;
 
 function RunManagement(Action: String; var ResultCode: Integer): Boolean;
 begin
-  Result := RunManagementFrom(ExpandConstant('{app}\Manage-Service.ps1'), Action, ResultCode);
+  { Use the new payload for both Prepare and Install, never retained app code. }
+  Result := RunManagementFrom(ExpandConstant('{tmp}\Manage-Service.ps1'), Action, ResultCode);
 end;
 
 function RunBundledPreparation(var ResultCode: Integer): Boolean;
@@ -109,8 +132,17 @@ begin
   Result := False;
   ResultCode := -1;
   try
+    ClosePreparationHandles;
     ExtractTemporaryFile('Manage-Service.ps1');
     ExtractTemporaryFile('Storage-Security.ps1');
+    { Hold read-only handles without WRITE/DELETE sharing from before hashing
+      until Setup exits. A writer already holding access also makes this fail.
+      These handles cover the exact staged files, not all filesystem races. }
+    ManagementHandle := OpenReadLockedFile(ExpandConstant('{tmp}\Manage-Service.ps1'),
+      $80000000, 1, 0, 3, $00200000, 0);
+    SecurityHandle := OpenReadLockedFile(ExpandConstant('{tmp}\Storage-Security.ps1'),
+      $80000000, 1, 0, 3, $00200000, 0);
+    if (ManagementHandle = -1) or (SecurityHandle = -1) then exit;
     if (CompareText(GetSHA256OfFile(ExpandConstant('{tmp}\Manage-Service.ps1')),
          '{#ManagementSHA256}') <> 0) or
        (CompareText(GetSHA256OfFile(ExpandConstant('{tmp}\Storage-Security.ps1')),

@@ -1,4 +1,46 @@
 # Shared by the installer and disposable Windows security acceptance.
+function Assert-TrustedCodeTree([string]$Path) {
+    # Installer identity, administrators and SYSTEM are trusted code writers.
+    # Unrelated local accounts and LocalService may read/execute, never modify code.
+    # This is a stationary ACL/owner check; it does not close SEC-03 path races.
+    Assert-NoReparsePath $Path
+    $root = $null
+    try { $root = Get-Item -LiteralPath ([IO.Path]::GetFullPath($Path)) -Force -ErrorAction Stop }
+    catch [System.Management.Automation.ItemNotFoundException] { return }
+    if (!$root.PSIsContainer) { throw 'Application code root must be a directory' }
+    $trusted = @{'S-1-5-18'=$true; 'S-1-5-32-544'=$true}
+    $trusted[[Security.Principal.WindowsIdentity]::GetCurrent().User.Value] = $true
+    $trustedOwners = @{} + $trusted
+    # Windows-owned Program Files folders can be owned by TrustedInstaller.
+    $trustedOwners['S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464'] = $true
+    $pending = New-Object 'System.Collections.Generic.Stack[System.IO.FileSystemInfo]'
+    $pending.Push($root)
+    while ($pending.Count -gt 0) {
+        $item = $pending.Pop()
+        if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'Application code tree contains a reparse point' }
+        $acl = Get-Acl -LiteralPath $item.FullName -ErrorAction Stop
+        if (!$trustedOwners.ContainsKey($acl.GetOwner([Security.Principal.SecurityIdentifier]).Value)) { throw 'Application code tree has an untrusted owner' }
+        $raw = [Security.AccessControl.RawSecurityDescriptor]::new($acl.GetSecurityDescriptorBinaryForm(), 0)
+        if (($raw.ControlFlags -band [Security.AccessControl.ControlFlags]::DiscretionaryAclPresent) -eq 0 -or $null -eq $raw.DiscretionaryAcl) { throw 'Application code tree has a null DACL' }
+        foreach ($ace in $raw.DiscretionaryAcl) {
+            if (!($ace -is [Security.AccessControl.CommonAce]) -or $ace.IsCallback -or $ace.AceQualifier -ne [Security.AccessControl.AceQualifier]::AccessAllowed) { throw 'Application code tree has an unsupported access rule' }
+            # CREATOR OWNER inherit-only rules resolve to the trusted creating
+            # installer identity; no untrusted principal can create code here.
+            if ($ace.SecurityIdentifier.Value -eq 'S-1-3-0' -and $ace.AceFlags.HasFlag([Security.AccessControl.AceFlags]::InheritOnly)) { continue }
+            # Include inherit-only grants: future installed children must be safe.
+            # Write data/append/EA/attributes, delete/delete-child, DACL/owner and
+            # generic write/all grant mutation, including on the code root itself.
+            $mutation = ([int64]$ace.AccessMask -band 0xffffffffL) -band 0x500d0156L
+            if ($mutation -ne 0 -and !$trusted.ContainsKey($ace.SecurityIdentifier.Value)) { throw 'Application code tree is writable by an untrusted identity' }
+        }
+        if ($item.PSIsContainer) {
+            foreach ($child in [IO.Directory]::EnumerateFileSystemEntries($item.FullName)) {
+                $pending.Push((Get-Item -LiteralPath $child -Force -ErrorAction Stop))
+            }
+        }
+    }
+}
+
 function Assert-NoReparsePath([string]$Path) {
     $current = [IO.Path]::GetFullPath($Path)
     while ($current) {

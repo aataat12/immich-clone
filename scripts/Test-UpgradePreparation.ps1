@@ -4,7 +4,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-function Assert([bool]$Condition,[string]$Label) { if (!$Condition) { throw $Label }; Write-Output "PASS: $Label" }
+function Assert([bool]$Condition,[string]$Label) { if (!$Condition) { throw $Label }; Write-Host "PASS: $Label" }
 function Native([string]$Exe,[string[]]$Arguments) { & $Exe @Arguments | Out-Null; if ($LASTEXITCODE -ne 0) { throw 'Preparation probe native operation failed' } }
 function Wait-Health {
     for ($i=0;$i -lt 30;$i++) {
@@ -13,8 +13,34 @@ function Wait-Health {
     }
     throw 'Preparation probe service did not become healthy'
 }
-function Run-Setup([string]$Application,[string]$State) {
-    $process = Start-Process $script:setup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$Application+'"'),('/STATE="'+$State+'"')) -Wait -PassThru
+function Run-Setup([string]$Application,[string]$State,[switch]$ObserveStaging) {
+    $process = Start-Process $script:setup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$Application+'"'),('/STATE="'+$State+'"')) -PassThru
+    $observed = $false
+    while (!$process.HasExited) {
+        if ($ObserveStaging -and !$observed) {
+            $children = @(Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($Application) -and $_.CommandLine.Contains('-Action ') })
+            foreach ($child in $children) {
+                $match = [regex]::Match($child.CommandLine,'-File "([^"\r\n]+Manage-Service\.ps1)"')
+                if (!$match.Success) { continue }
+                $staged = $match.Groups[1].Value
+                # No paths/command lines are printed. Check both exact extracted
+                # helpers against writes by even the current elevated account.
+                foreach ($file in @($staged,(Join-Path (Split-Path $staged -Parent) 'Storage-Security.ps1'))) {
+                    $locked = $false
+                    try { $f = [IO.File]::Open($file,[IO.FileMode]::Open,[IO.FileAccess]::Write,[IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete); $f.Dispose() }
+                    catch [IO.IOException] { $locked = (($_.Exception.HResult -band 0xffff) -eq 32) }
+                    Assert $locked 'actual extracted helper denies writes while Setup holds its sharing lock'
+                    Assert (![UpgradeWriteProbe]::CanWrite($ordinaryUser,$ordinaryPassword,$file)) 'actual extracted helper denies separate standard-user writes'
+                }
+                $observed = $true
+                break
+            }
+        }
+        Start-Sleep -Milliseconds 30
+        $process.Refresh()
+    }
+    $process.WaitForExit()
+    if ($ObserveStaging) { Assert $observed 'actual staged helper process observed during production Setup' }
     return $process.ExitCode
 }
 function Write-RetainedHelper([string]$Application) {
@@ -29,11 +55,38 @@ $repo = Split-Path $PSScriptRoot -Parent
 $currentApp = ''
 $junction = ''
 $serviceOwned = $false
+$ordinaryUser = 'ICUpgrade'+[guid]::NewGuid().ToString('N').Substring(0,8)
+$ordinaryPassword = 'Aa1!'+[guid]::NewGuid().ToString('N')
+$ordinaryCreated = $false
+Add-Type @'
+using System;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Security.Principal;
+public static class UpgradeWriteProbe {
+ [DllImport("advapi32.dll", CharSet=CharSet.Unicode, SetLastError=true)] static extern bool LogonUser(string u,string d,string p,int t,int v,out IntPtr token);
+ [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr token);
+ public static bool CanWrite(string user,string password,string path) {
+  IntPtr token;
+  if(!LogonUser(user,".",password,2,0,out token)) throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+  try { using(var identity=new WindowsIdentity(token)) using(var context=identity.Impersonate()) {
+   try { using(var f=File.Open(path,FileMode.Open,FileAccess.Write,FileShare.ReadWrite|FileShare.Delete)) {} return true; }
+   catch(UnauthorizedAccessException) { return false; }
+   catch(IOException e) { if((e.HResult & 65535)==32) return false; throw; }
+  }} finally { CloseHandle(token); }
+ }
+}
+'@
 try {
     Assert (!(Get-Service ImmichClone -ErrorAction SilentlyContinue)) 'upgrade preparation probe refuses an existing service'
     Assert (!(Test-Path 'HKLM:\SOFTWARE\ImmichClone')) 'upgrade preparation probe refuses existing application registration'
     Assert (!(Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{5DF7680B-6F42-4BAF-AD97-5A3095728DFA}_is1')) 'upgrade preparation probe refuses existing installer registration'
     New-Item -ItemType Directory -Path $root | Out-Null
+    New-LocalUser -Name $ordinaryUser -Password (ConvertTo-SecureString $ordinaryPassword -AsPlainText -Force) -AccountNeverExpires | Out-Null
+    $ordinaryCreated = $true
+    Add-LocalGroupMember -SID 'S-1-5-32-545' -Member $ordinaryUser
+    $ordinarySid = (Get-LocalUser -Name $ordinaryUser).SID.Value
+    Native icacls @($root,'/grant','*S-1-5-32-545:(OI)(CI)RX')
     Native icacls @($root,'/grant','*S-1-5-19:(OI)(CI)RX')
     if (!$Compiler) {
         $compilerSetup = Join-Path $root 'innosetup-6.7.4.exe'
@@ -107,6 +160,44 @@ try {
     Assert ((Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash -and (Get-FileHash (Join-Path $state 'access-code.txt')).Hash -eq $codeHash) 'bundled preparation preserves managed original and access code'
     Assert ((Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").StartName -eq 'NT AUTHORITY\LocalService') 'prepared service remains LocalService'
     Assert ((Get-ItemProperty 'HKLM:\SOFTWARE\ImmichClone').State -eq $state) 'Setup retains real application data location'
+    # Execute the real candidate installer against an existing healthy service.
+    # Opening a file for write is the standard-user positive control; no code
+    # bytes are changed or arbitrary elevated payload executed.
+    $codeProbe = Join-Path $currentApp 'ai/trust-probe.exe'
+    Copy-Item -LiteralPath $Binary -Destination $codeProbe
+    foreach ($entry in @('', 'Manage-Service.ps1', 'ai/trust-probe.exe', 'media')) {
+        $unsafe = $currentApp
+        if ($entry) { $unsafe = Join-Path $currentApp $entry }
+        $savedAcl = Get-Acl -LiteralPath $unsafe
+        try {
+            $acl = Get-Acl -LiteralPath $unsafe
+            $flags = [Security.AccessControl.InheritanceFlags]::None
+            if ((Get-Item -LiteralPath $unsafe).PSIsContainer) { $flags = [Security.AccessControl.InheritanceFlags]'ContainerInherit,ObjectInherit' }
+            $rule = New-Object Security.AccessControl.FileSystemAccessRule((New-Object Security.Principal.SecurityIdentifier($ordinarySid)),[Security.AccessControl.FileSystemRights]::Modify,$flags,[Security.AccessControl.PropagationFlags]::None,[Security.AccessControl.AccessControlType]::Allow)
+            $acl.AddAccessRule($rule)
+            Set-Acl -LiteralPath $unsafe -AclObject $acl
+            $writable = $unsafe
+            if ((Get-Item -LiteralPath $unsafe).PSIsContainer) {
+                $writable = Join-Path $unsafe 'ordinary-write-control.bin'
+                [IO.File]::WriteAllText($writable,'synthetic code-tree permission fixture')
+            }
+            Assert ([UpgradeWriteProbe]::CanWrite($ordinaryUser,$ordinaryPassword,$writable)) 'real standard-user write positive control for unsafe code permissions'
+            $pidBefore = (Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").ProcessId
+            $binaryBefore = (Get-FileHash (Join-Path $currentApp 'immichclone.exe')).Hash
+            $catalogBefore = (Get-FileHash (Join-Path $state 'catalog.db')).Hash
+            $rollbackBefore = (Get-FileHash (Join-Path $currentApp 'rollback/catalog.db')).Hash
+            Assert ((Run-Setup $currentApp $state) -ne 0) 'actual Setup refuses unsafe root script executable or provider permissions'
+            Assert ((Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").ProcessId -eq $pidBefore) 'unsafe code refusal precedes service stop or restart'
+            Assert ((Get-FileHash (Join-Path $currentApp 'immichclone.exe')).Hash -eq $binaryBefore -and (Get-FileHash (Join-Path $state 'catalog.db')).Hash -eq $catalogBefore -and (Get-FileHash (Join-Path $currentApp 'rollback/catalog.db')).Hash -eq $rollbackBefore) 'unsafe code refusal preserves executable catalog and rollback bytes'
+        } finally {
+            Set-Acl -LiteralPath $unsafe -AclObject $savedAcl
+            if ($writable -and $writable.EndsWith('ordinary-write-control.bin')) { Remove-Item -LiteralPath $writable -Force -ErrorAction SilentlyContinue }
+        }
+    }
+    Remove-Item -LiteralPath $codeProbe -Force
+    Assert (![UpgradeWriteProbe]::CanWrite($ordinaryUser,$ordinaryPassword,(Join-Path $currentApp 'Manage-Service.ps1'))) 'normal installed helper denies real standard-user modification'
+    Assert ((Run-Setup $currentApp $state -ObserveStaging) -eq 0) 'protected custom application remains upgradeable after negative controls'
+    Wait-Health
     $process = Start-Process (Join-Path $currentApp 'unins000.exe') -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru
     Assert ($process.ExitCode -eq 0) 'disposable preparation installer uninstalls cleanly'
     Assert ((Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash) 'probe uninstall retains managed original bytes'
@@ -118,5 +209,6 @@ try {
     }
     if ($currentApp -and (Test-Path (Join-Path $currentApp 'unins000.exe'))) { $null = Start-Process (Join-Path $currentApp 'unins000.exe') -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru }
     if ($junction -and (Test-Path -LiteralPath $junction)) { [IO.Directory]::Delete($junction) }
+    if ($ordinaryCreated) { Remove-LocalUser -Name $ordinaryUser -ErrorAction SilentlyContinue }
     if (Test-Path -LiteralPath $root) { Remove-Item -LiteralPath $root -Recurse -Force }
 }
