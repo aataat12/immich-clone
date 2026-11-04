@@ -87,9 +87,7 @@ archive size; they intentionally do not print archive contents or saved codes.
 The restored CLI queues derived previews for regeneration; this probe checks
 preserved source metadata/geometry, not newly regenerated preview pixels.
 
-No production change was needed for these M5 gates. Combined candidate-installer
-regression remains a release gate when integrating unrelated application changes;
-this result establishes the accepted 0.1.38 installed backup implementation.
+No production change was needed for these M5 gates. The [0.1.39 combined installed run](release-0.1.39-acceptance.md) subsequently passed actual0.1.38 upgrade, rollback, full service/browser backup and independent restored reinstall with the scheduling change. This focused result establishes the accepted0.1.38 installed backup implementation; its bounded cloud scope is delivered with0.1.39 and final target/extended-operation limits remain below.
 
 ## Limits
 
