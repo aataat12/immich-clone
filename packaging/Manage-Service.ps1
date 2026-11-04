@@ -110,8 +110,8 @@ try {
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
     Checked icacls @($AppDir,'/grant','*S-1-5-19:(OI)(CI)RX')
     Set-PrivateDirectoryAcl -CreationHelper $BoundaryHelper -Path $DataDir -ReaderSid $identity -ServiceAccess
-    $stage = 'initialize state'
-    Checked $binary @('-mode','init','-data',$DataDir)
+    # Initialization happens in the existing LocalService startup before health,
+    # never by executing the application with this elevated installer token.
     if (!$owned) {
         $stage = 'register LocalService'
         $created = Invoke-CimMethod -ClassName Win32_Service -MethodName Create -Arguments @{
@@ -124,11 +124,11 @@ try {
     $stage = 'configure automatic startup'
     Checked sc.exe @('config',$name,'start=','delayed-auto')
     Checked sc.exe @('failure',$name,'reset=','86400','actions=','restart/5000/restart/15000/none/0')
-    if ($env:IMMICH_INSTALL_TEST_FAILURE -eq '1') { throw 'Injected upgrade failure' }
     $stage = 'start service'
     Start-Service $name
     $stage = 'verify service health'
     Health
+    if ($env:IMMICH_INSTALL_TEST_FAILURE -eq '1') { throw 'Injected post-initialization upgrade failure' }
     Diagnostic 'installer_complete'
     exit 0
 } catch {

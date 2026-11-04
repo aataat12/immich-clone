@@ -20,7 +20,7 @@ try {
     Checked go @('build','-trimpath','-ldflags',("-X main.version=$Version"),'-o',$binary,'./cmd/immichclone')
     $env:IMMICH_NAV_BINARY=$binary
     try { Checked node @('tests/hidden-navigation.cjs') } finally { Remove-Item Env:IMMICH_NAV_BINARY -ErrorAction SilentlyContinue }
-    Checked $binary @('-mode','init','-data',$state)
+    New-Item -ItemType Directory -Path $state | Out-Null
     Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)RX')
     Checked icacls @($state,'/grant','*S-1-5-19:(OI)(CI)M')
     $credential = [PSCredential]::new('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))

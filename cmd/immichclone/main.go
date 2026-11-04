@@ -136,6 +136,10 @@ func main() {
 		fmt.Println(version)
 		return
 	}
+	if e := checkInitializationMode(*mode); e != nil {
+		fmt.Fprintln(os.Stderr, "Elevated initialization is refused; use the installer to initialize under LocalService.")
+		os.Exit(1)
+	}
 	channel := "commands"
 	if *mode == "service" || *mode == "serve" {
 		channel = "application"

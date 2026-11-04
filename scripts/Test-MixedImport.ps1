@@ -6,7 +6,7 @@ try {
     New-Item -ItemType Directory $root | Out-Null
     ./scripts/Prepare-MediaProvider.ps1 -Destination "$root/media/ffmpeg-8.1.3-7eb77d88e2e9"
     Checked go @('build','-o',"$root/app.exe",'./cmd/immichclone')
-    Checked "$root/app.exe" @('-mode','init','-data',"$root/state")
+    New-Item -ItemType Directory -Path "$root/state" | Out-Null
     Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)RX')
     Checked icacls @("$root/state",'/grant','*S-1-5-19:(OI)(CI)M')
     Checked icacls @((Join-Path $env:ProgramData 'ImmichCloneDiagnostics'),'/grant','*S-1-5-19:(OI)(CI)M')

@@ -16,7 +16,7 @@ try {
  ./scripts/Prepare-MediaProvider.ps1 -Destination "$root/media/ffmpeg-8.1.3-7eb77d88e2e9"
  ./scripts/Prepare-AIProvider.ps1 -Destination "$root/ai/opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3"
  Checked go @('build','-trimpath','-ldflags','-X main.version=6a-candidate-prototype','-o',"$root/app.exe",'./cmd/immichclone')
- Checked "$root/app.exe" @('-mode','init','-data',"$root/state")
+ New-Item -ItemType Directory -Path "$root/state" | Out-Null
  Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)RX')
  Checked icacls @("$root/state",'/grant','*S-1-5-19:(OI)(CI)M')
  $cred=[PSCredential]::new('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))

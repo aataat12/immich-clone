@@ -5,7 +5,7 @@ function Checked([string]$exe,[string[]]$argv) { & $exe @argv; if($LASTEXITCODE 
 try {
     New-Item -ItemType Directory $root | Out-Null
     Checked go @('build','-o',"$root/app.exe",'./cmd/immichclone')
-    Checked "$root/app.exe" @('-mode','init','-data',"$root/state")
+    New-Item -ItemType Directory -Path "$root/state" | Out-Null
     Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)RX')
     Checked icacls @("$root/state",'/grant','*S-1-5-19:(OI)(CI)M')
     $credential=[PSCredential]::new('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))

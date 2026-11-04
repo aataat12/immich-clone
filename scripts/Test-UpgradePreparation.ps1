@@ -143,7 +143,7 @@ try {
     New-Item -ItemType Directory -Path $currentApp | Out-Null
     Copy-Item -LiteralPath $Binary -Destination (Join-Path $currentApp 'immichclone.exe')
     Write-RetainedHelper $currentApp
-    Native (Join-Path $currentApp 'immichclone.exe') @('-mode','init','-data',$state)
+    New-Item -ItemType Directory -Path $state | Out-Null
     Native icacls @($state,'/grant','*S-1-5-19:(OI)(CI)M')
     $credential = New-Object PSCredential('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))
     New-Service -Name ImmichClone -BinaryPathName ('"'+(Join-Path $currentApp 'immichclone.exe')+'" -mode service -data "'+$state+'"') -Credential $credential | Out-Null
@@ -265,11 +265,29 @@ try {
     New-Item -ItemType Directory -Path $programApp | Out-Null
     Assert-TrustedCodeTree $programApp
     $currentApp = $programApp
-    Assert ((Run-Setup $currentApp $state) -eq 0) 'actual Setup works with default Program Files code inheritance'
+    $freshState = Join-Path $root 'fresh LocalService state'
+    Assert (!(Test-Path -LiteralPath $freshState)) 'fresh Setup fixture starts without state or application metadata'
+    $commandLog = Join-Path $env:ProgramData 'ImmichCloneDiagnostics/commands.jsonl'
+    $commandLogBefore = 'absent'
+    if (Test-Path -LiteralPath $commandLog) { $commandLogBefore = (Get-FileHash -LiteralPath $commandLog).Hash }
+    Assert ((Run-Setup $currentApp $freshState) -eq 0) 'actual fresh Setup works with default Program Files code inheritance'
     Wait-Health
     Assert (![UpgradeWriteProbe]::CanWrite($ordinaryUser,$ordinaryPassword,(Join-Path $currentApp 'Manage-Service.ps1'))) 'Program Files installed helper denies actual standard-user modification'
+    Assert ((Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").StartName -eq 'NT AUTHORITY\LocalService') 'fresh installer initializes through the existing LocalService account'
+    foreach ($leaf in @('state-format.txt','catalog.db','access-code.txt','originals','staging','previews','faces')) {
+        $owner = (Get-Acl -LiteralPath (Join-Path $freshState $leaf)).GetOwner([Security.Principal.SecurityIdentifier]).Value
+        Assert ($owner -eq 'S-1-5-19') 'fresh state metadata and storage directories are created by LocalService rather than the installer identity'
+    }
+    $commandLogAfter = 'absent'
+    if (Test-Path -LiteralPath $commandLog) { $commandLogAfter = (Get-FileHash -LiteralPath $commandLog).Hash }
+    Assert ($commandLogAfter -eq $commandLogBefore) 'fresh Setup performs no elevated offline initialization command logging'
+    $freshCode = ([IO.File]::ReadAllText((Join-Path $freshState 'access-code.txt'))).Trim()
+    $freshSession = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+    $null = Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$freshCode}|ConvertTo-Json) -WebSession $freshSession
+    $freshAsset = (Invoke-RestMethod 'http://127.0.0.1:2283/api/upload?name=fresh-fixture.bin' -Method Post -Headers @{'X-Immich-Request'='1'} -InFile $original -WebSession $freshSession).asset
+    Assert ((Get-FileHash (Join-Path $freshState ('originals/'+$freshAsset.id))).Hash -eq $originalHash) 'LocalService-initialized fresh library accepts and preserves actual original bytes'
     $process = Start-Process (Join-Path $currentApp 'unins000.exe') -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru
-    Assert ($process.ExitCode -eq 0 -and (Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash) 'Program Files uninstall preserves managed original bytes'
+    Assert ($process.ExitCode -eq 0 -and (Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash -and (Get-FileHash (Join-Path $freshState ('originals/'+$freshAsset.id))).Hash -eq $originalHash) 'Program Files uninstall preserves previous and fresh library original bytes'
 
 } finally {
     # Never remove an unrelated service/registration if this fixture did not own it.

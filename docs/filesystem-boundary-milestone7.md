@@ -447,3 +447,39 @@ init1; Setup/publication/code permissions2; uninstall1; integrated races1; combi
 closure1. Completed ACL integration0 more passes. Estimates may change only with
 explicitly identified evidence/rework, not silently decrementing or replenishing
 for conversation/status turns. Scope remains the original SEC-03 checklist.
+
+
+## Elevated initialization candidate
+
+Eliminate the elevated installer init process: the existing LocalService startup
+already opens/initializes the store and access code before listener/health and
+SCM Running. Setup creates the private root/policy, registers/configures the same
+LocalService and starts it; it never executes the application with -mode init as
+the installer. Failure injection moves after actual Health so upgrade rollback
+still exercises failure after real service-account initialization. No new token
+launcher, initialization implementation, catalog/schema, SDK or service is added.
+
+Windows explicit -mode init now checks TokenElevation before diagnostics.Init or
+any state access. Elevated tokens and identity-query failures refuse with fixed
+text and exit1; non-elevated/non-Windows behavior is retained. Version mode remains
+read-only and bypasses this check. Six disposable service fixtures now create an
+empty state root and let their existing LocalService startup initialize it; no
+elevated-init bypass is added for tests. Changed scripts are parsed; broad fixture
+execution remains a later combined gate, not inferred from parsing.
+
+Independent actual binary controls prove elevated-token refusal before missing
+state/log creation, direct mutation, junction traversal or hard-linked leaf writes,
+with actual alias positive control and unchanged outside descriptors/bytes. Actual
+fresh Program Files Setup uses a brand-new state root and checks LocalService
+ownership of marker/catalog/access code and known storage directories, unchanged
+commands logging, usable upload and original preservation on uninstall. These
+Windows controls are pending; local Linux command tests, Windows cross-build/vet
+and one authorized worker's review are preparation evidence.
+
+Scope is installer initialization plus explicit elevated init entry point, not a
+claim that every elevated CLI mode is secured: verify/show-code/backup/restore
+retain their existing library.Open/diagnostic behavior. Their applicable privileged
+filesystem operations remain in SEC-03's full boundary inventory and integrated
+race/closure review; do not silently drop them or move findings to another ID.
+Other remaining Setup/code-permission/uninstall paths remain unchanged. No feature
+or Group3 expansion, new dependency/provider/version/release, charge or PC action.
