@@ -1,0 +1,29 @@
+name: Installed import mounted-volume recovery
+on:
+  push:
+    paths:
+      - '.github/workflows/import-volume.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  mounted-volume:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: prototype-server-tested
+          path: accepted-installer
+          run-id: 41771361544
+          github-token: ${{ github.token }}
+      - name: Actual installed state-volume detach and recovery
+        shell: pwsh
+        run: |
+          $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD='1'
+          npm install --prefix "$env:RUNNER_TEMP/import-volume-deps" --no-audit --no-fund playwright@1.62.1
+          if ($LASTEXITCODE -ne 0) { throw 'Browser tooling unavailable' }
+          $env:IMMICH_BROWSER_MODULE="$env:RUNNER_TEMP/import-volume-deps/node_modules/playwright"
+          ./scripts/Test-ImportVolume.ps1
