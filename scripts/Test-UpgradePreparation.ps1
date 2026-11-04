@@ -168,6 +168,20 @@ try {
     Assert ((Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash -and (Get-FileHash (Join-Path $state 'access-code.txt')).Hash -eq $codeHash) 'bundled preparation preserves managed original and access code'
     Assert ((Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").StartName -eq 'NT AUTHORITY\LocalService') 'prepared service remains LocalService'
     Assert ((Get-ItemProperty 'HKLM:\SOFTWARE\ImmichClone').State -eq $state) 'Setup retains real application data location'
+    # A stopped-service native ACL acquisition can still meet an unrelated held
+    # writer. Refuse before permission writes, verify final policy, and restart
+    # the prior service honestly rather than leaving a healthy installation down.
+    $aclWriterPath = Join-Path $state 'acl-acquisition-writer.tmp'
+    [IO.File]::WriteAllText($aclWriterPath,'synthetic ACL sharing control')
+    $aclRootBefore = (Get-Acl -LiteralPath $state).Sddl
+    $aclWriter = [IO.File]::Open($aclWriterPath,[IO.FileMode]::Open,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
+    try {
+        Assert ((Run-Setup $currentApp $state) -ne 0) 'actual Setup refuses native ACL acquisition against an unrelated exclusive writer'
+        Wait-Health
+        Assert ((Get-Acl -LiteralPath $state).Sddl -eq $aclRootBefore) 'failed native ACL acquisition preserves root descriptor and restarts safe prior service'
+        Assert ((Get-FileHash (Join-Path $currentApp 'immichclone.exe')).Hash -eq $priorBinaryHash -and (Get-FileHash (Join-Path $state 'access-code.txt')).Hash -eq $codeHash -and (Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash) 'ACL phase refusal preserves prior code access code and original bytes'
+    } finally { $aclWriter.Dispose(); Remove-Item -LiteralPath $aclWriterPath }
+
     # Exercise the real management catch path too: snapshot must be complete,
     # and only the verified native restore permits restart/rollback_complete.
     $installerLog = Join-Path $env:ProgramData 'ImmichCloneDiagnostics/installer.jsonl'

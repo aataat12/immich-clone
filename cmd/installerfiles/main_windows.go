@@ -27,6 +27,8 @@ func main() {
 	}
 	var err error
 	switch *action {
+	case "normalize-private-tree":
+		err = installerfiles.NormalizePrivateTree(*root, *reader, *service)
 	case "ensure-private-root":
 		err = installerfiles.EnsurePrivateRoot(*root, *reader, *service)
 	case "diagnostic":

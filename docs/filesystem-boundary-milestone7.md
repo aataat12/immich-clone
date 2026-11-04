@@ -343,3 +343,50 @@ The separate larger installer gate was deliberately skipped. Worker review and
 independent controls, Windows cross-compilation and vet passed; actual execution
 remains required and must be recorded after logs are inspected. No installer
 operation conversion or completed ACL proof is claimed.
+
+
+## Accepted single-object ACL proof
+
+The earlier queued observation is superseded: actual Windows Server2022
+[run41862213427](https://github.com/aataat12/immich-clone/actions/runs/41862213427),
+source8adf2fa91371a3ca502b2f0c7637b27893a4cf84, job126686818594 **passed**.
+Primary inspected logs this pass. Ordinary named ACL mutation positively propagated
+to existing children; candidate held-MAXIMUM_ALLOWED mutation changed only root
+with unlocked and locked child variants, preserved protected/unprotected children
+and symlink-outside descriptors/bytes, and new children inherited the final policy.
+Root/ancestor pin, symlink refusal and actual competing directory-writer refusal
+passed. Existing primitive tests/vet passed. No Windows10 certification is inferred.
+
+## Existing-tree ACL integration candidate
+
+Normalize-private-tree is now a fixed helper action for state/log/rollback ACLs.
+It opens/pins every object relative to held parents, enumerating actual handles
+through Go's GetFileInformationByHandleEx names-only path. Actual owner, nonnull
+DACL, explicit/protected rules and required protected inheritance are audited for
+all objects before the first permission write. Hard links and reparses refuse.
+Root receives protected policy; valid protected descendants are never written;
+unprotected descendants preserve supported safe explicit ACE SID/mask/flags and
+receive only the intended inherited policy. Owner/protection/effective rights are
+verified afterward. Unknown explicit flags/forms refuse; inherited unsupported
+entries may be discarded only where existing preflight allowed normalization.
+
+Names/type/link counts are checked again before writing and after parent-first
+normalization, detecting late namespace additions. Sharing pins do not prevent
+all child creation and do not revoke already-granted owner/WRITE_DAC authority;
+no retroactive authority revocation is claimed. Partial failure may retain partial
+permission normalization, never reported as success or transactional rollback.
+
+The verified existing service is stopped only after all original read-only static
+audits pass, before exclusive native ACL acquisition. If that phase fails, restart
+requires final permission audits on all roles; otherwise it remains stopped with
+recovery required. No snapshot/content writes occur in that ACL phase. Actual
+Setup refusal against an unrelated exclusive writer tests safe prior-service
+recovery. Native policy/failure tests run before actual Setup/SEC01 compatibility.
+Actual Windows integration execution is pending; cross-compilation/vet/review
+are preparation evidence. One authorized worker contributed independent tests.
+
+Scope: state/log/rollback existing ACL normalization only; code-tree icacls grant
+remains in the already-known Setup/init path scope. Elevated init, remaining Setup
+publication/deletion, uninstall, integrated real-account races and full combined
+prior-release/provider/recovery remain open. No new policy, dependency/provider,
+feature/version/release, cost, PC action or Group3 work. SEC-03 stays open.

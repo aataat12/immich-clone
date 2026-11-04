@@ -17,6 +17,8 @@ $binary = Join-Path $AppDir 'immichclone.exe'
 $rollback = Join-Path $AppDir 'rollback'
 $stage = 'inspect service'
 $pathsValidated = $false
+$stoppedForAcl = $false
+$owned = $null
 $diagnosticsReady = $false
 $logRoot = Join-Path $env:ProgramData 'ImmichCloneDiagnostics'
 function Diagnostic([string]$event,[int]$result=0) {
@@ -61,13 +63,21 @@ try {
     Assert-PrivateDirectoryTree -Path $DataDir -ReaderSid $identity -ServiceAccess
     Assert-PrivateDirectoryTree -Path $logRoot -ReaderSid $identity -ServiceAccess
     Assert-PrivateDirectoryTree -Path $rollback -OwnerSid $identity
+    # Unsafe stationary trees were refused above before any service stop. Native
+    # ACL handles require exclusive write/delete sharing against active catalog
+    # writers, so stop only our verified service before held-tree normalization.
+    $owned = Own-Service
+    if ($owned -and $owned.State -eq 'Running') {
+        Stop-Service $name
+        $stoppedForAcl = $true
+    }
     $logIdentity = $identity
     if (Test-Path -LiteralPath $DataDir) { Set-PrivateDirectoryAcl -CreationHelper $BoundaryHelper -Path $DataDir -ReaderSid $identity -ServiceAccess }
     if (Test-Path -LiteralPath $rollback) { Set-PrivateDirectoryAcl -CreationHelper $BoundaryHelper -Path $rollback }
     Set-PrivateDirectoryAcl -CreationHelper $BoundaryHelper -Path $logRoot -ReaderSid $logIdentity -ServiceAccess
     # Verify actual inherited ACLs too; never assume the root change propagated.
-    # A failure here can leave safe root ACL normalization, but no service stop,
-    # diagnostics, snapshot or data-content mutation has happened.
+    # Failure may leave partial ACL normalization and a stopped service. No
+    # diagnostic, snapshot or data-content mutation has happened in this phase.
     Assert-PrivateDirectoryTree -Path $DataDir -ReaderSid $identity -ServiceAccess -VerifyInherited
     Assert-PrivateDirectoryTree -Path $logRoot -ReaderSid $identity -ServiceAccess -VerifyInherited
     Assert-PrivateDirectoryTree -Path $rollback -OwnerSid $identity -VerifyInherited
@@ -123,7 +133,20 @@ try {
     exit 0
 } catch {
     if (!$pathsValidated) {
-        Write-Error 'Installation storage validation failed; service and data content were not changed.' -ErrorAction Continue
+        if ($stoppedForAcl) {
+            try {
+                Assert-PrivateDirectoryTree -Path $DataDir -ReaderSid $identity -ServiceAccess -VerifyInherited
+                Assert-PrivateDirectoryTree -Path $logRoot -ReaderSid $identity -ServiceAccess -VerifyInherited
+                Assert-PrivateDirectoryTree -Path $rollback -OwnerSid $identity -VerifyInherited
+                Start-Service $name
+                Health
+                Write-Error 'Installation ACL normalization failed; prior service restarted after final permission verification. Data content was not changed.' -ErrorAction Continue
+            } catch {
+                Write-Error 'Installation ACL normalization failed; service remains stopped and administrator recovery is required. Data content was not changed.' -ErrorAction Continue
+            }
+        } else {
+            Write-Error 'Installation storage validation failed; service and data content were not changed.' -ErrorAction Continue
+        }
         exit 1
     }
     Diagnostic 'installer_failed' $_.Exception.HResult
