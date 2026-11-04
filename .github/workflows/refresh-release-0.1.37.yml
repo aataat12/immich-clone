@@ -1,0 +1,37 @@
+name: Correct accepted 0.1.37 release notes only
+on:
+  push:
+    paths:
+      - '.github/workflows/refresh-release-0.1.37.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  notes-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Verify accepted run and immutable installer identity before updating prose
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo=aataat12/immich-clone
+          gh api repos/$repo/actions/runs/41752068473 > "$RUNNER_TEMP/accepted.json"
+          gh api repos/$repo/releases/tags/v0.1.37-prototype > "$RUNNER_TEMP/release.json"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root=Path(os.environ['RUNNER_TEMP'])
+          run=json.loads((root/'accepted.json').read_text())
+          release=json.loads((root/'release.json').read_text())
+          expected='432481631d1668ad5ced28a105604148db8b0639'
+          assert run['conclusion']=='success' and run['head_sha']==expected
+          assert release['target_commitish']==expected and release['prerelease'] and not release['draft']
+          asset=next(a for a in release['assets'] if a['name']=='ImmichClone-0.1.37-prototype-x64-setup.exe')
+          assert asset['size']==104212004 and asset['digest']=='sha256:cfa11b989fda6f9dc50b9297320a0f138ea45000940c798d9d74aa318f43c46d'
+          PY
+          gh release edit v0.1.37-prototype --repo "$repo" --notes-file docs/release-0.1.37.md
