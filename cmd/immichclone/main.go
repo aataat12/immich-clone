@@ -176,30 +176,16 @@ func main() {
 		}
 		return
 	}
-	channel := "commands"
-	if *mode == "service" || *mode == "serve" {
-		channel = "application"
-	}
-	if e := diagnostics.Init(*logs, version, channel); e != nil {
-		fmt.Fprintln(os.Stderr, "Diagnostic file unavailable; check logging directory permissions")
-	}
-	diagnostics.Record("startup", "requested", nil, 0, 0, 0)
-	if !filepath.IsAbs(*data) {
-		log.Fatal("An absolute application data directory is required")
-	}
-	for _, component := range strings.FieldsFunc(filepath.Clean(*data), func(r rune) bool { return r == '/' || r == '\\' }) {
-		if strings.EqualFold(component, "Dropbox") {
-			log.Fatal("Application state must be outside cloud sync folders")
-		}
-	}
-	o := options{*data, *address}
-	if *mode == "service" {
-		if e := runService(o); e != nil {
-			log.Fatal("Windows service failed; verify permissions and configuration")
-		}
-		return
+	if *mode == "restore" && !filepath.IsAbs(*data) {
+		fmt.Fprintln(os.Stderr, "An absolute recovery destination is required.")
+		os.Exit(1)
 	}
 	if *mode == "restore" {
+		for _, component := range strings.FieldsFunc(filepath.Clean(*data), func(r rune) bool { return r == '/' || r == '\\' }) {
+			if strings.EqualFold(component, "Dropbox") {
+				log.Fatal("Application state must be outside cloud sync folders")
+			}
+		}
 		ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 		defer cancel()
 		limits := library.RestoreLimits{MaxBytes: *restoreBytes, MaxEntries: *restoreEntries, MaxManifestBytes: *restoreManifest, MaxCatalogBytes: *restoreCatalog, MaxMetadataBytes: *restoreMetadata, MemoryBytes: *restoreMemory, Timeout: *restoreTimeout}
@@ -229,6 +215,30 @@ func main() {
 		fmt.Println("Restore verified and published; previews queued for regeneration")
 		return
 	}
+	channel := "commands"
+	if *mode == "service" || *mode == "serve" {
+		channel = "application"
+	}
+	if e := diagnostics.Init(*logs, version, channel); e != nil {
+		fmt.Fprintln(os.Stderr, "Diagnostic file unavailable; check logging directory permissions")
+	}
+	diagnostics.Record("startup", "requested", nil, 0, 0, 0)
+	if !filepath.IsAbs(*data) {
+		log.Fatal("An absolute application data directory is required")
+	}
+	for _, component := range strings.FieldsFunc(filepath.Clean(*data), func(r rune) bool { return r == '/' || r == '\\' }) {
+		if strings.EqualFold(component, "Dropbox") {
+			log.Fatal("Application state must be outside cloud sync folders")
+		}
+	}
+	o := options{*data, *address}
+	if *mode == "service" {
+		if e := runService(o); e != nil {
+			log.Fatal("Windows service failed; verify permissions and configuration")
+		}
+		return
+	}
+
 	if *mode == "serve" {
 		ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 		defer cancel()

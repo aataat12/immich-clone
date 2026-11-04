@@ -16,7 +16,10 @@ import (
 
 const restoreJobListAttribute = 0x0002000d // PROC_THREAD_ATTRIBUTE_JOB_LIST, Windows 10+
 
-func runRestoreProcess(ctx context.Context, exe string, args []string, memoryBytes uint64, outputBytes int64, onStart func(uint32)) (result restoreProcessResult, err error) {
+func runRestoreProcess(ctx context.Context, exe string, args []string, memoryBytes uint64, outputBytes int64, onStart func(uint32)) (restoreProcessResult, error) {
+	return runRestoreProcessInherited(ctx, exe, args, memoryBytes, outputBytes, onStart, nil)
+}
+func runRestoreProcessInherited(ctx context.Context, exe string, args []string, memoryBytes uint64, outputBytes int64, onStart func(uint32), extra []windows.Handle) (result restoreProcessResult, err error) {
 	if memoryBytes < 32<<20 || outputBytes < 1 {
 		return result, ErrRestoreBudget
 	}
@@ -48,7 +51,12 @@ func runRestoreProcess(ctx context.Context, exe string, args []string, memoryByt
 		return result, e
 	}
 	defer nul.Close()
-	inherited := []windows.Handle{windows.Handle(w.Fd()), windows.Handle(nul.Fd())}
+	inherited := append([]windows.Handle{windows.Handle(w.Fd()), windows.Handle(nul.Fd())}, extra...)
+	defer func() {
+		for _, h := range extra {
+			windows.SetHandleInformation(h, windows.HANDLE_FLAG_INHERIT, 0)
+		}
+	}()
 	for _, h := range inherited {
 		if e = windows.SetHandleInformation(h, windows.HANDLE_FLAG_INHERIT, windows.HANDLE_FLAG_INHERIT); e != nil {
 			return result, e

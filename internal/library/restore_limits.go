@@ -101,7 +101,10 @@ func (l RestoreLimits) defaults(parent string) (RestoreLimits, error) {
 
 // RestoreWithLimits supervises the whole untrusted parse/check/reindex operation
 // out of process. The parent never opens the restored bbolt catalog.
-func RestoreWithLimits(ctx context.Context, archive, target string, l RestoreLimits) (result error) {
+func RestoreWithLimits(ctx context.Context, archive, target string, l RestoreLimits) error {
+	return restorePlatform(ctx, archive, target, l)
+}
+func restoreWithLimitsLegacy(ctx context.Context, archive, target string, l RestoreLimits) (result error) {
 	started := time.Now()
 	defer func() { recordRestore(result, time.Since(started)) }()
 	if e := ctx.Err(); e != nil {
@@ -221,6 +224,9 @@ func RestoreWithLimits(ctx context.Context, archive, target string, l RestoreLim
 }
 
 func init() {
+	if handled, code := restoreWorkerPlatform(); handled {
+		os.Exit(code)
+	}
 	if len(os.Args) < 2 || os.Args[1] != restoreWorkerArg {
 		return
 	}

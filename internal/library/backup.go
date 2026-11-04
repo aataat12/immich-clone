@@ -153,6 +153,19 @@ func restoreArchiveToStage(archive, stage string, limits RestoreLimits, nonce st
 		return e
 	}
 	defer zr.Close()
+	return restoreArchiveReaderToStage(&zr.Reader, stage, limits, nonce, nil)
+}
+
+// restoreStageIO confines payload creation/progress/final checks to held Windows
+// staging authority. Non-Windows development keeps the existing implementation.
+type restoreStageIO interface {
+	Create(string) (*os.File, error)
+	Progress(string, uint64) error
+	Check(RestoreLimits) error
+}
+
+func restoreArchiveReaderToStage(zr *zip.Reader, stage string, limits RestoreLimits, nonce string, fs restoreStageIO) (result error) {
+	var e error
 	if uint64(len(zr.File)) > limits.MaxEntries {
 		return ErrRestoreBudget
 	}
@@ -227,10 +240,15 @@ func restoreArchiveToStage(archive, stage string, limits RestoreLimits, nonce st
 			return errors.New("missing backup file")
 		}
 		path := filepath.Join(stage, filepath.FromSlash(entry))
-		if e = os.MkdirAll(filepath.Dir(path), 0700); e != nil {
-			return e
+		var out *os.File
+		if fs != nil {
+			out, e = fs.Create(entry)
+		} else {
+			if e = os.MkdirAll(filepath.Dir(path), 0700); e != nil {
+				return e
+			}
+			out, e = os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 		}
-		out, e := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 		if e != nil {
 			return e
 		}
@@ -259,7 +277,12 @@ func restoreArchiveToStage(archive, stage string, limits RestoreLimits, nonce st
 		}
 	}
 	base := declared - entries["catalog.db"].UncompressedSize64
-	if e = writeRestoreProgress(stage, nonce, base); e != nil {
+	if fs != nil {
+		e = fs.Progress(nonce, base)
+	} else {
+		e = writeRestoreProgress(stage, nonce, base)
+	}
+	if e != nil {
 		return e
 	}
 	// Read-only structural checking is untrusted work too: it remains inside the
@@ -319,6 +342,9 @@ func restoreArchiveToStage(archive, stage string, limits RestoreLimits, nonce st
 	}
 	if closeErr != nil {
 		return closeErr
+	}
+	if fs != nil {
+		return fs.Check(limits)
 	}
 	return checkRestoreStage(stage, limits)
 }
