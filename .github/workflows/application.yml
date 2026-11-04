@@ -117,6 +117,7 @@ jobs:
         shell: pwsh
         run: |
           ./scripts/Build-Installer.ps1
+          $env:IMMICH_BROWSER_OUTPUT = Join-Path $env:GITHUB_WORKSPACE 'browser-evidence'
           ./scripts/Test-Installer.ps1
       - name: Retain synthetic browser evidence
         if: always()
