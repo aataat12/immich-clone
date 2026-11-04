@@ -321,3 +321,90 @@ func TestCodeReadGrantRunningOwnImage(t *testing.T) {
 	codeAssertServiceRX(t, target, false, false, true)
 	t.Log("PASS: actual running copy of current Windows test executable successfully grants code read access including its own image, preserving all executable bytes")
 }
+
+// The real Program Files code root inherits its parent rather than starting with
+// a protected fixture DACL. Log numeric ACL shape only if that distinct case fails.
+func codeACLShape(t *testing.T, label string, sd *windows.SECURITY_DESCRIPTOR) {
+	t.Helper()
+	control, _, e := sd.Control()
+	if e != nil {
+		t.Log(label, "descriptor-control-unavailable")
+		return
+	}
+	acl, _, e := sd.DACL()
+	if e != nil || acl == nil {
+		t.Log(label, "dacl-unavailable")
+		return
+	}
+	t.Logf("%s control=%04x ace_count=%d", label, uint32(control), acl.AceCount)
+	for i := uint32(0); i < uint32(acl.AceCount); i++ {
+		var ace *windows.ACCESS_ALLOWED_ACE
+		if e = windows.GetAce(acl, i, &ace); e != nil {
+			t.Log(label, "ace-unavailable")
+			return
+		}
+		t.Logf("%s ace=%d type=%d flags=%02x rights=%08x", label, i, ace.Header.AceType, ace.Header.AceFlags, uint32(ace.Mask))
+	}
+}
+
+func TestCodeReadGrantUnprotectedInheritedRoot(t *testing.T) {
+	parent := t.TempDir()
+	setPrivacyDescriptor(t, parent, "D:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464)(A;OICI;0x1200a9;;;BU)(A;OICIIO;FA;;;CO)")
+	root := filepath.Join(parent, "unprotected code root é")
+	child := filepath.Join(root, "provider")
+	for _, p := range []string{root, child} {
+		if e := os.Mkdir(p, 0700); e != nil {
+			t.Fatal(e)
+		}
+	}
+	file := filepath.Join(child, "worker.bin")
+	if e := os.WriteFile(file, []byte("inherited code bytes"), 0600); e != nil {
+		t.Fatal(e)
+	}
+	beforeSD := treeSD(t, root)
+	control, _, e := beforeSD.Control()
+	if e != nil || control&windows.SE_DACL_PROTECTED != 0 {
+		t.Fatal("unprotected-root fixture was not established", e)
+	}
+	beforeACL, _, e := beforeSD.DACL()
+	if e != nil || beforeACL == nil {
+		t.Fatal("unprotected fixture DACL unavailable", e)
+	}
+	inherited := false
+	for i := uint32(0); i < uint32(beforeACL.AceCount); i++ {
+		var ace *windows.ACCESS_ALLOWED_ACE
+		if e = windows.GetAce(beforeACL, i, &ace); e != nil {
+			t.Fatal(e)
+		}
+		if ace.Header.AceFlags&16 != 0 {
+			inherited = true
+		}
+	}
+	if !inherited {
+		t.Fatal("unprotected-root fixture lacks actual inherited ACEs")
+	}
+	owners := map[string]string{}
+	before := map[string][][]byte{}
+	for _, p := range []string{root, child, file} {
+		owners[p] = treeOwner(t, p)
+		before[p] = codeACEBytes(t, p)
+	}
+	if e = GrantCodeReadAccess(root); e != nil {
+		codeACLShape(t, "root-before", beforeSD)
+		codeACLShape(t, "root-after", treeSD(t, root))
+		codeACLShape(t, "directory-after", treeSD(t, child))
+		codeACLShape(t, "file-after", treeSD(t, file))
+		t.Fatal("unprotected inherited code root grant failed", e)
+	}
+	codeAssertServiceRX(t, root, true, false, false)
+	codeAssertServiceRX(t, child, true, false, true)
+	codeAssertServiceRX(t, file, false, false, true)
+	for _, p := range []string{root, child, file} {
+		codePreservedACEs(t, p, before[p])
+		if treeOwner(t, p) != owners[p] {
+			t.Fatal("unprotected code grant changed owner")
+		}
+	}
+	assertBytes(t, file, "inherited code bytes")
+	t.Log("PASS: unprotected code root with real inherited trusted-writer/reader/creator-owner policy preserves inherited ACE bytes, owners and unprotected flags while granting only intended LocalService RX")
+}

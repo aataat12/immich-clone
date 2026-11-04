@@ -4,6 +4,7 @@ package installerfiles
 
 import (
 	"errors"
+	"fmt"
 
 	"golang.org/x/sys/windows"
 	"immichclone/internal/winfs"
@@ -32,6 +33,23 @@ func sameCodeGrants(a, b []aclGrant) bool {
 	}
 	for i := range a {
 		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func sameCodeGrantSet(a, b []aclGrant) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	counts := map[aclGrant]int{}
+	for _, g := range a {
+		counts[g]++
+	}
+	for _, g := range b {
+		counts[g]--
+		if counts[g] < 0 {
 			return false
 		}
 	}
@@ -150,7 +168,7 @@ func grantCodeReadAccess(app string, beforeApply func() error) (err error) {
 		}
 		p := plans[i]
 		if protected != p.protected || owner != p.owner || !sameCodeGrants(grants, p.after) {
-			return ErrRefused
+			return fmt.Errorf("%w: code grant verify root=%t directory=%t owner_same=%t protection_same=%t expected_aces=%d actual_aces=%d grants_same=%t grant_set_same=%t", ErrRefused, i == 0, n.Directory, owner == p.owner, protected == p.protected, len(p.after), len(grants), sameCodeGrants(grants, p.after), sameCodeGrantSet(grants, p.after))
 		}
 		if !p.propagate && sd.String() != p.descriptor {
 			return ErrRefused

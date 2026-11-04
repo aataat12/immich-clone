@@ -272,7 +272,18 @@ try {
     $commandLog = Join-Path $env:ProgramData 'ImmichCloneDiagnostics/commands.jsonl'
     $commandLogBefore = 'absent'
     if (Test-Path -LiteralPath $commandLog) { $commandLogBefore = (Get-FileHash -LiteralPath $commandLog).Hash }
-    Assert ((Run-Setup $currentApp $freshState) -eq 0) 'actual fresh Setup works with default Program Files code inheritance'
+    $freshSetupResult = Run-Setup $currentApp $freshState
+    if ($freshSetupResult -ne 0) {
+        # Fixed-schema diagnostic fields only; never output paths/exception text.
+        $failureLog = Join-Path $env:ProgramData 'ImmichCloneDiagnostics/installer.jsonl'
+        if (Test-Path -LiteralPath $failureLog) {
+            foreach ($line in (Get-Content -LiteralPath $failureLog -Tail 8)) {
+                $record = $line | ConvertFrom-Json
+                Write-Host ('Setup diagnostic event='+$record.event+' stage='+$record.stage+' result='+$record.result_code)
+            }
+        }
+    }
+    Assert ($freshSetupResult -eq 0) 'actual fresh Setup works with default Program Files code inheritance'
     Wait-Health
     Assert (![UpgradeWriteProbe]::CanWrite($ordinaryUser,$ordinaryPassword,(Join-Path $currentApp 'Manage-Service.ps1'))) 'Program Files installed helper denies actual standard-user modification'
     Assert ((Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").StartName -eq 'NT AUTHORITY\LocalService') 'fresh installer initializes through the existing LocalService account'

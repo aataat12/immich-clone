@@ -586,3 +586,21 @@ This avoids assuming an inapplicable regular-file inheritance rule survived the
 Windows ACL setter. No source-policy change or preservation assertion weakening.
 Actual Setup/SEC01 gate was skipped on native failure; no integration acceptance
 is claimed for that run.
+
+
+### Code-grant rerun and fresh-root regression
+
+Run41877617057/source586d183a4776ca0f5bc75ff736dd2eb89627a9ba,
+job126741279387: native code suite fully passed, including the required actual
+inherit-only directory writer, reader/creator-owner preservation, protected rollback,
+running-own-image, links and late names. Actual custom Setup/upgrades, private
+rollback audit, ACL acquisition safe restart and post-start verified rollback
+passed. Fresh Program Files Setup then returned failure, so this is not full
+acceptance. The job listing remained queued while complete logs were available;
+actual job logs were inspected instead of treating stale listing as execution proof.
+
+Add an unprotected/inherited code-root positive test matching the missing case.
+Fixed-label/numeric verification diagnostics distinguish root/file, owner/protection
+and ACE equality/count/order without outputting SIDs or paths; Setup failure
+prints only fixed-schema installer diagnostic fields. Protection/preservation
+conditions are not relaxed pending actual evidence.
