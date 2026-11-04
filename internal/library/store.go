@@ -48,6 +48,7 @@ type Asset struct {
 	Error           string        `json:"error,omitempty"`
 }
 type Store struct {
+	offline     *offlineState
 	reviewIndex *organizationIndex // protected by gate; derived from committed catalog state
 
 	analysisStill          func(context.Context, string) (image.Image, int, int, error)
@@ -203,7 +204,13 @@ func Open(root string) (*Store, error) {
 	s.recoverDeletions()
 	return s, nil
 }
-func (s *Store) Close() error                 { return s.db.Close() }
+func (s *Store) Close() error {
+	e := s.db.Close()
+	if s.offline != nil {
+		e = errors.Join(e, s.offline.close())
+	}
+	return e
+}
 func (s *Store) Original(id string) string    { return filepath.Join(s.root, "originals", id) }
 func (s *Store) PreviewPath(id string) string { return filepath.Join(s.root, "previews", id+".png") }
 func validID(id string) bool {
@@ -580,6 +587,9 @@ func (s *Store) Retry(id string) error {
 	return s.save(a)
 }
 func (s *Store) Verify() (result error) {
+	if s.offline != nil {
+		return s.verifyOffline()
+	}
 	started := time.Now()
 	defer func() { diagnostics.Record("verify", "integrity", result, 0, 0, time.Since(started)) }()
 	s.gate.Lock()

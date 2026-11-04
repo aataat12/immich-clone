@@ -174,6 +174,99 @@ try {
     $installedPayloadHashes = @{}
     foreach ($leaf in $payloadNames) { $installedPayloadHashes[$leaf] = (Get-FileHash -LiteralPath (Join-Path $currentApp $leaf)).Hash }
     Assert $true 'actual Setup publishes every fixed root and nested provider fixture through the native payload helper'
+    # A real separate non-administrator account must verify and back up installed
+    # source with RX only. This catches accidental Store.Open/diagnostic/staging
+    # writes that an administrator-only acceptance fixture would conceal.
+    $offlineExe = Join-Path $currentApp 'immichclone.exe'
+    $offlineOutput = Join-Path $root 'ordinary offline output'
+    $offlineLogs = Join-Path $offlineOutput 'logs must remain absent'
+    $offlineArchive = Join-Path $offlineOutput 'independent-readonly.zip'
+    $offlineRestored = Join-Path $root 'independent readonly recovery'
+    $offlineSavedAcls = @{}
+    $offlineExeAcl = Get-Acl -LiteralPath $offlineExe
+    $offlineCredential = [Management.Automation.PSCredential]::new(($env:COMPUTERNAME+'\'+$ordinaryUser),(ConvertTo-SecureString $ordinaryPassword -AsPlainText -Force))
+    $script:offlineAttempt = 0
+    function Offline-StateSnapshot([string]$Path) {
+        $records = @()
+        $items = @((Get-Item -LiteralPath $Path -Force)) + @(Get-ChildItem -LiteralPath $Path -Force -Recurse)
+        foreach ($item in ($items | Sort-Object FullName)) {
+            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'Read-only installed fixture unexpectedly contains a reparse point' }
+            $record = $item.FullName+'|'+(Get-Acl -LiteralPath $item.FullName).Sddl
+            if (!$item.PSIsContainer) { $record += '|'+(Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash }
+            $records += $record
+        }
+        return $records -join "`n"
+    }
+    function Run-OfflineProbe([string]$Mode,[string]$SelectedState,[string]$SelectedArchive,[Management.Automation.PSCredential]$Credential) {
+        $script:offlineAttempt++
+        $stdout = Join-Path $offlineOutput ('stdout-'+$script:offlineAttempt+'.txt')
+        $stderr = Join-Path $offlineOutput ('stderr-'+$script:offlineAttempt+'.txt')
+        $arguments = @('-mode',$Mode,'-data',('"'+$SelectedState+'"'),'-logs',('"'+$offlineLogs+'"'))
+        if ($SelectedArchive) { $arguments += @('-archive',('"'+$SelectedArchive+'"')) }
+        $options = @{FilePath=$offlineExe;ArgumentList=$arguments;PassThru=$true;WorkingDirectory=$offlineOutput;RedirectStandardOutput=$stdout;RedirectStandardError=$stderr}
+        if ($Credential) { $options.Credential = $Credential }
+        $process = Start-Process @options
+        $null = $process.Handle
+        try {
+            if (!$process.WaitForExit(60000)) { $process.Kill(); $process.WaitForExit(); throw 'Offline installed command exceeded the bounded fixture timeout' }
+            $process.Refresh(); $process.WaitForExit()
+            $status = $process.ExitCode
+            if ($null -eq $status) { throw 'Offline installed command completed without a captured exit status' }
+            return @{Code=$status;Output=[IO.File]::ReadAllText($stdout).Trim();Error=[IO.File]::ReadAllText($stderr).Trim()}
+        } finally { $process.Dispose() }
+    }
+    Stop-Service ImmichClone
+    (Get-Service ImmichClone).WaitForStatus('Stopped',[TimeSpan]::FromSeconds(30))
+    $offlineBeforeGrant = Offline-StateSnapshot $state
+    foreach ($item in (@((Get-Item -LiteralPath $state -Force)) + @(Get-ChildItem -LiteralPath $state -Force -Recurse))) { $offlineSavedAcls[$item.FullName] = Get-Acl -LiteralPath $item.FullName }
+    try {
+        New-Item -ItemType Directory -Path $offlineOutput | Out-Null
+        Native icacls @($offlineOutput,'/inheritance:r','/grant:r','*S-1-5-18:(OI)(CI)F','*S-1-5-32-544:(OI)(CI)F',('*'+$ordinarySid+':(OI)(CI)F'))
+        Native icacls @($state,'/grant',('*'+$ordinarySid+':(OI)(CI)RX'),'/t')
+        Native icacls @($offlineExe,'/grant',('*'+$ordinarySid+':RX'))
+        Assert (![UpgradeWriteProbe]::CanWrite($ordinaryUser,$ordinaryPassword,(Join-Path $state 'catalog.db')) -and ![UpgradeWriteProbe]::CanWrite($ordinaryUser,$ordinaryPassword,(Join-Path $state ('originals/'+$asset.id)))) 'actual offline account cannot modify source catalog or original with its RX grant'
+        $offlineBefore = Offline-StateSnapshot $state
+        $verified = Run-OfflineProbe 'verify' $state '' $offlineCredential
+        Assert ($verified.Code -eq 0 -and $verified.Output -eq 'All catalogued originals passed SHA256 verification' -and !$verified.Error) 'separate RX-only non-administrator verifies the installed library successfully'
+        $backedUp = Run-OfflineProbe 'backup' $state $offlineArchive $offlineCredential
+        Assert ($backedUp.Code -eq 0 -and $backedUp.Output -eq 'Consistent backup created' -and !$backedUp.Error) 'separate RX-only non-administrator creates a complete installed-library backup without source write authority'
+        Assert ((Offline-StateSnapshot $state) -eq $offlineBefore -and !(Test-Path -LiteralPath $offlineLogs)) 'actual RX verify and backup preserve all source hashes descriptors namespace and create no selected diagnostic directory'
+        $archiveAcl = Get-Acl -LiteralPath $offlineArchive
+        $archiveRaw = [Security.AccessControl.RawSecurityDescriptor]::new($archiveAcl.GetSecurityDescriptorBinaryForm(),0)
+        Assert (($archiveRaw.ControlFlags -band [Security.AccessControl.ControlFlags]::DiscretionaryAclProtected) -ne 0) 'ordinary-user-created archive has a protected private descriptor'
+        foreach ($ace in $archiveRaw.DiscretionaryAcl) {
+            Assert (($ace -is [Security.AccessControl.CommonAce]) -and $ace.AceQualifier -eq [Security.AccessControl.AceQualifier]::AccessAllowed -and $ace.SecurityIdentifier.Value -in @('S-1-5-18','S-1-5-32-544',$ordinarySid)) 'private archive grants access only to its creating user administrators and SYSTEM'
+        }
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        $zip = [IO.Compression.ZipFile]::OpenRead($offlineArchive)
+        try {
+            $manifestEntry = $zip.GetEntry('manifest.json')
+            Assert ($null -ne $manifestEntry) 'ordinary-user backup has an independent recovery manifest'
+            $manifestReader = [IO.StreamReader]::new($manifestEntry.Open())
+            try { $manifest = $manifestReader.ReadToEnd() | ConvertFrom-Json } finally { $manifestReader.Dispose() }
+            Assert ($manifest.schema -eq 1 -and @($manifest.sha256.PSObject.Properties).Count -eq 4 -and $zip.Entries.Count -eq 5) 'ordinary-user backup contains exactly the known installed library recovery set'
+            foreach ($property in $manifest.sha256.PSObject.Properties) {
+                $entry = $zip.GetEntry($property.Name)
+                Assert ($null -ne $entry) 'manifest names an existing archived recovery entry'
+                $stream = $entry.Open(); $algorithm = [Security.Cryptography.SHA256]::Create()
+                try { $hash = [BitConverter]::ToString($algorithm.ComputeHash($stream)).Replace('-','').ToLowerInvariant() } finally { $algorithm.Dispose(); $stream.Dispose() }
+                Assert ($hash -eq $property.Value) 'independent ZIP readback matches the archived recovery checksum'
+            }
+            Assert ($manifest.sha256.('originals/'+$asset.id) -eq $originalHash.ToLowerInvariant()) 'independent ZIP readback retains the exact uploaded original checksum'
+        } finally { $zip.Dispose() }
+        $archiveHashBeforeRestore = (Get-FileHash -LiteralPath $offlineArchive).Hash
+        $restored = Run-OfflineProbe 'restore' $offlineRestored $offlineArchive $null
+        Assert ($restored.Code -eq 0 -and $restored.Output -eq 'Restore verified and published; previews queued for regeneration') 'existing administrator recovery workflow restores the ordinary-user read-only backup into a distinct new library'
+        $restoredVerified = Run-OfflineProbe 'verify' $offlineRestored '' $null
+        Assert ($restoredVerified.Code -eq 0 -and $restoredVerified.Output -eq 'All catalogued originals passed SHA256 verification') 'administrator recovery verification remains compatible with the read-only command path'
+        Assert ((Get-FileHash -LiteralPath $offlineArchive).Hash -eq $archiveHashBeforeRestore -and (Get-FileHash -LiteralPath (Join-Path $offlineRestored ('originals/'+$asset.id))).Hash -eq $originalHash -and (Offline-StateSnapshot $state) -eq $offlineBefore) 'independent restore preserves the archive original library and exact restored original bytes'
+    } finally {
+        foreach ($path in ($offlineSavedAcls.Keys | Sort-Object Length)) { Set-Acl -LiteralPath $path -AclObject $offlineSavedAcls[$path] }
+        Set-Acl -LiteralPath $offlineExe -AclObject $offlineExeAcl
+        Assert ((Offline-StateSnapshot $state) -eq $offlineBeforeGrant) 'offline RX fixture restores every original source descriptor hash and directory entry before resuming service'
+        Start-Service ImmichClone
+        Wait-Health
+    }
     # Stationary metadata aliases must be refused BEFORE Inno overwrites its
     # retained journal, not merely noticed by the later code permission phase.
     $journal = Join-Path $currentApp 'unins000.dat'

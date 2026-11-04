@@ -996,3 +996,31 @@ Corrected best forecast **5 additional completion passes** (planning range5–7)
 These are the original SEC03 requirements decomposed, not added feature scope.
 A pass remains a session ending in completion/pause, not each worker or CI run.
 SEC03 open; security4 closed/4 open. Worker and CI complete; paused here.
+
+### Administrative verify/backup candidate (acceptance pending)
+
+User authorized two bounded workers for this checkpoint, superseding earlier
+one-worker allowance for this session only. Scope is exactly the first of five
+remaining SEC03 rows; no restore-path/durable-installer/concurrency/provider
+implementation starts here. Preserve administrative recovery guide and browser/
+service backup. New OpenReadOnly uses existing marker/catalog/schema and no
+repair, queue rebuild, directories or diagnostics. Windows holds root/originals
+and metadata leafs nofollow/singlelink/read sharing; bboltRO consumes the held
+catalog file once. Offline backup streams Tx.WriteTo directly into ZIP without
+source staging; held original reads validate catalog size+SHA256, and old entry/
+configuration/catalog/pendingdelete bounds remain. Source input is not repaired.
+
+New archive uses exclusive FILE_CREATE through held parent with creator/BA/SY
+private protected descriptor at birth, refuses existing names and physical source
+subtrees, deletes failed output through its exact held handle. Close/unverifiable
+cleanup is reported incomplete/private archive may remain; no pathname fallback.
+CLI verify/backup dispatch before diagnostics. Independent native tests cover
+source/ACL/namespace immutability, aliases/writers/missing/unsupported state,
+optional-code no-generation, bounded failures/cancel, private/exclusive output,
+actual output aliases, exact failure cleanup and independent restore. Second
+worker added actual distinct RX-account CLI success and cannot-write positives,
+archive privateACL/manifest checks, admin recovery compatibility, source/no-log
+immutability and ACL restoration before resuming service. Local Windows cross
+build/vet and focused Linux baseline backup tests passed; actual Windows pending.
+Five-item forecast unchanged until accepted execution. No new feature/provider/
+dependency/schema/version/release/cost or Group3 work.

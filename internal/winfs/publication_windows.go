@@ -82,3 +82,33 @@ func DeletePublicationFile(f *os.File) error {
 	v := byte(1)
 	return windows.SetFileInformationByHandle(windows.Handle(f.Fd()), windows.FileDispositionInfo, &v, 1)
 }
+
+// CreateExclusiveFile never opens an existing name and supplies the private
+// descriptor in the creation syscall, before any archive secret can be written.
+func (d *Directory) CreateExclusiveFile(name string, sd *windows.SECURITY_DESCRIPTOR) (*os.File, error) {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	if len(d.holds) == 0 {
+		return nil, os.ErrClosed
+	}
+	if !component(name) || sd == nil {
+		return nil, ErrUnsafeObject
+	}
+	u, e := windows.NewNTUnicodeString(name)
+	if e != nil {
+		return nil, e
+	}
+	oa := windows.OBJECT_ATTRIBUTES{RootDirectory: d.holds[len(d.holds)-1], ObjectName: u, Attributes: windows.OBJ_CASE_INSENSITIVE | windows.OBJ_DONT_REPARSE, SecurityDescriptor: sd}
+	oa.Length = uint32(unsafe.Sizeof(oa))
+	var status windows.IO_STATUS_BLOCK
+	var h windows.Handle
+	e = windows.NtCreateFile(&h, windows.FILE_GENERIC_READ|windows.FILE_GENERIC_WRITE|windows.DELETE, &oa, &status, nil, 0, windows.FILE_SHARE_READ, windows.FILE_CREATE, windows.FILE_NON_DIRECTORY_FILE|windows.FILE_OPEN_REPARSE_POINT|windows.FILE_SYNCHRONOUS_IO_NONALERT, 0, 0)
+	if e != nil {
+		return nil, e
+	}
+	if e = checked(h, false); e != nil {
+		windows.CloseHandle(h)
+		return nil, e
+	}
+	return os.NewFile(uintptr(h), "private-archive"), nil
+}

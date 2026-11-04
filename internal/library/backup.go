@@ -25,6 +25,9 @@ type Manifest struct {
 // Callers must discard output if an error occurs; HTTP callers stage before sending.
 func (s *Store) Backup(w io.Writer) error { return s.BackupContext(context.Background(), w, nil) }
 func (s *Store) BackupContext(ctx context.Context, w io.Writer, report func(BackupProgress)) (result error) {
+	if s.offline != nil {
+		return s.backupOffline(ctx, w)
+	}
 	started := time.Now()
 	defer func() { diagnostics.Record("backup", "archive_write", result, 0, 0, time.Since(started)) }()
 	if e := s.backupLock(ctx); e != nil {

@@ -164,6 +164,18 @@ func main() {
 		fmt.Println(code)
 		return
 	}
+	if *mode == "verify" || *mode == "backup" {
+		if e := runReadOnlyCommand(*mode, *data, *archive); e != nil {
+			fmt.Fprintln(os.Stderr, "Offline operation refused or failed; source state was not initialized or modified. An incomplete private archive may remain.")
+			os.Exit(1)
+		}
+		if *mode == "verify" {
+			fmt.Println("All catalogued originals passed SHA256 verification")
+		} else {
+			fmt.Println("Consistent backup created")
+		}
+		return
+	}
 	channel := "commands"
 	if *mode == "service" || *mode == "serve" {
 		channel = "application"
@@ -243,31 +255,6 @@ func main() {
 			log.Fatal("Access-code initialization failed")
 		}
 		fmt.Println("Application state initialized")
-	case "verify":
-		if e = s.Verify(); e != nil {
-			diagnostics.Record("verify", "failed", e, 0, 0, 0)
-			log.Fatal("Original integrity verification failed")
-		}
-		diagnostics.Record("verify", "complete", nil, 0, 0, 0)
-		fmt.Println("All catalogued originals passed SHA256 verification")
-	case "backup":
-		f, e := os.OpenFile(*archive, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
-		if e != nil {
-			log.Fatal("Backup destination must be a new writable file")
-		}
-		e = s.Backup(f)
-		if e == nil {
-			e = f.Sync()
-		}
-		ce := f.Close()
-		if e == nil {
-			e = ce
-		}
-		if e != nil {
-			os.Remove(*archive)
-			log.Fatal("Backup failed; incomplete archive removed")
-		}
-		fmt.Println("Consistent backup created")
 	default:
 		log.Fatal("Unknown mode")
 	}
