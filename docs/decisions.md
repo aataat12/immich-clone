@@ -376,3 +376,12 @@
   with focused token/Setup controls this closes original SEC-02 in the candidate,
   not SEC-03 races or final SEC-08 target/release acceptance. Status4 closed/4 open.
   0.1.39 stays published; no new installer offered. Next gate is SEC-03.
+
+- November4: SEC-03 component gate passed Windows run41836459908, source0a08a79.
+  Open each component relative to a held directory, use real FILE_LIST_DIRECTORY
+  access for sharing pins, reject links/unsafe names on opened files before writes.
+  Real NTFS copy and adversarial namespace controls passed; initial metadata-only
+  handle and unexercised-racer failures remain recorded. No installer integration
+  or original-item closure is inferred. Current count stays4 closed/4 open.
+  User permits checkpoint handoffs awaiting a response; next work is installer
+  ACL/snapshot/rollback integration, without new charges, workers or local tests.

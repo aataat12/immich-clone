@@ -21,6 +21,16 @@ unconfigured; no new costs, workers or product installer were introduced. A
 dedicated focused gate and the combined Windows Server candidate gate passed.
 Candidate publication is disabled; this does not certify final Windows 10 acceptance. Final Windows 10 clean-install/reboot/endurance acceptance remains open.
 
+### SEC-03 next checkpoint
+
+A candidate handle-relative filesystem component passed actual Windows NTFS
+copy/link, 200 pinned directory/ancestor replacement and 2,000 concurrent write
+controls: [evidence](filesystem-boundary-milestone7.md). It is not yet imported by
+the application or installer. SEC-03 stays open; status remains 4 closed / 4 open.
+Next work is privileged installer integration and its account/race/rollback gates.
+The user permits normal checkpoint handoffs; this component checkpoint is complete,
+with no workers or scheduled continuation running and no local action requested.
+
 ## Historical checkpoints (superseded where later acceptance applies)
 
 The chronological snapshots below are retained as history. Their old current/

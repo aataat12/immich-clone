@@ -33,7 +33,7 @@ Passing this primitive's tests cannot replace those obligations or certify Windo
 SEC-01/02/04/07 remain closed; current original status stays 4 closed / 4 open.
 0.1.39 is still published; 0.1.41 remains the previous unpublished candidate.
 
-Primary API references: Microsoft [NtCreateFile](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntcreatefile),
+Primary API references: Microsoft [NtCreateFile](https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntcreatefile),
 [CreateFile sharing](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew),
 and [reparse operations](https://learn.microsoft.com/en-us/windows/win32/fileio/reparse-points-and-file-operations).
 The existing Go/x/sys implementations and signatures were inspected locally.
@@ -54,3 +54,32 @@ no successful link swaps while the writer repeatedly acquired the name; the test
 now yields a short acquisition window and still requires successful actual swaps,
 both write/refusal outcomes and unchanged outside bytes. No passing race evidence
 or installer integration/SEC-03 closure is claimed by this failed run.
+
+
+## Corrected actual Windows acceptance
+
+[Run 41836459908](https://github.com/aataat12/immich-clone/actions/runs/41836459908),
+source `0a08a79df693e1110505aa5d8e755e8d9bfc56f5`, job `126596509835`: **PASS**
+on Windows Server2022 x64, 1.409 seconds for the actual three-test package; vet and
+pinned-module verification also passed. No test skipped its link/privilege controls.
+
+- Normal Unicode/space-path copy, hard-link positive control and source/target
+  refusal, symbolic-link/name/device/ADS refusal and unchanged outside bytes passed.
+- Actual rename controls worked before/after guards. All 200 leaf/ancestor rename
+  attempts failed while held; redirected-directory refusal passed.
+- The concurrent actor completed 530 actual link swaps during 2,000 writer attempts:
+  1,238 writes accepted and 762 refused, with the outside sentinel unchanged. These
+  are one disposable-runner interleaving's counts, not a universal race proof.
+
+The directory-sharing correction is production candidate code; the actor yield
+only ensures the test actually exercises contested link publication. Error/refusal
+and outside-byte assertions were retained. This supplies representative execution
+before any installer dependency on the new APIs. It does **not** close SEC-03,
+prove full installer ACL/snapshot/rollback safety or certify Windows10. The installed
+application and prior unpublished 0.1.41 candidate are unchanged. No new release,
+model/provider change, worker, charge, local dependency or user-PC test is requested.
+
+Next checkpoint: use the verified handles in actual privileged installer operations,
+including ACL inheritance semantics and snapshot/rollback; then execute adversarial
+account/race tests and applicable combined acceptance. Do not substitute another
+primitive-only run for that integration or repeat this passing run without a change.
