@@ -4,8 +4,7 @@
 
 Continue from the accepted `0.1.38-prototype` executable, SHA256
 `14e1f0dd6b5bc709d45235963e137e47ee5740fee13ec3c8c03d4756ddd24038`.
-No new application build, provider, schema, file-size limit or dependency is introduced
-by these checks. The existing exact 4 GiB HTTP and installed browser boundary,
+The mounted-volume proof uses that unchanged package. The sustained-load follow-up below introduces a focused application scheduling change; no provider, schema, file-size limit or dependency changes. The existing exact 4 GiB HTTP and installed browser boundary,
 selected-source disappearance, mixed-media service-crash/independent restore and
 real NTFS ENOSPC proofs are reused, not relabelled as new executions.
 
@@ -74,14 +73,23 @@ are time bounded; no unbounded retry or success-on-timeout is allowed.
 
 Execution [41782439700](https://github.com/aataat12/immich-clone/actions/runs/41782439700),
 source `a74d9236059410e837d0fda12828157e1e0db25c`, job `126416862620`,
-failed its verification harness because the gallery request omitted the required `visibility=library` parameter and correctly received HTTP 400. Both full 2,048-entry copy sessions had already passed all receipts/counts/bytes checks (35,986 ms first, 33,770 ms second). The harness request now matches the existing production API; no API defaults or input validation were changed. Corrected execution is pending. No milestone completion or new release is claimed yet.
+failed its verification harness because the gallery request omitted the required `visibility=library` parameter and correctly received HTTP 400. Both full 2,048-entry copy sessions had already passed all receipts/counts/bytes checks (35,986 ms first, 33,770 ms second). The harness request now matches the existing production API; no API defaults or input validation were changed. The corrected baseline execution is [41782798531](https://github.com/aataat12/immich-clone/actions/runs/41782798531), source `9a5b108a4c531baafcf5b55aa4a48d1e90400486`, job `126417994811`; FAIL: both full copy sessions passed (40,362ms and37,425ms), then the unchanged ten-minute final preview-drain assertion failed. No failed preview was reported; the aggregate drain deadline failed before final original readback verification. Source review identified the existing service ticker permits at most one preview per second, so a 1,536-preview queue inherently cannot drain within the ten-minute verification bound. The accepted package is not relabelled as a faster build.
+
+### Preview scheduling correction
+
+`cmd/immichclone/main.go` now drains completed preview jobs serially without an artificial inter-item delay. It checks context cancellation and the existing Store copy-first gate before each job. Idle, AI polling and storage-error paths retain a one-second delay; provider time/memory/process limits and single-job concurrency stay unchanged. No automatic AI analysis is introduced. The queue remains authoritative and persisted, with the existing restart recovery.
+
+New tests process ten real distinct PNGs before an intentionally long idle interval, hash-verify originals, exercise a live import lease that keeps every preview queued, release that lease, drain the original jobs and check prompt cancellation. Local race tests, full Go suite and vet passed; targeted worker/import tests also passed on Windows. They test actual Store operations rather than a mock processing callback.
+
+The next focused Windows run builds `0.1.39-prototype-candidate` from the reviewed source, installs the accepted0.1.38 service/providers, stops that service, substitutes only the candidate executable, then executes the same sustained workload. This is explicitly a candidate executable proof, not a new installer or0.1.38 result. It retains the ten-minute preview-completion bound. Candidate execution [41783697663](https://github.com/aataat12/immich-clone/actions/runs/41783697663), source `3191ac612748c61b0561c98aea0bb0f4541bd870`, job `126420857646`: PASS, first candidate attempt on Windows Server 2022 x64, Go1.27.3, actual LocalService and Edge/Playwright1.62.1. All4,096 receipts,1,536 unique managed originals,2,560 duplicate receipts, six MIME counts of256, all completed previews, all original HTTP/source hashes, source aliases, bounded gallery/history pages, staging cleanup, both service restarts and offline installed Verify passed. Each batch copied64,010,893 actual bytes; copy phases took28,191ms and28,977ms. The final preview-drain/page/hash verification took60,053ms. These timings describe this modest-byte synthetic/byte-varied corpus and runner, not user-library throughput or broad natural-media coverage.
+
+The old one-preview-per-second scheduler cannot finish1,536 queued jobs within the same ten-minute verification window even with zero-cost decoding; the candidate removes that artificial scheduling ceiling. The workload and verification bound were retained. Combined installer/upgrade/rollback and independent restoration acceptance remain required before delivery. No new installer or full milestone completion is claimed yet.
 
 ## Remaining gates
 
 Record actual results here before updating delivery status. Final target OS,
 clean-machine/reboot and extended operation remain milestone 8 gates. Physical
 hardware/network-share fault behavior is not established by virtual-volume tests.
-Milestone 5 installed large-byte backup/restore is assigned independently; its
-ZIP64/count and restore proofs remain separate evidence. Security Group 2/3 work
+The assigned worker completed [milestone5 installed large-byte backup/recovery](installed-backup-recovery-acceptance.md), including two full cycles, actual volume withdrawal and independent hashes/metadata restoration. Its separate ZIP64/count proof is reused. Security Group 2/3 work
 and every-frame Full Scan remain paused/deferred. User validation of 0.1.38 is
 pending and no additional local test, dependency installation or reboot is requested.

@@ -1,5 +1,5 @@
 name: Application originals slice
-# Milestones 2/6 acceptance includes explicit installed-media readiness polling.
+# Milestones4/5 combined delivery: serial preview drain with actual0.1.38 upgrade and prior focused volume/scale/backup acceptance.
 on:
   push:
     paths:
@@ -63,7 +63,7 @@ jobs:
         with:
           name: prototype-server-tested
           path: previous-installer
-          run-id: 41752068473
+          run-id: 41771361544
           github-token: ${{ github.token }}
       - name: Validate installer script syntax before lengthy acceptance
         shell: pwsh
@@ -135,15 +135,15 @@ jobs:
         with:
           name: prototype-server-tested
           path: |
-            dist/ImmichClone-0.1.38-prototype-x64-setup.exe
+            dist/ImmichClone-0.1.39-prototype-x64-setup.exe
             dist/SHA256SUMS.txt
           retention-days: 7
-      - name: Publish checked unsigned0.1.38 prototype
+      - name: Publish checked unsigned0.1.39 prototype
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           $releaseNotes=Join-Path $env:RUNNER_TEMP 'published-release-notes.txt'
-          ((Get-Content docs/release-0.1.38.md -Raw)+"`nCombined installer acceptance passed: https://github.com/aataat12/immich-clone/actions/runs/$env:GITHUB_RUN_ID`n") | Set-Content $releaseNotes -Encoding utf8
-          gh release create v0.1.38-prototype dist/ImmichClone-0.1.38-prototype-x64-setup.exe dist/SHA256SUMS.txt --repo aataat12/immich-clone --target $env:GITHUB_SHA --prerelease --title 'Immich Clone0.1.38 prototype' --notes-file $releaseNotes
+          ((Get-Content docs/release-0.1.39.md -Raw)+"`nCombined installer acceptance passed: https://github.com/aataat12/immich-clone/actions/runs/$env:GITHUB_RUN_ID`n") | Set-Content $releaseNotes -Encoding utf8
+          gh release create v0.1.39-prototype dist/ImmichClone-0.1.39-prototype-x64-setup.exe dist/SHA256SUMS.txt --repo aataat12/immich-clone --target $env:GITHUB_SHA --prerelease --title 'Immich Clone0.1.39 prototype' --notes-file $releaseNotes
           if ($LASTEXITCODE -ne 0) { throw 'Release publication failed' }
