@@ -483,3 +483,15 @@ filesystem operations remain in SEC-03's full boundary inventory and integrated
 race/closure review; do not silently drop them or move findings to another ID.
 Other remaining Setup/code-permission/uninstall paths remain unchanged. No feature
 or Group3 expansion, new dependency/provider/version/release, charge or PC action.
+
+
+### First initialization gate result
+
+Run41872557865/source603270e486badbf30873d6ad592071dee1ae6724,
+job126723288185: all actual elevated-token/direct/junction/hard-link refusal and
+outside byte/descriptor controls passed. The workflow then failed its status check
+because the PowerShell test used Start-Process ExitCode assertions but did not
+explicitly return a successful script exit status. Test-only correction adds exit0
+after successful try/finally; exceptions still terminate and candidate exit1
+assertions are unchanged. No application policy change or weakened assertion.
+Native/actual Setup/SEC01 steps were skipped; this is not full integration acceptance.

@@ -85,3 +85,5 @@ try {
  foreach($path in $junctions){if(Test-Path -LiteralPath $path){[IO.Directory]::Delete($path)}}
  Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
 }
+
+exit 0
