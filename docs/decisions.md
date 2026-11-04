@@ -392,3 +392,12 @@
   staged exact-hash/no-write/delete-sharing trust. Require completion receipts,
   actual-file private descriptors, physical-root overlap checks and fail-closed
   partial recovery. No whole SEC-03 closure or new product release from this slice.
+
+- November4: source d74c6ee passed first focused Windows installer integration
+  run41842717775/job126618212032. Actual fixed-set snapshot/verified restore,
+  partial-copy refusal, private actual-handle policies, real DOS alias controls,
+  three staged payload mutation denials, injected Setup rollback and existing
+  SEC-01 compatibility passed. The authorized worker reviewed and contributed
+  independent controls. Retain source/runtime/placeholder limits in the evidence;
+  no original SEC-03 closure, public release or Win10 certification. Next checkpoint
+  is remaining privileged root/ACL/diagnostic operations. No workers remain active.

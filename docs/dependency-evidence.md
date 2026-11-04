@@ -860,8 +860,8 @@ classification in security-priority-groups.md; no Group2/3 investigation here.
 CGO=0/GOAMD64=v1. It is a bundled fixed-action executable, not an end-user SDK,
 new service, listener, user account, runtime download or native provider/model.
 Existing Go/x/sys distribution notices apply. Inno verifies its compiled payload
-hash and pins the staged bytes; the installed-payload canary inventory and Windows
-Go scan now include this executable. Actual held-object descriptors and normalized
-volume-GUID names use existing Windows APIs. Cross-compilation/vet passed; focused
-actual helper/privacy/alias and production Setup execution is pending before any
-integration acceptance. These APIs do not establish Windows10 behavior from Server.
+hash and pins the staged bytes; the configured installed-payload canary inventory and Windows
+Go scan now include this executable (their full release execution remains pending). Actual held-object descriptors and normalized
+volume-GUID names use existing Windows APIs. Cross-compilation/vet and focused actual helper/privacy/alias plus production Setup
+execution passed in run41842717775/source d74c6ee; see filesystem-boundary-milestone7.md
+for exact operation evidence and remaining nonconverted paths/full release gates. These APIs do not establish Windows10 behavior from Server.

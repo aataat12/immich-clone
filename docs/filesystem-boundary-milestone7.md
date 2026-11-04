@@ -1,8 +1,8 @@
 # SEC-03 handle-bound filesystem candidate
 
 The existing stationary checks do not prevent replacement between validation and
-privileged filesystem access. `internal/winfs` is a candidate primitive, currently
-not imported by the application or installer. No new external dependency, model,
+privileged filesystem access. `internal/winfs` began as an isolated primitive; the fixed installer snapshot/
+rollback integration below has now passed focused Windows execution. No new external dependency, model,
 schema, runtime prerequisite or product version is selected.
 
 The candidate opens a local drive root, then opens each directory component using
@@ -140,3 +140,47 @@ is requested, and the original count remains 4 closed / 4 open.
 Primary API checks: Microsoft [held-object security](https://learn.microsoft.com/en-us/windows/win32/api/aclapi/nf-aclapi-getsecurityinfo)
 and [normalized handle paths](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfinalpathnamebyhandlew).
 There is no string-path fallback if a normalized volume-GUID path query fails.
+
+
+## Accepted focused installer copy integration
+
+[Run 41842717775](https://github.com/aataat12/immich-clone/actions/runs/41842717775),
+source `d74c6ee47d2750d90457a32e3f88119e7a8eb0af`, job `126618212032`: **PASS**,
+first focused execution of this integration on Windows Server2022 x64. The worker
+contributed the independent privacy/inheritance/physical-alias tests and reviewed
+staging, readiness and recovery ordering; the primary agent inspected actual logs.
+
+The new file-set tests passed actual three-file snapshot/restore; interruption
+after the first copy with readiness invalidation and refused recovery; unsafe third
+snapshot/live targets before earlier truncation; corrupt snapshot and replaced-root
+refusal; protected Everyone-readable child/receipt/source refusal; required root
+inheritance; and real DOS aliases hiding either direction of physical role overlap.
+Both packages passed vet. The underlying NTFS test repeated 200 held leaf/ancestor
+refusals and 2,000 concurrent write attempts, with 219 actual link swaps and unchanged
+outside bytes (one runner interleaving; not a universal race proof).
+
+Actual production Inno execution observed and attempted modification of all three
+staged helper payloads, including installer-files.exe. Elevated and separate real
+standard-user writes were denied while Setup held its sharing locks. Existing
+custom-path LocalService preparation, exact snapshots and originals/code preservation
+passed. An actual injected post-initialization Setup failure invoked verified native
+restore, returned a healthy service only afterward and emitted one new rollback_complete
+record; all three readiness entries, executable/access-code/original hashes passed.
+Unsafe code-root/script/executable/provider refusal, protected custom upgrade,
+Program Files install/uninstall and the full existing SEC-01 suite passed.
+
+This fixture used the production Inno script/current runtime with minimal disposable
+provider placeholders. It was not the genuine prior-version/full-provider combined
+release gate; no fixture installer was published. Root/ACL creation and propagation,
+logging/fallback, elevated initialization, Inno publication and uninstall filesystem
+operations remain outside this conversion. Partial restore is still a recovery-required
+failure, not an atomic transaction. Source ACLs, ownership, attributes and timestamps
+are not copied; data destination permissions are retained/inherited as documented.
+SEC-03 remains open and the original status stays **4 closed / 4 open**. The published
+0.1.39 and earlier accepted unpublished 0.1.41 installer artifacts are unchanged.
+No PC action, dependency install, new release, paid service or additional worker.
+
+Next checkpoint: convert the remaining privileged root/ACL and diagnostic writes
+without weakening inherited-rights policy; then test those real operations and the
+applicable combined prior-release/provider/recovery gate. Reuse this passing evidence
+unless relevant source, version or a reported failure changes.

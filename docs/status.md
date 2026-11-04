@@ -17,19 +17,21 @@ Setup/token controls and combined genuine prior-release/full-provider/rollback
 acceptance in an unpublished 0.1.41 candidate: [evidence](installer-trust-milestone7.md).
 SEC-03/05/06/08 remain open; milestone 7 is in progress. 0.1.39 is still the
 published prototype; no candidate installation is requested. Signing is
-unconfigured; no new costs, workers or product installer were introduced. A
+unconfigured; no new costs or published product installer were introduced. A
 dedicated focused gate and the combined Windows Server candidate gate passed.
 Candidate publication is disabled; this does not certify final Windows 10 acceptance. Final Windows 10 clean-install/reboot/endurance acceptance remains open.
 
-### SEC-03 next checkpoint
+### SEC-03 installer copy checkpoint
 
-A candidate handle-relative filesystem component passed actual Windows NTFS
-copy/link, 200 pinned directory/ancestor replacement and 2,000 concurrent write
-controls: [evidence](filesystem-boundary-milestone7.md). It is not yet imported by
-the application or installer. SEC-03 stays open; status remains 4 closed / 4 open.
-Next work is privileged installer integration and its account/race/rollback gates.
-The user permits normal checkpoint handoffs; this component checkpoint is complete,
-with no workers or scheduled continuation running and no local action requested.
+The fixed three-file snapshot/rollback helper now uses held directories/files,
+checks actual private descriptors and physical role overlap, and publishes readiness
+only after byte verification/Sync/Close. Focused Windows run41842717775 passed native
+failure/privacy/alias controls, real production Setup injected failure/recovery,
+protected custom/Program Files and existing SEC-01 compatibility. [Exact evidence](filesystem-boundary-milestone7.md#accepted-focused-installer-copy-integration).
+One user-authorized worker independently reviewed the integration and added tests.
+SEC-03 remains open for root/ACL, logging, initialization, Inno publication/uninstall
+and full combined release gates. Count stays4 closed/4 open. No new installer or
+PC action is requested. This checkpoint is complete; no workers/CI are left running.
 
 ## Historical checkpoints (superseded where later acceptance applies)
 
