@@ -1,4 +1,5 @@
 name: Installed bounded mixed import endurance
+# Exercise the explicit production library visibility contract on bounded gallery reads.
 on:
   push:
     paths:

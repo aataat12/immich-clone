@@ -37,7 +37,7 @@ const watchdog=setTimeout(()=>{console.error('Endurance phase exceeded twelve mi
    fs.writeFileSync(record,JSON.stringify(saved));console.log('PASS: '+phase+' installed browser batch, 2048 receipts, exact bytes/counts and bounded history pages; '+saved.timings.at(-1).copy_ms+' ms');
   }else if(phase==='verify'){
    const expected=new Map(entries.map(e=>[e.id,e])),started=Date.now();let assets;
-   const scan=async()=>{const all=[];let cursor='';do{const p=await get('/api/gallery?sort=name&limit=60'+(cursor?'&after='+encodeURIComponent(cursor):''));assert.equal(p.total,1536);assert(p.assets.length<=60);all.push(...p.assets);cursor=p.next}while(cursor);assert.equal(all.length,1536);assert.equal(new Set(all.map(a=>a.id)).size,1536);return all};
+   const scan=async()=>{const all=[];let cursor='';do{const p=await get('/api/gallery?sort=name&visibility=library&limit=60'+(cursor?'&after='+encodeURIComponent(cursor):''));assert.equal(p.total,1536);assert(p.assets.length<=60);all.push(...p.assets);cursor=p.next}while(cursor);assert.equal(all.length,1536);assert.equal(new Set(all.map(a=>a.id)).size,1536);return all};
    const until=Date.now()+600000;
    while(Date.now()<until){try{assets=await scan()}catch(e){if(String(e).includes('409')){await sleep(250);continue}throw e}const failed=assets.filter(a=>a.preview==='failed');assert.deepEqual(failed.map(a=>a.name),[],'Actual media preview failed');if(assets.every(a=>a.preview==='ready'))break;await sleep(1000)}
    assert(assets&&assets.every(a=>a.preview==='ready'&&a.width>0&&a.height>0),'All mixed previews must drain after service restart');
