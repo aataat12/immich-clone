@@ -32,6 +32,8 @@ func main() {
 	}
 	var err error
 	switch *action {
+	case "audit-code":
+		err = installerfiles.AuditCode(*app)
 	case "audit-cleanup":
 		err = installerfiles.AuditCleanup(*app, *data)
 	case "cleanup":

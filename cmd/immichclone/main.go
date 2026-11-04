@@ -136,9 +136,33 @@ func main() {
 		fmt.Println(version)
 		return
 	}
-	if e := checkInitializationMode(*mode); e != nil {
-		fmt.Fprintln(os.Stderr, "Elevated initialization is refused; use the installer to initialize under LocalService.")
+	if !validMode(*mode) {
+		fmt.Fprintln(os.Stderr, "Unknown application mode refused before opening files.")
 		os.Exit(1)
+	}
+	if e := checkInitializationMode(*mode); e != nil {
+		message := "Elevated initialization is refused; use the installer to initialize under LocalService."
+		if *mode == "serve" {
+			message = "Elevated interactive serving is refused; use the installed LocalService service."
+		}
+		if *mode == "service" {
+			message = "Service mode requires the installed LocalService service and Service Control Manager."
+		}
+		fmt.Fprintln(os.Stderr, message)
+		os.Exit(1)
+	}
+	if *mode == "show-code" {
+		if !filepath.IsAbs(*data) {
+			fmt.Fprintln(os.Stderr, "An absolute existing application data directory is required.")
+			os.Exit(1)
+		}
+		code, e := readExistingAccessCode(*data)
+		if e != nil {
+			fmt.Fprintln(os.Stderr, "Existing access code unavailable; no state was initialized.")
+			os.Exit(1)
+		}
+		fmt.Println(code)
+		return
 	}
 	channel := "commands"
 	if *mode == "service" || *mode == "serve" {
@@ -219,12 +243,6 @@ func main() {
 			log.Fatal("Access-code initialization failed")
 		}
 		fmt.Println("Application state initialized")
-	case "show-code":
-		code, e := web.AccessCode(*data)
-		if e != nil {
-			log.Fatal("Access code unavailable")
-		}
-		fmt.Println(code)
 	case "verify":
 		if e = s.Verify(); e != nil {
 			diagnostics.Record("verify", "failed", e, 0, 0, 0)

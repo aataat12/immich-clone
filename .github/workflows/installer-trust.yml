@@ -11,6 +11,8 @@ on:
       - 'internal/winfs/**'
       - 'cmd/installerfiles/**'
       - 'cmd/immichclone/init_*.go'
+      - 'cmd/immichclone/main.go'
+      - 'cmd/immichclone/existing_code*.go'
       - 'scripts/Test-ElevatedInitialization.ps1'
   workflow_dispatch:
 permissions:

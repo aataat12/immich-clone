@@ -907,3 +907,33 @@ combined genuine prior-release/full-provider/recovery closure1. SEC03 remains
 open, original security4 closed/4 open. No new dependency/provider/schema/version/
 release/cost, feature or Group3 work. Keep published0.1.39; no local PC action.
 Server execution does not certify Windows10. Worker/CI complete; paused here.
+
+### Integrated boundary tranche: command entrypoints and stationary metadata (pending)
+
+Review found the remaining integrated row includes unfinished implementation, not
+just execution. Do NOT blanket-refuse elevated recovery commands: published
+recovery-guide restores/verifies in admin PowerShell and installed installer SID
+is RX. This would break recovery. Current bounded patch: elevated interactive
+serve and direct/non-LocalService service mode refuse before diagnostics; service
+requires actual SCM context+LocalService token; unknown modes refuse before files.
+show-code reads only an existing bounded validated code through held nofollow
+root/leaf handles on Windows, never Store.Open/AccessCode creation/diagnostics.
+Admin verify/backup/restore are unchanged and explicitly not closed yet.
+
+Native read-only code audit now precedes Prepare service stop and builtin Inno
+metadata writes, including stationary hardlink counts omitted by old PS audit.
+Actual valid retained journal hardlink test must preserve outside bytes and PID.
+Stronger audit requires split optional-note test: stationary alias refuses early;
+separate no-alias injected failure must actually record verified-health failure
+and rollback, not pass merely from some earlier nonzero Setup exit. Worker
+independent early-mode/no-write/show-code tests exercise real aliases and retain
+original init controls, without printing access-code contents. Windows build/vet
+and Linux command tests passed; actual Windows gates pending.
+
+Still original SEC03 work: safe admin verify/backup reads, supervisor AND pre-main
+restore-worker path publication/cleanup, durable full-payload intent BEFORE first
+overwrite and interrupted/mixed recovery, real-account concurrent metadata-leaf
+substitution, and combined genuine prior0.1.39/full-provider recovery. Temp final
+receipt currently cannot recover mixed partial payload after hard kill. Previous
+two-pass forecast undercounted implementation; do not call this tranche full
+integrated closure or silently remove these requirements from SEC03.

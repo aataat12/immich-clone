@@ -30,6 +30,17 @@ func AuditCleanup(app, data string) (err error) {
 	return auditCleanupDirectory(root, true)
 
 }
+
+// AuditCode is a stationary read-only audit, including type/link-count checks
+// before Setup's builtin metadata overwrite. Concurrent substitution is separate.
+func AuditCode(app string) (err error) {
+	d, e := winfs.OpenDirectory(app)
+	if e != nil {
+		return e
+	}
+	defer func() { err = errors.Join(err, d.Close()) }()
+	return auditCleanupDirectory(d, true)
+}
 func auditCleanupDirectory(d *winfs.Directory, root bool) (err error) {
 	if e := trustedDirectory(d); e != nil {
 		return e

@@ -174,6 +174,26 @@ try {
     $installedPayloadHashes = @{}
     foreach ($leaf in $payloadNames) { $installedPayloadHashes[$leaf] = (Get-FileHash -LiteralPath (Join-Path $currentApp $leaf)).Hash }
     Assert $true 'actual Setup publishes every fixed root and nested provider fixture through the native payload helper'
+    # Stationary metadata aliases must be refused BEFORE Inno overwrites its
+    # retained journal, not merely noticed by the later code permission phase.
+    $journal = Join-Path $currentApp 'unins000.dat'
+    $journalOutside = Join-Path $root 'outside-valid-uninstaller-journal.dat'
+    $journalAcl = Get-Acl -LiteralPath $journal
+    Copy-Item -LiteralPath $journal -Destination $journalOutside
+    $journalHash = (Get-FileHash -LiteralPath $journalOutside).Hash
+    $metadataPid = (Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").ProcessId
+    Remove-Item -LiteralPath $journal
+    New-Item -ItemType HardLink -Path $journal -Target $journalOutside | Out-Null
+    try {
+        Assert ((Run-Setup $currentApp $state) -ne 0) 'actual Setup refuses a hard-linked retained Inno metadata journal before publication'
+        Assert ((Get-FileHash -LiteralPath $journalOutside).Hash -eq $journalHash -and (Get-FileHash -LiteralPath $journal).Hash -eq $journalHash) 'refused metadata preparation leaves outside and selected journal bytes unchanged'
+        Assert ((Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").ProcessId -eq $metadataPid) 'hard-linked metadata refusal precedes service stop and restart'
+        Assert ((Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash) 'metadata alias refusal preserves managed original bytes'
+    } finally {
+        Remove-Item -LiteralPath $journal
+        Copy-Item -LiteralPath $journalOutside -Destination $journal
+        Set-Acl -LiteralPath $journal -AclObject $journalAcl
+    }
     # A stopped-service native ACL acquisition can still meet an unrelated held
     # writer. Refuse before permission writes, verify final policy, and restart
     # the prior service honestly rather than leaving a healthy installation down.
@@ -200,13 +220,19 @@ try {
     $noteHash = (Get-FileHash -LiteralPath $noteOutside).Hash
     $notePath = Join-Path $currentApp 'install-diagnostic.txt'
     New-Item -ItemType HardLink -Path $notePath -Target $noteOutside | Out-Null
+    $notePid = (Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").ProcessId
+    Assert ((Run-Setup $currentApp $state) -ne 0) 'actual preparation refuses a hard-linked optional note before service stop'
+    Assert ((Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").ProcessId -eq $notePid -and (Get-FileHash -LiteralPath $noteOutside).Hash -eq $noteHash) 'early optional-note alias refusal preserves prior service and outside bytes'
+    Remove-Item -LiteralPath $notePath
+    $healthFailureBefore = @(Get-Content -LiteralPath $installerLog | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object { $_.event -eq 'installer_failed' -and $_.stage -eq 'verify service health' }).Count
     try {
         $env:IMMICH_INSTALL_TEST_FAILURE = '1'
         Assert ((Run-Setup $currentApp $state) -ne 0) 'actual candidate Setup rejects injected post-initialization failure'
     } finally { Remove-Item Env:IMMICH_INSTALL_TEST_FAILURE -ErrorAction SilentlyContinue }
     Wait-Health
-    Assert ((Get-FileHash -LiteralPath $noteOutside).Hash -eq $noteHash) 'refused hard-linked failure note preserves outside bytes and does not prevent real Setup rollback'
-    Remove-Item -LiteralPath $notePath
+    Assert ((Get-FileHash -LiteralPath $noteOutside).Hash -eq $noteHash) 'injected post-health rollback preserves prior outside sentinel bytes'
+    $healthFailureAfter = @(Get-Content -LiteralPath $installerLog | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object { $_.event -eq 'installer_failed' -and $_.stage -eq 'verify service health' }).Count
+    Assert ($healthFailureAfter -eq $healthFailureBefore+1) 'actual injected failure reaches verified service health before rollback rather than passing on an earlier refusal'
     $rollbackAfterCount = @(Get-Content -LiteralPath $installerLog | Where-Object { $_ -match '"event":"rollback_complete"' }).Count
     Assert ($rollbackAfterCount -eq $rollbackBeforeCount+1) 'verified native restore completes before management reports rollback and service health'
     Assert ((Get-FileHash (Join-Path $currentApp 'immichclone.exe')).Hash -eq $priorBinaryHash -and (Get-FileHash (Join-Path $state 'access-code.txt')).Hash -eq $codeHash -and (Get-FileHash (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash) 'actual failed Setup restores code and preserves access code and original bytes'

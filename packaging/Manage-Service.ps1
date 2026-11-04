@@ -61,6 +61,7 @@ try {
     Assert-TrustedCodeTree $PSScriptRoot
     Assert-TrustedCodeTree $AppDir
     Assert-TrustedCodeTree (Split-Path -Parent $BoundaryHelper)
+    if ($Action -eq 'Prepare' -and (Test-Path -LiteralPath $AppDir)) { Checked $BoundaryHelper @('-action','audit-code','-app-dir',$AppDir) }
     Assert-NoReparsePath $AppDir
     Assert-NoReparsePath $DataDir
     Assert-NoReparsePath $logRoot
