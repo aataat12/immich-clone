@@ -1,5 +1,5 @@
 name: Application originals slice
-# Combined recovery acceptance includes the Windows progress-file sharing fix.
+# Milestones 2/6 acceptance includes explicit installed-media readiness polling.
 on:
   push:
     paths:
