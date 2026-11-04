@@ -68,3 +68,8 @@ https://github.com/PowerShell/PowerShell/blob/master/src/Microsoft.PowerShell.Co
 ## Later bounded scale proofs
 
 The [ZIP64 entry-count acceptance](backup-zip64-entry-count-acceptance.md) crossed 65,535 entries with 65,536 tiny originals and an independent restore. The separate [large byte-volume acceptance](backup-large-volume-acceptance.md) created an actual 4,296,346,455-byte archive from two originals, exercised mid-copy cancellation/cleanup/retry, then independently restored with default budgets and full hash checks. Both passed on Windows Server 2022 without production changes. These library proofs do not establish installed large-library endurance, forced backup service termination, physical storage outage behavior or Windows 10 compatibility.
+
+
+## Actual extraction interruption checkpoint
+
+[Windows run 41743990678](https://github.com/aataat12/immich-clone/actions/runs/41743990678), source `e9666959d011f43c8734b1d2445fd05be5a2448a`, job `126292284233`, passed actual mid-original extraction cancellation and independent retry. Cancellation was triggered at 17,825,792 of 536,870,912 extracted bytes; no target/staging remained and the archive was unchanged. Default-budget retry with source state offline passed full regenerated/source/restored hashes, exact size, catalog alias and required secret checks. See [restore-interruption-acceptance.md](restore-interruption-acceptance.md). This is supervised context cancellation, not controller crash or power loss; no production change or new release was needed.
