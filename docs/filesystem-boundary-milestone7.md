@@ -306,3 +306,29 @@ closure or Windows10 certification. Counts remain4 closed/4 open; published0.1.3
 unchanged. No new dependencies/features/costs, release, PC action or running
 workers/CI. Next checkpoint: handle-bound existing-tree ACL normalization with
 explicit descendant/inheritance semantics, without widening this scope.
+
+
+## Existing-tree ACL pass 1: single-object API proof candidate
+
+The user defines a pass as one session ending in a completion/pause update.
+The planning estimate was two passes for existing-tree ACL handling. This first
+pass isolates a required native API contract before changing production installer
+ACL behavior: an existing directory is opened once with MAXIMUM_ALLOWED through
+a held parent, checked no-follow, and receives a protected DACL through its held
+handle. Microsoft documents suppression of implicit child propagation for that
+access mode. Actual Windows execution must confirm root change, unchanged existing
+child ACLs and bytes, and future-child inheritance; documentation is insufficient.
+The worker independently reviews and implements adversarial/normal tests.
+
+No installer call site or ACL/refusal policy is changed in this pass. The component
+is not reachable through installed helper actions. Do not use this primitive as
+proof of whole-tree normalization: a following integration must pin/audit actual
+descendants, preserve safe explicit/protected ACEs, replace only inherited rights
+as the existing policy intends, handle service sharing honestly, and prove failure
+recovery. Unsafe explicit children must still refuse before mutations; do not
+protect all children or silently repair unrelated explicit permissions.
+
+The focused filesystem workflow supplies this primitive proof; a filesystem-only
+commit skips the larger Setup gate. No dependency, feature, provider, version,
+public installer or Group3 work is added. SEC-03 remains open.
+Reference: Microsoft [SetSecurityInfo](https://learn.microsoft.com/en-us/windows/win32/api/aclapi/nf-aclapi-setsecurityinfo).
