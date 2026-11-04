@@ -1024,3 +1024,17 @@ immutability and ACL restoration before resuming service. Local Windows cross
 build/vet and focused Linux baseline backup tests passed; actual Windows pending.
 Five-item forecast unchanged until accepted execution. No new feature/provider/
 dependency/schema/version/release/cost or Group3 work.
+
+First offline run41912052062/source017b5130/job126861893332 passed native
+read-only/source+output alias/writer/privatearchive/failure/independentrestore
+tests, actual RX account cannot-write+verify+backup, exact source/ACL/namespace
+no-log checks, archiveACL+manifest checks and administrator independent restore/
+verify. It failed ONLY fixture teardown's original SDDL comparison after temporary
+ACL grants were reapplied. Keep this as failed acceptance, not product success.
+Test-only correction avoids installed state/executable ACL mutation entirely:
+adminverify/backup operate actual installed source; ordinary account operates a
+byte/namespace-identical stopped-library copy with RX. Exact source, clone and
+installed executable checks remain, admin recovery and privateZIP checks remain.
+No product bytes/assertions are weakened. Full gate rerun still required.
+Automatic bounded catalog-scale baseline41912052098 also completed success; no
+new scale work or repeated scale run is requested.

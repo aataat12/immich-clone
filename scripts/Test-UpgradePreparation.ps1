@@ -174,16 +174,18 @@ try {
     $installedPayloadHashes = @{}
     foreach ($leaf in $payloadNames) { $installedPayloadHashes[$leaf] = (Get-FileHash -LiteralPath (Join-Path $currentApp $leaf)).Hash }
     Assert $true 'actual Setup publishes every fixed root and nested provider fixture through the native payload helper'
-    # A real separate non-administrator account must verify and back up installed
-    # source with RX only. This catches accidental Store.Open/diagnostic/staging
-    # writes that an administrator-only acceptance fixture would conceal.
-    $offlineExe = Join-Path $currentApp 'immichclone.exe'
+    # Keep installed source ACLs untouched. An exact byte copy of its stopped
+    # library is separately configured RX-only for a real non-administrator.
+    # Administrator CLI commands also exercise the original installed library.
+    $offlineInstalledExe = Join-Path $currentApp 'immichclone.exe'
+    $offlineExe = Join-Path $root 'offline-current-runtime.exe'
+    $offlineSource = Join-Path $root 'ordinary readonly library copy'
     $offlineOutput = Join-Path $root 'ordinary offline output'
     $offlineLogs = Join-Path $offlineOutput 'logs must remain absent'
     $offlineArchive = Join-Path $offlineOutput 'independent-readonly.zip'
+    $offlineAdminArchive = Join-Path $offlineOutput 'administrator-original.zip'
     $offlineRestored = Join-Path $root 'independent readonly recovery'
-    $offlineSavedAcls = @{}
-    $offlineExeAcl = Get-Acl -LiteralPath $offlineExe
+    $offlineInstalledExeAcl = (Get-Acl -LiteralPath $offlineInstalledExe).Sddl
     $offlineCredential = [Management.Automation.PSCredential]::new(($env:COMPUTERNAME+'\'+$ordinaryUser),(ConvertTo-SecureString $ordinaryPassword -AsPlainText -Force))
     $script:offlineAttempt = 0
     function Offline-StateSnapshot([string]$Path) {
@@ -217,20 +219,43 @@ try {
     }
     Stop-Service ImmichClone
     (Get-Service ImmichClone).WaitForStatus('Stopped',[TimeSpan]::FromSeconds(30))
-    $offlineBeforeGrant = Offline-StateSnapshot $state
-    foreach ($item in (@((Get-Item -LiteralPath $state -Force)) + @(Get-ChildItem -LiteralPath $state -Force -Recurse))) { $offlineSavedAcls[$item.FullName] = Get-Acl -LiteralPath $item.FullName }
+    $offlineInstalledBefore = Offline-StateSnapshot $state
     try {
         New-Item -ItemType Directory -Path $offlineOutput | Out-Null
         Native icacls @($offlineOutput,'/inheritance:r','/grant:r','*S-1-5-18:(OI)(CI)F','*S-1-5-32-544:(OI)(CI)F',('*'+$ordinarySid+':(OI)(CI)F'))
-        Native icacls @($state,'/grant',('*'+$ordinarySid+':(OI)(CI)RX'),'/t')
+        Copy-Item -LiteralPath $offlineInstalledExe -Destination $offlineExe
+        Assert ((Get-FileHash -LiteralPath $offlineExe).Hash -eq (Get-FileHash -LiteralPath $offlineInstalledExe).Hash) 'offline process uses exact installed runtime bytes without changing installed executable permissions'
         Native icacls @($offlineExe,'/grant',('*'+$ordinarySid+':RX'))
-        Assert (![UpgradeWriteProbe]::CanWrite($ordinaryUser,$ordinaryPassword,(Join-Path $state 'catalog.db')) -and ![UpgradeWriteProbe]::CanWrite($ordinaryUser,$ordinaryPassword,(Join-Path $state ('originals/'+$asset.id)))) 'actual offline account cannot modify source catalog or original with its RX grant'
-        $offlineBefore = Offline-StateSnapshot $state
-        $verified = Run-OfflineProbe 'verify' $state '' $offlineCredential
-        Assert ($verified.Code -eq 0 -and $verified.Output -eq 'All catalogued originals passed SHA256 verification' -and !$verified.Error) 'separate RX-only non-administrator verifies the installed library successfully'
-        $backedUp = Run-OfflineProbe 'backup' $state $offlineArchive $offlineCredential
-        Assert ($backedUp.Code -eq 0 -and $backedUp.Output -eq 'Consistent backup created' -and !$backedUp.Error) 'separate RX-only non-administrator creates a complete installed-library backup without source write authority'
-        Assert ((Offline-StateSnapshot $state) -eq $offlineBefore -and !(Test-Path -LiteralPath $offlineLogs)) 'actual RX verify and backup preserve all source hashes descriptors namespace and create no selected diagnostic directory'
+        $adminVerified = Run-OfflineProbe 'verify' $state '' $null
+        Assert ($adminVerified.Code -eq 0 -and $adminVerified.Output -eq 'All catalogued originals passed SHA256 verification' -and !$adminVerified.Error) 'administrator verifies the original installed library without source repair or writes'
+        $adminBackedUp = Run-OfflineProbe 'backup' $state $offlineAdminArchive $null
+        Assert ($adminBackedUp.Code -eq 0 -and $adminBackedUp.Output -eq 'Consistent backup created' -and !$adminBackedUp.Error) 'administrator backs up the original installed library without modifying source state'
+        Assert ((Offline-StateSnapshot $state) -eq $offlineInstalledBefore -and !(Test-Path -LiteralPath $offlineLogs)) 'administrator verify and backup preserve original installed source hashes descriptors namespace and selected logs'
+        Copy-Item -LiteralPath $state -Destination $offlineSource -Recurse
+        $installedItems = @((Get-Item -LiteralPath $state -Force)) + @(Get-ChildItem -LiteralPath $state -Force -Recurse)
+        $copiedItems = @((Get-Item -LiteralPath $offlineSource -Force)) + @(Get-ChildItem -LiteralPath $offlineSource -Force -Recurse)
+        Assert ($installedItems.Count -eq $copiedItems.Count) 'RX fixture copy preserves the complete installed library namespace'
+        foreach ($item in $installedItems) {
+            $relative = $item.FullName.Substring($state.Length).TrimStart('\')
+            $copyPath = $offlineSource
+            if ($relative) { $copyPath = Join-Path $offlineSource $relative }
+            Assert ((Test-Path -LiteralPath $copyPath) -and (Get-Item -LiteralPath $copyPath -Force).PSIsContainer -eq $item.PSIsContainer) 'RX fixture copy preserves each installed library object type'
+            if (!$item.PSIsContainer) { Assert ((Get-FileHash -LiteralPath $copyPath).Hash -eq (Get-FileHash -LiteralPath $item.FullName).Hash) 'RX fixture copy preserves each installed library file byte before permission setup' }
+        }
+        foreach ($item in (@((Get-Item -LiteralPath $offlineSource -Force)) + @(Get-ChildItem -LiteralPath $offlineSource -Force -Recurse) | Sort-Object FullName)) {
+            $cloneAcl = Get-Acl -LiteralPath $item.FullName
+            if ($item.PSIsContainer) { $clonePolicy = 'D:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;0x1200a9;;;'+$ordinarySid+')' }
+            else { $clonePolicy = 'D:P(A;;FA;;;SY)(A;;FA;;;BA)(A;;0x1200a9;;;'+$ordinarySid+')' }
+            $cloneAcl.SetSecurityDescriptorSddlForm($clonePolicy,[Security.AccessControl.AccessControlSections]::Access)
+            Set-Acl -LiteralPath $item.FullName -AclObject $cloneAcl
+        }
+        Assert (![UpgradeWriteProbe]::CanWrite($ordinaryUser,$ordinaryPassword,(Join-Path $offlineSource 'catalog.db')) -and ![UpgradeWriteProbe]::CanWrite($ordinaryUser,$ordinaryPassword,(Join-Path $offlineSource ('originals/'+$asset.id)))) 'actual offline account cannot modify copied source catalog or original with its RX-only policy'
+        $offlineBefore = Offline-StateSnapshot $offlineSource
+        $verified = Run-OfflineProbe 'verify' $offlineSource '' $offlineCredential
+        Assert ($verified.Code -eq 0 -and $verified.Output -eq 'All catalogued originals passed SHA256 verification' -and !$verified.Error) 'separate RX-only non-administrator verifies the copied installed library successfully'
+        $backedUp = Run-OfflineProbe 'backup' $offlineSource $offlineArchive $offlineCredential
+        Assert ($backedUp.Code -eq 0 -and $backedUp.Output -eq 'Consistent backup created' -and !$backedUp.Error) 'separate RX-only non-administrator backs up the copied installed library without source write authority'
+        Assert ((Offline-StateSnapshot $offlineSource) -eq $offlineBefore -and (Offline-StateSnapshot $state) -eq $offlineInstalledBefore -and !(Test-Path -LiteralPath $offlineLogs)) 'actual RX verify and backup preserve all source hashes descriptors namespace and create no selected diagnostic directory'
         $archiveAcl = Get-Acl -LiteralPath $offlineArchive
         $archiveRaw = [Security.AccessControl.RawSecurityDescriptor]::new($archiveAcl.GetSecurityDescriptorBinaryForm(),0)
         Assert (($archiveRaw.ControlFlags -band [Security.AccessControl.ControlFlags]::DiscretionaryAclProtected) -ne 0) 'ordinary-user-created archive has a protected private descriptor'
@@ -259,11 +284,9 @@ try {
         Assert ($restored.Code -eq 0 -and $restored.Output -eq 'Restore verified and published; previews queued for regeneration') 'existing administrator recovery workflow restores the ordinary-user read-only backup into a distinct new library'
         $restoredVerified = Run-OfflineProbe 'verify' $offlineRestored '' $null
         Assert ($restoredVerified.Code -eq 0 -and $restoredVerified.Output -eq 'All catalogued originals passed SHA256 verification') 'administrator recovery verification remains compatible with the read-only command path'
-        Assert ((Get-FileHash -LiteralPath $offlineArchive).Hash -eq $archiveHashBeforeRestore -and (Get-FileHash -LiteralPath (Join-Path $offlineRestored ('originals/'+$asset.id))).Hash -eq $originalHash -and (Offline-StateSnapshot $state) -eq $offlineBefore) 'independent restore preserves the archive original library and exact restored original bytes'
+        Assert ((Get-FileHash -LiteralPath $offlineArchive).Hash -eq $archiveHashBeforeRestore -and (Get-FileHash -LiteralPath (Join-Path $offlineRestored ('originals/'+$asset.id))).Hash -eq $originalHash -and (Offline-StateSnapshot $offlineSource) -eq $offlineBefore -and (Offline-StateSnapshot $state) -eq $offlineInstalledBefore) 'independent restore preserves the archive original installed library RX source copy and exact restored original bytes'
     } finally {
-        foreach ($path in ($offlineSavedAcls.Keys | Sort-Object Length)) { Set-Acl -LiteralPath $path -AclObject $offlineSavedAcls[$path] }
-        Set-Acl -LiteralPath $offlineExe -AclObject $offlineExeAcl
-        Assert ((Offline-StateSnapshot $state) -eq $offlineBeforeGrant) 'offline RX fixture restores every original source descriptor hash and directory entry before resuming service'
+        Assert ((Offline-StateSnapshot $state) -eq $offlineInstalledBefore -and (Get-Acl -LiteralPath $offlineInstalledExe).Sddl -eq $offlineInstalledExeAcl) 'offline fixture leaves every original installed source descriptor hash directory entry and executable permission unchanged before resuming service'
         Start-Service ImmichClone
         Wait-Health
     }
