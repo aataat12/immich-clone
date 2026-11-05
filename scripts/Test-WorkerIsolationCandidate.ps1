@@ -24,6 +24,8 @@ try {
  New-Service -Name $name -BinaryPathName ('"'+(Join-Path $root 'canary.exe')+'" -mode candidate-service -service "'+$name+'" -root "'+$root+'"') -Credential $cred|Out-Null;$created=$true;Start-Service $name
  $report=Join-Path $root 'control/result.json';for($i=0;$i-lt 100;$i++){if(Test-Path $report){break};Start-Sleep -Milliseconds 300};Assert(Test-Path $report) 'restricted candidate completed'
  $r=Get-Content $report -Raw|ConvertFrom-Json
+ Write-Output ('Candidate report: '+($r|ConvertTo-Json -Compress))
+ Assert($r.probe_complete) 'restricted launcher completed'
  foreach($k in @('service_identity_localservice','restricted_identity_localservice','restricted_input_read_allowed','restricted_scratch_write_allowed','restricted_state_secret_denied','restricted_catalog_denied','restricted_original_write_denied','restricted_private_read_denied','restricted_process_spawn_denied','job_peak_within_configured_bound')){Assert($r.$k) $k}
  Assert((Get-Content (Join-Path $root 'state/original-canary.bin') -Raw) -eq 'synthetic-original-before-probe') 'original canary preserved'
 } finally {if($created){Stop-Service $name -Force -ErrorAction SilentlyContinue;& sc.exe delete $name|Out-Null};if(Test-Path $root){Remove-Item $root -Recurse -Force}}
