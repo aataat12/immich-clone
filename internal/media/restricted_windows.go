@@ -34,7 +34,7 @@ var (
 func restrictedToken() (token windows.Token, err error) {
 	defer func() { if recovered := recover(); recovered != nil { token = 0; err = fmt.Errorf("token panic: %v", recovered) } }()
 	var base windows.Token
-	if err := windows.OpenProcessToken(windows.CurrentProcess(), windows.TOKEN_DUPLICATE|windows.TOKEN_QUERY, &base); err != nil { return 0, fmt.Errorf("token: %w", err) }
+	if err := windows.OpenProcessToken(windows.CurrentProcess(), windows.TOKEN_ASSIGN_PRIMARY|windows.TOKEN_DUPLICATE|windows.TOKEN_QUERY, &base); err != nil { return 0, fmt.Errorf("token: %w", err) }
 	defer base.Close()
 	// S-1-5-12 is the documented Restricted Code SID. Access checks for a
 	// restricted token must succeed for both the normal token and this SID.

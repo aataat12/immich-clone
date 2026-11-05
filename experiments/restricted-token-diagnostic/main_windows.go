@@ -49,7 +49,7 @@ func main() {
 
 	var base windows.Token
 	r.Stage = "open_process_token"
-	if err := windows.OpenProcessToken(windows.CurrentProcess(), windows.TOKEN_DUPLICATE|windows.TOKEN_QUERY, &base); err != nil {
+	if err := windows.OpenProcessToken(windows.CurrentProcess(), windows.TOKEN_ASSIGN_PRIMARY|windows.TOKEN_DUPLICATE|windows.TOKEN_QUERY, &base); err != nil {
 		r.Error = err.Error(); writeReport(r); return
 	}
 	defer base.Close()
