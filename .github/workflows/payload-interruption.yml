@@ -1,4 +1,4 @@
-name: SEC-03 native interrupted payload recovery
+name: SEC-03 native interrupted payload recovery candidate
 on:
   push:
     branches: ['work/sec03-durable-recovery']
