@@ -1,0 +1,35 @@
+name: SEC-03 native interrupted payload recovery
+on:
+  push:
+    branches: ['work/sec03-durable-recovery']
+    paths:
+      - 'internal/installerfiles/**'
+      - 'cmd/installerfiles/**'
+      - '.github/workflows/payload-interruption.yml'
+permissions:
+  contents: read
+jobs:
+  native-recovery:
+    runs-on: windows-2022
+    timeout-minutes: 8
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - shell: pwsh
+        run: |
+          go mod verify
+          if ($LASTEXITCODE -ne 0) { throw 'Dependency verification failed' }
+          gofmt -w internal/installerfiles/publication_windows.go internal/installerfiles/publication_interruption_windows_test.go cmd/installerfiles/main_windows.go
+          go test -mod=readonly -v -count=1 -timeout=180s ./internal/installerfiles
+          if ($LASTEXITCODE -ne 0) { throw 'Native installer file controls failed' }
+          go vet ./internal/installerfiles ./cmd/installerfiles
+          if ($LASTEXITCODE -ne 0) { throw 'Installer helper vet failed' }
+          go build -mod=readonly -o "$env:RUNNER_TEMP/installer-files.exe" ./cmd/installerfiles
+          if ($LASTEXITCODE -ne 0) { throw 'Installer helper build failed' }

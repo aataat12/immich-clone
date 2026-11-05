@@ -19,11 +19,13 @@ import (
 var payloadRootNames = []string{"Manage-Service.ps1", "Storage-Security.ps1", "installer-files.exe", "immichclone.exe", "Export-Diagnostics.ps1", "THIRD-PARTY-LICENSES.txt", "prototype-notes.txt"}
 
 const publicationReceipt = "publication-ready.json"
+const publicationIntent = "publication-intent.json"
 
 type payloadEntry struct {
 	Path     string
 	HadOld   bool
 	Old, New fileReceipt
+	Destination winfs.Identity
 }
 type payloadReceipt struct {
 	Version int
@@ -404,6 +406,9 @@ func publishPayload(app, source, backup string, beforeCopy func(int) error) (err
 			return e
 		}
 		f.entry.HadOld = !f.created
+		if f.entry.Destination, e = payloadIdentity(f.dst); e != nil {
+			return e
+		}
 	}
 	for _, d := range append([]*winfs.Directory{p.app}, mapDirectories(cache)...) {
 		names, e := d.Names()
@@ -439,6 +444,12 @@ func publishPayload(app, source, backup string, beforeCopy func(int) error) (err
 		return e
 	}
 	if e = privateFile(p.ready); e != nil {
+		return e
+	}
+	// Persist a complete recovery plan BEFORE the first old byte is truncated.
+	// Each old backup has already been copied, synced and verified. The intent
+	// is distinct from completion: it must never authorize starting mixed code.
+	if e = p.writeIntent(); e != nil {
 		return e
 	}
 	changed := false
@@ -504,13 +515,27 @@ func publishPayload(app, source, backup string, beforeCopy func(int) error) (err
 	p.ready = nil
 	return err
 }
-func RestorePayload(app, backup string) (err error) {
+func RestorePayload(app, backup string) error {
+	return restorePayload(app, backup, false)
+}
+
+// RecoverInterruptedPayload restores only the exact destination objects named
+// by a durable prewrite intent. Unlike completed-publication rollback, their
+// bytes may be old, new, empty or partial. Never use this as a completion check.
+func RecoverInterruptedPayload(app, backup string) error {
+	return restorePayload(app, backup, true)
+}
+func restorePayload(app, backup string, interrupted bool) (err error) {
 	p, e := openPayloadRoots(app, backup, false)
 	if e != nil {
 		return e
 	}
 	defer func() { err = errors.Join(err, p.close()) }()
-	p.ready, e = p.backup.OpenFile(publicationReceipt, false)
+	recordName := publicationReceipt
+	if interrupted {
+		recordName = publicationIntent
+	}
+	p.ready, e = p.backup.OpenFile(recordName, false)
 	if e != nil {
 		return e
 	}
@@ -527,7 +552,11 @@ func RestorePayload(app, backup string) (err error) {
 	var record payloadReceipt
 	dec := json.NewDecoder(bytes.NewReader(body))
 	dec.DisallowUnknownFields()
-	if dec.Decode(&record) != nil || dec.Decode(new(any)) != io.EOF || record.Version != 1 || len(record.Files) < len(payloadRootNames) {
+	version := 1
+	if interrupted {
+		version = 2
+	}
+	if dec.Decode(&record) != nil || dec.Decode(new(any)) != io.EOF || record.Version != version || len(record.Files) < len(payloadRootNames) {
 		return ErrRefused
 	}
 	id, e := p.app.Identity()
@@ -570,6 +599,11 @@ func RestorePayload(app, backup string) (err error) {
 		}
 		var created bool
 		f.dst, created, e = d.ExistingPublicationFile(filepath.Base(row.Path))
+		// A previous recovery can have deleted a new leaf before being killed.
+		// Missing prior files still refuse; recovery never creates replacements.
+		if interrupted && !row.HadOld && errors.Is(e, windows.STATUS_OBJECT_NAME_NOT_FOUND) {
+			continue
+		}
 		if e != nil {
 			return e
 		}
@@ -578,6 +612,16 @@ func RestorePayload(app, backup string) (err error) {
 		}
 		if e = trustedFile(f.dst); e != nil {
 			return e
+		}
+		if interrupted {
+			id, e := payloadIdentity(f.dst)
+			if e != nil {
+				return e
+			}
+			if row.Destination == (winfs.Identity{}) || id != row.Destination {
+				return ErrRefused
+			}
+			continue
 		}
 		got, e := digest(f.dst)
 		if e != nil {
@@ -593,4 +637,53 @@ func RestorePayload(app, backup string) (err error) {
 		}
 	}
 	return p.restoreHeld()
+}
+
+func payloadIdentity(f *os.File) (winfs.Identity, error) {
+	if e := winfs.ValidateFile(f); e != nil {
+		return winfs.Identity{}, e
+	}
+	var info windows.ByHandleFileInformation
+	if e := windows.GetFileInformationByHandle(windows.Handle(f.Fd()), &info); e != nil {
+		return winfs.Identity{}, e
+	}
+	return winfs.Identity{Volume: info.VolumeSerialNumber, High: info.FileIndexHigh, Low: info.FileIndexLow}, nil
+}
+
+func (p *payloadSet) writeIntent() (err error) {
+	id, e := p.app.Identity()
+	if e != nil {
+		return e
+	}
+	record := payloadReceipt{Version: 2, App: id}
+	for _, f := range p.files {
+		record.Files = append(record.Files, f.entry)
+	}
+	body, e := json.Marshal(record)
+	if e != nil {
+		return e
+	}
+	if len(body) > 4*1024*1024 {
+		return ErrRefused
+	}
+	sd, e := windows.SecurityDescriptorFromString("D:P(A;;FA;;;SY)(A;;FA;;;BA)")
+	if e != nil {
+		return e
+	}
+	f, e := p.backup.CreateExclusiveFile(publicationIntent, sd)
+	if e != nil {
+		return e
+	}
+	defer func() { err = errors.Join(err, f.Close()) }()
+	if e = privateFile(f); e != nil {
+		return e
+	}
+	n, e := f.Write(body)
+	if e != nil {
+		return e
+	}
+	if n != len(body) {
+		return io.ErrShortWrite
+	}
+	return f.Sync()
 }

@@ -40,6 +40,8 @@ func main() {
 		err = installerfiles.Cleanup(*app, *data)
 	case "publish-payload":
 		err = installerfiles.PublishPayload(*app, *source, *backup)
+	case "recover-interrupted-payload":
+		err = installerfiles.RecoverInterruptedPayload(*app, *backup)
 	case "restore-payload":
 		err = installerfiles.RestorePayload(*app, *backup)
 	case "grant-code-read":
