@@ -16,6 +16,7 @@ import (
 )
 
 var (
+	// The diagnostic intentionally mirrors the production Windows launcher.
 	advapi = windows.NewLazySystemDLL("advapi32.dll")
 	createRestrictedToken = advapi.NewProc("CreateRestrictedToken")
 )
