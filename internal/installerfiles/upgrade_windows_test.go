@@ -61,3 +61,33 @@ func TestUpgradeWrongStateAndUnknownRetirementNamesRefuse(t *testing.T) {
     if _,e:=RecoverUpgrade(app,data,root);e!=nil{t.Fatal(e)}
     publicationAssertSet(t,app,"candidate-")
 }
+
+func TestUpgradeCorruptStateSnapshotRefusesBeforeCodeRollback(t *testing.T) {
+    app,source,data,root:=upgradeFixture(t)
+    if e:=BeginUpgrade(app,data,root,true);e!=nil{t.Fatal(e)}
+    if e:=PublishPayload(app,source,filepath.Join(root,"payload"));e!=nil{t.Fatal(e)}
+    if e:=os.WriteFile(filepath.Join(app,"rollback","catalog.db"),[]byte("corrupt saved catalog"),0600);e!=nil{t.Fatal(e)}
+    if _,e:=RecoverUpgrade(app,data,root);e==nil{t.Fatal("corrupt prior catalog accepted")}
+    publicationAssertSet(t,app,"candidate-")
+    assertBytes(t,filepath.Join(data,"catalog.db"),"old-catalog.db")
+}
+func TestUpgradeEmptyRootAndPreparedOnlyRetry(t *testing.T) {
+    app,_,data,root:=upgradeFixture(t)
+    if e:=EnsurePrivateRoot(root,"",false);e!=nil{t.Fatal(e)}
+    if kind,e:=RecoverUpgrade(app,data,root);e!=nil||kind!="none"{t.Fatal(kind,e)}
+    if e:=BeginUpgrade(app,data,root,true);e!=nil{t.Fatal(e)}
+    if kind,e:=RecoverUpgrade(app,data,root);e!=nil||kind!="prior"{t.Fatal(kind,e)}
+    publicationAssertSet(t,app,"prior-")
+    assertBytes(t,filepath.Join(data,"catalog.db"),"old-catalog.db")
+}
+func TestUpgradeFreshInterruptedRecoveryPreservesNewState(t *testing.T) {
+    app,source,_,root:=upgradeFixture(t)
+    data:=filepath.Join(filepath.Dir(app),"new state")
+    if e:=BeginUpgrade(app,data,root,false);e!=nil{t.Fatal(e)}
+    exitPublication(t,app,source,filepath.Join(root,"payload"),5)
+    if e:=EnsurePrivateRoot(data,"",false);e!=nil{t.Fatal(e)}
+    if e:=os.WriteFile(filepath.Join(data,"catalog.db"),[]byte("new state remains"),0600);e!=nil{t.Fatal(e)}
+    if kind,e:=RecoverUpgrade(app,data,root);e!=nil||kind!="fresh"{t.Fatal(kind,e)}
+    publicationAssertSet(t,app,"prior-")
+    assertBytes(t,filepath.Join(data,"catalog.db"),"new state remains")
+}

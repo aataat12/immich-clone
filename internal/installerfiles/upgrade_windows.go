@@ -201,8 +201,9 @@ func RecoverUpgrade(app,data,root string) (kind string,err error) {
     if e!=nil&&!missingCleanup(e){return "",errors.Join(e,ce)}
     if ce!=nil{return "",ce}
     if hasIntent{
-        if e=RecoverInterruptedPayload(app,filepath.Join(root,"payload"));e!=nil{return "",e}
-        if record.HadService{if e=Restore(app,data);e!=nil{return "",e}}
+        recoverPayload:=func()error{return RecoverInterruptedPayload(app,filepath.Join(root,"payload"))}
+        if record.HadService{e=restoreSnapshot(app,data,recoverPayload)}else{e=recoverPayload()}
+        if e!=nil{return "",e}
     }
     record.Phase="recovered"
     if e=writeUpgradeRecord(d,upgradeTerminalName,record);e!=nil{return "",e}
