@@ -18,8 +18,8 @@ $licenses = @('Go 1.27.3', (Get-Content (Join-Path $goRoot 'LICENSE') -Raw), 'bb
 $licenses += @('golang.org/x/image 0.47.0', (Get-Content (Join-Path $imageDir 'LICENSE') -Raw))
 $licenses -join "`r`n`r`n" | Set-Content dist/THIRD-PARTY-LICENSES.txt
 Checked go @('build','-trimpath','-ldflags','-s -w','-o','dist/installer-files.exe','./cmd/installerfiles')
-foreach ($version in @('0.1.41','0.1.42')) {
+foreach ($version in @('0.1.40','0.1.41')) {
     Checked go @('build','-trimpath','-ldflags',('-s -w -X main.version='+$version+'-prototype'),'-o','dist/immichclone.exe','./cmd/immichclone')
     Checked "$compilerDir/ISCC.exe" @(('/DAppVersion='+$version),'packaging/immichclone.iss')
 }
-Get-Item dist/ImmichClone-0.1.41-prototype-x64-setup.exe | ForEach-Object { ((Get-FileHash $_.FullName).Hash.ToLowerInvariant()+'  '+$_.Name) } | Set-Content dist/SHA256SUMS.txt
+Get-Item dist/ImmichClone-0.1.40-prototype-x64-setup.exe | ForEach-Object { ((Get-FileHash $_.FullName).Hash.ToLowerInvariant()+'  '+$_.Name) } | Set-Content dist/SHA256SUMS.txt

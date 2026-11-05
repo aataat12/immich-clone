@@ -87,15 +87,15 @@ try {
     # Fail the first initial upgrade upgrade too, then prove old executable/provider
     # and original data still work before attempting a successful upgrade.
     $env:IMMICH_INSTALL_TEST_FAILURE='1'
-    $firstUpgradeFailure=Install '0.1.41'
+    $firstUpgradeFailure=Install '0.1.40'
     Remove-Item Env:IMMICH_INSTALL_TEST_FAILURE
     Assert ($firstUpgradeFailure -ne 0) 'initial upgrade failed upgrade is rejected'
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.39-prototype') 'initial upgrade rollback restores prior build'
     Assert ((Get-FileHash "$app/ai/opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3/ai-worker.exe").Hash.ToLowerInvariant() -eq '15d1c2ca7ef3f526b34ac4823f9337c51280ad171ddf43df4f3af5d8128a7c58') 'initial upgrade rollback retains old immutable worker'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'initial upgrade rollback preserves original bytes'
-    Assert ((Install '0.1.41') -eq 0) 'installer upgrade succeeds'
-    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.41-prototype') 'upgrade deploys new executable version'
-    Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.41-prototype') 'installed health reports actual executable build'
+    Assert ((Install '0.1.40') -eq 0) 'installer upgrade succeeds'
+    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.40-prototype') 'upgrade deploys new executable version'
+    Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.40-prototype') 'installed health reports actual executable build'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'upgrade preserves original bytes'
     $session=[Microsoft.PowerShell.Commands.WebRequestSession]::new()
     $null=Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$code}|ConvertTo-Json) -WebSession $session
@@ -182,12 +182,12 @@ try {
     New-Item -ItemType Directory $deleteBlock | Out-Null
     BrowserPhase 'tests/deletion.cjs' 'denied'
     $env:IMMICH_INSTALL_TEST_FAILURE = '1'
-    $failedCode = Install '0.1.42'
+    $failedCode = Install '0.1.41'
     Remove-Item Env:IMMICH_INSTALL_TEST_FAILURE
     $installLog = Get-Content (Join-Path $env:ProgramData 'ImmichCloneDiagnostics/installer.jsonl') -Raw
     Assert ($installLog.Contains('installer_failed') -and $installLog.Contains('rollback_complete') -and !$installLog.Contains($state)) 'installer logs failed-upgrade and rollback stages without data paths'
     Assert ($failedCode -ne 0) 'injected failed upgrade returns failure'
-    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.41-prototype') 'failed upgrade restores previous executable'
+    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.40-prototype') 'failed upgrade restores previous executable'
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'rollback restores healthy service'
     BrowserPhase 'tests/deletion.cjs' 'pending'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'failed upgrade preserves original bytes'
@@ -258,7 +258,7 @@ try {
     $state = Join-Path $root 'restored state'
     & $recoveryTool -mode restore -data $state -archive $archive
     Assert ($LASTEXITCODE -eq 0) 'offline restoration succeeds at a different location'
-    Assert ((Install '0.1.41') -eq 0) 'installer starts a restored library without the original data folder'
+    Assert ((Install '0.1.40') -eq 0) 'installer starts a restored library without the original data folder'
     $session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
     $restoredCode = (Get-Content "$state/access-code.txt" -Raw).Trim()
     $null = Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$restoredCode}|ConvertTo-Json) -WebSession $session
