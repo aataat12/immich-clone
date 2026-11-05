@@ -108,6 +108,28 @@ while (Get-Process -Id $args[0] -ErrorAction SilentlyContinue) {
 '@
     $script.Replace('__P__',$p).Replace('__O__',$o).Replace('__R__',$r).Replace('__U__',$u) | Set-Content -LiteralPath $actor
     $credential = [PSCredential]::new(($env:COMPUTERNAME+'\'+$ordinaryUser),(ConvertTo-SecureString $ordinaryPassword -AsPlainText -Force))
+    $positive = Join-Path $control 'permissive-parent'
+    New-Item -ItemType Directory -Path $positive | Out-Null
+    Native icacls @($positive,'/grant',('*'+$ordinarySid+':(OI)(CI)M'))
+    $positiveFile = Join-Path $positive 'positive.txt'
+    $positiveSource = Join-Path $positive 'hardlink-source.txt'
+    $positiveLink = Join-Path $positive 'hardlink-link.txt'
+    [IO.File]::WriteAllText($positiveFile,'positive')
+    [IO.File]::WriteAllText($positiveSource,'hardlink')
+    $positiveScript = Join-Path $control 'permissive-actor.ps1'
+    $pp = $positiveFile.Replace("'","''"); $ps = $positiveSource.Replace("'","''"); $pl = $positiveLink.Replace("'","''"); $pr = $result.Replace("'","''")
+    @'
+try {
+  Add-Content -LiteralPath '__PP__' -Value 'write' -ErrorAction Stop
+  Rename-Item -LiteralPath '__PP__' -NewName 'renamed.txt' -ErrorAction Stop
+  & fsutil.exe hardlink create '__PL__' '__PS__' | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw 'hardlink' }
+  Set-Content -LiteralPath '__PR__' -Value 'write-rename-link'
+} catch { Set-Content -LiteralPath '__PR__' -Value 'positive-control-failed' }
+'@.Replace('__PP__',$pp).Replace('__PS__',$ps).Replace('__PL__',$pl).Replace('__PR__',$pr) | Set-Content -LiteralPath $positiveScript
+    $positiveProcess = Start-Process powershell.exe -Credential $credential -ArgumentList @('-NoProfile','-File',('"'+$positiveScript+'"')) -Wait -PassThru
+    Assert ($positiveProcess.ExitCode -eq 0 -and (Get-Content -LiteralPath $result -Raw).Trim() -eq 'write-rename-link') 'separate account permissive parent write rename and hardlink positive control'
+    Remove-Item -LiteralPath $result -Force
     $process = Start-Process $script:setup -WindowStyle Hidden -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$Application+'"'),('/STATE="'+$State+'"')) -PassThru
     $actorProcess = Start-Process powershell.exe -Credential $credential -ArgumentList @('-NoProfile','-File',('"'+$actor+'"'),[string]$process.Id) -PassThru
     try {
