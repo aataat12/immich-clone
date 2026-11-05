@@ -28,6 +28,8 @@ type accessResult struct {
 	DeniedWrite     bool `json:"denied_write"`
 	LargeAllocation bool `json:"large_allocation"`
 	ChildSpawn      bool `json:"child_spawn"`
+	InputRead       bool `json:"input_read"`
+	ScratchWrite    bool `json:"scratch_write"`
 }
 
 func localService() bool {
@@ -43,6 +45,8 @@ func canWrite(path string) bool {
 }
 func child(root string) accessResult {
 	r := accessResult{LocalService: localService()}
+	r.InputRead = readEquals(filepath.Join(root, "input", "required.txt"), "synthetic-required-input")
+	r.ScratchWrite = os.WriteFile(filepath.Join(root, "scratch", "worker.tmp"), []byte("synthetic-scratch"), 0600) == nil
 	r.SecretRead = readEquals(filepath.Join(root, "state", "secret.txt"), secretValue)
 	r.CatalogRead = readEquals(filepath.Join(root, "state", "catalog-canary.bin"), catalogValue)
 	r.OriginalWrite = canWrite(filepath.Join(root, "state", "original-canary.bin"))
@@ -63,6 +67,27 @@ func child(root string) accessResult {
 		}
 	}
 	return r
+}
+func restrictedProbe(ctx context.Context, root string) map[string]bool {
+	result := map[string]bool{"service_identity_localservice": localService()}
+	exe, err := os.Executable()
+	if err != nil { result["probe_complete"] = false; return result }
+	jobCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	bounded, err := media.RunRestricted(jobCtx, exe, []string{"-mode", "child", "-root", root}, nil)
+	cancel()
+	var childResult accessResult
+	if err != nil || json.Unmarshal(bounded.Output, &childResult) != nil { result["probe_complete"] = false; return result }
+	result["restricted_identity_localservice"] = childResult.LocalService
+	result["restricted_input_read_allowed"] = childResult.InputRead
+	result["restricted_scratch_write_allowed"] = childResult.ScratchWrite
+	result["restricted_state_secret_denied"] = !childResult.SecretRead
+	result["restricted_catalog_denied"] = !childResult.CatalogRead
+	result["restricted_original_write_denied"] = !childResult.OriginalWrite
+	result["restricted_private_read_denied"] = !childResult.DeniedRead
+	result["restricted_process_spawn_denied"] = !childResult.ChildSpawn
+	result["job_peak_within_configured_bound"] = bounded.Peak > 0 && bounded.Peak <= media.MemoryLimit
+	result["probe_complete"] = true
+	return result
 }
 func probe(ctx context.Context, root string) map[string]bool {
 	result := map[string]bool{"service_identity_localservice": localService()}
@@ -110,14 +135,14 @@ func probe(ctx context.Context, root string) map[string]bool {
 	return result
 }
 
-type serviceProbe struct{ root string }
+type serviceProbe struct{ root string; candidate bool }
 
 func (p *serviceProbe) Execute(_ []string, requests <-chan svc.ChangeRequest, status chan<- svc.Status) (bool, uint32) {
 	status <- svc.Status{State: svc.StartPending}
 	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 	defer cancel()
 	done := make(chan map[string]bool, 1)
-	go func() { done <- probe(ctx, p.root) }()
+	go func() { if p.candidate { done <- restrictedProbe(ctx, p.root) } else { done <- probe(ctx, p.root) } }()
 	status <- svc.Status{State: svc.Running, Accepts: svc.AcceptStop | svc.AcceptShutdown}
 	for {
 		select {
@@ -158,10 +183,15 @@ func main() {
 		}
 		return
 	}
-	if *mode != "service" {
+	if *mode == "candidate" {
+		if json.NewEncoder(os.Stdout).Encode(restrictedProbe(context.Background(), *root)) != nil { os.Exit(2) }
+		return
+	}
+	if *mode != "service" && *mode != "candidate-service" {
 		os.Exit(2)
 	}
-	if svc.Run(*name, &serviceProbe{root: *root}) != nil {
+	if svc.Run(*name, &serviceProbe{root: *root, candidate: *mode == "candidate-service"}) != nil {
 		os.Exit(2)
 	}
 }
+

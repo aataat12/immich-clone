@@ -1,0 +1,32 @@
+name: Worker isolation candidate
+on:
+  push:
+    paths:
+      - 'internal/media/restricted_windows.go'
+      - 'experiments/worker-access-canary/**'
+      - 'scripts/Test-WorkerIsolationCandidate.ps1'
+      - '.github/workflows/worker-isolation-candidate.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: worker-isolation-candidate-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 8
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Run restricted-token and ACL canary
+        shell: pwsh
+        run: ./scripts/Test-WorkerIsolationCandidate.ps1
+
