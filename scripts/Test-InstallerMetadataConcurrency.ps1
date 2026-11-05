@@ -139,13 +139,21 @@ try{
  Assert ($actor.Allowed -eq 0 -and $actor.Denied -gt 0 -and $actor.Unexpected -eq 0) 'all protected writes renames outgoing hardlinks and ACL changes are refused'
  Assert ((Snapshot $pending) -eq $pendingBefore) 'pending bytes and descriptor are preserved'
  # A preauthorized writable handle survives DACL removal. Sharing must exclude it.
- $saved=Get-Acl -LiteralPath $pending;$grant=Get-Acl -LiteralPath $pending
+ $savedSddl=(Get-Acl -LiteralPath $pending).Sddl;$grant=Get-Acl -LiteralPath $pending
  $grant.AddAccessRule([Security.AccessControl.FileSystemAccessRule]::new([Security.Principal.SecurityIdentifier]::new($sid),'Modify','Allow'))
  Set-Acl -LiteralPath $pending -AclObject $grant
- try{$actor.HoldWriter($pending)}finally{Set-Acl -LiteralPath $pending -AclObject $saved}
+ try{$actor.HoldWriter($pending)}finally{
+  # Fresh descriptor marks Access modified; reusing a Get-Acl object can leave
+  # its unchanged-section flags clear and fail to restore the temporary grant.
+  $restore=[Security.AccessControl.FileSecurity]::new()
+  $restore.SetSecurityDescriptorSddlForm($savedSddl,[Security.AccessControl.AccessControlSections]::Access)
+  Set-Acl -LiteralPath $pending -AclObject $restore
+ }
+ Assert ((Get-Acl -LiteralPath $pending).Sddl -eq $savedSddl) 'preheld-writer fixture restores exact original descriptor before native refusal' 
  Assert ((Invoke-Action 'audit-upgrade' $app $data $transaction) -ne 0) 'audit refuses actual preheld standard-account writer after private DACL restoration'
  $actor.ReleaseWriter()
- Assert ((Invoke-Action 'audit-upgrade' $app $data $transaction) -eq 0 -and (Snapshot $pending) -eq $pendingBefore) 'writer release permits unchanged retry'
+ Assert ((Invoke-Action 'audit-upgrade' $app $data $transaction) -eq 0) 'writer release permits native retry'
+ Assert ((Snapshot $pending) -eq $pendingBefore) 'writer fixture preserves exact pending bytes and descriptor'
  $actor.Dispose();$actor=$null;$actor=[MetadataActor]::new($user,$password,$permissive)
  $actor.SetTargets([string[]]@($pending,(Join-Path $payload 'publication-intent.json'),(Join-Path $payload 'publication-ready.json'),(Join-Path $payload 'file-000000.bin'),(Join-Path $transaction 'upgrade-terminal.json'),$outside));$actor.Start()
  Native $InstallerFiles @('-action','publish-payload','-app-dir',$app,'-source-dir',$source,'-backup-dir',$payload)
