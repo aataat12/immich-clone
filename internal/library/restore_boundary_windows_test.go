@@ -176,7 +176,7 @@ func TestRestoreBoundaryPrivateDescendantsAdoptInstallerServicePolicy(t *testing
 		owners[path] = owner.String()
 		ctl, _, e := sd.Control()
 		if e != nil || (ctl&windows.SE_DACL_PROTECTED != 0) != (i == 0) {
-			t.Fatal("only restored root must be protected", e)
+			t.Fatalf("restore inheritance node=%d directory=%t control=0x%x: %v", i, info.IsDir(), ctl, e)
 		}
 		acl, _, e := sd.DACL()
 		if e != nil || acl == nil {
