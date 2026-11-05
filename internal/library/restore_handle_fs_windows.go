@@ -63,11 +63,11 @@ func (f *restoreHandleFS) Create(entry string) (*os.File, error) {
 		d = child
 		entry = strings.TrimPrefix(entry, "originals/")
 	}
-	return d.CreateExclusiveFile(entry, f.sd)
+	return d.CreateInheritingExclusiveFile(entry, f.sd)
 }
 func (f *restoreHandleFS) Progress(nonce string, base uint64) (err error) {
 	d := f.stage.Directory()
-	file, e := d.CreateExclusiveFile(restoreProgressName, f.sd)
+	file, e := d.CreateInheritingExclusiveFile(restoreProgressName, f.sd)
 	if e != nil {
 		return e
 	}

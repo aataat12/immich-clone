@@ -277,6 +277,37 @@ func TestRestoreBoundaryChildInheritanceKeepsPrivatePolicy(t *testing.T) {
 		child.Close()
 		t.Fatal("unprotected child accepted as restore root")
 	}
+	file, e := child.CreateInheritingExclusiveFile("retained.txt", childSD)
+	if e != nil {
+		child.Close()
+		t.Fatal(e)
+	}
+	if _, e = file.WriteString("retained private original"); e != nil {
+		file.Close()
+		child.Close()
+		t.Fatal(e)
+	}
+	if e = file.Close(); e != nil {
+		child.Close()
+		t.Fatal(e)
+	}
+	if replaced, e := child.CreateInheritingExclusiveFile("retained.txt", rootSD); e == nil {
+		replaced.Close()
+		child.Close()
+		t.Fatal("inheriting creation reopened an existing file")
+	}
+	retained, e := child.OpenFile("retained.txt", false)
+	if e != nil {
+		child.Close()
+		t.Fatal(e)
+	}
+	body := make([]byte, 64)
+	n, e := retained.Read(body)
+	retained.Close()
+	if e != nil || string(body[:n]) != "retained private original" {
+		child.Close()
+		t.Fatal("refused creation changed existing bytes", e)
+	}
 	if e = child.Close(); e != nil {
 		t.Fatal(e)
 	}

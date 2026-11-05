@@ -86,6 +86,18 @@ func DeletePublicationFile(f *os.File) error {
 // CreateExclusiveFile never opens an existing name and supplies the private
 // descriptor in the creation syscall, before any archive secret can be written.
 func (d *Directory) CreateExclusiveFile(name string, sd *windows.SECURITY_DESCRIPTOR) (*os.File, error) {
+	return d.createExclusiveFile(name, sd, false)
+}
+
+// CreateInheritingExclusiveFile keeps the private creation policy, then enables
+// inheritance through the same held file before the caller can write any bytes.
+// The caller must audit and hold a private parent; native creation alone can mark
+// an explicit file DACL protected even when its descriptor omitted that flag.
+func (d *Directory) CreateInheritingExclusiveFile(name string, sd *windows.SECURITY_DESCRIPTOR) (*os.File, error) {
+	return d.createExclusiveFile(name, sd, true)
+}
+
+func (d *Directory) createExclusiveFile(name string, sd *windows.SECURITY_DESCRIPTOR, inherit bool) (*os.File, error) {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 	if len(d.holds) == 0 {
@@ -102,13 +114,40 @@ func (d *Directory) CreateExclusiveFile(name string, sd *windows.SECURITY_DESCRI
 	oa.Length = uint32(unsafe.Sizeof(oa))
 	var status windows.IO_STATUS_BLOCK
 	var h windows.Handle
-	e = windows.NtCreateFile(&h, windows.FILE_GENERIC_READ|windows.FILE_GENERIC_WRITE|windows.DELETE, &oa, &status, nil, 0, windows.FILE_SHARE_READ, windows.FILE_CREATE, windows.FILE_NON_DIRECTORY_FILE|windows.FILE_OPEN_REPARSE_POINT|windows.FILE_SYNCHRONOUS_IO_NONALERT, 0, 0)
+	access := uint32(windows.FILE_GENERIC_READ | windows.FILE_GENERIC_WRITE | windows.DELETE)
+	if inherit {
+		access |= windows.WRITE_DAC
+	}
+	e = windows.NtCreateFile(&h, access, &oa, &status, nil, 0, windows.FILE_SHARE_READ, windows.FILE_CREATE, windows.FILE_NON_DIRECTORY_FILE|windows.FILE_OPEN_REPARSE_POINT|windows.FILE_SYNCHRONOUS_IO_NONALERT, 0, 0)
 	if e != nil {
 		return nil, e
 	}
 	if e = checked(h, false); e != nil {
 		windows.CloseHandle(h)
 		return nil, e
+	}
+	if inherit {
+		acl, _, e := sd.DACL()
+		if e == nil && acl != nil {
+			e = windows.SetSecurityInfo(h, windows.SE_FILE_OBJECT, windows.DACL_SECURITY_INFORMATION|windows.UNPROTECTED_DACL_SECURITY_INFORMATION, nil, nil, acl, nil)
+		} else if e == nil {
+			e = ErrUnsafeObject
+		}
+		if e == nil {
+			actual, qe := windows.GetSecurityInfo(h, windows.SE_FILE_OBJECT, windows.DACL_SECURITY_INFORMATION)
+			e = qe
+			if e == nil {
+				control, _, ce := actual.Control()
+				e = ce
+				if e == nil && control&windows.SE_DACL_PROTECTED != 0 {
+					e = ErrUnsafeObject
+				}
+			}
+		}
+		if e != nil {
+			windows.CloseHandle(h)
+			return nil, e
+		}
 	}
 	return os.NewFile(uintptr(h), "private-archive"), nil
 }
