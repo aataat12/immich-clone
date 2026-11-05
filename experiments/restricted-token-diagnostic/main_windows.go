@@ -24,6 +24,8 @@ type report struct {
 	SidCreated bool `json:"sid_created"`
 	NativeReturned bool `json:"native_returned"`
 	TokenCreated bool `json:"token_created"`
+	ProcessCreated bool `json:"process_created"`
+	ProcessExitedZero bool `json:"process_exited_zero"`
 	PanicRecovered bool `json:"panic_recovered"`
 	Error string `json:"error,omitempty"`
 }
@@ -35,6 +37,7 @@ func writeReport(r report) {
 }
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "child" { return }
 	r := report{Stage: "start"}
 	defer func() {
 		if p := recover(); p != nil {
@@ -70,6 +73,22 @@ func main() {
 		r.Error = callErr.Error(); writeReport(r); return
 	}
 	r.TokenCreated = true
+	r.Stage = "create_process_as_user"
+	exe, err := os.Executable()
+	if err != nil { r.Error = err.Error(); _ = out.Close(); writeReport(r); return }
+	app, err := windows.UTF16PtrFromString(exe)
+	if err != nil { r.Error = err.Error(); _ = out.Close(); writeReport(r); return }
+	line, err := windows.UTF16PtrFromString(windows.ComposeCommandLine([]string{exe, "child"}))
+	if err != nil { r.Error = err.Error(); _ = out.Close(); writeReport(r); return }
+	startup := windows.StartupInfo{Cb: uint32(unsafe.Sizeof(windows.StartupInfo{}))}
+	var pi windows.ProcessInformation
+	if err = windows.CreateProcessAsUser(out, app, line, nil, nil, false, windows.CREATE_NO_WINDOW, nil, nil, &startup, &pi); err != nil { r.Error = err.Error(); _ = out.Close(); writeReport(r); return }
+	r.ProcessCreated = true
+	_ = windows.WaitForSingleObject(pi.Process, 5000)
+	var code uint32
+	if windows.GetExitCodeProcess(pi.Process, &code) == nil { r.ProcessExitedZero = code == 0 }
+	_ = windows.CloseHandle(pi.Process)
+	_ = windows.CloseHandle(pi.Thread)
 	_ = out.Close()
 	r.Stage = "complete"
 	writeReport(r)
