@@ -2,11 +2,11 @@
 const fs=require('fs'),os=require('os'),path=require('path'),assert=require('assert/strict'),crypto=require('crypto');
 const {spawn}=require('child_process');const {chromium}=require(process.env.IMMICH_BROWSER_MODULE);
 (async()=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'immich-people-index-')),state=path.join(root,'state');let app,browser;
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'immich-people-index-')),state=process.env.IMMICH_PEOPLE_ATTACH?process.env.IMMICH_TEST_STATE:path.join(root,'state');let app,browser;
  try{
-  let occupied=false;try{await fetch('http://127.0.0.1:2283/health');occupied=true}catch{}assert(!occupied,'Disposable runner port occupied');
-  app=spawn(process.env.IMMICH_PEOPLE_BINARY,['-mode','serve','-data',state,'-logs',path.join(root,'logs')],{stdio:'ignore'});
-  for(let i=0;i<100;i++){if(app.exitCode!==null)throw Error('App exited');try{if((await fetch('http://127.0.0.1:2283/health')).ok)break}catch{}await new Promise(r=>setTimeout(r,100))}
+  let occupied=false;try{await fetch('http://127.0.0.1:2283/health');occupied=true}catch{}assert(!occupied||process.env.IMMICH_PEOPLE_ATTACH,'Disposable runner port occupied');
+  if(!process.env.IMMICH_PEOPLE_ATTACH)app=spawn(process.env.IMMICH_PEOPLE_BINARY,['-mode','serve','-data',state,'-logs',path.join(root,'logs')],{stdio:'ignore'});
+  for(let i=0;i<100;i++){if(app&&app.exitCode!==null)throw Error('App exited');try{if((await fetch('http://127.0.0.1:2283/health')).ok)break}catch{}await new Promise(r=>setTimeout(r,100))}
   browser=await chromium.launch({channel:'msedge',headless:true});const page=await browser.newPage({viewport:{width:1280,height:900}});page.setDefaultTimeout(30000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:2283');await page.fill('#code',fs.readFileSync(path.join(state,'access-code.txt'),'utf8').trim());await page.click('#loginForm button');await page.waitForSelector('#library:not(.hidden)');
   const png=Buffer.from(await page.evaluate(()=>{const c=document.createElement('canvas');c.width=c.height=32;const x=c.getContext('2d');x.fillStyle='orange';x.fillRect(0,0,32,32);return c.toDataURL('image/png').split(',')[1]}),'base64');

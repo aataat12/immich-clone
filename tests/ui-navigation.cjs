@@ -43,6 +43,10 @@ const assert = require('assert/strict');
       for (const width of [1360, 390]) {
         await page.setViewportSize({ width, height: 900 });
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'Overflow: ' + url + ' at ' + width);
+        if (process.env.IMMICH_BROWSER_OUTPUT) {
+          const label = url === '/' ? 'library' : url.slice(1);
+          await page.screenshot({ path: path.join(process.env.IMMICH_BROWSER_OUTPUT, 'redesign-' + label + '-' + width + '.png'), fullPage: true });
+        }
       }
       assert.equal(await page.locator('.ui-sidebar').isVisible(), true);
     }

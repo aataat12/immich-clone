@@ -1,0 +1,72 @@
+name: Existing-function UI redesign acceptance
+on:
+  push:
+    branches: ['work/ui-existing-behavior']
+    paths:
+      - '.github/workflows/ui-redesign.yml'
+      - 'internal/web/**'
+      - 'tests/**'
+      - 'scripts/Test-UIRedesign.ps1'
+      - 'scripts/Test-Application.ps1'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  ui-redesign:
+    runs-on: windows-2022
+    timeout-minutes: 18
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: experimental-media-source-and-binaries
+          path: media-candidate
+          run-id: 41346172469
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: experimental-native-ai-build-not-accepted
+          path: native-ai-candidate
+          run-id: 41551816976
+          github-token: ${{ github.token }}
+      - name: Execute compiled web authentication CSP and behavior regressions
+        shell: pwsh
+        run: |
+          go mod verify
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned dependencies failed verification' }
+          go test -mod=readonly -count=1 -timeout=180s ./internal/web ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'Web or command regressions failed' }
+          go vet ./internal/web ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'Web vet failed' }
+          node --check tests/ui-navigation.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'UI navigation syntax failed' }
+      - name: Exercise redesigned pages with real Edge and LocalService
+        shell: powershell
+        run: |
+          foreach ($file in @('scripts/Test-UIRedesign.ps1','scripts/Test-Application.ps1')) {
+            $tokens=$null;$errors=$null
+            $null=[Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file),[ref]$tokens,[ref]$errors)
+            if ($errors.Count) { throw 'UI fixture parser failed' }
+          }
+          npm install --prefix "$env:RUNNER_TEMP/browser-deps" --no-audit --no-fund playwright@1.62.1
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned browser tooling acquisition failed' }
+          $env:IMMICH_BROWSER_MODULE="$env:RUNNER_TEMP/browser-deps/node_modules/playwright"
+          $env:IMMICH_BROWSER_OUTPUT="$env:GITHUB_WORKSPACE/browser-evidence"
+          New-Item -ItemType Directory -Path $env:IMMICH_BROWSER_OUTPUT | Out-Null
+          ./scripts/Test-UIRedesign.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'UI acceptance failed' }
+      - name: Retain only synthetic UI screenshots
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ui-redesign-synthetic-screenshots
+          path: browser-evidence/*.png
+          retention-days: 7

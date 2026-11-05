@@ -1,4 +1,4 @@
-param([ValidatePattern('^[A-Za-z0-9][A-Za-z0-9.+-]{0,63}$')][string]$Version='0.1.41-prototype')
+param([ValidatePattern('^[A-Za-z0-9][A-Za-z0-9.+-]{0,63}$')][string]$Version='0.1.41-prototype',[switch]$UIReview)
 $ErrorActionPreference = 'Stop'
 $root = Join-Path $env:RUNNER_TEMP ('immich-app-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory $root | Out-Null
@@ -19,7 +19,7 @@ try {
     ./scripts/Prepare-AIProvider.ps1 -Destination (Join-Path $root 'ai/opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3')
     Checked go @('build','-trimpath','-ldflags',("-X main.version=$Version"),'-o',$binary,'./cmd/immichclone')
     $env:IMMICH_NAV_BINARY=$binary
-    try { Checked node @('tests/hidden-navigation.cjs') } finally { Remove-Item Env:IMMICH_NAV_BINARY -ErrorAction SilentlyContinue }
+    try { if (!$UIReview) { Checked node @('tests/hidden-navigation.cjs') } } finally { Remove-Item Env:IMMICH_NAV_BINARY -ErrorAction SilentlyContinue }
     New-Item -ItemType Directory -Path $state | Out-Null
     Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)RX')
     Checked icacls @($state,'/grant','*S-1-5-19:(OI)(CI)M')
@@ -29,6 +29,10 @@ try {
     New-Item -ItemType Directory -Force -Path $diagnosticRoot | Out-Null
     Checked icacls @($diagnosticRoot,'/grant','*S-1-5-19:(OI)(CI)M')
     Start-Service $name
+    for ($healthAttempt=0;$healthAttempt -lt 40;$healthAttempt++) {
+        try { if ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') { break } } catch {}
+        Start-Sleep -Milliseconds 250
+    }
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'actual application starts as LocalService'
     Login
     # Generate a fixture using the already-executed standard image encoders in tests.
@@ -83,6 +87,7 @@ try {
             $codecOriginals[$uploaded.asset.id] = (Get-FileHash $file).Hash
         }
         $env:IMMICH_TEST_STATE = $state
+        if ($UIReview) { Checked node @('tests/ui-navigation.cjs') }
         Checked node @('tests/browser.cjs')
         Checked node @('tests/people.cjs')
         Checked node @('tests/import.cjs')
