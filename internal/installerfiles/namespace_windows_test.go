@@ -35,7 +35,7 @@ func TestNamespaceCreateOnlyParentAllowsPrivateChildren(t *testing.T) {
 }
 
 func TestNamespaceReplacementRightsRefusedWithoutMutation(t *testing.T) {
-	for _, mask := range []uint32{0x10000, 0x40, 0x40000, 0x80000, 0x10000000, 0x40000000} {
+	for _, mask := range []uint32{0x10000, 0x40, 0x40000, 0x80000, 0x10000000} {
 		t.Run(fmt.Sprintf("%x", mask), func(t *testing.T) {
 			parent := t.TempDir()
 			setPrivacyDescriptor(t, parent, fmt.Sprintf("D:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;;0x%x;;;BU)", mask))
@@ -66,5 +66,15 @@ func TestNamespaceExistingHostileAppRefused(t *testing.T) {
 	}
 	if _, e := os.Stat(filepath.Join(txn, upgradeRecordName)); !os.IsNotExist(e) {
 		t.Fatal("hostile application caused durable transaction write", e)
+	}
+}
+
+// Windows maps GENERIC_WRITE to create/attribute rights when installing a
+// filesystem DACL; it does not become DELETE_CHILD, DELETE or WRITE_DAC.
+func TestNamespaceMappedGenericWriteAllowsPrivateChildren(t *testing.T) {
+	parent := t.TempDir()
+	setPrivacyDescriptor(t, parent, "D:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;;GW;;;BU)")
+	if e := AuditNamespaceParents(filepath.Join(parent, "child")); e != nil {
+		t.Fatal(e)
 	}
 }

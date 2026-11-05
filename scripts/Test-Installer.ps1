@@ -103,7 +103,14 @@ try {
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.39-prototype') 'initial upgrade rollback restores prior build'
     Assert ((Get-FileHash "$app/ai/opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3/ai-worker.exe").Hash.ToLowerInvariant() -eq '15d1c2ca7ef3f526b34ac4823f9337c51280ad171ddf43df4f3af5d8128a7c58') 'initial upgrade rollback retains old immutable worker'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'initial upgrade rollback preserves original bytes'
+    Stop-Service ImmichClone
+    & sc.exe config ImmichClone start= disabled | Out-Null
+    Assert ($LASTEXITCODE -eq 0) 'prior service disabled again before successful corrected upgrade'
+    $disabled = Get-CimInstance Win32_Service -Filter "Name='ImmichClone'"
+    Assert ($disabled.State -eq 'Stopped' -and $disabled.StartMode -eq 'Disabled') 'successful corrected upgrade begins with stopped disabled prior service'
     Assert ((Install '0.1.41') -eq 0) 'installer upgrade succeeds'
+    $recoveredService = Get-CimInstance Win32_Service -Filter "Name='ImmichClone'"
+    Assert ($recoveredService.State -eq 'Running' -and $recoveredService.StartMode -eq 'Auto') 'corrected upgrade recovers automatic running service from disabled prior installation'
     Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.41-prototype') 'upgrade deploys new executable version'
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.41-prototype') 'installed health reports actual executable build'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'upgrade preserves original bytes'
