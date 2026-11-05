@@ -1,0 +1,96 @@
+name: Publish approved tested 0.1.41 artifact
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-0.1.41.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-0.1.41
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/work/release-0.1.41'
+    runs-on: windows-2022
+    timeout-minutes: 5
+    steps:
+      - name: Verify accepted artifact and publish the approved immutable prototype
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ProgressPreference = 'SilentlyContinue'
+          $repo = 'aataat12/immich-clone'
+          $api = 'https://api.github.com/repos/'+$repo
+          $source = 'e1212539511ee3413a7049e318dc0c2699e8ee0c'
+          $tag = 'v0.1.41-prototype'
+          $headers = @{ Accept='application/vnd.github+json'; Authorization=('Bearer '+$env:GH_TOKEN); 'X-GitHub-Api-Version'='2022-11-28' }
+          $run = Invoke-RestMethod ($api+'/actions/runs/41986219923') -Headers $headers
+          if ($run.head_sha -ne $source -or $run.status -ne 'completed' -or $run.conclusion -ne 'success') { throw 'Accepted full build identity changed' }
+          $focused = Invoke-RestMethod ($api+'/actions/runs/41984997929') -Headers $headers
+          if ($focused.head_sha -ne 'dabe53da04e936edeb2f80607488590bbf593de7' -or $focused.conclusion -ne 'success') { throw 'Accepted focused gate identity changed' }
+          $artifact = Invoke-RestMethod ($api+'/actions/artifacts/13396906359') -Headers $headers
+          $zipHash = 'bfc1bf3165c2843296611fe4afa55ef262d22dad2ce84c6f6d41f32de4ad6e25'
+          if ($artifact.name -ne 'prototype-0.1.41-server-tested' -or $artifact.expired -or $artifact.workflow_run.head_sha -ne $source -or $artifact.digest -ne ('sha256:'+$zipHash)) { throw 'Accepted artifact identity changed' }
+          $prior = & gh release view $tag --repo $repo --json tagName 2>$null
+          if ($LASTEXITCODE -eq 0) { throw 'Release exists; existing releases are never overwritten' }
+          $existingTags = @(Invoke-RestMethod ($api+'/git/matching-refs/tags/'+$tag) -Headers $headers)
+          if ($existingTags.Count -ne 0) { throw 'Tag exists; existing tags are never overwritten' }
+          $zip = Join-Path $env:RUNNER_TEMP 'tested-0.1.41.zip'
+          Invoke-WebRequest ($api+'/actions/artifacts/13396906359/zip') -Headers $headers -OutFile $zip
+          if ((Get-FileHash $zip).Hash.ToLowerInvariant() -ne $zipHash) { throw 'Downloaded artifact ZIP checksum mismatch' }
+          $root = Join-Path $env:RUNNER_TEMP 'tested-0.1.41'
+          Expand-Archive -LiteralPath $zip -DestinationPath $root
+          $assets = @(
+            @{Path='dist/ImmichClone-0.1.41-prototype-x64-setup.exe'; Size=104634954; Hash='2f61cca971e9d4bcbdd390f3809e9fcc55c7c1988ce40ce2e399dda799e2740a'},
+            @{Path='dist/SHA256SUMS.txt'; Size=110; Hash='e2f8cbabb6edf1804c5f3f84e96a55a96422e8a7c5564737cb8227676326a1c2'},
+            @{Path='docs/validation-0.1.41.md'; Size=6542; Hash='aea6cbea1a0fe2909cc8f88cabe2e6d76509560593c25556b5fdf0592207853c'},
+            @{Path='docs/release-notes-0.1.41.md'; Size=2374; Hash='d4d1c9256e79d32ae07cff7a10dcd4d9ea76be00cf8fc8b678e17eb299fdf420'}
+          )
+          if (@(Get-ChildItem -LiteralPath $root -Recurse -File).Count -ne 4) { throw 'Unexpected tested artifact members' }
+          $files = @()
+          foreach ($asset in $assets) {
+            $file = Join-Path $root $asset.Path
+            if ((Get-Item -LiteralPath $file).Length -ne $asset.Size -or (Get-FileHash -LiteralPath $file).Hash.ToLowerInvariant() -ne $asset.Hash) { throw 'Tested deliverable checksum mismatch' }
+            $files += $file
+          }
+          $body = @'
+          # Immich Clone 0.1.41 prototype
+
+          Corrects 0.1.40 Setup refusing normal ProgramData parent creation permissions. Use the same application/data folders; Setup handles the retained stopped/disabled 0.1.39 service. Close the failed 0.1.40 Setup first. No uninstall or manual permission edits are needed.
+
+          User-approved publication of the exact tested artifact, without rebuilding. Windows Server 2022 validation passed actual Program Files/ProgramData fresh installation, genuine 0.1.39 disabled-service upgrade, rollback, full media/AI, browser controls, original/organization preservation and independent restore/reinstall. Target-PC validation remains pending.
+
+          Tested source: e1212539511ee3413a7049e318dc0c2699e8ee0c
+          Full validation: https://github.com/aataat12/immich-clone/actions/runs/41986219923
+          Focused security/default-folder validation: https://github.com/aataat12/immich-clone/actions/runs/41984997929
+          Installer SHA256: 2f61cca971e9d4bcbdd390f3809e9fcc55c7c1988ce40ce2e399dda799e2740a
+          Installer size: 104634954 bytes
+
+          Download the installer, SHA256SUMS.txt and validation-0.1.41.md. All four assets are retained unchanged from the tested build. Their build-time notes describe publication as pending approval; that approval was subsequently supplied and this release completes publication.
+
+          Retain an independent Ready backup and verify the checksum. The package remains unsigned. Windows Server evidence does not certify final Windows 10 clean-install, reboot, endurance or physical power-loss acceptance. Milestone 7 and SEC-05/06/08 remain open; no deferred features, dependencies, providers or schema changes are added here. Keep support logs, media, access codes and backups private.
+          '@
+          $bodyFile = Join-Path $env:RUNNER_TEMP 'release-0.1.41-body.md'
+          [IO.File]::WriteAllText($bodyFile,$body,[Text.UTF8Encoding]::new($false))
+          & gh release create $tag --repo $repo --target $source --title 'Immich Clone 0.1.41 prototype' --draft --prerelease --notes-file $bodyFile @files
+          if ($LASTEXITCODE -ne 0) { throw 'Approved draft release creation failed' }
+          $drafts = @(Invoke-RestMethod ($api+'/releases?per_page=100') -Headers $headers | Where-Object tag_name -eq $tag)
+          if ($drafts.Count -ne 1) { throw 'Approved draft release could not be uniquely identified' }
+          $release = Invoke-RestMethod ($api+'/releases/'+$drafts[0].id) -Headers $headers
+          if (!$release.draft -or !$release.prerelease -or $release.target_commitish -ne $source -or @($release.assets).Count -ne 4) { throw 'Draft release identity mismatch' }
+          foreach ($asset in $assets) {
+            $name = Split-Path $asset.Path -Leaf
+            $actual = @($release.assets | Where-Object name -eq $name)
+            if ($actual.Count -ne 1 -or $actual[0].size -ne $asset.Size -or $actual[0].digest -ne ('sha256:'+$asset.Hash)) { throw 'Uploaded draft asset identity mismatch' }
+          }
+          & gh release edit $tag --repo $repo --draft=false --prerelease
+          if ($LASTEXITCODE -ne 0) { throw 'Approved release publication failed' }
+          $published = Invoke-RestMethod ($api+'/releases/tags/'+$tag) -Headers $headers
+          if ($published.draft -or !$published.prerelease -or $published.target_commitish -ne $source -or @($published.assets).Count -ne 4) { throw 'Published release identity mismatch' }
+          $ref = Invoke-RestMethod ($api+'/git/ref/tags/'+$tag) -Headers $headers
+          if ($ref.object.type -ne 'commit' -or $ref.object.sha -ne $source) { throw 'Published tag does not target accepted source' }
+          Write-Output ('Published '+$published.html_url+' with four verified tested assets')
