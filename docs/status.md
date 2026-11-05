@@ -82,13 +82,33 @@ integration reduced it to6 remaining passes; initialization reduced it to5; the 
 | Administrative verify/backup held read-only paths and archive output | Focused Windows checkpoint accepted | 0 |
 | Restore supervisor and pre-main worker path boundary | Focused Windows checkpoint accepted | 0 |
 | Durable full-payload intent and interrupted/mixed-copy recovery | Focused Windows Setup kill/retry checkpoint accepted | 0 |
-| Separate-account installer/metadata concurrency controls | Remaining | 1 |
+| Separate-account installer/metadata concurrency controls | Native action/retirement checkpoint tested; full Setup concurrency remains | 1 |
 | Genuine prior-release/full-provider/recovery closure | Remaining | 1 |
 | Total | SEC-03 remains open | 2 |
 
 No recovery CI remains active. No new feature/provider/version/release, cost,
 Group3 work or PC action; keep published0.1.39. Security remains4 closed/4 open.
 Windows Server results do not certify Windows10.
+
+### SEC-03 separate-account native metadata checkpoint
+
+[Run41953634876](https://github.com/aataat12/immich-clone/actions/runs/41953634876),
+sourcef4b8098b81879a07c453e57cc51b0a5ab89e7083/job127003195293 passed on Windows
+Server2022. The corrected worker handoff proves real standard-account positive
+write/rename/hardlink/ACL capabilities, concurrent protected native begin/audit/
+publish/commit attempts with zero successful mutations, preheld-writer refusal
+and unchanged retry, plus a deterministic held retirement interruption after the
+first deletion. A committed terminal survives partial cleanup; retry retires
+without candidate rollback. Independent synthetic metadata bytes/ACLs, native
+regressions/build/vet and parser checks passed. Source formatting from the tested
+runner is saved unchanged. [Exact evidence and fixture corrections](metadata-concurrency-native-checkpoint.md).
+
+This is component evidence only: actual Inno Setup/rollback/uninstall metadata
+interleavings and action-boundary protection remain in the SAME concurrency row.
+The combined genuine prior-release/full-provider/recovery row remains gated.
+SEC03 stays open, security4 closed/4 open; no estimate reduction or new scope.
+Keep0.1.39; no PC action or new release/dependency/provider/cost. Server execution
+does not certify Windows10. All native metadata gate runs have completed.
 
 ### SEC-03 interrupted-upgrade recovery accepted
 

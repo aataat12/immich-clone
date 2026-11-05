@@ -593,3 +593,21 @@
   Same outstanding row closes, forecast3 to2; remaining concurrency and genuine
   release/fullprovider/recovery rows unchanged. No release/provider/dependency/
   catalog-schema/cost/Group3 work or Windows10/physical-powerloss certification.
+
+
+- SEC03 separate-account metadata native checkpoint: correct the worker fixture
+  before accepting evidence. Real standard token proves permissive write/rename/
+  hardlink/actual ACL mutation; protected operations overlap native actions and
+  must have zero successes. Establish verified private policy after the old
+  writer capability is acquired, then measure exact preservation; native sharing
+  still refuses that writer until release. A package-private nil production hook
+  permits a compiled test to hold all retirement objects, observe the actor,
+  interrupt after first deletion and prove terminal retention/no committed-code
+  rollback on retry. No shipped flag/environment bypass or dependency added.
+  Sourcef4b8098/run41953634876/job127003195293 passes native tests/build/vet/parser
+  and actual separate-account fixture. Exact tested Go formatting saved. Failed
+  fixture numeric-wrapper/ACL/observer-sharing iterations are retained in the
+  checkpoint evidence; no mutation assertions or native sharing were relaxed.
+  SAME original concurrency row remains open for actual Inno/action-boundary
+  replacement proof; combined full-provider/prior-release gate still waits.
+  No forecast reduction, Group3/cost/provider/release/schema/Windows10 claim.

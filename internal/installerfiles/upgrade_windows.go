@@ -227,7 +227,7 @@ func BeginUpgrade(app, data, root string, hadService bool) (err error) {
 // All surviving objects are held and audited before the first deletion. A valid
 // terminal record remains until all payload/other metadata deletion completes.
 func retireUpgrade(d *winfs.Directory) error {
-    return retireUpgradeWithHook(d, nil)
+	return retireUpgradeWithHook(d, nil)
 }
 
 // The nil production hook leaves the retirement protocol unchanged. Package
@@ -319,9 +319,11 @@ func retireUpgradeWithHook(d *winfs.Directory, beforeDelete func(int) error) (er
 		}
 	}
 	for i, f := range files {
-        if beforeDelete != nil {
-            if e = beforeDelete(i); e != nil { return e }
-        }
+		if beforeDelete != nil {
+			if e = beforeDelete(i); e != nil {
+				return e
+			}
+		}
 		if e = f.n.Delete(); e != nil {
 			return e
 		}
