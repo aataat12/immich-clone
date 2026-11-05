@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"syscall"
+	"unicode/utf16"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -84,10 +85,13 @@ func main() {
 	if err != nil { r.Error = err.Error(); _ = out.Close(); writeReport(r); return }
 	cwd, err := windows.UTF16PtrFromString(filepath.Dir(exe))
 	if err != nil { r.Error = err.Error(); _ = out.Close(); writeReport(r); return }
-	env := syscall.StringToUTF16Ptr("PATH=" + os.Getenv("PATH") + "\x00SystemRoot=" + os.Getenv("SystemRoot") + "\x00\x00")
+	envBlock := utf16.Encode([]rune("PATH=" + os.Getenv("PATH") + "\x00SystemRoot=" + os.Getenv("SystemRoot") + "\x00"))
+	envBlock = append(envBlock, 0)
+	env := &envBlock[0]
 	startup := windows.StartupInfo{Cb: uint32(unsafe.Sizeof(windows.StartupInfo{}))}
 	var pi windows.ProcessInformation
 	if err = windows.CreateProcessAsUser(out, app, line, nil, nil, false, windows.CREATE_NO_WINDOW|windows.CREATE_UNICODE_ENVIRONMENT, env, cwd, &startup, &pi); err != nil { r.Error = err.Error(); _ = out.Close(); writeReport(r); return }
+	runtime.KeepAlive(envBlock)
 	r.ProcessCreated = true
 	_, _ = windows.WaitForSingleObject(pi.Process, 5000)
 	var code uint32

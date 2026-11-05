@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"syscall"
+	"unicode/utf16"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -72,10 +73,13 @@ func RunRestricted(ctx context.Context, exe string, args []string, onStart func(
 	line, err := windows.UTF16PtrFromString(windows.ComposeCommandLine(append([]string{exe}, args...))); if err != nil { return result, err }
 	app, err := windows.UTF16PtrFromString(exe); if err != nil { return result, err }
 	cwd, err := windows.UTF16PtrFromString(filepath.Dir(exe)); if err != nil { return result, err }
-	env := syscall.StringToUTF16Ptr("PATH=" + filepath.Dir(exe) + "\x00SystemRoot=" + os.Getenv("SystemRoot") + "\x00\x00")
+	envBlock := utf16.Encode([]rune("PATH=" + filepath.Dir(exe) + "\x00SystemRoot=" + os.Getenv("SystemRoot") + "\x00"))
+	envBlock = append(envBlock, 0)
+	env := &envBlock[0]
 	startup := windows.StartupInfo{Cb: uint32(unsafe.Sizeof(windows.StartupInfo{})), Flags: windows.STARTF_USESTDHANDLES, StdInput: windows.Handle(nul.Fd()), StdOutput: windows.Handle(w.Fd()), StdErr: windows.Handle(nul.Fd())}
 	var pi windows.ProcessInformation
 	if err = windows.CreateProcessAsUser(token, app, line, nil, nil, true, windows.CREATE_NO_WINDOW|windows.CREATE_UNICODE_ENVIRONMENT, env, cwd, &startup, &pi); err != nil { return result, fmt.Errorf("process: %w", err) }
+	runtime.KeepAlive(envBlock)
 	job, jobErr := windows.CreateJobObject(nil, nil)
 	if jobErr != nil { windows.TerminateProcess(pi.Process, 1); return result, fmt.Errorf("job: %w", jobErr) }
 	defer windows.CloseHandle(job)
