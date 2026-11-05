@@ -70,6 +70,10 @@ func restoreDescriptor(protected bool) (*windows.SECURITY_DESCRIPTOR, string, er
 	}
 	if protected {
 		text = strings.Replace(text, "D:", "D:P", 1)
+	} else {
+		// Native file creation treats a supplied legacy DACL as protected.
+		// Mark this private descendant policy for automatic inheritance too.
+		text = strings.Replace(text, "D:", "D:AI", 1)
 	}
 	sd, e := windows.SecurityDescriptorFromString(text)
 	return sd, owner, e
