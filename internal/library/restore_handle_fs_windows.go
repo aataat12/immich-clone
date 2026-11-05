@@ -35,7 +35,7 @@ func (f *restoreHandleFS) initial() error {
 		if e != nil {
 			return e
 		}
-		e = restorePrivateDirectory(d)
+		e = restorePrivateChildDirectory(d)
 		children, ne := d.Names()
 		ce := d.Close()
 		if e != nil || ne != nil || ce != nil {
@@ -99,7 +99,7 @@ func (f *restoreHandleFS) Check(l RestoreLimits) error {
 			if e != nil {
 				return e
 			}
-			e = restorePrivateDirectory(d)
+			e = restorePrivateChildDirectory(d)
 			if e != nil {
 				d.Close()
 				return e

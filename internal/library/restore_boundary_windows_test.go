@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"immichclone/internal/installerfiles"
 	"immichclone/internal/winfs"
 	"os"
 	"os/exec"
@@ -47,7 +48,7 @@ func restoreBoundaryPrivateDirectory(t *testing.T, path string, requireProtected
 		t.Fatal(e)
 	}
 	ctrl, _, e := sd.Control()
-	if e != nil || (requireProtected && ctrl&windows.SE_DACL_PROTECTED == 0) {
+	if e != nil || (ctrl&windows.SE_DACL_PROTECTED != 0) != requireProtected {
 		t.Fatal("created restore directory is not protected/private", e)
 	}
 	owner, _, e := sd.Owner()
@@ -136,6 +137,170 @@ func TestRestoreBoundaryValidPrivateAtBirthAndIndependentRecovery(t *testing.T) 
 	offlineAssertSnapshot(t, filepath.Dir(archive), archiveBefore)
 	t.Log("PASS: actual restore stage and derived directories are private/protected before any catalog extraction; authentic supervised recovery verifies original bytes while source and archive remain unchanged")
 }
+func TestRestoreBoundaryPrivateDescendantsAdoptInstallerServicePolicy(t *testing.T) {
+	_, restoreOwner, e := restorePrivateDescriptor()
+	if e != nil {
+		t.Fatal(e)
+	}
+	if restoreOwner != "S-1-5-32-544" {
+		t.Skip("installer service enrollment requires an elevated administrator")
+	}
+	archive, _, id, _ := restoreBoundaryFixture(t)
+	target := filepath.Join(t.TempDir(), "private restored library")
+	if e := restoreBoundaryCall(archive, target); e != nil {
+		t.Fatal(e)
+	}
+	user, e := windows.GetCurrentProcessToken().GetTokenUser()
+	if e != nil {
+		t.Fatal(e)
+	}
+	paths := []string{target}
+	for _, name := range []string{"originals", "staging", "previews", "faces", "catalog.db", "state-format.txt", "access-code.txt", "originals/" + id} {
+		paths = append(paths, filepath.Join(target, name))
+	}
+	owners := map[string]string{}
+	contents := map[string][]byte{}
+	for i, path := range paths {
+		info, e := os.Stat(path)
+		if e != nil {
+			t.Fatal(e)
+		}
+		sd, e := windows.GetNamedSecurityInfo(path, windows.SE_FILE_OBJECT, windows.OWNER_SECURITY_INFORMATION|windows.DACL_SECURITY_INFORMATION)
+		if e != nil {
+			t.Fatal(e)
+		}
+		owner, _, e := sd.Owner()
+		if e != nil || owner == nil {
+			t.Fatal("missing restored owner", e)
+		}
+		owners[path] = owner.String()
+		ctl, _, e := sd.Control()
+		if e != nil || (ctl&windows.SE_DACL_PROTECTED != 0) != (i == 0) {
+			t.Fatal("only restored root must be protected", e)
+		}
+		acl, _, e := sd.DACL()
+		if e != nil || acl == nil {
+			t.Fatal("missing restored private DACL", e)
+		}
+		for j := uint32(0); j < uint32(acl.AceCount); j++ {
+			var ace *windows.ACCESS_ALLOWED_ACE
+			if e = windows.GetAce(acl, j, &ace); e != nil {
+				t.Fatal(e)
+			}
+			if ace.Header.AceType != windows.ACCESS_ALLOWED_ACE_TYPE {
+				t.Fatal("unsupported restored private grant")
+			}
+			sid := (*windows.SID)(unsafe.Pointer(&ace.SidStart)).String()
+			if sid != "S-1-5-18" && sid != "S-1-5-32-544" && sid != user.User.Sid.String() {
+				t.Fatal("restored bytes exposed before installer enrollment")
+			}
+		}
+		if info.IsDir() {
+			restoreBoundaryPrivateDirectory(t, path, i == 0)
+		} else {
+			contents[path], e = os.ReadFile(path)
+			if e != nil {
+				t.Fatal(e)
+			}
+		}
+	}
+	if e = installerfiles.NormalizePrivateTree(target, user.User.Sid.String(), true); e != nil {
+		t.Fatal("actual private restored tree cannot enroll LocalService", e)
+	}
+	for _, path := range paths {
+		sd, e := windows.GetNamedSecurityInfo(path, windows.SE_FILE_OBJECT, windows.OWNER_SECURITY_INFORMATION|windows.DACL_SECURITY_INFORMATION)
+		if e != nil {
+			t.Fatal(e)
+		}
+		owner, _, e := sd.Owner()
+		if e != nil || owner == nil || owner.String() != owners[path] {
+			t.Fatal("installer enrollment changed restored owner", e)
+		}
+		acl, _, e := sd.DACL()
+		if e != nil || acl == nil {
+			t.Fatal(e)
+		}
+		var service uint32
+		for j := uint32(0); j < uint32(acl.AceCount); j++ {
+			var ace *windows.ACCESS_ALLOWED_ACE
+			if e = windows.GetAce(acl, j, &ace); e != nil {
+				t.Fatal(e)
+			}
+			if ace.Header.AceType == windows.ACCESS_ALLOWED_ACE_TYPE && ace.Header.AceFlags&8 == 0 && (*windows.SID)(unsafe.Pointer(&ace.SidStart)).String() == "S-1-5-19" {
+				service |= uint32(ace.Mask)
+			}
+		}
+		if service != 0x1301bf {
+			t.Fatal("restored node lacks exactly LocalService Modify")
+		}
+		if before, ok := contents[path]; ok {
+			after, e := os.ReadFile(path)
+			if e != nil || !bytes.Equal(before, after) {
+				t.Fatal("installer enrollment changed restored bytes", e)
+			}
+		}
+	}
+	t.Log("PASS: actual restore remains private under a protected root; inherited descendants enroll LocalService through unchanged held normalization without changing owners or bytes")
+}
+
+func TestRestoreBoundaryChildInheritanceKeepsPrivatePolicy(t *testing.T) {
+	parent, e := winfs.OpenDirectory(t.TempDir())
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer parent.Close()
+	rootSD, _, e := restorePrivateDescriptor()
+	if e != nil {
+		t.Fatal(e)
+	}
+	stage, e := parent.CreateExclusiveDirectory("protected private root", rootSD)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer stage.Close()
+	if e = restorePrivateDirectory(stage.Directory()); e != nil {
+		t.Fatal(e)
+	}
+	childSD, _, e := restoreChildDescriptor()
+	if e != nil {
+		t.Fatal(e)
+	}
+	child, e := stage.Directory().Child("inheriting private child", childSD)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if e = restorePrivateChildDirectory(child); e != nil {
+		child.Close()
+		t.Fatal("private inheriting child refused", e)
+	}
+	if e = restorePrivateDirectory(child); e == nil {
+		child.Close()
+		t.Fatal("unprotected child accepted as restore root")
+	}
+	if e = child.Close(); e != nil {
+		t.Fatal(e)
+	}
+	for _, kind := range []string{"unknown-reader", "deny"} {
+		text := childSD.String() + "(A;;GR;;;WD)"
+		if kind == "deny" {
+			text = childSD.String() + "(D;;GW;;;WD)"
+		}
+		unsafeSD, e := windows.SecurityDescriptorFromString(text)
+		if e != nil {
+			t.Fatal(e)
+		}
+		d, e := stage.Directory().Child(kind, unsafeSD)
+		if e != nil {
+			t.Fatal(e)
+		}
+		e = restorePrivateChildDirectory(d)
+		ce := d.Close()
+		if e == nil || ce != nil {
+			t.Fatal("unsafe child policy was not refused", kind, e, ce)
+		}
+	}
+}
+
 func TestRestoreBoundaryArchiveBesideDestination(t *testing.T) {
 	archive, _, _, _ := restoreBoundaryFixture(t)
 	before, e := os.ReadFile(archive)

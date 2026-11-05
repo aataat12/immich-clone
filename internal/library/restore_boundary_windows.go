@@ -40,6 +40,17 @@ type restoreBoundary struct {
 }
 
 func restorePrivateDescriptor() (*windows.SECURITY_DESCRIPTOR, string, error) {
+	return restoreDescriptor(true)
+}
+
+// Descendants inherit only from the protected private restore root. Keeping
+// their inheritance enabled lets the installer later grant LocalService access
+// through its audited held-tree normalizer, without rewriting protected children.
+func restoreChildDescriptor() (*windows.SECURITY_DESCRIPTOR, string, error) {
+	return restoreDescriptor(false)
+}
+
+func restoreDescriptor(protected bool) (*windows.SECURITY_DESCRIPTOR, string, error) {
 	var elevated, size uint32
 	if e := windows.GetTokenInformation(windows.GetCurrentProcessToken(), windows.TokenElevation, (*byte)(unsafe.Pointer(&elevated)), 4, &size); e != nil {
 		return nil, "", e
@@ -48,19 +59,28 @@ func restorePrivateDescriptor() (*windows.SECURITY_DESCRIPTOR, string, error) {
 		return nil, "", errors.New("unknown elevation")
 	}
 	owner := "S-1-5-32-544"
-	text := "O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)"
+	text := "O:BAG:BAD:(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)"
 	if elevated == 0 {
 		u, e := windows.GetCurrentProcessToken().GetTokenUser()
 		if e != nil {
 			return nil, "", e
 		}
 		owner = u.User.Sid.String()
-		text = "O:" + owner + "D:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;" + owner + ")"
+		text = "O:" + owner + "D:(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;" + owner + ")"
+	}
+	if protected {
+		text = strings.Replace(text, "D:", "D:P", 1)
 	}
 	sd, e := windows.SecurityDescriptorFromString(text)
 	return sd, owner, e
 }
 func restorePrivateDirectory(d *winfs.Directory) error {
+	return restoreDirectoryPolicy(d, true)
+}
+func restorePrivateChildDirectory(d *winfs.Directory) error {
+	return restoreDirectoryPolicy(d, false)
+}
+func restoreDirectoryPolicy(d *winfs.Directory, protected bool) error {
 	_, owner, e := restorePrivateDescriptor()
 	if e != nil {
 		return e
@@ -74,8 +94,8 @@ func restorePrivateDirectory(d *winfs.Directory) error {
 		return errors.New("untrusted restore owner")
 	}
 	ctl, _, e := sd.Control()
-	if e != nil || ctl&windows.SE_DACL_PROTECTED == 0 {
-		return errors.New("unprotected restore root")
+	if e != nil || (ctl&windows.SE_DACL_PROTECTED != 0) != protected {
+		return errors.New("unexpected restore inheritance")
 	}
 	acl, _, e := sd.DACL()
 	if e != nil || acl == nil {
@@ -228,12 +248,16 @@ func restorePlatform(ctx context.Context, archive, target string, l RestoreLimit
 	if e = oldParent.Close(); e != nil {
 		return e
 	}
+	childSD, _, e := restoreChildDescriptor()
+	if e != nil {
+		return e
+	}
 	for _, n := range []string{"originals", "staging", "previews", "faces"} {
-		d, e := b.stage.Directory().Child(n, b.sd)
+		d, e := b.stage.Directory().Child(n, childSD)
 		if e != nil {
 			return e
 		}
-		e = restorePrivateDirectory(d)
+		e = restorePrivateChildDirectory(d)
 		ce := d.Close()
 		if e != nil || ce != nil {
 			return errors.Join(e, ce)
@@ -471,7 +495,7 @@ func restoreWorkerPlatform() (bool, int) {
 			return 2
 		}
 		fs := &restoreHandleFS{stage: stage, sd: nil}
-		fs.sd, _, e = restorePrivateDescriptor()
+		fs.sd, _, e = restoreChildDescriptor()
 		if e != nil || fs.initial() != nil {
 			return 2
 		}
