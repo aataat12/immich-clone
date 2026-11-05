@@ -516,7 +516,9 @@ func (s *Store) makePreviewContext(ctx context.Context, a *Asset) error {
 	if _, e = f.Seek(0, 0); e != nil {
 		return e
 	}
-	img, e := decodeParentImage(ctx, f)
+	encodedLimit:=maxParentImageBytes
+ if a.MIME=="image/jpeg" || a.MIME=="image/png" {encodedLimit=MaxUpload}
+ img, e := decodeParentImageLimit(ctx, f,encodedLimit)
 	if e != nil {
 		return e
 	}

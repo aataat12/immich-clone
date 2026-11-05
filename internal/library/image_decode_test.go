@@ -116,5 +116,19 @@ func TestSEC06ParentLargeImageResourceEvidence(t *testing.T) {
  img,err=orientedContext(ctx,img,6);if err!=nil {t.Fatal(err)}
  runtime.ReadMemStats(&after)
  if img.Bounds().Dx()!=5000||img.Bounds().Dy()!=8000 {t.Fatal("40MP orientation parity")}
+ if after.TotalAlloc-before.TotalAlloc>520<<20 {t.Fatal("decode/rotation exceeded finite allocation budget")}
+ r,g,b,a:=img.At(4999,0).RGBA();if r!=65535||g!=0||b!=0||a!=65535 {t.Fatal("16bit orientation color parity")}
  t.Logf("40MP PNG16+rotation wall=%s allocated_bytes=%d encoded_bytes=%d",time.Since(started),after.TotalAlloc-before.TotalAlloc,encoded.Len())
+}
+
+func TestSEC06LargeEncodedJPEGPreviewParity(t *testing.T) {
+ s,_:=openTest(t)
+ f,err:=os.CreateTemp(t.TempDir(),"large-jpeg");if err!=nil {t.Fatal(err)};defer f.Close()
+ if _,err=f.Write(parentFixture(t,"jpeg"));err!=nil {t.Fatal(err)}
+ if err=f.Truncate(maxParentImageBytes+1);err!=nil {t.Fatal(err)}
+ if _,err=f.Seek(0,0);err!=nil {t.Fatal(err)}
+ a,_,err:=s.Put("large.jpg",f);if err!=nil {t.Fatal(err)}
+ if _,err=s.ProcessOne();err!=nil {t.Fatal(err)}
+ a,err=s.Get(a.ID);if err!=nil||a.Preview!="ready" {t.Fatal("prior JPEG preview compatibility",err,a.Preview)}
+ if _,err=s.analysisImage(context.Background(),a.ID);err==nil {t.Fatal("existing AI size limit lost")}
 }

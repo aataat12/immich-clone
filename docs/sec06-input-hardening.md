@@ -5,12 +5,16 @@ Published prototype remains 0.1.39. No dependency/provider/model/schema change.
 
 ## Candidate changes
 
-- Shared parent Go image decoder for preview and AI: 64 MiB encoded decode
-  budget, overflow-safe 40-megapixel check, decoded/config bounds and format
-  agreement, cancellation checks before/after decoding. Original upload/download
-  limit remains 4 GiB; larger encoded images retain originals and report failed
-  derived processing. This extends the existing 64 MiB GIF/BMP/TIFF preview bound
-  to parent JPEG/PNG preview decoding; test/accept this behavior before release.
+- Shared parent Go image decoder for preview and AI: overflow-safe 40-megapixel
+  check, decoded/config bounds and format agreement, cancellation before/after
+  decoding. Preserve existing encoded limits: JPEG/PNG previews and originals
+  4 GiB, GIF/BMP/TIFF previews and all parent AI decoding 64 MiB. A proposed
+  uniform 64 MiB cutoff was removed during review before acceptance because it
+  would narrow existing JPEG/PNG preview compatibility.
+- TIFF uses the same pinned upstream parser with context-checked bounded random
+  reads, allowing repeated compressed strips to observe the existing 45-second
+  preview/75-second AI deadlines. Orientation checks cancellation per row and
+  uses typed pixel access to avoid per-pixel heap allocation.
 - EXIF structural failure discards partial fields; malformed metadata remains a
   warning and does not prevent otherwise valid media previews. Orientation copy
   checks cancellation between rows.
@@ -43,8 +47,13 @@ hard CPU/memory containment guarantees.
 
 ## Execution blocker and remaining acceptance
 
-No local Go toolchain is available. Local diff whitespace and UTF-8 checks passed;
-Go compilation, tests, formatting and resource measurements have NOT run.
+No local Go toolchain is available. Initial candidate 3c03df2 passed Windows Server
+2022 run42073757825/job127408339355: focused tests, full internal/command tests,
+module verification, vet and build. Initial 40MP PNG16+rotation took 2.305s and
+allocated 1120197168 bytes (TotalAlloc, not peak RSS). The next revision reduces
+rotation allocation, preserves large encoded JPEG previews, and adds adversarial
+TIFF, catalog no-write refusal and configured native/media/restore checks; those
+changes are pending execution. The baseline catalog probe42073757656 also passed.
 The user explicitly authorized uploading this SEC-06 source/test payload to a
 separate branch of the existing public project repository and running Windows
 checks on November 5. Earlier automatic-review rejections were not bypassed.

@@ -55,17 +55,12 @@ func validateCatalogInput(tx *bolt.Tx) error {
      if json.Unmarshal(v,&d)!=nil || !validDeletion(d,string(k)) {return errCatalogInput}
     case reanalysisBucket:
      var j reanalysisJob
-     if json.Unmarshal(v,&j)!=nil || !validReanalysis(j,string(k)) || !textOK(j.Provider,128) || !textOK(j.MediaProvider,128) || len(j.Error)>4096 || !validCatalogTags(j.Objects,80) {return errCatalogInput}
+     if json.Unmarshal(v,&j)!=nil || !validReanalysis(j,string(k)) || !textOK(j.Provider,128) || !textOK(j.MediaProvider,128) || len(j.Error)>4096 || !validCatalogTags(j.Objects,80) || (j.Video!=nil && !validCatalogVideo(j.Video)) {return errCatalogInput}
     case analysisBucket:
      var a Analysis
      if !validID(string(k)) || json.Unmarshal(v, &a) != nil || a.AssetID != string(k) || !textOK(a.Provider,128) || len(a.Error) > 4096 || !validCatalogTags(a.Objects,80) { return errCatalogInput }
      switch a.Status { case "queued", "ready", "failed", "paused", "cancelled": default: return errCatalogInput }
-     if a.Video != nil {
-      if !validVideo(a.Video) { return errCatalogInput }
-      for _,sample:=range a.Video.Samples {
-       if !textOK(sample.Provider,128) || !validCatalogTags(sample.Objects,80) || sample.Width<0 || sample.Height<0 {return errCatalogInput}
-      }
-     }
+     if a.Video != nil && !validCatalogVideo(a.Video) { return errCatalogInput }
     }
     return nil
    })
@@ -111,4 +106,12 @@ func validateCatalogImports(b *bolt.Bucket) error {
   if entries!=m.TotalFiles || total!=m.TotalBytes {return errCatalogInput}
   return nil
  })
+}
+
+func validCatalogVideo(v *VideoProgress) bool {
+ if !validVideo(v) {return false}
+ for _,sample:=range v.Samples {
+  if !textOK(sample.Provider,128) || !validCatalogTags(sample.Objects,80) || sample.Width<0 || sample.Height<0 {return false}
+ }
+ return true
 }

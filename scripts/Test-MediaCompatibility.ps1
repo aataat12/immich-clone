@@ -12,6 +12,8 @@ try {
     $env:IMMICH_COMPAT_PROVIDER="$root/media"
     go test -mod=readonly -v -count=1 -timeout=120s ./internal/library -run '^TestMediaCompatibilityImageMatrix$'
     if ($LASTEXITCODE -ne 0) { throw 'Production image matrix or independent recovery failed' }
+    go test -mod=readonly -v -count=1 -timeout=90s ./internal/library -run '^TestSEC06NativeMalformedMediaAndRecovery$'
+    if ($LASTEXITCODE -ne 0) { throw 'Actual hostile media and recovery failed' }
     go test -mod=readonly -v -count=1 -timeout=120s ./internal/media -run 'TestActualVideoMetadataCompatibilityMatrix|TestMetadataRoutingAndBounds|TestAnalysisOutputAllowanceRemainsFinite'
     if ($LASTEXITCODE -ne 0) { throw 'Actual video metadata/resource compatibility failed' }
 } finally {

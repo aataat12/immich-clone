@@ -10,6 +10,7 @@ import (
 
  "encoding/json"
  "os"
+ "path/filepath"
 
  "strings"
 
@@ -210,4 +211,28 @@ func TestSEC06CatalogEscapedMaximumAliases(t *testing.T) {
  for i:=0;i<4096;i++ {a.Sources=append(a.Sources,strings.Repeat("<",1024))}
  if e:=s.db.Update(func(tx *bolt.Tx)error {b,e:=json.Marshal(a);if e!=nil{return e};return tx.Bucket([]byte("assets")).Put([]byte(a.ID),b)});e!=nil {t.Fatal(e)}
  if e:=s.db.View(validateCatalogInput);e!=nil{t.Fatal("escaped aliases rejected",e)}
+}
+
+func TestSEC06CatalogOpenRefusesWithoutCatalogMutation(t *testing.T) {
+ s,root:=openTest(t)
+ a,_,e:=s.Put("safe.txt",bytes.NewBufferString("synthetic authoritative original"));if e!=nil{t.Fatal(e)}
+ if e=s.db.Update(func(tx *bolt.Tx)error{return writeJSON(tx.Bucket([]byte(tagsBucket)),a.ID,[]string{"bad\nlabel"})});e!=nil{t.Fatal(e)}
+ if e=s.Close();e!=nil{t.Fatal(e)}
+ catalog:=filepath.Join(root,"catalog.db")
+ before,e:=os.ReadFile(catalog);if e!=nil{t.Fatal(e)}
+ reopened,e:=Open(root)
+ if e==nil {reopened.Close();t.Fatal("Open accepted malformed authoritative catalog")}
+ after,e:=os.ReadFile(catalog);if e!=nil{t.Fatal(e)}
+ if !bytes.Equal(before,after) {t.Fatal("failed catalog validation changed catalog bytes")}
+ original,e:=os.ReadFile(filepath.Join(root,"originals",a.ID))
+ if e!=nil || string(original)!="synthetic authoritative original" {t.Fatal("failed validation changed original",e)}
+}
+
+func TestSEC06CatalogVideoSampleValidation(t *testing.T) {
+ v:=&VideoProgress{Version:1,Policy:videoPolicy,DurationUS:100,Targets:[]int64{0},Next:1,Samples:[]VideoSample{{Provider:"safe",PositionUS:0,Width:1,Height:1,Objects:[]string{"cat"}}}}
+ if !validCatalogVideo(v) {t.Fatal("valid video sample refused")}
+ v.Samples[0].Objects=[]string{"bad\n"}
+ if validCatalogVideo(v) {t.Fatal("video sample control tag accepted")}
+ v.Samples[0].Objects=[]string{"cat"};v.Samples[0].Provider=string([]byte{255})
+ if validCatalogVideo(v) {t.Fatal("invalid video provider encoding accepted")}
 }
