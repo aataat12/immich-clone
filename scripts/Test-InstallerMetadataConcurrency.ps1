@@ -19,7 +19,7 @@ public sealed class MetadataActor : IDisposable {
  [DllImport("kernel32.dll",CharSet=CharSet.Unicode,SetLastError=true)] static extern bool CreateHardLink(string n,string existing,IntPtr s);
  IntPtr token; Thread thread; ManualResetEvent stop=new ManualResetEvent(false),ready=new ManualResetEvent(false);
  readonly object gate=new object(); string[] targets=new string[0]; string links; FileStream held;
- public long Attempts,Allowed,Denied,Missing,Unexpected,PrimaryDenied,AllowedWrite,AllowedRename,AllowedLink,AllowedAcl; public int LastUnexpectedCode; public bool Standard;
+ public long Attempts,Allowed,Denied,Missing,Unexpected,PrimaryDenied,AllowedWrite,AllowedRename,AllowedLink,AllowedAcl; public int LastUnexpectedCode; public string LastUnexpectedType; public bool Standard;
  public MetadataActor(string user,string password,string linkDirectory) {
   if(!LogonUser(user,".",password,2,0,out token))throw new Win32Exception(Marshal.GetLastWin32Error());
   links=linkDirectory;
@@ -30,9 +30,13 @@ public sealed class MetadataActor : IDisposable {
   try{action();Interlocked.Increment(ref Allowed);if(operation==0)Interlocked.Increment(ref AllowedWrite);if(operation==1)Interlocked.Increment(ref AllowedRename);if(operation==2)Interlocked.Increment(ref AllowedLink);if(operation==3)Interlocked.Increment(ref AllowedAcl);}
   catch(Exception e){
    int code=e is Win32Exception?((Win32Exception)e).NativeErrorCode:(e.HResult&65535);
+   // Framework NativeObjectSecurity wraps some missing-path Win32 statuses in
+   // InvalidOperationException. Classify only its exact numeric wrapper; do
+   // not swallow arbitrary exceptions or weaken mutation-success assertions.
+   if(e is InvalidOperationException){var m=System.Text.RegularExpressions.Regex.Match(e.Message,@"\AMethod failed with unexpected error code ([0-9]+)\.?\z");if(m.Success)code=Int32.Parse(m.Groups[1].Value);}
    if(e is UnauthorizedAccessException||code==5||code==32){Interlocked.Increment(ref Denied);if(index==0)Interlocked.Increment(ref PrimaryDenied);}
    else if(code==2||code==3||code==80||code==183)Interlocked.Increment(ref Missing);
-   else {Interlocked.Increment(ref Unexpected);Interlocked.Exchange(ref LastUnexpectedCode,code);}
+   else {Interlocked.Increment(ref Unexpected);Interlocked.Exchange(ref LastUnexpectedCode,code);LastUnexpectedType=e.GetType().FullName;}
   }
  }
  void Cycle(string[] current){
@@ -41,7 +45,7 @@ public sealed class MetadataActor : IDisposable {
    Attempt(index,0,delegate{using(var f=new FileStream(target,FileMode.Open,FileAccess.Write,FileShare.ReadWrite|FileShare.Delete)){f.Seek(0,SeekOrigin.End);f.WriteByte(82);}});
    Attempt(index,1,delegate{string moved=target+".actor-swap";File.Move(target,moved);File.Move(moved,target);});
    Attempt(index,2,delegate{string link=Path.Combine(links,"attempt-"+index+".bin");if(!CreateHardLink(link,target,IntPtr.Zero))throw new Win32Exception(Marshal.GetLastWin32Error());File.Delete(link);});
-   Attempt(index,3,delegate{var acl=File.GetAccessControl(target);File.SetAccessControl(target,acl);});
+   Attempt(index,3,delegate{var acl=File.GetAccessControl(target);var sid=WindowsIdentity.GetCurrent().User;acl.AddAccessRule(new System.Security.AccessControl.FileSystemAccessRule(sid,System.Security.AccessControl.FileSystemRights.Read,System.Security.AccessControl.AccessControlType.Allow));File.SetAccessControl(target,acl);});
   }
  }
  public void Positive(string target){using(var id=new WindowsIdentity(token))using(var c=id.Impersonate()){Cycle(new string[]{target});}}
@@ -109,6 +113,7 @@ try{
  $positiveActor.Positive($positive)
  Assert ($positiveActor.Allowed -eq 4 -and $positiveActor.Denied -eq 0 -and $positiveActor.Unexpected -eq 0 -and $positiveActor.Missing -eq 0) 'same account positively writes renames creates hardlinks and applies ACLs in permissive control'
  Assert ([IO.File]::ReadAllText($positive) -eq 'positiveR') 'positive control actually changes bytes'
+ Assert (@((Get-Acl -LiteralPath $positive).GetAccessRules($true,$false,[Security.Principal.SecurityIdentifier]) | Where-Object { $_.IdentityReference.Value -eq $sid }).Count -gt 0) 'positive ACL control actually creates a new explicit account grant'
  $positiveActor.Dispose();$positiveActor=$null
  $app=Join-Path $root 'app';$data=Join-Path $root 'data';$source=Join-Path $root 'source';$transaction=$app+'-upgrade-recovery'
  foreach($dir in @($app,$data,$source)){Native $InstallerFiles @('-action','ensure-private-root','-root-dir',$dir)}
@@ -130,7 +135,7 @@ try{
  for($i=0;$i -lt 12;$i++){Assert ((Invoke-Action 'audit-upgrade' $app $data $transaction) -eq 0) 'native audit succeeds during concurrent leaf replacement attempts'}
  Assert ($script:overlap -gt 0) 'attempt counters advance while native processes are active'
  $actor.Stop()
- Write-Host ('Actor counters: write='+$actor.AllowedWrite+' rename='+$actor.AllowedRename+' link='+$actor.AllowedLink+' acl='+$actor.AllowedAcl+' denied='+$actor.Denied+' missing='+$actor.Missing+' unexpected='+$actor.Unexpected+' code='+$actor.LastUnexpectedCode)
+ Write-Host ('Actor counters: write='+$actor.AllowedWrite+' rename='+$actor.AllowedRename+' link='+$actor.AllowedLink+' acl='+$actor.AllowedAcl+' denied='+$actor.Denied+' missing='+$actor.Missing+' unexpected='+$actor.Unexpected+' code='+$actor.LastUnexpectedCode+' type='+$actor.LastUnexpectedType)
  Assert ($actor.Allowed -eq 0 -and $actor.Denied -gt 0 -and $actor.Unexpected -eq 0) 'all protected writes renames outgoing hardlinks and ACL changes are refused'
  Assert ((Snapshot $pending) -eq $pendingBefore) 'pending bytes and descriptor are preserved'
  # A preauthorized writable handle survives DACL removal. Sharing must exclude it.
