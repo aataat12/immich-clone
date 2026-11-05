@@ -81,7 +81,7 @@ integration reduced it to6 remaining passes; initialization reduced it to5; the 
 | Command entrypoint guards, existing-code reads and stationary metadata aliases | Focused Windows checkpoint accepted | 0 |
 | Administrative verify/backup held read-only paths and archive output | Focused Windows checkpoint accepted | 0 |
 | Restore supervisor and pre-main worker path boundary | Focused Windows checkpoint accepted | 0 |
-| Durable full-payload intent and interrupted/mixed-copy recovery | Remaining | 1 |
+| Durable full-payload intent and interrupted/mixed-copy recovery | Native component tested; Setup integration remaining | 1 |
 | Separate-account installer/metadata concurrency controls | Remaining | 1 |
 | Genuine prior-release/full-provider/recovery closure | Remaining | 1 |
 | Total | SEC-03 remains open | 3 |
@@ -89,6 +89,30 @@ integration reduced it to6 remaining passes; initialization reduced it to5; the 
 No worker/CI remains active. No new feature/provider/version/release, cost,
 Group3 work or PC action; keep published0.1.39. Security remains4 closed/4 open.
 Windows Server results do not certify Windows10.
+
+### SEC-03 interrupted payload recovery: native component checkpoint
+
+Development resumed from accepted restore checkpoint `9a9d89c` on a separate
+`work/sec03-durable-recovery` branch. Native component source `5e17f2c` passed
+[Windows Server 2022 run41944521442](https://github.com/aataat12/immich-clone/actions/runs/41944521442),
+job126973302428: all installerfiles tests, helper build, module verification and
+vet. Real child-process exits at four publication boundaries bypass deferred
+rollback. A synced, closed private prewrite intent restores old/new/partial
+contents only through the recorded destination objects, verifies all prior-copy
+hashes before mutation, removes newly created leaves and supports repeated
+recovery. Replacement objects and corrupt backups refuse before restoration.
+The ordinary completion receipt remains required for completed-payload rollback.
+
+This is a component checkpoint, not acceptance of the durable-upgrade row.
+Setup still supplies temporary payload backup storage and does not call the new
+`recover-interrupted-payload` action. Next: persistent private transaction storage,
+pre-snapshot pending-transaction handling, commit/retirement and actual killed
+Setup/retry validation with service-start gating. Process-exit execution does not
+prove power-loss durability, full-provider recovery or Windows 10 behavior.
+The accepted security-baseline branch remains unchanged. No release, provider,
+dependency, application schema, cost or PC action. SEC03 stays open, security
+4 closed/4 open; the same three remaining workstreams stay tracked, best estimate
+3 additional passes. Native progress does not close the first row prematurely.
 
 ### SEC-03 initialization checkpoint accepted
 

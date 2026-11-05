@@ -552,3 +552,22 @@
   defects without reducing assertions; two workers reviewed/tested. Same restore
   row closes, forecast4 to3, remaining durable/races/combined rows unchanged.
   No new release/dependency/provider/cost/Group3 or Windows10 certification.
+
+
+- SEC03 interrupted publication component: write a private exclusive version2
+  prewrite intent after all prior-file backups are synced/verified, before the
+  first old-byte truncation. Bind recovery to the application and each exact
+  destination object; partial bytes cannot match a completed-payload digest.
+  Keep version1 successful-publication receipt and its strict new-byte check
+  separate. Explicit interrupted recovery validates all saved old copies and
+  destination identities/policies before restoring; repeat recovery tolerates
+  already removed new leaves, never missing old leaves or replacements.
+  Source5e17f2c/run41944521442/job126973302428 passes actual process-exit and
+  partial-content recovery, repeat recovery, corruption/replacement refusal and
+  existing native installerfiles/build/vet checks on Windows Server2022.
+  No Setup orchestration change yet: temporary backups are still not durable
+  transaction storage. Persistent roots, pending-transaction/commit lifecycle,
+  service-start gating and actual killed-Setup/retry acceptance remain in the
+  SAME first outstanding row. Do not reduce the three-workstream forecast or
+  claim power-loss/Windows10 acceptance. Separate candidate branch only; no
+  security-baseline update, release, dependency/provider/cost/Group3 expansion.
