@@ -616,3 +616,12 @@
   Package checksum independently verified without execution; exact evidence is
   sec03-combined-acceptance.md. No release/provider/dependency/cost/Group3 work,
   physical-powerloss or Windows10 certification; published0.1.39 unchanged.
+
+- November5 user requested0.1.40 release and validation-AI notes. Publish the
+  exact version only after genuine0.1.39/full-provider/UI/rollback/independent
+  recovery gates; source5fcab695/run41979194020/job127085130561 passed. Immutable
+  v0.1.40-prototype and four assets verified against tested artifact13393786248.
+  Previous tags/assets retained;0.1.41 remains only the rollback test fixture.
+  No runtime/provider/model/schema change in this packaging step. Target0.1.40
+  results remain pending;5 closed/3 open (SEC05/06/08), milestone7 in progress.
+  No final Windows10/reboot/endurance/signing claim. See release-0.1.40-acceptance.md.

@@ -1067,3 +1067,16 @@ independently streamed/hashchecked against its checksum file without execution.
 OriginalSEC03 closes in unpublished candidate;5 closed/3 open, SEC05/06/08 remain.
 See sec03-combined-acceptance.md. No release/new cost/Windows10/reboot/endurance or
 physical-powerloss certification; keep0.1.39 with no PC action.
+
+## 0.1.40 prototype release
+
+No new dependency/provider/model/runtime/schema. Exact-version source5fcab695,
+Windows Server2022 run41979194020/job127085130561 passed genuine0.1.39 upgrade,
+initial/late rollback, LocalService/Edge desktop/narrow UI, full native media/AI,
+private package controls and independent restored reinstall/uninstall. Published
+v0.1.40-prototype points to the tested source. Installer104650356 bytes SHA256
+ec49d308d237cc0a639d5e9b548c9cda04de0d404efd23168ef40d6a7688f292 and three
+note/checksum assets matched downloaded test artifact13393786248. Local execution
+was not performed. Target0.1.40 checks remain pending; see release-0.1.40-acceptance.md
+and validation-0.1.40.md. Security5 closed/3 open; final Windows10/reboot/endurance,
+SEC05/06/08 and unsigned-installer limits remain explicit.

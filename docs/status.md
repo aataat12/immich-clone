@@ -1,5 +1,24 @@
 # Current status
 
+## 0.1.40 published; target validation pending
+
+User-requested [0.1.40 prototype](https://github.com/aataat12/immich-clone/releases/tag/v0.1.40-prototype)
+is published from exact tested source5fcab695e086403c8e9bb1fdb339a7dc697b9eb6:
+[run41979194020](https://github.com/aataat12/immich-clone/actions/runs/41979194020),
+job127085130561, Windows Server 2022/LocalService/Edge. Genuine 0.1.39 upgrade,
+injected rollback, full native providers, redesigned desktop/narrow pages,
+backup and independent restored reinstall/uninstall passed. All four published
+assets match the downloaded tested artifact. [Evidence/checksum](release-0.1.40-acceptance.md).
+
+[Validation-AI assignment](validation-0.1.40.md): focused same-folder update and
+existing-data/navigation regression. User 0.1.40 target results are pending;
+accepted 0.1.39 results remain recorded. No routine reboot, destructive restore
+drill or extra import is requested. Milestone 7 remains in progress, 5 closed /
+3 open (SEC-05/06/08). No new provider/model/schema/cost/Group 3 work or final
+Windows 10 certification. Prior keep-0.1.39 notes below describe earlier
+checkpoints; 0.1.40 is now released for this authorized validation. Retain the
+prior accepted 0.1.39 installer.
+
 ## SEC-03 final combined checkpoint accepted
 
 Source `c8873e9cdbb197bc9d06af19c8985e69b132c8a0` passed the full focused
