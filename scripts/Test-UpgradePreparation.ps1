@@ -219,6 +219,7 @@ public static class UpgradeWriteProbe {
    Directory.Move(own,own+"-renamed");
    try { Directory.Move(managed,managed+"-replaced"); return false; }
    catch(UnauthorizedAccessException) { return true; }
+   catch(IOException e) { if((e.HResult & 65535)==5) return true; throw; }
   }} finally { CloseHandle(token); }
  }
  public static bool CanWrite(string user,string password,string path) {
