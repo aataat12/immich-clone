@@ -31,7 +31,8 @@ var (
 	createRestrictedToken = advapi.NewProc("CreateRestrictedToken")
 )
 
-func restrictedToken() (windows.Token, error) {
+func restrictedToken() (token windows.Token, err error) {
+	defer func() { if recovered := recover(); recovered != nil { token = 0; err = fmt.Errorf("token panic: %v", recovered) } }()
 	var base windows.Token
 	if err := windows.OpenProcessToken(windows.CurrentProcess(), windows.TOKEN_DUPLICATE|windows.TOKEN_QUERY, &base); err != nil { return 0, fmt.Errorf("token: %w", err) }
 	defer base.Close()
