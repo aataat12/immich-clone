@@ -55,8 +55,8 @@ func restrictedToken() (token windows.Token, err error) {
 	return out, nil
 }
 
-func RunRestricted(ctx context.Context, exe string, args []string, onStart func(uint32)) (Result, error) {
-	var result Result
+func RunRestricted(ctx context.Context, exe string, args []string, onStart func(uint32)) (result Result, err error) {
+	defer func() { if recovered := recover(); recovered != nil { result = Result{}; err = fmt.Errorf("restricted run panic: %v", recovered) } }()
 	if !filepath.IsAbs(exe) { return result, errors.New("absolute executable required") }
 	if err := ctx.Err(); err != nil { return result, err }
 	token, err := restrictedToken()
