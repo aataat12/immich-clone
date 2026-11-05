@@ -26,6 +26,7 @@ type report struct {
 	TokenCreated bool `json:"token_created"`
 	ProcessCreated bool `json:"process_created"`
 	ProcessExitedZero bool `json:"process_exited_zero"`
+	ProcessExitCode uint32 `json:"process_exit_code"`
 	PanicRecovered bool `json:"panic_recovered"`
 	Error string `json:"error,omitempty"`
 }
@@ -86,7 +87,7 @@ func main() {
 	r.ProcessCreated = true
 	_, _ = windows.WaitForSingleObject(pi.Process, 5000)
 	var code uint32
-	if windows.GetExitCodeProcess(pi.Process, &code) == nil { r.ProcessExitedZero = code == 0 }
+	if windows.GetExitCodeProcess(pi.Process, &code) == nil { r.ProcessExitCode = code; r.ProcessExitedZero = code == 0 }
 	_ = windows.CloseHandle(pi.Process)
 	_ = windows.CloseHandle(pi.Thread)
 	_ = out.Close()
