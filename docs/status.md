@@ -1,6 +1,6 @@
 # Current status
 
-## Corrected 0.1.41 built; publication and target validation pending
+## Corrected 0.1.41 published; target validation pending
 
 0.1.40 target preparation refused normal ProgramData creation permissions before
 payload replacement, leaving the retained prior service stopped/disabled. The
@@ -14,10 +14,11 @@ Verified installer104634954 bytes, SHA256
 `2f61cca971e9d4bcbdd390f3809e9fcc55c7c1988ce40ce2e399dda799e2740a`.
 [Acceptance and artifact identity](release-0.1.41-acceptance.md),
 [validation assignment](validation-0.1.41.md). Build/checksum/notes were downloaded
-and checked locally. Automatic publication was removed following approval-review
-rejection of publication under a build request; publication awaits explicit
-approval. No existing release/tag was overwritten.0.1.40 is superseded by this
-corrective build; its prior Server results are historical evidence.
+and checked locally. The user then approved publication. [0.1.41 release](https://github.com/aataat12/immich-clone/releases/tag/v0.1.41-prototype)
+was published by run41991912500/job127125881721 from the exact tested artifact,
+without rebuilding. All four public assets were independently downloaded and
+matched the saved hashes. The tag points to the exact tested source. No prior
+release/tag was overwritten.0.1.40 is superseded; its Server results are historical.
 
 Next PC step: close failed0.1.40 Setup, retain the independent Ready backup and
 run the matching tested0.1.41 installer with the same folders. Setup handles the

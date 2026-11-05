@@ -1098,3 +1098,17 @@ Windows line-ending normalization.0.1.40 target preparation failure supersedes
 its prior pending-target note; private support logs stay local. Automatic release
 publication removed after approval review; tested build is ready, publication
 and target-PC validation remain pending. See release-0.1.41-acceptance.md.
+
+
+## Approved 0.1.41 publication
+
+No rebuild or dependency change. User-approved fixed-artifact publication
+source dee45fc51338900ef5a6b26d541224af0fd2a4e0/run41991912500/job127125881721
+passed. Release434923147 v0.1.41-prototype is public/prerelease; tag source
+is exactly e1212539511ee3413a7049e318dc0c2699e8ee0c. Four public downloads
+were independently retrieved and matched the tested artifact hashes and sizes.
+Installer104634954 bytes SHA2562f61cca971e9d4bcbdd390f3809e9fcc55c7c1988ce40ce2e399dda799e2740a.
+Prior tags/assets remain. Frozen build-time notes retain their historical pending
+approval text; the release body records completed user approval/publication.
+Target validation remains pending; no local installer execution or service change.
+See release-0.1.41-acceptance.md for all asset identities.

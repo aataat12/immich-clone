@@ -1,7 +1,7 @@
 # 0.1.41 corrective installer acceptance
 
-**PASS: built, independently downloaded and checksum verified. Publication and
-target-PC validation pending.** No release/tag was created or overwritten.
+**PASS: published, independently downloaded and checksum verified. Target-PC
+validation pending.** Prior releases/tags were preserved.
 
 0.1.40 target update validation found a preparation compatibility defect: normal
 Windows ProgramData parent creation/attribute grants were rejected as replacement
@@ -63,8 +63,8 @@ No installer was executed on the user's PC by the build agent.
 
 Automatic approval review rejected a workflow dispatch that would also publish a
 release under a build-only request. The publication step was removed; the gate
-now retains the tested package only. Publishing these exact tested bytes to the
-GitHub release requires separate explicit approval.
+retained the tested package only. The user subsequently explicitly approved
+publication, completed through the separate fixed-artifact publisher below.
 
 Close failed0.1.40 Setup, retain any independent Ready backup, verify the corrected
 checksum and use the same application/data folders. Setup handles service recovery;
@@ -74,3 +74,31 @@ clean-machine, reboot, endurance or physical power-loss acceptance. Milestone7
 remains in progress; security5 closed/3 open, SEC05/06/08 remain. Existing-function
 UI is retained; deferred Curation/Cinema/global review/Full Scan/RAW/HDR work does
 not start here.
+
+## Approved publication and public-download verification
+
+The user approved publishing this tested build. Publication-only source
+`dee45fc51338900ef5a6b26d541224af0fd2a4e0` passed
+[run41991912500](https://github.com/aataat12/immich-clone/actions/runs/41991912500),
+job127125881721. The publisher checks both accepted runs, exact artifact ZIP,
+every file hash/size, absence of the new tag/release, and uploaded draft assets
+before publication. No rebuild occurred. An earlier publisher attempt stopped
+before any release creation on empty JSON-array handling; the corrected check
+preserves the no-overwrite boundary.
+
+[Published v0.1.41-prototype](https://github.com/aataat12/immich-clone/releases/tag/v0.1.41-prototype),
+release434923147, is public, non-draft and prerelease. Its tag points exactly to
+`e1212539511ee3413a7049e318dc0c2699e8ee0c`. All four public downloads were retrieved
+again and independently matched the original tested-artifact bytes and hashes:
+
+| Asset | ID | Bytes | SHA256 |
+|---|---:|---:|---|
+| ImmichClone-0.1.41-prototype-x64-setup.exe |712590790|104634954|2f61cca971e9d4bcbdd390f3809e9fcc55c7c1988ce40ce2e399dda799e2740a|
+| SHA256SUMS.txt |712590789|110|e2f8cbabb6edf1804c5f3f84e96a55a96422e8a7c5564737cb8227676326a1c2|
+| validation-0.1.41.md |712590793|6542|aea6cbea1a0fe2909cc8f88cabe2e6d76509560593c25556b5fdf0592207853c|
+| release-notes-0.1.41.md |712590794|2374|d4d1c9256e79d32ae07cff7a10dcd4d9ea76be00cf8fc8b678e17eb299fdf420|
+
+Build-time notes were deliberately retained unchanged; their pending-publication
+wording records the build checkpoint. The release body documents subsequent
+approval and completed publication. Only target-PC validation remains pending
+for this release step. No local installer execution or service changes occurred.

@@ -637,3 +637,10 @@
   under a build-only request. Removed automatic publication and complete the
   reviewable tested build first. GitHub release publication requires separate
   explicit approval; no existing release or tag is overwritten.
+
+- 2026-11-05: User explicitly approved publishing the verified0.1.41 build.
+  Fixed-artifact publisher dee45fc5/run41991912500/job127125881721 published
+  v0.1.41-prototype at exact tested sourcee1212539 without rebuilding. Four
+  public downloads match saved tested-artifact hashes. Prior releases/tags
+  preserved. Build-time note assets retained unchanged; release body records
+  completed approval/publication. Target-PC acceptance remains pending.

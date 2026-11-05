@@ -3,7 +3,7 @@
 Use the exact tested installer and matching SHA256SUMS.txt identified by its
 acceptance record. The corrected **0.1.41 build** passed
 [Windows validation](https://github.com/aataat12/immich-clone/actions/runs/41986219923);
-GitHub release publication and target-PC validation are pending. See
+[0.1.41 is published](https://github.com/aataat12/immich-clone/releases/tag/v0.1.41-prototype); target-PC validation is pending. See
 release-0.1.41-acceptance.md and validation-0.1.41.md.0.1.40 target preparation failed
 before payload replacement and is superseded by this build. Other internally
 numbered rollback-injection packages are not accepted updates.
@@ -15,7 +15,7 @@ numbered rollback-injection packages are not accepted updates.
    A Ready temporary server copy alone is not an independent backup. Do not discard
    a retained backup merely to enable Create backup.
 2. Obtain the installer and checksum list from the exact tested build handoff
-   (or the identical release once published). Compare SHA256 before executing.
+   (or its identical published release). Compare SHA256 before executing.
    The 0.1.41 installer is 104,634,954 bytes, SHA256
    `2f61cca971e9d4bcbdd390f3809e9fcc55c7c1988ce40ce2e399dda799e2740a`.
    A checksum checks byte identity against the chosen record; it is not a signed
