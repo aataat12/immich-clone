@@ -26,24 +26,22 @@ security deferrals. No workers or new charges are authorized.
 | Update procedure | [Manual update guide](update-guide.md) records verification, backup, same-folder upgrade and failure handling. No automatic updater is introduced. | Documentation prepared; next installer must pass acceptance for its actual source and previous release. |
 | Signing arrangements | Current release is unsigned. No certificate, signing account, identity validation or timestamp service has been configured or verified. Existing unsigned prototypes may continue within the user's prior bounded approval. | Final signing decision is open. No purchase or trusted-publisher claim. |
 | Safe upgrades: SEC-02 | Staged helper token/sharing and static code trust controls plus genuine prior-release/full-provider/rollback passed. See installer-trust-milestone7.md. | Closed in validated unpublished candidate; SEC-03 races and SEC-08 final gates remain separate. |
-| Filesystem boundaries: SEC-03 | Concurrent junction/reparse replacement; static checks are insufficient. | Active under explicit milestone7 authorization; implementation/evidence remains. |
+| Filesystem boundaries: SEC-03 | Held path/identity/ACL, private administrative recovery, durable interruption and actual Setup/metadata concurrency plus genuine prior-release/full-provider/independent recovery passed. | Closed in validated unpublished candidate; sec03-combined-acceptance.md. |
 | Native isolation: SEC-05 | Same-token children retain service-readable authority beyond required input/scratch. | Active under explicit milestone7 authorization; implementation/evidence remains. |
 | Remaining input review: SEC-06 | Full declared malformed media/filename/metadata/tag/catalog review, including parent Go decoding. | Active under explicit milestone7 authorization; review/mitigation remains. |
 | Release validation: SEC-08 | Final target/clean-install/reboot and broader acceptance gates; routine prototype gates are already covered above. | Open and authorized; final target gates remain with milestone 8. |
 
 Milestone 7 is **in progress, not delivered**. No delivered release number is assigned.
-Current original security status is **4 closed / 4 open**: SEC-01/02/04/07 closed;
-SEC-03/05/06/08 open. SEC-02 is validated in the unpublished candidate. Group 1 has no demonstrated open original item; all eight
+Current original security status is **5 closed / 3 open**: SEC-01/02/03/04/07 closed;
+SEC-05/06/08 open. SEC-02/03 are validated in the unpublished candidate. Group 1 has no demonstrated open original item; all eight
 are currently Group 2. New issues remain Group 3, record only.
 
 ## Original scope decision (now approved)
 
-The next uncompleted installer-hardening work is SEC-02, followed by SEC-03;
-SEC-05/06 and extra SEC-08 security checks also require lifting their deferral.
-Ask whether milestone 7 should now resume these five original open items, or
-retain the deferral and hold milestone 7 incomplete after its permitted evidence
-and procedure work. Do not treat silence as approval, reopen closed items, begin
-new Group 3 investigations or buy signing/infrastructure services.
+The original scope decision was explicitly approved at the top of this document.
+SEC-02/03 have since passed their focused and combined gates. Next bounded work is
+SEC-05, then remaining SEC-06/08 gates; no additional permission is required within
+that approved scope. Group3 and signing/infrastructure purchases remain deferred.
 
 ## Preparation verification
 

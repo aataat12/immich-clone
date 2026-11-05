@@ -11,8 +11,9 @@ workers or new charges are authorized. Final target acceptance remains distinct.
 These are the original eight items. Keep these IDs and titles stable. New findings
 belong under the relevant item; genuinely additional work gets a new explicit ID,
 never a replacement list. A diagnostic or source review alone cannot close an item.
-Security scope progress: **4 closed, 4 open**. SEC-02 closed in the validated
-unpublished milestone7 candidate; see installer-trust-milestone7.md. Original SEC-04 protection remains
+Security scope progress: **5 closed, 3 open**. SEC-02 and SEC-03 closed in the validated
+unpublished milestone7 candidate; see installer-trust-milestone7.md and
+sec03-combined-acceptance.md. Original SEC-04 protection remains
 implemented/validated; the later normal-restore observation is separately recorded
 as deferred Group 3, not represented as a demonstrated security-limit failure.
 All original items are currently classified Group 2 under security-priority-groups.md;
@@ -27,7 +28,7 @@ of those findings is not implied. Release delivery is separately item 8.
 |---|---|---|---|
 | SEC-01 | Child-folder and file permissions | Closed — implemented and Windows-validated | Inspect every application-owned state/log/rollback descendant and root ownership/DACL policy; unsafe explicit/protected/inherited configurations or unreadable ACL/enumeration must fail closed; never follow child links. Prove ordinary-user denial on correct trees, read-only refusal before mutations and final verification before service/content changes, unchanged originals and outside targets, and usable LocalService. No silent recursive permission/ownership rewrite. |
 | SEC-02 | Safe upgrades | Closed — implemented and Windows-validated candidate | Actual staged-helper token/sharing denial, unsafe static code-tree refusal, protected custom/Program Files Setup and genuine 0.1.39-to-candidate/full-provider/injected rollback passed. See installer-trust-milestone7.md. Concurrent replacement remains SEC-03; final target/release gates remain SEC-08. |
-| SEC-03 | Filesystem boundaries | Open | Protect against concurrent junction/reparse replacement during privileged operations; static preflight does not close this item. |
+| SEC-03 | Filesystem boundaries | Closed — implemented and Windows-validated candidate | Held nofollow paths/identities, private creation/ACLs, administrative backup/restore, durable interrupted publication, actual Setup/rollback/uninstall separate-account races and unsafe-parent refusal passed focused and genuine prior-release/full-provider/independent-recovery gates. See sec03-combined-acceptance.md. Windows10 and release gates remain SEC-08. |
 | SEC-04 | Hostile backup limits | Closed — security protections validated; Group 2 further mitigation paused | Aggregate/catalog/process protections remain enforced and passed hostile/valid controls. R-RESTORE-01 is separate deferred Group 3 reliability evidence; no root-cause fix is claimed. |
 | SEC-05 | Native worker isolation | Open | Enforce required-input/scratch-only authority; current Windows canaries confirm same-token secret/catalog/original access remains possible despite working resource limits. A probe is not a fix. |
 | SEC-06 | Remaining input review | Open | Complete malformed media/filename/metadata/tag/catalog review and applicable negative tests; parent Go decoding is included. NR-01 has a patched, native/application-validated candidate (opencv-nr01.md); final installer acceptance remains SEC-08. |

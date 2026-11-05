@@ -1,11 +1,14 @@
 # Security baseline — work in progress
 
-Current authoritative closure: original SEC-01/07 are complete, 2 closed /
-6 open; SEC-04 was reopened for R-RESTORE-01 on 2026-11-03. See restore-revalidation.md; see security-worklist.md. Complete review/scan/advisory/servicing coverage
-is security-review-closeout.md, which records NR-01 as an unresolved native
-provider release blocker. Historical sections below retain their original scope.
-Latest combined Windows acceptance: 41547447887 (source
-1f1cdb912b223634dec0350e58e9ae86b11893b0); no installer or Windows 10 certification.
+Current authoritative closure: original SEC-01/02/03/04/07 are complete in the
+validated unpublished candidate, **5 closed / 3 open**; SEC-05/06/08 remain.
+See security-worklist.md and sec03-combined-acceptance.md. Latest combined Windows
+Server acceptance:41976076284, sourcec8873e9cdbb197bc9d06af19c8985e69b132c8a0.
+NR-01 has a patched native/application/installer-tested candidate; broader input
+review and final target/release gates remain separate. The later normal-restore
+observation is deferred Group3 and does not reopen validated SEC-04 limits.
+Historical sections below retain their original scope. No release publication
+or Windows10 certification; published0.1.39 remains unchanged.
 
 Scope: loopback-only, single-user Windows photo library; not LAN or Internet
 hosting. Assets include immutable originals, access code/session cookies, names,

@@ -38,7 +38,7 @@ against unknown vulnerabilities. No configuration/exposure expansion is authoriz
 |---|---|---|
 | SEC-01 Child-folder and file permissions | Group 2 | Existing completed protection retained; no further mitigation work. |
 | SEC-02 Safe upgrades | Group 2 | Closed in validated unpublished milestone7 candidate; retain controls. See installer-trust-milestone7.md. |
-| SEC-03 Filesystem boundaries | Group 2 | Active in milestone7. Local junction/reparse replacement paths remain open. |
+| SEC-03 Filesystem boundaries | Group 2 | Closed in the validated unpublished milestone7 candidate; focused concurrency and final genuine prior-release/provider/recovery gates passed. See sec03-combined-acceptance.md. |
 | SEC-04 Hostile backup limits | Group 2 | Existing validated resource protections retained; no further mitigation work. |
 | SEC-05 Native worker isolation | Group 2 | Active in milestone7. Local/imported-media worker authority remains open. |
 | SEC-06 Remaining input review | Group 2 | Active in milestone7 under current authenticated local-import/catalog deployment. No demonstrated remote bypass. |
@@ -67,9 +67,10 @@ paused exhaustive Group 2 mitigation backlog. No claim that Group 2 issues are f
 
 ## Current original-item status — November 4
 
-SEC-02 now joins SEC-01/04/07 as closed after actual focused token/Setup and combined
-prior-release/full-provider/rollback acceptance; installer-trust-milestone7.md records
-exact scope. SEC-03/05/06/08 remain open and authorized for milestone7. The earlier
+SEC-02/03 now join SEC-01/04/07 as closed after focused and combined genuine
+prior-release/full-provider/rollback/independent-recovery acceptance. See
+installer-trust-milestone7.md and sec03-combined-acceptance.md for exact scope.
+Count is5 closed/3 open. SEC-05/06/08 remain open and authorized for milestone7. The earlier
 November2 pause instructions above are superseded for those original open items by
 the explicit November4 authorization at the top; Group3 investigations and paid
 signing remain deferred. All original items retain their Group2 classification.

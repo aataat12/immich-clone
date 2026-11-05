@@ -1050,3 +1050,20 @@ the existing Range-header regression needs its web-request behavior. Screenshot
 ZIP13384194348 SHA256c62b677602531daf33fed4a1477340f3fa65f923f783dba8286cb0dabf288e15.
 See ui-redesign-acceptance.md. Not a new provider build, installer closure or
 Windows10/reboot/endurance certification; published0.1.39 remains unchanged.
+
+## Final combined SEC-03 prior-release/provider/recovery acceptance
+
+No new product dependency/provider/model/runtime. Exact sourcec8873e9c passed
+Windows Server2022 focused41975733374/job127074014301 and full combined41976076284/
+job127075119754. Genuine permanent0.1.39 installer/checksum, pinned bundled native
+media/AI and actual HEIC/video inference, initial/late failed-upgrade rollback,
+package canaries, backup/independent restored reinstall/verification and browser
+compatibility passed. Native exclusive private file creation plus same-handle
+SetSecurityInfo/UNPROTECTED before writes fixes restore/service policy composition;
+actual permissions, owners, original bytes and closed-item negative controls pass.
+Candidate artifact13392376825 ZIPSHA25640f685d0d3cdb5881575f2436b776338565a3024e6a23cff8e65b5d5cd44c049;
+installer104636634 bytes SHA25613aa5366a9021c7b57ae66c4a60f5d30dfbe0fa19674b2304f8d71b6e3bef707
+independently streamed/hashchecked against its checksum file without execution.
+OriginalSEC03 closes in unpublished candidate;5 closed/3 open, SEC05/06/08 remain.
+See sec03-combined-acceptance.md. No release/new cost/Windows10/reboot/endurance or
+physical-powerloss certification; keep0.1.39 with no PC action.

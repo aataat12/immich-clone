@@ -1,5 +1,23 @@
 # Current status
 
+## SEC-03 final combined checkpoint accepted
+
+Source `c8873e9cdbb197bc9d06af19c8985e69b132c8a0` passed the full focused
+Windows gate41975733374/job127074014301 and the genuine0.1.39/full-provider/
+independent-recovery [combined run41976076284](https://github.com/aataat12/immich-clone/actions/runs/41976076284),
+job127075119754. Restore-to-service enrollment now preserves a protected private
+root and private inheriting children; the unchanged held installer normalizer
+grants service access. Actual restored reinstall/authentication/media/organization/
+reanalysis/uninstall passed with the old state unavailable. Accepted concurrency
+and existing-function UI are integrated. [Exact source, checksums and limits](sec03-combined-acceptance.md).
+
+**Original SEC-03 is closed in the unpublished Server-validated candidate.**
+Security is **5 closed / 3 open**: SEC-05/06/08 remain. SEC-03 has **0 passes left**;
+this latest record supersedes older partial-checkpoint forecasts below. Next
+bounded security work is SEC-05; it has not started in this checkpoint. Milestone7
+remains in progress. No release publication/Windows10/reboot/endurance or physical
+power-loss certification; keep published0.1.39, no PC action. Group3 stays deferred.
+
 ## Existing-function UI redesign: Server/browser acceptance
 
 The five-page redesign passed actual LocalService/native-provider/Edge validation
@@ -9,7 +27,7 @@ job127019911895. Desktop/narrow navigation, original hashes, inference, import,
 backup/range downloads, independent restore and failure reporting passed.
 [Exact scope, screenshots and final text-only cleanup](ui-redesign-acceptance.md).
 The combined-validation chat owns final integration with full concurrency evidence.
-SEC-03 remains open, security4 closed/4 open; two security passes best case remain.
+SEC-03 subsequently passed final combined acceptance above; security5 closed/3 open.
 Curation/Cinema/durable review counts and library-wide filters remain deferred.
 No release or Windows10 certification; keep0.1.39, no PC action.
 

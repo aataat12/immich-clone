@@ -602,3 +602,17 @@
   Curation/Cinema/durable review decisions/counts/global filters remain deferred.
   Final visible-text cleanup preserves identical markup/scripts/styles. See
   ui-redesign-acceptance.md; no release, SEC03 closure or Windows10 certification.
+
+- SEC03 final combined acceptance: sourcec8873e9c/run41976076284/job127075119754
+  and same-source focused41975733374/job127074014301 passed. Preserve protected
+  private restore root and private inheriting descendants; native exclusive file
+  creation enables/verifies inheritance through the same new held handle before
+  restoring bytes. Existing installer normalization/protected-subtree refusal and
+  default private archive creation remain unchanged. Actual restored reinstall,
+  secret/original/media/names/tags/6A/proposal/context and uninstall passed with
+  old state unavailable. Accepted UI and full concurrency are integrated; no
+  weakened elevated-entrypoint guard or functional assertions. Original SEC03
+  closes in unpublished Server candidate:5 closed/3 open, SEC05/06/08 remain.
+  Package checksum independently verified without execution; exact evidence is
+  sec03-combined-acceptance.md. No release/provider/dependency/cost/Group3 work,
+  physical-powerloss or Windows10 certification; published0.1.39 unchanged.

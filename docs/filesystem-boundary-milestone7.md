@@ -1,5 +1,13 @@
 # SEC-03 handle-bound filesystem candidate
 
+Latest checkpoint: **SEC-03 is closed in the unpublished Server-validated candidate**.
+Focused41975733374 and full prior-release/provider/independent-recovery41976076284
+passed exact sourcec8873e9cdbb197bc9d06af19c8985e69b132c8a0. See
+[final scope, checksums and limits](sec03-combined-acceptance.md). Security5 closed/
+3 open; SEC05/06/08 remain. Historical partial-checkpoint claims and forecasts
+below retain their original scope and are superseded by this final acceptance.
+Published0.1.39 unchanged; no Windows10, physical-powerloss or release claim.
+
 The existing stationary checks do not prevent replacement between validation and
 privileged filesystem access. `internal/winfs` began as an isolated primitive; the fixed installer snapshot/
 rollback integration below has now passed focused Windows execution. No new external dependency, model,
