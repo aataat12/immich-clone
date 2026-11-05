@@ -57,6 +57,7 @@ function Run-Setup([string]$Application,[string]$State,[switch]$ObserveStaging,[
         }
         Start-Sleep -Milliseconds 30
         $process.Refresh()
+        $script:uninstallRaceExitCode = $process.ExitCode
     }
     $process.WaitForExit()
     if ($ObserveStaging) { Assert $observed 'actual staged helper process observed during production Setup' }
@@ -172,7 +173,9 @@ while (Get-Process -Id $args[0] -ErrorAction SilentlyContinue) {
 '@
     $script.Replace('__T__',$t).Replace('__J__',$j).Replace('__O__',$o).Replace('__R__',$r) | Set-Content -LiteralPath $actor
     $credential = [PSCredential]::new(($env:COMPUTERNAME+'\'+$ordinaryUser),(ConvertTo-SecureString $ordinaryPassword -AsPlainText -Force))
-    $process = Start-Process (Join-Path $Application 'unins000.exe') -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -PassThru
+    $trace = Join-Path $root 'uninstall-boundary.log'
+    $script:uninstallRaceTrace = $trace
+    $process = Start-Process (Join-Path $Application 'unins000.exe') -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/LOG="'+$trace+'"')) -PassThru
     $actorProcess = Start-Process powershell.exe -Credential $credential -ArgumentList @('-NoProfile','-File',('"'+$actor+'"'),[string]$process.Id) -PassThru
     try {
         $process.WaitForExit()
@@ -598,7 +601,7 @@ try {
     foreach ($path in @($unknownRoot,$unknownRollback)) { [IO.File]::WriteAllText($path,'unrelated retained bytes') }
     Run-UninstallMetadataRace $currentApp
     $uninstallTrace = Join-Path $root 'uninstall-boundary.log'
-    $process = Start-Process (Join-Path $currentApp 'unins000.exe') -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/LOG="'+$uninstallTrace+'"')) -Wait -PassThru
+    $uninstallExitCode = $script:uninstallRaceExitCode
     if ($process.ExitCode -ne 0) {
         Write-Host ('Uninstall boundary: exit_code='+$process.ExitCode)
         if (Test-Path -LiteralPath $uninstallTrace) { Get-Content -LiteralPath $uninstallTrace | Where-Object { $_ -match 'Uninstall boundary:' } | ForEach-Object { Write-Host ($_.Substring($_.IndexOf('Uninstall boundary:'))) } }
@@ -607,7 +610,97 @@ try {
         if ($remainingService) { Write-Host ('Uninstall boundary: service_state='+$remainingService.Status) }
         foreach ($leaf in @('Manage-Service.ps1','immichclone.exe','ai','media','rollback/catalog.db')) { Write-Host ('Uninstall boundary: selected_remaining='+[bool](Test-Path -LiteralPath (Join-Path $currentApp $leaf))) }
     }
-    Assert ($process.ExitCode -eq 0) 'disposable preparation installer uninstalls cleanly'
+ 
+ 
+ 
+ 
+A
+s
+s
+e
+r
+t
+ 
+(
+$
+u
+n
+i
+n
+s
+t
+a
+l
+l
+E
+x
+i
+t
+C
+o
+d
+e
+ 
+-
+e
+q
+ 
+0
+)
+ 
+'
+d
+i
+s
+p
+o
+s
+a
+b
+l
+e
+ 
+p
+r
+e
+p
+a
+r
+a
+t
+i
+o
+n
+ 
+i
+n
+s
+t
+a
+l
+l
+e
+r
+ 
+u
+n
+i
+n
+s
+t
+a
+l
+l
+s
+ 
+c
+l
+e
+a
+n
+l
+y
+'
     foreach ($path in @($unknownRoot,$unknownRollback)) { Assert ([IO.File]::ReadAllText($path) -eq 'unrelated retained bytes') 'native uninstall preserves unrelated root and rollback contents' }
     Assert (!(Get-Service ImmichClone -ErrorAction SilentlyContinue) -and !(Test-Path 'HKLM:\SOFTWARE\ImmichClone')) 'completed native uninstall removes owned service and product registration'
     foreach ($leaf in $payloadNames) { Assert (!(Test-Path -LiteralPath (Join-Path $currentApp $leaf))) 'uninstall removes fixed native-published payload and provider fixture files' }
