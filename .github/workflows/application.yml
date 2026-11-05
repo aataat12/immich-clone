@@ -170,7 +170,9 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: synthetic-browser-evidence
-          path: browser-evidence/*.png
+          path: |
+            browser-evidence/*.png
+            ${{ runner.temp }}/installed6A/paint-*.png
           retention-days: 7
       - name: Retain unpublished milestone7 candidate only after all checks pass
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
