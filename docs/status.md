@@ -1,5 +1,18 @@
 # Current status
 
+## Existing-function UI redesign: Server/browser acceptance
+
+The five-page redesign passed actual LocalService/native-provider/Edge validation
+on Windows Server 2022: source d1a47efe66cdec69aa340bbf3adda897280611f5,
+[run41958781493](https://github.com/aataat12/immich-clone/actions/runs/41958781493),
+job127019911895. Desktop/narrow navigation, original hashes, inference, import,
+backup/range downloads, independent restore and failure reporting passed.
+[Exact scope, screenshots and final text-only cleanup](ui-redesign-acceptance.md).
+The combined-validation chat owns final integration with full concurrency evidence.
+SEC-03 remains open, security4 closed/4 open; two security passes best case remain.
+Curation/Cinema/durable review counts and library-wide filters remain deferred.
+No release or Windows10 certification; keep0.1.39, no PC action.
+
 ## November 4, 2026: 0.1.39 local regression accepted; milestone 7 started
 
 Current published prototype is **0.1.39**. The user reported all exercised combined

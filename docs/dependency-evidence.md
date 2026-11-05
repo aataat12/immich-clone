@@ -1038,3 +1038,15 @@ retirement, normal/fresh/rollback/uninstall and SEC01 compatibility. Pinned Go's
 formatter canonicalized source before this validation; its exact formatting is
 saved in the checkpoint. Full prior-release/provider/concurrency integration and
 Windows10 remain separate. No end-user SDK or local setup is requested; keep0.1.39.
+## Existing-function UI Server/browser validation
+
+No new product dependency, runtime, provider or model. Windows Server2022 source
+d1a47efe66cdec69aa340bbf3adda897280611f5/run41958781493/job127019911895 passed
+Go1.27.3 tests/vet and Playwright1.62.1 with actual runner Edge/LocalService, the
+existing pinned native media/AI artifacts and hash-checked models. Actual inference,
+playback, original hashes, import recovery, provider recovery and independent
+backup restore passed with desktop/narrow navigation. Workflow uses pwsh because
+the existing Range-header regression needs its web-request behavior. Screenshot
+ZIP13384194348 SHA256c62b677602531daf33fed4a1477340f3fa65f923f783dba8286cb0dabf288e15.
+See ui-redesign-acceptance.md. Not a new provider build, installer closure or
+Windows10/reboot/endurance certification; published0.1.39 remains unchanged.

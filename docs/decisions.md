@@ -593,3 +593,12 @@
   Same outstanding row closes, forecast3 to2; remaining concurrency and genuine
   release/fullprovider/recovery rows unchanged. No release/provider/dependency/
   catalog-schema/cost/Group3 work or Windows10/physical-powerloss certification.
+- Existing-function UI acceptance uses fresh actual LocalService fixtures for
+  hidden-navigation and People tests, preserving the elevated/direct-service
+  entrypoint guard. Dedicated Server/Edge gate source d1a47efe/run41958781493/
+  job127019911895 passed full application/provider/restore regression plus five
+  desktop/narrow shells. Keep the default-off UIReview switch and attach-mode
+  fixture support for final integration. No new backend/auth/CSP policy/provider;
+  Curation/Cinema/durable review decisions/counts/global filters remain deferred.
+  Final visible-text cleanup preserves identical markup/scripts/styles. See
+  ui-redesign-acceptance.md; no release, SEC03 closure or Windows10 certification.
