@@ -13,6 +13,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"syscall"
 	"unsafe"
 
@@ -43,6 +44,9 @@ func restrictedToken() (windows.Token, error) {
 	r, _, callErr := createRestrictedToken.Call(
 		uintptr(base), disableMaxPrivilege,
 		0, 0, 0, 0, 1, uintptr(unsafe.Pointer(&restricted)), uintptr(unsafe.Pointer(&out)))
+	runtime.KeepAlive(base)
+	runtime.KeepAlive(sid)
+	runtime.KeepAlive(restricted)
 	if r == 0 {
 		if callErr != syscall.Errno(0) { return 0, fmt.Errorf("token: %w", callErr) }
 		return 0, fmt.Errorf("token: %w", windows.GetLastError())
