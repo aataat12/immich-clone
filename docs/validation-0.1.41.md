@@ -6,17 +6,21 @@ navigation; do not repeat historical tests solely for chronology.
 
 ## Exact package
 
-Release: https://github.com/aataat12/immich-clone/releases/tag/v0.1.41-prototype
+The build handoff supplies the exact tested source, successful run and installer
+SHA256. Publication is separate and pending approval. Use the installer and
+checksum list supplied with that handoff; once published, identical assets will
+be available at https://github.com/aataat12/immich-clone/releases/tag/v0.1.41-prototype.
 
-Download these assets from that exact release:
+Required matching files:
 
 - ImmichClone-0.1.41-prototype-x64-setup.exe
 - SHA256SUMS.txt
 - validation-0.1.41.md
 
-Verify the installer's SHA256 against SHA256SUMS.txt and the release body before
+Verify the installer's SHA256 against SHA256SUMS.txt and the build handoff before
 executing it. The displayed application version and /health build must be
-0.1.41-prototype. Use only the published 0.1.41 release asset; internal test installers are not release packages. The accepted package is unsigned; report a Windows protection block
+0.1.41-prototype. Use only the exact tested 0.1.41 package identified by the handoff; other internally
+numbered test installers are not accepted packages. The accepted package is unsigned; report a Windows protection block
 privately rather than disabling protections.
 
 ## Preparation and update
@@ -73,7 +77,7 @@ Cloud acceptance covers actual Windows Server 2022 LocalService/Edge, genuine
 prior-release upgrade in actual Program Files/ProgramData locations, recovery
 from the stopped/disabled prior service, initial/late injected rollback, pinned installed media/AI,
 original/organization preservation, independent offline restore/reinstall and
-uninstall. The release body links its exact tested source/run. Focused separate-
+uninstall. The build handoff records the exact tested source/run; publication is separate. Focused separate-
 account concurrency and interrupted-Setup/retry evidence is recorded in
 sec03-combined-acceptance.md. Do not repeat adversarial races, forced crashes,
 permanent deletion, a real restore drill or a reboot on the user's working library

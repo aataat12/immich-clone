@@ -21,7 +21,9 @@ gate retains separate-account concurrency, unsafe-parent refusal and interrupted
 Setup/retry controls. Exact source, successful run and installer SHA256 are added
 to the release body after those checks pass.
 
-Download the installer, SHA256SUMS.txt and validation-0.1.41.md from this release.
+The tested build contains the installer, SHA256SUMS.txt and validation-0.1.41.md.
+Publication is separate and requires approval; the build handoff identifies the
+exact source, successful run and checksum.
 Verify the checksum and retain any existing independent Ready backup. If the
 service is unavailable, retain that backup without attempting a new live export.
 Do not bypass a refused location or Windows protection block. The package remains
