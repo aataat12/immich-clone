@@ -38,6 +38,9 @@ func upgradeRoot(app, data, root string, create bool) (*winfs.Directory, error) 
 	if !filepath.IsAbs(app) || !filepath.IsAbs(data) || !filepath.IsAbs(root) || within(app, root) || within(root, app) || within(data, root) || within(root, data) {
 		return nil, ErrRefused
 	}
+	if e := validateNamespaceParents(app, data, root); e != nil {
+		return nil, e
+	}
 	if create {
 		if e := EnsurePrivateRoot(root, "", false); e != nil {
 			return nil, e
@@ -166,6 +169,9 @@ func validateUpgradeRecord(record upgradeRecord, app, data string) error {
 // BeginUpgrade runs after the prior state snapshot but before Inno publication.
 // An existing pending transaction is never overwritten by a new snapshot.
 func BeginUpgrade(app, data, root string, hadService bool) (err error) {
+	if e := validateNamespaceParents(app, data, root); e != nil {
+		return e
+	}
 	sd, e := codeCreationDescriptor()
 	if e != nil {
 		return e
