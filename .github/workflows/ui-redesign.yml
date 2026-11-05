@@ -49,7 +49,7 @@ jobs:
           node --check tests/ui-navigation.cjs
           if ($LASTEXITCODE -ne 0) { throw 'UI navigation syntax failed' }
       - name: Exercise redesigned pages with real Edge and LocalService
-        shell: powershell
+        shell: pwsh
         run: |
           foreach ($file in @('scripts/Test-UIRedesign.ps1','scripts/Test-Application.ps1')) {
             $tokens=$null;$errors=$null
