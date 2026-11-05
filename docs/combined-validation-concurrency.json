@@ -1,0 +1,7 @@
+{
+  "accepted": true,
+  "source": "dcc54c1f8ba2846626c1e58c7d9671d9dba9561e",
+  "run": 41962976317,
+  "job": 127033425847,
+  "scope": "Full Setup/rollback/uninstall/action-boundary concurrency acceptance required; native-only evidence is insufficient."
+}

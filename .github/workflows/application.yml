@@ -62,12 +62,37 @@ jobs:
           path: native-ai-candidate
           run-id: 41551816976
           github-token: ${{ github.token }}
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
-          name: prototype-server-tested
-          path: previous-installer
-          run-id: 41784610044
-          github-token: ${{ github.token }}
+      - name: Download and verify permanent published 0.1.39 baseline
+        shell: pwsh
+        run: |
+          $url = 'https://github.com/aataat12/immich-clone/releases/download/v0.1.39-prototype/ImmichClone-0.1.39-prototype-x64-setup.exe'
+          $dest = Join-Path $env:GITHUB_WORKSPACE 'previous-installer/ImmichClone-0.1.39-prototype-x64-setup.exe'
+          New-Item -ItemType Directory -Force (Split-Path $dest) | Out-Null
+          Invoke-WebRequest $url -OutFile $dest
+          $expected = '543e5742a00e2cf79522e4ddc7bd2c6a9647426c46bb0ca0564644f7d3ea3605'
+          $actual = (Get-FileHash $dest).Hash.ToLowerInvariant()
+          if ($actual -ne $expected) { throw 'Published 0.1.39 installer checksum mismatch' }
+          "IMMICH_PRIOR_INSTALLER=$dest" >> $env:GITHUB_ENV
+      - name: Require accepted full Setup concurrency handoff
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $manifest = Get-Content docs/combined-validation-concurrency.json -Raw | ConvertFrom-Json
+          if (!$manifest.accepted -or !$manifest.source -or [int64]$manifest.run -le 0 -or [int64]$manifest.job -le 0) {
+            throw 'Combined SEC-03 gate is intentionally blocked until the versioned full Setup concurrency acceptance manifest is populated'
+          }
+          if ($manifest.source -notmatch '^[0-9a-f]{40}$') { throw 'Concurrency source must be a full commit SHA' }
+          $headers = @{ Accept='application/vnd.github+json'; Authorization=('Bearer '+$env:GITHUB_TOKEN); 'X-GitHub-Api-Version'='2022-11-28' }
+          $compare = Invoke-RestMethod "https://api.github.com/repos/${{ github.repository }}/compare/32749aa5dc59b238af1c59a5b0ecff1b29ef8e66...$($manifest.source)" -Headers $headers
+          if ($compare.status -ne 'ahead' -or $compare.behind_by -ne 0) { throw 'Concurrency source is not a descendant of the accepted recovery checkpoint' }
+          $run = Invoke-RestMethod "https://api.github.com/repos/${{ github.repository }}/actions/runs/$([int64]$manifest.run)" -Headers $headers
+          if ($run.head_sha -ne $manifest.source -or $run.status -ne 'completed' -or $run.conclusion -ne 'success') { throw 'Recorded concurrency run is not a successful completed run for the recorded source' }
+          $jobs = Invoke-RestMethod "https://api.github.com/repos/${{ github.repository }}/actions/runs/$([int64]$manifest.run)/jobs?per_page=100" -Headers $headers
+          $job = @($jobs.jobs | Where-Object { [int64]$_.id -eq [int64]$manifest.job })[0]
+          if (!$job -or $job.conclusion -ne 'success') { throw 'Recorded concurrency job is missing or not successful' }
+          "IMMICH_FULL_CONCURRENCY_SOURCE=$($manifest.source)" >> $env:GITHUB_ENV
+          "IMMICH_FULL_CONCURRENCY_RUN=$([int64]$manifest.run)" >> $env:GITHUB_ENV
       - name: Validate installer script syntax before lengthy acceptance
         shell: pwsh
         run: |
@@ -76,6 +101,20 @@ jobs:
             $null=[Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file),[ref]$tokens,[ref]$parseErrors)
             if ($parseErrors.Count -gt 0) { throw ($file+': '+($parseErrors.Message -join '; ')) }
           }
+      - name: Verify complete pinned provider inputs
+        shell: pwsh
+        run: |
+          $media = @{
+            'ffmpeg.exe'='7eb77d88e2e97afff0844d8df1408ec10f9ca66fac58f6971112cefd25fb6a0f'
+            'ffprobe.exe'='0ba24b17e5b42e02de441fb053dacca08aa52ac4f7f38e0845bda7df6b73a6e6'
+            'ffmpeg-8.1.3-source.tar.gz'='57421c6be6861f26d1dc9edf384a9d1ab6410cc0b247b2502f415df83443fe4b'
+          }
+          foreach ($item in $media.GetEnumerator()) {
+            if (!(Test-Path "media-candidate/$($item.Key)")) { throw "Missing pinned media input: $($item.Key)" }
+            if ((Get-FileHash "media-candidate/$($item.Key)").Hash.ToLowerInvariant() -ne $item.Value) { throw "Pinned media input hash mismatch: $($item.Key)" }
+          }
+          $worker='native-ai-candidate/ai-worker.exe'
+          if (!(Test-Path $worker) -or (Get-FileHash $worker).Hash.ToLowerInvariant() -ne '15d1c2ca7ef3f526b34ac4823f9337c51280ad171ddf43df4f3af5d8128a7c58') { throw 'Pinned AI worker input mismatch' }
       - name: Verify dependency checksums and execute storage, recovery and HTTP tests
         shell: pwsh
         run: |

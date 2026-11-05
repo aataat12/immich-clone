@@ -70,6 +70,127 @@ param([string]$Action,[string]$AppDir,[string]$DataDir)
 exit 0
 '@ | Set-Content -LiteralPath (Join-Path $Application 'Manage-Service.ps1')
 }
+function Run-SetupMetadataRace([string]$Application,[string]$State) {
+    $transaction = $Application+'-upgrade-recovery'
+    $control = Join-Path $root 'metadata-race-control'
+    New-Item -ItemType Directory -Path $control | Out-Null
+    Native icacls @($control,'/grant',('*'+$ordinarySid+':(OI)(CI)M'))
+    $outside = Join-Path $root 'metadata-race-outside.txt'
+    $actor = Join-Path $control 'metadata-race-actor.ps1'
+    $result = Join-Path $control 'metadata-race-result.json'
+    [IO.File]::WriteAllText($outside,'outside-sentinel')
+    if (Test-Path -LiteralPath $transaction) { Remove-Item -LiteralPath $transaction -Recurse -Force }
+    $pending = Join-Path $transaction 'upgrade-pending.json'
+    $payload = Join-Path $transaction 'payload'
+    $p = $pending.Replace("'","''"); $o = $outside.Replace("'","''"); $r = $result.Replace("'","''"); $u = $ordinarySid.Replace("'","''")
+    $script = @'
+$attempts=0; $writeSuccess=0; $renameSuccess=0; $linkSuccess=0; $aclSuccess=0
+while (Get-Process -Id $args[0] -ErrorAction SilentlyContinue) {
+  $attempts++
+    try { Add-Content -LiteralPath '__P__' -Value 'race' -ErrorAction Stop; $writeSuccess++ } catch {}
+    try {
+      Rename-Item -LiteralPath '__P__' -NewName 'upgrade-pending.swap' -ErrorAction Stop
+      Rename-Item -LiteralPath (Join-Path (Split-Path '__P__') 'upgrade-pending.swap') -NewName 'upgrade-pending.json' -ErrorAction Stop
+      $renameSuccess++
+    } catch {}
+    try {
+      & fsutil.exe hardlink create (Join-Path (Split-Path '__P__') 'payload/actor-link.bin') '__P__' | Out-Null
+      if ($LASTEXITCODE -eq 0) { $linkSuccess++ }
+    } catch {}
+    try {
+      & icacls.exe '__P__' /grant ('*'+ '__U__'+':F') | Out-Null
+      if ($LASTEXITCODE -eq 0) { $aclSuccess++ }
+    } catch {}
+  try { Add-Content -LiteralPath '__O__' -Value 'race' -ErrorAction Stop } catch {}
+  Start-Sleep -Milliseconds 10
+}
+[ordered]@{attempts=$attempts;writeSuccess=$writeSuccess;renameSuccess=$renameSuccess;linkSuccess=$linkSuccess;aclSuccess=$aclSuccess} | ConvertTo-Json | Set-Content -LiteralPath '__R__'
+'@
+    $script.Replace('__P__',$p).Replace('__O__',$o).Replace('__R__',$r).Replace('__U__',$u) | Set-Content -LiteralPath $actor
+    $credential = [PSCredential]::new(($env:COMPUTERNAME+'\'+$ordinaryUser),(ConvertTo-SecureString $ordinaryPassword -AsPlainText -Force))
+    $positive = Join-Path $control 'permissive-parent'
+    New-Item -ItemType Directory -Path $positive | Out-Null
+    Native icacls @($positive,'/grant',('*'+$ordinarySid+':(OI)(CI)M'))
+    $positiveFile = Join-Path $positive 'positive.txt'
+    $positiveSource = Join-Path $positive 'hardlink-source.txt'
+    $positiveLink = Join-Path $positive 'hardlink-link.txt'
+    [IO.File]::WriteAllText($positiveFile,'positive')
+    [IO.File]::WriteAllText($positiveSource,'hardlink')
+    $positiveScript = Join-Path $control 'permissive-actor.ps1'
+    $pp = $positiveFile.Replace("'","''"); $ps = $positiveSource.Replace("'","''"); $pl = $positiveLink.Replace("'","''"); $pr = $result.Replace("'","''")
+    @'
+try {
+  Add-Content -LiteralPath '__PP__' -Value 'write' -ErrorAction Stop
+  Rename-Item -LiteralPath '__PP__' -NewName 'renamed.txt' -ErrorAction Stop
+  & fsutil.exe hardlink create '__PL__' '__PS__' | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw 'hardlink' }
+  Set-Content -LiteralPath '__PR__' -Value 'write-rename-link'
+} catch { Set-Content -LiteralPath '__PR__' -Value 'positive-control-failed' }
+'@.Replace('__PP__',$pp).Replace('__PS__',$ps).Replace('__PL__',$pl).Replace('__PR__',$pr) | Set-Content -LiteralPath $positiveScript
+    $positiveProcess = Start-Process powershell.exe -Credential $credential -ArgumentList @('-NoProfile','-File',('"'+$positiveScript+'"')) -Wait -PassThru
+    Assert ($positiveProcess.ExitCode -eq 0 -and (Get-Content -LiteralPath $result -Raw).Trim() -eq 'write-rename-link') 'separate account permissive parent write rename and hardlink positive control'
+    Remove-Item -LiteralPath $result -Force
+    $process = Start-Process $script:setup -WindowStyle Hidden -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$Application+'"'),('/STATE="'+$State+'"')) -PassThru
+    $actorProcess = Start-Process powershell.exe -Credential $credential -ArgumentList @('-NoProfile','-File',('"'+$actor+'"'),[string]$process.Id) -PassThru
+    try {
+        $process.WaitForExit()
+        $process.Refresh()
+        if (!$actorProcess.WaitForExit(30000)) { $actorProcess.Kill(); $actorProcess.WaitForExit(); throw 'metadata actor timeout' }
+        Assert ($process.ExitCode -eq 0) 'real Setup completes while separate account races recovery metadata'
+        Assert (Test-Path -LiteralPath $result) 'separate-account Setup race emitted result'
+        $counts = Get-Content -LiteralPath $result -Raw | ConvertFrom-Json
+        Assert ($counts.attempts -gt 0 -and $counts.writeSuccess -eq 0 -and $counts.renameSuccess -eq 0 -and $counts.linkSuccess -eq 0 -and $counts.aclSuccess -eq 0) 'protected Setup metadata rejects all separate-account mutation attempts'
+        Assert ([IO.File]::ReadAllText($outside) -eq 'outside-sentinel') 'Setup metadata race preserves outside bytes'
+        Assert (!(Test-Path -LiteralPath (Join-Path $transaction 'upgrade-pending.json')) -and !(Test-Path -LiteralPath (Join-Path $transaction 'upgrade-terminal.json'))) 'successful Setup retires transaction metadata without stale markers'
+    } finally {
+        if (!$process.HasExited) { $process.Kill(); $process.WaitForExit() }
+        if (!$actorProcess.HasExited) { $actorProcess.Kill(); $actorProcess.WaitForExit() }
+    }
+}
+function Run-UninstallMetadataRace([string]$Application) {
+    $control = Join-Path $root 'uninstall-metadata-control'
+    $actor = Join-Path $control 'uninstall-metadata-actor.ps1'
+    $result = Join-Path $control 'uninstall-metadata-result.json'
+    $target = Join-Path $Application 'Manage-Service.ps1'
+    $journal = Join-Path $Application 'unins000.dat'
+    New-Item -ItemType Directory -Path $control | Out-Null
+    Native icacls @($control,'/grant',('*'+$ordinarySid+':(OI)(CI)M'))
+    $outside = Join-Path $root 'uninstall-race-outside.txt'
+    [IO.File]::WriteAllText($outside,'outside-sentinel')
+    $t = $target.Replace("'","''"); $j = $journal.Replace("'","''"); $o = $outside.Replace("'","''"); $r = $result.Replace("'","''")
+    $script = @'
+$attempts=0; $writeSuccess=0; $renameSuccess=0; $journalSuccess=0; $outsideSuccess=0
+while (Get-Process -Id $args[0] -ErrorAction SilentlyContinue) {
+  $attempts++
+  try { Add-Content -LiteralPath '__T__' -Value 'race' -ErrorAction Stop; $writeSuccess++ } catch {}
+  try { Rename-Item -LiteralPath '__T__' -NewName 'Manage-Service.swap' -ErrorAction Stop; $renameSuccess++ } catch {}
+  try { Add-Content -LiteralPath '__J__' -Value 'race' -ErrorAction Stop; $journalSuccess++ } catch {}
+  try { Add-Content -LiteralPath '__O__' -Value 'race' -ErrorAction Stop; $outsideSuccess++ } catch {}
+  Start-Sleep -Milliseconds 10
+}
+[ordered]@{attempts=$attempts;writeSuccess=$writeSuccess;renameSuccess=$renameSuccess;journalSuccess=$journalSuccess;outsideSuccess=$outsideSuccess} | ConvertTo-Json | Set-Content -LiteralPath '__R__'
+'@
+    $script.Replace('__T__',$t).Replace('__J__',$j).Replace('__O__',$o).Replace('__R__',$r) | Set-Content -LiteralPath $actor
+    $credential = [PSCredential]::new(($env:COMPUTERNAME+'\'+$ordinaryUser),(ConvertTo-SecureString $ordinaryPassword -AsPlainText -Force))
+    $trace = Join-Path $root 'uninstall-boundary.log'
+    $script:uninstallRaceTrace = $trace
+    $process = Start-Process (Join-Path $Application 'unins000.exe') -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/LOG="'+$trace+'"')) -PassThru
+    $actorProcess = Start-Process powershell.exe -Credential $credential -ArgumentList @('-NoProfile','-File',('"'+$actor+'"'),[string]$process.Id) -PassThru
+    try {
+        $process.WaitForExit()
+        $process.Refresh()
+        $script:uninstallRaceExitCode = $process.ExitCode
+        if (!$actorProcess.WaitForExit(30000)) { $actorProcess.Kill(); $actorProcess.WaitForExit(); throw 'uninstall metadata actor timeout' }
+        Assert ($process.ExitCode -eq 0) 'real uninstall completes while separate account races metadata'
+        $counts = Get-Content -LiteralPath $result -Raw | ConvertFrom-Json
+        Assert ($counts.attempts -gt 0 -and $counts.writeSuccess -eq 0 -and $counts.renameSuccess -eq 0 -and $counts.journalSuccess -eq 0 -and $counts.outsideSuccess -eq 0) 'uninstall metadata race rejects separate-account mutations'
+        Assert ([IO.File]::ReadAllText($outside) -eq 'outside-sentinel') 'uninstall metadata race preserves outside bytes'
+    } finally {
+        if (!$process.HasExited) { $process.Kill(); $process.WaitForExit() }
+        if (!$actorProcess.HasExited) { $actorProcess.Kill(); $actorProcess.WaitForExit() }
+    }
+}
+
 $root = Join-Path $env:RUNNER_TEMP ('upgrade preparation '+[guid]::NewGuid().ToString('N')+' é')
 $repo = Split-Path $PSScriptRoot -Parent
 $currentApp = ''
@@ -152,6 +273,17 @@ try {
     Assert ((Get-Acl -LiteralPath $outside).Sddl -eq $outsideAcl -and [IO.File]::ReadAllText($sentinel) -eq 'outside sentinel' -and @(Get-ChildItem -LiteralPath $outside -Force).Count -eq 1) 'rejected Setup leaves junction target ACL and bytes unchanged'
     Assert (!(Get-Service ImmichClone -ErrorAction SilentlyContinue) -and !(Test-Path 'HKLM:\SOFTWARE\ImmichClone')) 'rejected preparation registers no service or state'
     [IO.Directory]::Delete($junction); $junction = ''
+
+    # An actor-writable parent is an invalid installer namespace. The actual
+    # Inno Setup must refuse before creating a managed app, state or service.
+    $unsafeParent = Join-Path $root 'actor-writable-parent'
+    $unsafeApp = Join-Path $unsafeParent 'unsafe application'
+    $unsafeState = Join-Path $unsafeParent 'unsafe state'
+    New-Item -ItemType Directory -Path $unsafeParent | Out-Null
+    Native icacls @($unsafeParent,'/grant',('*'+$ordinarySid+':(OI)(CI)M'))
+    $unsafeResult = Run-Setup $unsafeApp $unsafeState
+    Assert ($unsafeResult -ne 0) 'actual Setup refuses an actor-writable application namespace before privileged writes'
+    Assert (!(Test-Path -LiteralPath (Join-Path $unsafeApp 'immichclone.exe')) -and !(Test-Path -LiteralPath $unsafeState) -and !(Test-Path -LiteralPath ($unsafeApp+'-upgrade-recovery')) -and !(Get-Service ImmichClone -ErrorAction SilentlyContinue)) 'unsafe namespace refusal leaves no managed app, state, recovery metadata or service'
 
     # Create an actual service-owned existing library without using the retained
     # helper. It deliberately represents old files, not an older runtime version.
@@ -357,6 +489,7 @@ try {
     Assert ((Run-Setup $currentApp $state) -ne 0) 'actual preparation refuses a hard-linked optional note before service stop'
     Assert ((Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").ProcessId -eq $notePid -and (Get-FileHash -LiteralPath $noteOutside).Hash -eq $noteHash) 'early optional-note alias refusal preserves prior service and outside bytes'
     Remove-Item -LiteralPath $notePath
+    Run-SetupMetadataRace $currentApp $state
     $healthFailureBefore = @(Get-Content -LiteralPath $installerLog | ForEach-Object { $_ | ConvertFrom-Json } | Where-Object { $_.event -eq 'installer_failed' -and $_.stage -eq 'verify service health' }).Count
     try {
         $env:IMMICH_INSTALL_TEST_FAILURE = '1'
@@ -477,17 +610,22 @@ try {
     $unknownRoot = Join-Path $currentApp 'unrelated-preserved.txt'
     $unknownRollback = Join-Path $currentApp 'rollback/unrelated-preserved.txt'
     foreach ($path in @($unknownRoot,$unknownRollback)) { [IO.File]::WriteAllText($path,'unrelated retained bytes') }
+    Run-UninstallMetadataRace $currentApp
     $uninstallTrace = Join-Path $root 'uninstall-boundary.log'
-    $process = Start-Process (Join-Path $currentApp 'unins000.exe') -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/LOG="'+$uninstallTrace+'"')) -Wait -PassThru
-    if ($process.ExitCode -ne 0) {
-        Write-Host ('Uninstall boundary: exit_code='+$process.ExitCode)
+    $uninstallExitCode = $script:uninstallRaceExitCode
+    if ($uninstallExitCode -ne 0) {
+        Write-Host ('Uninstall boundary: exit_code='+$uninstallExitCode)
         if (Test-Path -LiteralPath $uninstallTrace) { Get-Content -LiteralPath $uninstallTrace | Where-Object { $_ -match 'Uninstall boundary:' } | ForEach-Object { Write-Host ($_.Substring($_.IndexOf('Uninstall boundary:'))) } }
         $remainingService = Get-Service ImmichClone -ErrorAction SilentlyContinue
         Write-Host ('Uninstall boundary: service_present='+[bool]$remainingService)
         if ($remainingService) { Write-Host ('Uninstall boundary: service_state='+$remainingService.Status) }
         foreach ($leaf in @('Manage-Service.ps1','immichclone.exe','ai','media','rollback/catalog.db')) { Write-Host ('Uninstall boundary: selected_remaining='+[bool](Test-Path -LiteralPath (Join-Path $currentApp $leaf))) }
     }
-    Assert ($process.ExitCode -eq 0) 'disposable preparation installer uninstalls cleanly'
+ 
+ 
+ 
+ 
+    Assert ($uninstallExitCode -eq 0) 'disposable preparation installer uninstalls cleanly'
     foreach ($path in @($unknownRoot,$unknownRollback)) { Assert ([IO.File]::ReadAllText($path) -eq 'unrelated retained bytes') 'native uninstall preserves unrelated root and rollback contents' }
     Assert (!(Get-Service ImmichClone -ErrorAction SilentlyContinue) -and !(Test-Path 'HKLM:\SOFTWARE\ImmichClone')) 'completed native uninstall removes owned service and product registration'
     foreach ($leaf in $payloadNames) { Assert (!(Test-Path -LiteralPath (Join-Path $currentApp $leaf))) 'uninstall removes fixed native-published payload and provider fixture files' }

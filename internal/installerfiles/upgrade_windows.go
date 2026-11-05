@@ -38,6 +38,9 @@ func upgradeRoot(app, data, root string, create bool) (*winfs.Directory, error) 
 	if !filepath.IsAbs(app) || !filepath.IsAbs(data) || !filepath.IsAbs(root) || within(app, root) || within(root, app) || within(data, root) || within(root, data) {
 		return nil, ErrRefused
 	}
+	if e := validateNamespaceParents(app, data, root); e != nil {
+		return nil, e
+	}
 	if create {
 		if e := EnsurePrivateRoot(root, "", false); e != nil {
 			return nil, e
@@ -166,6 +169,9 @@ func validateUpgradeRecord(record upgradeRecord, app, data string) error {
 // BeginUpgrade runs after the prior state snapshot but before Inno publication.
 // An existing pending transaction is never overwritten by a new snapshot.
 func BeginUpgrade(app, data, root string, hadService bool) (err error) {
+	if e := validateNamespaceParents(app, data, root); e != nil {
+		return e
+	}
 	sd, e := codeCreationDescriptor()
 	if e != nil {
 		return e
@@ -226,7 +232,13 @@ func BeginUpgrade(app, data, root string, hadService bool) (err error) {
 // retireUpgrade admits only fixed metadata and numbered flat backup leaves.
 // All surviving objects are held and audited before the first deletion. A valid
 // terminal record remains until all payload/other metadata deletion completes.
-func retireUpgrade(d *winfs.Directory) (err error) {
+func retireUpgrade(d *winfs.Directory) error {
+	return retireUpgradeWithHook(d, nil)
+}
+
+// The nil production hook leaves the retirement protocol unchanged. Package
+// tests can stop at held-object deletion boundaries without a public bypass.
+func retireUpgradeWithHook(d *winfs.Directory, beforeDelete func(int) error) (err error) {
 	names, e := d.Names()
 	if e != nil {
 		return e
@@ -312,7 +324,12 @@ func retireUpgrade(d *winfs.Directory) (err error) {
 			return e
 		}
 	}
-	for _, f := range files {
+	for i, f := range files {
+		if beforeDelete != nil {
+			if e = beforeDelete(i); e != nil {
+				return e
+			}
+		}
 		if e = f.n.Delete(); e != nil {
 			return e
 		}

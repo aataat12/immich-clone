@@ -3,6 +3,11 @@ $root = Join-Path $env:RUNNER_TEMP ('installer test ' + [guid]::NewGuid().ToStri
 $app = Join-Path $root 'application'
 $state = Join-Path $root 'state'
 New-Item -ItemType Directory $root | Out-Null
+if (!$env:IMMICH_PRIOR_INSTALLER) { throw 'Permanent published prior installer was not supplied' }
+if (!(Test-Path -LiteralPath $env:IMMICH_PRIOR_INSTALLER)) { throw 'Published prior installer path is missing' }
+$priorHash = (Get-FileHash -LiteralPath $env:IMMICH_PRIOR_INSTALLER).Hash.ToLowerInvariant()
+if ($priorHash -ne '543e5742a00e2cf79522e4ddc7bd2c6a9647426c46bb0ca0564644f7d3ea3605') { throw 'Published 0.1.39 installer hash mismatch' }
+if (!$env:IMMICH_FULL_CONCURRENCY_SOURCE -or !$env:IMMICH_FULL_CONCURRENCY_RUN) { throw 'Full Setup concurrency handoff metadata is required' }
 # Model a protected application location, not the runner temporary parent's
 # permissive inherited code-write grants. Hostile permissions are exercised by
 # the focused actual-Setup/standard-user gate before this combined transition.
@@ -39,7 +44,7 @@ function Get-OrganizationSnapshot($WebSession) {
     return $first
 }
 function Install([string]$version) {
-    if ($version -eq '0.1.39') { $setup=Join-Path 'previous-installer' 'ImmichClone-0.1.39-prototype-x64-setup.exe';if ((Get-FileHash $setup).Hash.ToLowerInvariant() -ne '543e5742a00e2cf79522e4ddc7bd2c6a9647426c46bb0ca0564644f7d3ea3605') { throw 'Previous installer checksum mismatch' }; $setup=(Resolve-Path $setup).Path } else { $setup=(Resolve-Path "dist/ImmichClone-$version-prototype-x64-setup.exe").Path }
+    if ($version -eq '0.1.39') { $setup=(Resolve-Path $env:IMMICH_PRIOR_INSTALLER).Path } else { $setup=(Resolve-Path "dist/ImmichClone-$version-prototype-x64-setup.exe").Path }
     $process = Start-Process $setup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$app+'"'),('/STATE="'+$state+'"'),('/LOG="'+$root+'/setup-'+$version+'.log"')) -Wait -PassThru
     if ($process.ExitCode -ne 0) {
         Get-Content "$root/setup-$version.log" -Tail 25 | ForEach-Object { Write-Host $_ }

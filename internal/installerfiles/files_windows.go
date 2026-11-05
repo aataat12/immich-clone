@@ -103,6 +103,62 @@ func openRoots(app, data string) (_ *roots, err error) {
 
 // Snapshot contains the catalog and access code. Never write it into a role root
 // that a different user or LocalService can read or mutate, even after a path swap.
+const namespaceWriteMask uint32 = 0x00010000 | 0x00000002 | 0x00000004 | 0x00000040 | 0x00000010 | 0x00000100 | 0x00040000 | 0x00080000
+
+// namespaceParentSafe rejects a writable ancestor for installer-managed roots.
+// Leaf ACLs alone do not prevent a non-administrator who controls the parent
+// from replacing the selected directory between privileged actions.
+func namespaceParentSafe(path string) error {
+	parent := filepath.Clean(filepath.Dir(path))
+	d, e := winfs.OpenDirectory(parent)
+	if e != nil {
+		return e
+	}
+	defer d.Close()
+	sd, e := d.SecurityDescriptor()
+	if e != nil {
+		return e
+	}
+	acl, _, e := sd.DACL()
+	if e != nil || acl == nil {
+		return ErrRefused
+	}
+	user, e := windows.GetCurrentProcessToken().GetTokenUser()
+	if e != nil {
+		return e
+	}
+	allowed := map[string]bool{
+		"S-1-5-18":    true,
+		"S-1-5-32-544": true,
+		"S-1-3-0":     true,
+		user.User.Sid.String(): true,
+	}
+	for i := uint32(0); i < uint32(acl.AceCount); i++ {
+		var ace *windows.ACCESS_ALLOWED_ACE
+		if e = windows.GetAce(acl, i, &ace); e != nil {
+			return e
+		}
+		if ace.Header.AceType != windows.ACCESS_ALLOWED_ACE_TYPE {
+			continue
+		}
+		sid := (*windows.SID)(unsafe.Pointer(&ace.SidStart)).String()
+		trustedService := strings.HasPrefix(sid, "S-1-5-80-")
+		if uint32(ace.Mask)&namespaceWriteMask != 0 && !allowed[sid] && !trustedService {
+			return ErrRefused
+		}
+	}
+	return nil
+}
+
+func validateNamespaceParents(paths ...string) error {
+	for _, path := range paths {
+		if e := namespaceParentSafe(path); e != nil {
+			return e
+		}
+	}
+	return nil
+}
+
 func privateRollback(d *winfs.Directory) error {
 	sd, e := d.SecurityDescriptor()
 	if e != nil {
