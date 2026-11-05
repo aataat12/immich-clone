@@ -57,19 +57,24 @@ func restrictedToken() (token windows.Token, err error) {
 }
 
 func RunRestricted(ctx context.Context, exe string, args []string, onStart func(uint32)) (result Result, err error) {
-	defer func() { if recovered := recover(); recovered != nil { result = Result{}; err = fmt.Errorf("restricted run panic: %v", recovered) } }()
+	stage := "start"
+	defer func() { if recovered := recover(); recovered != nil { result = Result{}; err = fmt.Errorf("restricted run panic at %s: %v", stage, recovered) } }()
 	if !filepath.IsAbs(exe) { return result, errors.New("absolute executable required") }
 	if err := ctx.Err(); err != nil { return result, err }
+	stage = "restricted token"
 	token, err := restrictedToken()
 	if err != nil { return result, fmt.Errorf("token: %w", err) }
 	defer token.Close()
+	stage = "pipe"
 	r, w, err := os.Pipe(); if err != nil { return result, err }
 	defer r.Close(); defer w.Close()
+	stage = "standard handles"
 	nul, err := os.OpenFile("NUL", os.O_RDWR, 0); if err != nil { return result, err }
 	defer nul.Close()
 	for _, h := range []windows.Handle{windows.Handle(w.Fd()), windows.Handle(nul.Fd())} {
 		if err = windows.SetHandleInformation(h, windows.HANDLE_FLAG_INHERIT, windows.HANDLE_FLAG_INHERIT); err != nil { return result, err }
 	}
+	stage = "command line"
 	line, err := windows.UTF16PtrFromString(windows.ComposeCommandLine(append([]string{exe}, args...))); if err != nil { return result, err }
 	app, err := windows.UTF16PtrFromString(exe); if err != nil { return result, err }
 	cwd, err := windows.UTF16PtrFromString(filepath.Dir(exe)); if err != nil { return result, err }
@@ -78,15 +83,19 @@ func RunRestricted(ctx context.Context, exe string, args []string, onStart func(
 	env := &envBlock[0]
 	startup := windows.StartupInfo{Cb: uint32(unsafe.Sizeof(windows.StartupInfo{})), Flags: windows.STARTF_USESTDHANDLES, StdInput: windows.Handle(nul.Fd()), StdOutput: windows.Handle(w.Fd()), StdErr: windows.Handle(nul.Fd())}
 	var pi windows.ProcessInformation
+	stage = "process"
 	if err = windows.CreateProcessAsUser(token, app, line, nil, nil, true, windows.CREATE_NO_WINDOW|windows.CREATE_UNICODE_ENVIRONMENT, env, cwd, &startup, &pi); err != nil { return result, fmt.Errorf("process: %w", err) }
 	runtime.KeepAlive(envBlock)
+	stage = "job create"
 	job, jobErr := windows.CreateJobObject(nil, nil)
 	if jobErr != nil { windows.TerminateProcess(pi.Process, 1); return result, fmt.Errorf("job: %w", jobErr) }
 	defer windows.CloseHandle(job)
 	limits := windows.JOBOBJECT_EXTENDED_LIMIT_INFORMATION{ProcessMemoryLimit: MemoryLimit, JobMemoryLimit: MemoryLimit}
 	limits.BasicLimitInformation.LimitFlags = windows.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE | windows.JOB_OBJECT_LIMIT_ACTIVE_PROCESS | windows.JOB_OBJECT_LIMIT_PROCESS_MEMORY | windows.JOB_OBJECT_LIMIT_JOB_MEMORY
 	limits.BasicLimitInformation.ActiveProcessLimit = 1
+	stage = "job limits"
 	if _, jobErr = windows.SetInformationJobObject(job, windows.JobObjectExtendedLimitInformation, uintptr(unsafe.Pointer(&limits)), uint32(unsafe.Sizeof(limits))); jobErr != nil { windows.TerminateProcess(pi.Process, 1); return result, fmt.Errorf("job: %w", jobErr) }
+	stage = "job assign"
 	if jobErr = windows.AssignProcessToJobObject(job, pi.Process); jobErr != nil { windows.TerminateProcess(pi.Process, 1); return result, fmt.Errorf("job: %w", jobErr) }
 	defer windows.CloseHandle(pi.Process); windows.CloseHandle(pi.Thread); w.Close()
 	result.PID = pi.ProcessId; if onStart != nil { onStart(pi.ProcessId) }

@@ -77,7 +77,7 @@ func restrictedProbe(ctx context.Context, root string) map[string]bool {
 	bounded, err := media.RunRestricted(jobCtx, exe, []string{"-mode", "child", "-root", root}, nil)
 	cancel()
 	var childResult accessResult
-	if err != nil { message := err.Error(); result["restricted_launcher_failed"] = true; result["restricted_failure_token"] = strings.HasPrefix(message, "token:"); result["restricted_failure_process"] = strings.HasPrefix(message, "process:"); result["restricted_failure_job"] = strings.HasPrefix(message, "job:"); result["restricted_failure_invalid_parameter"] = strings.Contains(message, "The parameter is incorrect"); result["probe_complete"] = false; return result }
+	if err != nil { message := err.Error(); result["restricted_launcher_failed"] = true; result["restricted_failure_token"] = strings.HasPrefix(message, "token:") || strings.Contains(message, "at restricted token"); result["restricted_failure_process"] = strings.HasPrefix(message, "process:") || strings.Contains(message, "at process"); result["restricted_failure_job"] = strings.HasPrefix(message, "job:") || strings.Contains(message, "at job"); result["restricted_failure_invalid_parameter"] = strings.Contains(message, "The parameter is incorrect"); result["probe_complete"] = false; return result }
 	if json.Unmarshal(bounded.Output, &childResult) != nil { result["restricted_output_invalid"] = true; result["probe_complete"] = false; return result }
 	result["restricted_identity_localservice"] = childResult.LocalService
 	result["restricted_input_read_allowed"] = childResult.InputRead
