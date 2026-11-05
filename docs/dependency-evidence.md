@@ -1080,3 +1080,21 @@ note/checksum assets matched downloaded test artifact13393786248. Local executio
 was not performed. Target0.1.40 checks remain pending; see release-0.1.40-acceptance.md
 and validation-0.1.40.md. Security5 closed/3 open; final Windows10/reboot/endurance,
 SEC05/06/08 and unsigned-installer limits remain explicit.
+
+
+## 0.1.41 default-parent compatibility and disabled-service recovery
+
+No new dependency/provider/model/runtime/schema. Focused Server2022 source
+ dabe53da04e936edeb2f80607488590bbf593de7/run41984997929/job127103552474 and full
+sourcee1212539511ee3413a7049e318dc0c2699e8ee0c/run41986219923/job127107600519 PASS.
+Actual Program Files/ProgramData fresh installation and genuine0.1.39 initial
+rollback/direct upgrade from stopped/disabled service return Auto/Running0.1.41;
+originals/organization, full installed providers, UI, late rollback, independent
+restored reinstall and closed security controls pass. No parent permissions are
+relaxed. Artifact13396906359 ZIP SHA256bfc1bf3165c2843296611fe4afa55ef262d22dad2ce84c6f6d41f32de4ad6e25;
+installer104634954 bytes SHA2562f61cca971e9d4bcbdd390f3809e9fcc55c7c1988ce40ce2e399dda799e2740a.
+Downloaded/checksum verified without local execution. Notes match source after
+Windows line-ending normalization.0.1.40 target preparation failure supersedes
+its prior pending-target note; private support logs stay local. Automatic release
+publication removed after approval review; tested build is ready, publication
+and target-PC validation remain pending. See release-0.1.41-acceptance.md.

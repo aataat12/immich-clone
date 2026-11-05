@@ -1,29 +1,33 @@
-> Corrective release in progress: 0.1.40 target preparation refused normal
-> ProgramData creation rights before payload replacement and left the prior
-> owned service stopped/disabled. 0.1.41 fixes that bounded compatibility case;
-> focused/full default-folder and service-recovery acceptance is pending.
-> Private support logs remain local. See release-0.1.41-acceptance.md.
-
 # Current status
 
-## 0.1.40 published; target validation pending
+## Corrected 0.1.41 built; publication and target validation pending
 
-User-requested [0.1.40 prototype](https://github.com/aataat12/immich-clone/releases/tag/v0.1.40-prototype)
-is published from exact tested source5fcab695e086403c8e9bb1fdb339a7dc697b9eb6:
-[run41979194020](https://github.com/aataat12/immich-clone/actions/runs/41979194020),
-job127085130561, Windows Server 2022/LocalService/Edge. Genuine 0.1.39 upgrade,
-injected rollback, full native providers, redesigned desktop/narrow pages,
-backup and independent restored reinstall/uninstall passed. All four published
-assets match the downloaded tested artifact. [Evidence/checksum](release-0.1.40-acceptance.md).
+0.1.40 target preparation refused normal ProgramData creation permissions before
+payload replacement, leaving the retained prior service stopped/disabled. The
+corrected 0.1.41 build passed actual default-folder fresh install and genuine
+0.1.39 disabled-service recovery, restoring an automatic running service while
+preserving originals and organization. Focused security run41984997929 and full
+[build41986219923](https://github.com/aataat12/immich-clone/actions/runs/41986219923)
+passed. Exact full source `e1212539511ee3413a7049e318dc0c2699e8ee0c`.
 
-[Validation-AI assignment](validation-0.1.40.md): focused same-folder update and
-existing-data/navigation regression. User 0.1.40 target results are pending;
-accepted 0.1.39 results remain recorded. No routine reboot, destructive restore
-drill or extra import is requested. Milestone 7 remains in progress, 5 closed /
-3 open (SEC-05/06/08). No new provider/model/schema/cost/Group 3 work or final
-Windows 10 certification. Prior keep-0.1.39 notes below describe earlier
-checkpoints; 0.1.40 is now released for this authorized validation. Retain the
-prior accepted 0.1.39 installer.
+Verified installer104634954 bytes, SHA256
+`2f61cca971e9d4bcbdd390f3809e9fcc55c7c1988ce40ce2e399dda799e2740a`.
+[Acceptance and artifact identity](release-0.1.41-acceptance.md),
+[validation assignment](validation-0.1.41.md). Build/checksum/notes were downloaded
+and checked locally. Automatic publication was removed following approval-review
+rejection of publication under a build request; publication awaits explicit
+approval. No existing release/tag was overwritten.0.1.40 is superseded by this
+corrective build; its prior Server results are historical evidence.
+
+Next PC step: close failed0.1.40 Setup, retain the independent Ready backup and
+run the matching tested0.1.41 installer with the same folders. Setup handles the
+owned stopped/disabled prior service. No uninstall/permission edits, development
+tools or routine reboot requested. Private support logs stay local.
+
+Milestone7 remains in progress. Security **5 closed / 3 open** (SEC05/06/08).
+No new dependency/provider/model/schema/cost/Group3 work or final Windows10,
+reboot, endurance or physical-power-loss certification. Earlier forecasts and
+keep-version instructions below describe historical checkpoints.
 
 ## SEC-03 final combined checkpoint accepted
 

@@ -625,3 +625,15 @@
   No runtime/provider/model/schema change in this packaging step. Target0.1.40
   results remain pending;5 closed/3 open (SEC05/06/08), milestone7 in progress.
   No final Windows10/reboot/endurance/signing claim. See release-0.1.40-acceptance.md.
+
+- 2026-11-05: Bound 0.1.41 to correcting 0.1.40 default-parent permission
+  compatibility and recovery of the retained stopped/disabled prior service.
+  Preserve no-follow private roots and all replacement/metadata race refusals;
+  add actual Program Files/ProgramData and genuine prior disabled-service gates.
+  No dependency, schema, media/provider or UI scope change. Private support logs
+  stay local. Focused acceptance: run41984997929/source dabe53d. Full build source e1212539,
+  run41986219923/job127107600519 passed; tested artifact/hash independently verified.
+- 2026-11-05: Automatic approval review rejected publication-triggering dispatch
+  under a build-only request. Removed automatic publication and complete the
+  reviewable tested build first. GitHub release publication requires separate
+  explicit approval; no existing release or tag is overwritten.

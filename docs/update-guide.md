@@ -1,8 +1,12 @@
 # Manual prototype updates and recovery
 
-Use the project's exact published release, its acceptance record and its
-`SHA256SUMS.txt`. Do not use an unpublished rollback-injection package as an
-update. The current released prototype is [0.1.40](https://github.com/aataat12/immich-clone/releases/tag/v0.1.40-prototype); its focused target validation is pending. See validation-0.1.40.md.
+Use the exact tested installer and matching SHA256SUMS.txt identified by its
+acceptance record. The corrected **0.1.41 build** passed
+[Windows validation](https://github.com/aataat12/immich-clone/actions/runs/41986219923);
+GitHub release publication and target-PC validation are pending. See
+release-0.1.41-acceptance.md and validation-0.1.41.md.0.1.40 target preparation failed
+before payload replacement and is superseded by this build. Other internally
+numbered rollback-injection packages are not accepted updates.
 
 ## Before an update
 
@@ -10,10 +14,10 @@ update. The current released prototype is [0.1.40](https://github.com/aataat12/i
    instructions. Backups contain originals and the access code; keep them private.
    A Ready temporary server copy alone is not an independent backup. Do not discard
    a retained backup merely to enable Create backup.
-2. Obtain the installer and checksum list from the exact release. Compare the
-   downloaded installer's SHA256 to that release's listed value before executing.
-   The 0.1.40 installer is 104,650,356 bytes, SHA256
-   `ec49d308d237cc0a639d5e9b548c9cda04de0d404efd23168ef40d6a7688f292`.
+2. Obtain the installer and checksum list from the exact tested build handoff
+   (or the identical release once published). Compare SHA256 before executing.
+   The 0.1.41 installer is 104,634,954 bytes, SHA256
+   `2f61cca971e9d4bcbdd390f3809e9fcc55c7c1988ce40ce2e399dda799e2740a`.
    A checksum checks byte identity against the chosen record; it is not a signed
    publisher identity or independent proof against a compromised release account.
 3. Retain the prior accepted installer and read the candidate's tested upgrade
@@ -21,6 +25,11 @@ update. The current released prototype is [0.1.40](https://github.com/aataat12/i
    database server, Docker or WSL setup is part of this application update.
 
 ## Install and check
+
+Close/cancel the failed0.1.40 Setup before starting the correction. If the prior
+service is unavailable, retain the existing independent Ready backup without
+attempting a new live export.0.1.41 handles the owned stopped/disabled prior
+service; manual permission edits or uninstall are unnecessary.
 
 Run the accepted installer with its required administrator permission and retain
 the existing application and data locations. Changing the live library location

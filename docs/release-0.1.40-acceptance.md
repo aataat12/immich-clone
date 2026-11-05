@@ -1,6 +1,11 @@
 # 0.1.40 release acceptance
 
-**PASS and published prototype. Target-PC validation remains pending.**
+**Historical Server gate PASS and published prototype; target preparation FAIL.**
+
+The target update subsequently refused normal ProgramData creation permissions
+before payload replacement and left the retained prior service stopped/disabled.
+This release is superseded by the 0.1.41 corrective build. See
+[0.1.41 acceptance](release-0.1.41-acceptance.md). Private support logs stay local.
 
 The user requested 0.1.40 after acceptance of the combined SEC-03/UI checkpoint.
 The release retains the accepted runtime and closed SEC-01/02/03/04/07 controls.
