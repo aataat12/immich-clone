@@ -283,7 +283,9 @@ func TestRestoreBoundaryChildInheritanceKeepsPrivatePolicy(t *testing.T) {
 	for _, kind := range []string{"unknown-reader", "deny"} {
 		text := childSD.String() + "(A;;GR;;;WD)"
 		if kind == "deny" {
-			text = childSD.String() + "(D;;GW;;;WD)"
+			// Deny only data writes, so opening the fixture can still reach the
+			// descriptor audit instead of failing on denied SYNCHRONIZE access.
+			text = childSD.String() + "(D;;0x2;;;WD)"
 		}
 		unsafeSD, e := windows.SecurityDescriptorFromString(text)
 		if e != nil {
