@@ -6,7 +6,7 @@ navigation; do not repeat historical tests solely for chronology.
 
 ## Exact package
 
-Release: https://github.com/aataat12/immich-clone/releases/tag/v 0.1.40-prototype
+Release: https://github.com/aataat12/immich-clone/releases/tag/v0.1.40-prototype
 
 Download these assets from that exact release:
 

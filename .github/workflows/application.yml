@@ -17,6 +17,8 @@ on:
       - '.github/workflows/application.yml'
       - 'packaging/**'
       - 'scripts/Build-Installer.ps1'
+      - 'docs/validation-0.1.40.md'
+      - 'docs/release-notes-0.1.40.md'
       - 'scripts/Test-Installer.ps1'
       - 'scripts/Test-LocalPrototype.ps1'
       - 'scripts/Test-FullDisk.ps1'
