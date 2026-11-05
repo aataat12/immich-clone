@@ -1,0 +1,54 @@
+name: SEC-06 hostile input and parent decode
+on:
+  push:
+    branches: ['work/sec06-input-hardening']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  input:
+    runs-on: windows-2022
+    timeout-minutes: 12
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Verify modules and format candidate
+        shell: pwsh
+        run: |
+          go mod download
+          if ($LASTEXITCODE -ne 0) { throw 'module download failed' }
+          go mod verify
+          if ($LASTEXITCODE -ne 0) { throw 'module verification failed' }
+          gofmt -w internal/library/image_decode.go internal/library/image_decode_test.go internal/library/input_validation.go internal/library/sec06_input_test.go internal/library/store.go internal/library/organization.go internal/library/metadata.go internal/library/offline.go internal/library/analysis_batch.go internal/web/organization.go internal/web/import.go internal/web/sec06_input_test.go
+          if ($LASTEXITCODE -ne 0) { throw 'format failed' }
+      - name: Focused hostile corpus and allocation evidence
+        shell: pwsh
+        run: |
+          go test -mod=readonly -v -count=1 -timeout=4m ./internal/library ./internal/web -run SEC06
+          if ($LASTEXITCODE -ne 0) { throw 'focused input tests failed' }
+      - name: Full internal and command regression
+        shell: pwsh
+        run: |
+          go test -mod=readonly -count=1 -timeout=6m ./internal/... ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'regression tests failed' }
+          go vet ./internal/... ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'vet failed' }
+          go build ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'build failed' }
+      - name: Preserve canonical source diff
+        if: always()
+        shell: pwsh
+        run: git diff --output=sec06-format.patch
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: sec06-format
+          path: sec06-format.patch
+          retention-days: 3

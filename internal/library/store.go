@@ -25,6 +25,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"unicode/utf8"
 )
 
 const MaxUpload int64 = 4 << 30
@@ -118,6 +119,7 @@ func Open(root string) (*Store, error) {
 	}
 	s := &Store{root: root, db: db, mediaAnalysisGate: make(chan struct{}, 1)}
 	e = db.Update(func(tx *bolt.Tx) error {
+		if err := validateCatalogInput(tx); err != nil { return err }
 		for _, n := range []string{"meta", "assets"} {
 			if _, e := tx.CreateBucketIfNotExists([]byte(n)); e != nil {
 				return e
@@ -290,6 +292,10 @@ func (s *Store) PutWithPath(name, relative string, r io.Reader) (Asset, bool, er
 	return s.putWithPath(name, relative, r, -1, "", nil)
 }
 func (s *Store) putWithPath(name, relative string, r io.Reader, size int64, expected string, receipt func(*bolt.Tx, Asset, bool) error) (result Asset, duplicate bool, returnErr error) {
+	name = filepath.Base(strings.ReplaceAll(name, "\\", "/"))
+	if name == "." || name == "/" || name == "" { name = "original" }
+	if !textOK(name, 256) { return result, false, errors.New("invalid original filename") }
+
 	if relative != "" {
 		clean, e := cleanRelative(relative)
 		if e != nil {
@@ -510,22 +516,12 @@ func (s *Store) makePreviewContext(ctx context.Context, a *Asset) error {
 	if _, e = f.Seek(0, 0); e != nil {
 		return e
 	}
-	config, _, e := image.DecodeConfig(contextReader{ctx, f})
+	img, e := decodeParentImage(ctx, f)
 	if e != nil {
-		return errors.New("malformed image")
-	}
-	if config.Width <= 0 || config.Height <= 0 || int64(config.Width)*int64(config.Height) > 40_000_000 {
-		return errors.New("image exceeds 40 megapixel preview limit")
-	}
-	a.Width, a.Height = config.Width, config.Height
-	if _, e = f.Seek(0, 0); e != nil {
 		return e
 	}
-	img, _, e := image.Decode(contextReader{ctx, f})
-	if e != nil {
-		return errors.New("image decode failed")
-	}
-	img = oriented(img, a.Photo.Orientation)
+	img, e = orientedContext(ctx, img, a.Photo.Orientation)
+	if e != nil { return e }
 	a.Width, a.Height = img.Bounds().Dx(), img.Bounds().Dy()
 	return s.publishPreview(a.ID, img)
 }
@@ -609,7 +605,7 @@ func (s *Store) Verify() (result error) {
 
 func cleanRelative(p string) (string, error) {
 	p = strings.ReplaceAll(p, "\\", "/")
-	if len(p) > 1024 || strings.HasPrefix(p, "/") || strings.Contains(p, ":") {
+	if !utf8.ValidString(p) || len(p) > 1024 || strings.HasPrefix(p, "/") || strings.Contains(p, ":") {
 		return "", errors.New("invalid relative import path")
 	}
 	for _, r := range p {

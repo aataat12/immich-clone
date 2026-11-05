@@ -193,18 +193,11 @@ func (s *Store) analysisImage(ctx context.Context, id string) (image.Image, erro
 	if _, e = f.Seek(0, 0); e != nil {
 		return nil, errors.New("original read failed")
 	}
-	cfg, _, e := image.DecodeConfig(contextReader{ctx, f})
-	if e != nil || cfg.Width <= 0 || cfg.Height <= 0 || int64(cfg.Width)*int64(cfg.Height) > 40_000_000 {
-		return nil, errors.New("AI image malformed or exceeds 40 megapixels")
-	}
-	if _, e = f.Seek(0, 0); e != nil {
-		return nil, errors.New("original read failed")
-	}
-	img, _, e := image.Decode(contextReader{ctx, f})
+	img, e := decodeParentImage(ctx, f)
 	if e != nil {
-		return nil, errors.New("AI image decode failed")
+		return nil, e
 	}
-	return oriented(img, photo.Orientation), nil
+	return orientedContext(ctx, img, photo.Orientation)
 }
 func newFaceID() (string, error) {
 	var b [32]byte
@@ -467,6 +460,9 @@ func textOK(s string, max int) bool {
 	return true
 }
 func (s *Store) LabelFaces(ids []string, name string) error {
+	if !textOK(name, 128) {
+		return ErrOrganizationInput
+	}
 	name = strings.TrimSpace(name)
 	if len(ids) == 0 || len(ids) > 100 || !textOK(name, 128) {
 		return ErrOrganizationInput
@@ -532,6 +528,9 @@ func (s *Store) SetTags(id string, tags []string) error {
 	}
 	clean := []string{}
 	for _, tag := range tags {
+		if !textOK(tag, 64) {
+			return ErrOrganizationInput
+		}
 		tag = strings.TrimSpace(tag)
 		if tag == "" {
 			continue
@@ -750,7 +749,7 @@ func (s *Store) OrganizationExport() (map[string]any, error) {
 
 // ManualFace records user-supplied geometry, without claiming model recognition.
 func (s *Store) ManualFace(ctx context.Context, id string, box []float64, name string) error {
-	if !validID(id) || len(box) != 4 || !textOK(strings.TrimSpace(name), 128) {
+	if !validID(id) || len(box) != 4 || !textOK(name, 128) {
 		return ErrOrganizationInput
 	}
 	for _, v := range box {

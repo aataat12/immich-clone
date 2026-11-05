@@ -4,6 +4,7 @@ package library
 // external/native dependency, arbitrary directory traversal or maker-note decode.
 import (
 	"bytes"
+ "context"
 	"encoding/binary"
 	"image"
 	"io"
@@ -59,7 +60,7 @@ func ReadPhotoMetadata(r io.Reader) PhotoMetadata {
 }
 func readTIFF(b []byte) PhotoMetadata {
 	m := PhotoMetadata{Orientation: 1}
-	bad := func() PhotoMetadata { m.Warning = "invalid_exif"; return m }
+	bad := func() PhotoMetadata { return PhotoMetadata{Orientation: 1, Warning: "invalid_exif"} }
 	if len(b) < 8 {
 		return bad()
 	}
@@ -162,8 +163,13 @@ func readTIFF(b []byte) PhotoMetadata {
 	return m
 }
 func oriented(img image.Image, orientation int) image.Image {
+ out, _ := orientedContext(context.Background(), img, orientation)
+ return out
+}
+func orientedContext(ctx context.Context, img image.Image, orientation int) (image.Image, error) {
+ if err := ctx.Err(); err != nil { return nil, err }
 	if orientation <= 1 || orientation > 8 {
-		return img
+		return img, nil
 	}
 	bounds := img.Bounds()
 	w, h := bounds.Dx(), bounds.Dy()
@@ -173,6 +179,7 @@ func oriented(img image.Image, orientation int) image.Image {
 	}
 	out := image.NewRGBA(image.Rect(0, 0, ow, oh))
 	for y := 0; y < h; y++ {
+ if err := ctx.Err(); err != nil { return nil, err }
 		for x := 0; x < w; x++ {
 			dx, dy := x, y
 			switch orientation {
@@ -194,5 +201,5 @@ func oriented(img image.Image, orientation int) image.Image {
 			out.Set(dx, dy, img.At(bounds.Min.X+x, bounds.Min.Y+y))
 		}
 	}
-	return out
+	return out, nil
 }

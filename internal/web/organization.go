@@ -2,6 +2,8 @@ package web
 
 import (
 	"encoding/json"
+ "bytes"
+ "unicode/utf8"
 	"errors"
 	"image/png"
 	"immichclone/internal/library"
@@ -10,21 +12,28 @@ import (
 	"strings"
 )
 
-func organizationInput(w http.ResponseWriter, r *http.Request, out any) bool {
-	r.Body = http.MaxBytesReader(w, r.Body, 64<<10)
-	d := json.NewDecoder(r.Body)
-	d.DisallowUnknownFields()
-	if d.Decode(out) != nil {
-		http.Error(w, "invalid review request", 400)
-		return false
-	}
-	var extra any
-	if !errors.Is(d.Decode(&extra), io.EOF) {
-		http.Error(w, "invalid review request", 400)
-		return false
-	}
-	return true
+// Read through EOF before decoding so invalid UTF-8 cannot be silently replaced
+// by encoding/json and oversized/trailing input cannot hide after a valid prefix.
+func boundedJSON(w http.ResponseWriter, r *http.Request, limit int64, out any) error {
+ r.Body = http.MaxBytesReader(w, r.Body, limit)
+ raw, err := io.ReadAll(r.Body)
+ if err != nil { return err }
+ if !utf8.Valid(raw) { return errors.New("invalid JSON encoding") }
+ d := json.NewDecoder(bytes.NewReader(raw))
+ d.DisallowUnknownFields()
+ if err = d.Decode(out); err != nil { return err }
+ var extra any
+ if !errors.Is(d.Decode(&extra), io.EOF) { return errors.New("trailing JSON data") }
+ return nil
 }
+func organizationInput(w http.ResponseWriter, r *http.Request, out any) bool {
+ if boundedJSON(w,r,64<<10,out) != nil {
+  http.Error(w,"invalid review request",400)
+  return false
+ }
+ return true
+}
+
 func (s *Server) organizationHTTP(w http.ResponseWriter, r *http.Request) bool {
 	if r.URL.Path == "/api/analysis-batch" {
 		if r.Method == "POST" {

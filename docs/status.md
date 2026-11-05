@@ -1,5 +1,15 @@
 # Current status
 
+## November 5, 2026: SEC-06 candidate, Windows validation pending
+
+Parent decode/rotation, filename/metadata/tag, JSON and catalog hardening changes
+and synthetic negative/valid tests are prepared. [Scope and execution blocker](sec06-input-hardening.md).
+No Go toolchain is available locally; no compilation/test/resource acceptance is
+claimed. The user explicitly authorized this source/test payload upload to a separate
+branch of the existing public repository and Windows checks. Validation is
+pending; no compilation or resource acceptance is claimed. SEC-06 remains open, security4 closed/4 open,
+published0.1.39 unchanged. No new dependency/schema/provider/cost or PC action.
+
 ## November 4, 2026: 0.1.39 local regression accepted; milestone 7 started
 
 Current published prototype is **0.1.39**. The user reported all exercised combined
