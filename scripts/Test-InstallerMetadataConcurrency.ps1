@@ -93,7 +93,14 @@ function Invoke-Action([string]$Action,[string]$App,[string]$Data,[string]$Trans
  }
  $code=Finish-NativeProcess $run;$run.Process.Dispose();return $code
 }
-function Snapshot([string]$Path){return ((Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash+'|'+(Get-Acl -LiteralPath $Path).Sddl)}
+# This controller is a preauthorized observer. Its reader allows the deliberately
+# preheld writer's sharing; the production native audit remains strictly shared.
+function Observed-Hash([string]$Path){
+ $stream=[IO.File]::Open($Path,[IO.FileMode]::Open,[IO.FileAccess]::Read,([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete))
+ $hash=[Security.Cryptography.SHA256]::Create()
+ try{return [BitConverter]::ToString($hash.ComputeHash($stream)).Replace('-','')}finally{$hash.Dispose();$stream.Dispose()}
+}
+function Snapshot([string]$Path){return ((Observed-Hash $Path)+'|'+(Get-Acl -LiteralPath $Path).Sddl)}
 function Wait-Condition([scriptblock]$Condition,[int]$Seconds=10){
  $until=[DateTime]::UtcNow.AddSeconds($Seconds)
  while([DateTime]::UtcNow -lt $until){if(&$Condition){return $true};Start-Sleep -Milliseconds 10}
@@ -158,7 +165,7 @@ try{
  foreach($ace in $raw.DiscretionaryAcl){
   if(!($ace -is [Security.AccessControl.CommonAce]) -or $ace.AceQualifier -ne [Security.AccessControl.AceQualifier]::AccessAllowed -or $ace.SecurityIdentifier.Value -notin @('S-1-5-18','S-1-5-32-544') -or $ace.AccessMask -ne 0x1f01ff -or $ace.AceFlags -ne 0){$privateRules=$false}
  }
- Assert ($privateRules -and $hardened.AreAccessRulesProtected -and $hardened.Owner -eq $pendingOwner -and (Get-FileHash -LiteralPath $pending).Hash -eq $pendingHash) 'preauthorized-writer fixture has exact privileged-only private grants and unchanged owner and bytes'
+ Assert ($privateRules -and $hardened.AreAccessRulesProtected -and $hardened.Owner -eq $pendingOwner -and (Observed-Hash $pending) -eq $pendingHash) 'preauthorized-writer fixture has exact privileged-only private grants and unchanged owner and bytes'
  $hardenedBefore=Snapshot $pending
  Assert ((Invoke-Action 'audit-upgrade' $app $data $transaction) -ne 0) 'audit refuses actual preheld standard-account writer after private hardening'
  $actor.ReleaseWriter()
