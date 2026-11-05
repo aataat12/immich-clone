@@ -76,8 +76,8 @@ func restrictedProbe(ctx context.Context, root string) map[string]bool {
 	bounded, err := media.RunRestricted(jobCtx, exe, []string{"-mode", "child", "-root", root}, nil)
 	cancel()
 	var childResult accessResult
-	if err != nil { result["restricted_launcher_error"] = err.Error(); result["probe_complete"] = false; return result }
-	if json.Unmarshal(bounded.Output, &childResult) != nil { result["restricted_launcher_error"] = "child output was not valid JSON"; result["probe_complete"] = false; return result }
+	if err != nil { result["restricted_launcher_failed"] = true; result["probe_complete"] = false; return result }
+	if json.Unmarshal(bounded.Output, &childResult) != nil { result["restricted_output_invalid"] = true; result["probe_complete"] = false; return result }
 	result["restricted_identity_localservice"] = childResult.LocalService
 	result["restricted_input_read_allowed"] = childResult.InputRead
 	result["restricted_scratch_write_allowed"] = childResult.ScratchWrite
