@@ -22,7 +22,7 @@ try {
  Native icacls @((Join-Path $root 'denied'),'/deny','*S-1-5-12:(OI)(CI)F')
  $cred=New-Object PSCredential('NT AUTHORITY\LocalService',(ConvertTo-SecureString 'unused' -AsPlainText -Force))
  New-Service -Name $name -BinaryPathName ('"'+(Join-Path $root 'canary.exe')+'" -mode candidate-service -service "'+$name+'" -root "'+$root+'"') -Credential $cred|Out-Null;$created=$true;Start-Service $name
- $report=Join-Path $root 'control/result.json';for($i=0;$i-lt 100;$i++){if(Test-Path $report){break};Start-Sleep -Milliseconds 300};Assert(Test-Path $report) 'restricted candidate completed'
+	$report=Join-Path $root 'control/result.json';for($i=0;$i-lt 100;$i++){if(Test-Path $report){break};Start-Sleep -Milliseconds 300};if(!(Test-Path $report)){Write-Output ('service-started='+[bool](Test-Path (Join-Path $root 'control/service-started')));& sc.exe query $name;throw 'restricted candidate completed'}
  $r=Get-Content $report -Raw|ConvertFrom-Json
  Write-Output ('Candidate report: '+($r|ConvertTo-Json -Compress))
  Assert($r.probe_complete) 'restricted launcher completed'

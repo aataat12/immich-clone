@@ -141,6 +141,7 @@ type serviceProbe struct{ root string; candidate bool }
 
 func (p *serviceProbe) Execute(_ []string, requests <-chan svc.ChangeRequest, status chan<- svc.Status) (bool, uint32) {
 	status <- svc.Status{State: svc.StartPending}
+	_ = os.WriteFile(filepath.Join(p.root, "control", "service-started"), []byte("started"), 0600)
 	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 	defer cancel()
 	done := make(chan map[string]bool, 1)
