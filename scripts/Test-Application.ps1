@@ -18,8 +18,6 @@ try {
     ./scripts/Prepare-MediaProvider.ps1 -Destination (Join-Path $root 'media/ffmpeg-8.1.3-7eb77d88e2e9')
     ./scripts/Prepare-AIProvider.ps1 -Destination (Join-Path $root 'ai/opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3')
     Checked go @('build','-trimpath','-ldflags',("-X main.version=$Version"),'-o',$binary,'./cmd/immichclone')
-    $env:IMMICH_NAV_BINARY=$binary
-    try { if (!$UIReview) { Checked node @('tests/hidden-navigation.cjs') } } finally { Remove-Item Env:IMMICH_NAV_BINARY -ErrorAction SilentlyContinue }
     New-Item -ItemType Directory -Path $state | Out-Null
     Checked icacls @($root,'/grant','*S-1-5-19:(OI)(CI)RX')
     Checked icacls @($state,'/grant','*S-1-5-19:(OI)(CI)M')
@@ -34,6 +32,18 @@ try {
         Start-Sleep -Milliseconds 250
     }
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'actual application starts as LocalService'
+    if (!$UIReview) {
+        Assert (![string]::IsNullOrWhiteSpace($env:IMMICH_BROWSER_MODULE)) 'pinned browser module supplied for hidden-navigation acceptance'
+        $oldNavAttach=$env:IMMICH_NAV_ATTACH;$oldTestState=$env:IMMICH_TEST_STATE
+        try {
+            # Direct elevated serving is intentionally refused; attach the browser
+            # fixture to the actual LocalService instance and its initialized state.
+            $env:IMMICH_NAV_ATTACH='1';$env:IMMICH_TEST_STATE=$state
+            Checked node @('tests/hidden-navigation.cjs')
+        } finally {
+            $env:IMMICH_NAV_ATTACH=$oldNavAttach;$env:IMMICH_TEST_STATE=$oldTestState
+        }
+    }
     Login
     # Generate a fixture using the already-executed standard image encoders in tests.
     # This tiny known PNG fixture exercises actual upload/preview retrieval in service.
@@ -221,3 +231,4 @@ try {
     if (Get-Service $name -ErrorAction SilentlyContinue) { Stop-Service $name -Force -ErrorAction Continue; Checked sc.exe @('delete',$name) }
     Remove-Item $root -Recurse -Force -ErrorAction Continue
 }
+
