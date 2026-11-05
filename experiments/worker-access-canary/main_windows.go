@@ -145,7 +145,10 @@ func (p *serviceProbe) Execute(_ []string, requests <-chan svc.ChangeRequest, st
 	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 	defer cancel()
 	done := make(chan map[string]bool, 1)
-	go func() { if p.candidate { done <- restrictedProbe(ctx, p.root) } else { done <- probe(ctx, p.root) } }()
+	go func() {
+		defer func() { if recover() != nil { done <- map[string]bool{"probe_complete": false, "restricted_panic": true} } }()
+		if p.candidate { done <- restrictedProbe(ctx, p.root) } else { done <- probe(ctx, p.root) }
+	}()
 	status <- svc.Status{State: svc.Running, Accepts: svc.AcceptStop | svc.AcceptShutdown}
 	for {
 		select {
