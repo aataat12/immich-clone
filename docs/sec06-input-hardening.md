@@ -14,7 +14,10 @@ Published prototype remains 0.1.39. No dependency/provider/model/schema change.
 - TIFF uses the same pinned upstream parser with context-checked bounded random
   reads, allowing repeated compressed strips to observe the existing 45-second
   preview/75-second AI deadlines. Orientation checks cancellation per row and
-  uses typed pixel access to avoid per-pixel heap allocation.
+  uses typed pixel access to avoid per-pixel heap allocation. Preflight also bounds
+  TIFF padded tile storage to 40MP plus 1MP of padding before upstream Decode;
+  image dimensions alone do not constrain a skinny padded tile. A guarded test
+  advertises 1x40M output with 17x40M tiles and verifies no payload read.
 - EXIF structural failure discards partial fields; malformed metadata remains a
   warning and does not prevent otherwise valid media previews. Orientation copy
   checks cancellation between rows.

@@ -2,6 +2,7 @@ package library
 
 import (
 	"context"
+ "encoding/binary"
 	"errors"
 	"image"
 	"io"
@@ -43,6 +44,9 @@ func decodeParentImageLimit(ctx context.Context, r io.ReadSeeker, encodedLimit i
 	if ctx.Err() != nil { return nil, ctx.Err() }
 	if err != nil { return nil, errors.New("malformed image") }
 	if !validImageDimensions(cfg.Width, cfg.Height) { return nil, errors.New("image exceeds 40 megapixel decode limit") }
+ if isTIFF {
+  if err=validateTIFFBlockBudget(contextImageReader{ctx:ctx,r:r,size:end});err!=nil{return nil,err}
+ }
 	if err = ctx.Err(); err != nil { return nil, err }
 	if _, err = r.Seek(0, io.SeekStart); err != nil { return nil, err }
 	var img image.Image
@@ -74,4 +78,42 @@ func (r contextImageReader) ReadAt(p []byte,offset int64)(int,error) {
  if offset<0 || offset>r.size || int64(len(p))>r.size-offset {return 0,io.ErrUnexpectedEOF}
  if _,err:=r.r.Seek(offset,io.SeekStart);err!=nil{return 0,err}
  return io.ReadFull(contextReader{r.ctx,r.r},p)
+}
+
+// TIFF allocates decompressed tile storage using padded tile dimensions, not
+// only image dimensions. A very skinny image can otherwise multiply a nominal
+// 40MP image by the permitted 16-pixel padding. Permit an extra 1MP for ordinary
+// edge padding while keeping each block finite before calling Decode.
+func validateTIFFBlockBudget(r contextImageReader) error {
+ var header [8]byte
+ if _,err:=r.ReadAt(header[:],0);err!=nil{return err}
+ var order binary.ByteOrder=binary.LittleEndian
+ if string(header[:2])=="MM" {order=binary.BigEndian}
+ offset:=int64(order.Uint32(header[4:]))
+ var count [2]byte
+ if _,err:=r.ReadAt(count[:],offset);err!=nil{return err}
+ entries:=make([]byte,int(order.Uint16(count[:]))*12)
+ if _,err:=r.ReadAt(entries,offset+2);err!=nil{return err}
+ var width,height uint64
+ for i:=0;i<len(entries);i+=12 {
+  entry:=entries[i:i+12]
+  tag:=order.Uint16(entry)
+  if tag!=322 && tag!=323 {continue}
+  kind,n:=order.Uint16(entry[2:]),uint64(order.Uint32(entry[4:]))
+  var size uint64
+  switch kind {case 1:size=1;case 3:size=2;case 4:size=4;default:return errors.New("invalid TIFF tile metadata")}
+  if n==0 {continue}
+  value:=entry[8:12]
+  if n*size>4 {
+   var scalar [4]byte
+   if _,err:=r.ReadAt(scalar[:size],int64(order.Uint32(value)));err!=nil{return err}
+   value=scalar[:]
+  }
+  var v uint64
+  switch size {case 1:v=uint64(value[0]);case 2:v=uint64(order.Uint16(value));case 4:v=uint64(order.Uint32(value))}
+  if tag==322 {width=v}else{height=v}
+ }
+ const maxBlockPixels=maxParentImagePixels+(1<<20)
+ if width>0 && height>0 && width>maxBlockPixels/height {return errors.New("TIFF padded tile exceeds decoded block budget")}
+ return nil
 }

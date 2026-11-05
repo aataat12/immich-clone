@@ -9,6 +9,7 @@ import (
  "runtime"
  "testing"
  "time"
+ "golang.org/x/image/tiff"
 )
 
 // Synthetic baseline TIFF: one grayscale pixel per row, with deliberately
@@ -88,4 +89,30 @@ func TestSEC06TIFFRepeatedStripCancellation(t *testing.T) {
  _,e:=decodeParentImage(ctx,r)
  if !errors.Is(e,context.Canceled) || r.payloadReads>9 {t.Fatalf("repeated strips failed cooperative cancellation: reads=%d error=%v",r.payloadReads,e)}
  t.Logf("TIFF repeated_strips=1024 payload_reads_before_cancel=%d",r.payloadReads)
+}
+
+// Never build the multi-gigabyte decompressed attack body. A one-byte payload
+// proves preflight refusal before pixel allocation/decompression is entered.
+// Without the padded-tile guard, the upstream decoder reaches payload reads.
+type sec06NoTilePayloadReader struct {
+ *bytes.Reader
+ payloadOffset int64
+ touched bool
+}
+func(r *sec06NoTilePayloadReader)Read(p []byte)(int,error) {
+ pos,_:=r.Reader.Seek(0,1)
+ if pos>=r.payloadOffset {r.touched=true;return 0,errors.New("tile payload reached")}
+ return r.Reader.Read(p)
+}
+func TestSEC06TIFFPaddingAmplificationRejectedBeforeDecode(t *testing.T) {
+ data,offset:=sec06TIFF(t,1,1,true)
+ // Output is exactly40MP; sixteen permitted padding columns advertise680MP
+ // in one tile. Upstream's relative-padding check skips its1024-tile bound.
+ binary.LittleEndian.PutUint32(data[10+1*12+8:],40_000_000)
+ binary.LittleEndian.PutUint32(data[10+5*12+8:],17)
+ binary.LittleEndian.PutUint32(data[10+6*12+8:],40_000_000)
+ cfg,e:=tiff.DecodeConfig(bytes.NewReader(data))
+ if e!=nil || cfg.Width!=1 || cfg.Height!=40_000_000 {t.Fatal("attack header precondition",e)}
+ r:=&sec06NoTilePayloadReader{Reader:bytes.NewReader(data),payloadOffset:int64(offset)}
+ if _,e=decodeParentImage(context.Background(),r);e==nil || r.touched {t.Fatalf("padded tile entered decode: payload_read=%t error=%v",r.touched,e)}
 }
