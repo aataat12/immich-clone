@@ -1112,3 +1112,17 @@ Prior tags/assets remain. Frozen build-time notes retain their historical pendin
 approval text; the release body records completed user approval/publication.
 Target validation remains pending; no local installer execution or service change.
 See release-0.1.41-acceptance.md for all asset identities.
+
+
+## Reported installed 0.1.41 UI regression - November 5, 2026
+
+User-returned UI observation accepts running0.1.41, exercised navigation and
+existing media/organization/history/backup controls, previews, TIFF download,
+authenticated access/signout, existing sampled-video frames and current layout/
+console checks. No dependency or provider acquisition/execution evidence added.
+Preservation is observational; manual corrections, installer/upgrade/rollback,
+clean machine/reboot/Windows10, backup restore and large import remain NOT TESTED
+by that session. No narrow-viewport, fresh inference or original-hash proof is
+inferred. Generic scope/limits are in release-0.1.41-acceptance.md. Raw report,
+counts and personal paths are not published. Existing Server evidence remains
+separate. SEC08/milestone7 stay open; no CI, runtime or dependency changes.

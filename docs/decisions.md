@@ -644,3 +644,11 @@
   public downloads match saved tested-artifact hashes. Prior releases/tags
   preserved. Build-time note assets retained unchanged; release body records
   completed approval/publication. Target-PC acceptance remains pending.
+
+- 2026-11-05: Accept the user's reported installed0.1.41 non-destructive UI
+  regression scope as observed evidence only. Preserve explicit NOT TESTED for
+  manual corrections, installer/upgrade/rollback, clean machine, reboot/Windows10,
+  backup restore and large import. No original-hash, fresh inference, post-signout
+  re-entry or narrow-viewport proof inferred. Record only a generic public summary;
+  private counts, local paths and the raw report stay local. Security5 closed/3
+  open; SEC08 and milestone7 remain open. No runtime work, workers or CI started.

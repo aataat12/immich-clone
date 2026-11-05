@@ -1,6 +1,6 @@
 # Current status
 
-## Corrected 0.1.41 published; target validation pending
+## Corrected 0.1.41 published; reported UI checks accepted
 
 0.1.40 target preparation refused normal ProgramData creation permissions before
 payload replacement, leaving the retained prior service stopped/disabled. The
@@ -20,10 +20,16 @@ without rebuilding. All four public assets were independently downloaded and
 matched the saved hashes. The tag points to the exact tested source. No prior
 release/tag was overwritten.0.1.40 is superseded; its Server results are historical.
 
-Next PC step: close failed0.1.40 Setup, retain the independent Ready backup and
-run the matching tested0.1.41 installer with the same folders. Setup handles the
-owned stopped/disabled prior service. No uninstall/permission edits, development
-tools or routine reboot requested. Private support logs stay local.
+The user now reports the installed0.1.41 UI validation complete: exercised
+navigation, observed media/hidden-item preservation, existing sampled frames,
+organization/search controls, import history, Ready backup/instructions controls,
+previews, an original download, authenticated access/sign-out and current browser
+layout/errors passed. Manual corrections, installer/upgrade/rollback, clean-machine,
+reboot/Windows10 compatibility, backup restore and large imports were not tested
+by that UI session. No hash-based preservation or fresh inference claim is added.
+See the reported UI section in release-0.1.41-acceptance.md. Private report details
+remain local. Keep0.1.41; no repeat installation or extra PC action is requested.
+Next bounded development work remains SEC05; it was not started by this update.
 
 Milestone7 remains in progress. Security **5 closed / 3 open** (SEC05/06/08).
 No new dependency/provider/model/schema/cost/Group3 work or final Windows10,

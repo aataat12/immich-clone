@@ -1,7 +1,8 @@
 # 0.1.41 corrective installer acceptance
 
-**PASS: published, independently downloaded and checksum verified. Target-PC
-validation pending.** Prior releases/tags were preserved.
+**PASS: published and checksum verified; exercised installed UI checks accepted
+as reported observations. Broader target acceptance remains open.** Prior
+releases/tags were preserved.
 
 0.1.40 target update validation found a preparation compatibility defect: normal
 Windows ProgramData parent creation/attribute grants were rejected as replacement
@@ -102,3 +103,37 @@ Build-time notes were deliberately retained unchanged; their pending-publication
 wording records the build checkpoint. The release body documents subsequent
 approval and completed publication. Only target-PC validation remains pending
 for this release step. No local installer execution or service changes occurred.
+
+## November 5, 2026: reported installed 0.1.41 UI validation
+
+The user supplied a completed browser validation report for the running
+`0.1.41-prototype`. This is reported observation, not a newly executed test by
+the primary agent. Only this generic summary is public; private paths, library
+counts, machine details and the raw report are excluded.
+
+| Check | Recorded outcome and limit |
+|---|---|
+| Running version | PASS:0.1.41-prototype displayed. Installer/upgrade execution was not observed by this session. |
+| Existing data | PASS, observed: existing originals and hidden media remained available; no destructive changes. No new original-hash comparison or full inventory audit. |
+| Navigation and organization | PASS: requested sections opened; named-face, existing sampled-video-frame and search/filter controls visible. This does not prove fresh inference execution. |
+| Bulk import | PASS: saved completed history and resume guidance visible. No new large import or outage/recovery execution. |
+| Backups | PASS: Ready/verified status, checksum and recovery-instructions control visible. Backup restoration was not executed. |
+| Hidden Media | PASS: existing items and restore/managed-copy controls visible. No restoration or deletion executed. |
+| Build Notes | PASS: milestone/status table visible. No milestone completion inferred. |
+| Media access | PASS: image/video preview dialogs with metadata opened; a TIFF original downloaded. This is not checksum proof. |
+| Authentication | PASS: authenticated pages worked; sign-out returned to the access-code screen. No code read or exposure reported. Re-entry after sign-out was not reported. |
+| Browser/layout | PASS: no console warnings/errors observed and current layout/navigation rendered correctly. No separately measured narrow-viewport acceptance inferred. |
+| Manual corrections | NOT TESTED: existing names/tags were not changed. |
+| Installer and platform | NOT TESTED by this UI session: installation, upgrade, rollback, clean-machine prerequisites, reboot and Windows10 compatibility. |
+| Other recovery/endurance | NOT TESTED: backup restore and large imports. No physical power-loss/endurance claim. |
+
+The validator reported consulting the authoritative requirements copy in its
+source checkout after finding no copy at the workspace root. No machine-specific
+path is published. Requirements remain authoritative.
+
+This accepts the exercised non-destructive UI regression scope only. It adds to,
+and does not replace, the independently recorded Server2022 installer/provider/
+rollback/restore evidence. SEC08 remains open; milestone7 remains in progress,
+security5 closed/3 open (SEC05/06/08). Keep0.1.41. No reinstall, permissions change,
+manual correction or live restore drill is requested from this report. No new
+runtime changes, workers, CI runs, providers or dependencies were started.
