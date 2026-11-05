@@ -74,6 +74,9 @@ try {
     Assert-NoReparsePath $AppDir
     Assert-NoReparsePath $DataDir
     Assert-NoReparsePath $logRoot
+    if ($durablePayload) {
+        Checked $BoundaryHelper @('-action','audit-namespace','-app-dir',$AppDir,'-data-dir',$DataDir,'-root-dir',$upgradeRoot)
+    }
     $stage = 'audit storage permissions'
     if ([IO.Path]::GetFullPath($AppDir).TrimEnd('\') -eq [IO.Path]::GetFullPath($DataDir).TrimEnd('\')) { throw 'State and installation directories must differ' }
     foreach ($component in ($DataDir -split '[\\/]')) { if ($component -ieq 'Dropbox') { throw 'Application state cannot be inside a sync folder' } }
@@ -94,7 +97,9 @@ try {
         $stoppedForAcl = $true
     }
     $logIdentity = $identity
-    if (Test-Path -LiteralPath $DataDir) { Set-PrivateDirectoryAcl -CreationHelper $BoundaryHelper -Path $DataDir -ReaderSid $identity -ServiceAccess }
+    # Even a fresh state has a protected private root before releasing pins.
+    # It keeps a create-only parent nonempty across later privileged actions.
+    Set-PrivateDirectoryAcl -CreationHelper $BoundaryHelper -Path $DataDir -ReaderSid $identity -ServiceAccess
     if (Test-Path -LiteralPath $rollback) { Set-PrivateDirectoryAcl -CreationHelper $BoundaryHelper -Path $rollback }
     Set-PrivateDirectoryAcl -CreationHelper $BoundaryHelper -Path $logRoot -ReaderSid $logIdentity -ServiceAccess
     # Verify actual inherited ACLs too; never assume the root change propagated.
@@ -113,6 +118,7 @@ try {
             # Recovery MUST precede replacement of the three-file state snapshot.
             $safeToStartPrior = $false
             if ($owned) { Checked sc.exe @('config',$name,'start=','disabled') }
+            $stage = 'recover pending upgrade'
             $recovered = Recover-Upgrade
             if ($recovered -eq 'fresh' -and $owned) {
                 Checked sc.exe @('delete',$name)

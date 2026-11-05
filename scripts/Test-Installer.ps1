@@ -1,7 +1,11 @@
 $ErrorActionPreference = 'Stop'
 $root = Join-Path $env:RUNNER_TEMP ('installer test ' + [guid]::NewGuid().ToString('N'))
-$app = Join-Path $root 'application'
-$state = Join-Path $root 'state'
+if ($env:GITHUB_ACTIONS -ne 'true' -or (Get-Service ImmichClone -ErrorAction SilentlyContinue) -or (Test-Path 'HKLM:\SOFTWARE\ImmichClone')) { throw 'Installer acceptance requires an unregistered disposable CI host' }
+$fixtureName = 'ImmichClone-install-'+[guid]::NewGuid().ToString('N')
+$app = Join-Path $env:ProgramFiles $fixtureName
+$initialState = Join-Path $env:ProgramData $fixtureName
+$state = $initialState
+if ((Test-Path -LiteralPath $app) -or (Test-Path -LiteralPath $initialState)) { throw 'Disposable default-layout names already exist' }
 New-Item -ItemType Directory $root | Out-Null
 if (!$env:IMMICH_PRIOR_INSTALLER) { throw 'Permanent published prior installer was not supplied' }
 if (!(Test-Path -LiteralPath $env:IMMICH_PRIOR_INSTALLER)) { throw 'Published prior installer path is missing' }
@@ -86,16 +90,22 @@ try {
 
     # Fail the first initial upgrade upgrade too, then prove old executable/provider
     # and original data still work before attempting a successful upgrade.
+    Stop-Service ImmichClone
+    & sc.exe config ImmichClone start= disabled | Out-Null
+    Assert ($LASTEXITCODE -eq 0) 'disposable previous service is disabled before corrected recovery'
+    $disabled = Get-CimInstance Win32_Service -Filter "Name='ImmichClone'"
+    Assert ($disabled.State -eq 'Stopped' -and $disabled.StartMode -eq 'Disabled') 'upgrade fixture reproduces retained prior build with stopped disabled service'
+    Assert ((& $previousBinary -mode version) -eq '0.1.39-prototype') 'disabled-service recovery starts with the actual previous release'
     $env:IMMICH_INSTALL_TEST_FAILURE='1'
-    $firstUpgradeFailure=Install '0.1.40'
+    $firstUpgradeFailure=Install '0.1.41'
     Remove-Item Env:IMMICH_INSTALL_TEST_FAILURE
     Assert ($firstUpgradeFailure -ne 0) 'initial upgrade failed upgrade is rejected'
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.39-prototype') 'initial upgrade rollback restores prior build'
     Assert ((Get-FileHash "$app/ai/opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3/ai-worker.exe").Hash.ToLowerInvariant() -eq '15d1c2ca7ef3f526b34ac4823f9337c51280ad171ddf43df4f3af5d8128a7c58') 'initial upgrade rollback retains old immutable worker'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'initial upgrade rollback preserves original bytes'
-    Assert ((Install '0.1.40') -eq 0) 'installer upgrade succeeds'
-    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.40-prototype') 'upgrade deploys new executable version'
-    Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.40-prototype') 'installed health reports actual executable build'
+    Assert ((Install '0.1.41') -eq 0) 'installer upgrade succeeds'
+    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.41-prototype') 'upgrade deploys new executable version'
+    Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.41-prototype') 'installed health reports actual executable build'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'upgrade preserves original bytes'
     $session=[Microsoft.PowerShell.Commands.WebRequestSession]::new()
     $null=Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$code}|ConvertTo-Json) -WebSession $session
@@ -182,12 +192,12 @@ try {
     New-Item -ItemType Directory $deleteBlock | Out-Null
     BrowserPhase 'tests/deletion.cjs' 'denied'
     $env:IMMICH_INSTALL_TEST_FAILURE = '1'
-    $failedCode = Install '0.1.41'
+    $failedCode = Install '0.1.42'
     Remove-Item Env:IMMICH_INSTALL_TEST_FAILURE
     $installLog = Get-Content (Join-Path $env:ProgramData 'ImmichCloneDiagnostics/installer.jsonl') -Raw
     Assert ($installLog.Contains('installer_failed') -and $installLog.Contains('rollback_complete') -and !$installLog.Contains($state)) 'installer logs failed-upgrade and rollback stages without data paths'
     Assert ($failedCode -ne 0) 'injected failed upgrade returns failure'
-    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.40-prototype') 'failed upgrade restores previous executable'
+    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.41-prototype') 'failed upgrade restores previous executable'
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'rollback restores healthy service'
     BrowserPhase 'tests/deletion.cjs' 'pending'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'failed upgrade preserves original bytes'
@@ -254,11 +264,12 @@ try {
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'uninstall retains original bytes'
     Assert ((Test-Path "$state/catalog.db") -and (Test-Path "$state/access-code.txt")) 'uninstall retains catalog and access code'
     # Make the old installation unavailable without destroying its files.
+    if ([IO.Path]::GetFullPath($state) -ne [IO.Path]::GetFullPath($initialState) -or (Split-Path $state -Leaf) -ne $fixtureName) { throw 'Offline fixture target escaped disposable default state' }
     Move-Item -LiteralPath $state -Destination ($state+'.offline')
     $state = Join-Path $root 'restored state'
     & $recoveryTool -mode restore -data $state -archive $archive
     Assert ($LASTEXITCODE -eq 0) 'offline restoration succeeds at a different location'
-    Assert ((Install '0.1.40') -eq 0) 'installer starts a restored library without the original data folder'
+    Assert ((Install '0.1.41') -eq 0) 'installer starts a restored library without the original data folder'
     $session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
     $restoredCode = (Get-Content "$state/access-code.txt" -Raw).Trim()
     $null = Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$restoredCode}|ConvertTo-Json) -WebSession $session
@@ -300,6 +311,11 @@ try {
     Remove-Item Env:IMMICH_INSTALL_TEST_FAILURE -ErrorAction SilentlyContinue
     Remove-Item Env:IMMICH_COMPAT_INSTALLED -ErrorAction SilentlyContinue
     if (Get-Service ImmichClone -ErrorAction SilentlyContinue) { Stop-Service ImmichClone -Force -ErrorAction Continue; & sc.exe delete ImmichClone }
-    # Only this disposable, randomly generated CI directory is removed.
-    Remove-Item $root -Recurse -Force -ErrorAction Continue
+    # Delete only the exact GUID names created by this disposable fixture.
+    foreach ($target in @($app,($app+'-upgrade-recovery'),$initialState,($initialState+'.offline'),$root)) {
+        $absolute = [IO.Path]::GetFullPath($target)
+        $allowed = @((Join-Path $env:ProgramFiles $fixtureName),(Join-Path $env:ProgramFiles ($fixtureName+'-upgrade-recovery')),(Join-Path $env:ProgramData $fixtureName),(Join-Path $env:ProgramData ($fixtureName+'.offline')),$root)
+        if ($absolute -notin $allowed) { throw 'Cleanup target escaped disposable installer fixture' }
+        if (Test-Path -LiteralPath $absolute) { Remove-Item -LiteralPath $absolute -Recurse -Force -ErrorAction Continue }
+    }
 }

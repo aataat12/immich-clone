@@ -101,54 +101,51 @@ func openRoots(app, data string) (_ *roots, err error) {
 	return r, nil
 }
 
-// Snapshot contains the catalog and access code. Never write it into a role root
-// that a different user or LocalService can read or mutate, even after a path swap.
-const namespaceWriteMask uint32 = 0x00010000 | 0x00000002 | 0x00000004 | 0x00000040 | 0x00000010 | 0x00000100 | 0x00040000 | 0x00080000
+// Creation and attribute rights on a directory do not grant DELETE_CHILD or
+// DELETE on an existing protected child. The namespace must instead exclude
+// replacement of the parent itself, child deletion and permission takeover.
+const namespaceReplacementMask uint32 = 0x00010000 | 0x00000040 | 0x00040000 | 0x00080000 | 0x10000000 | 0x40000000
 
-// namespaceParentSafe rejects a writable ancestor for installer-managed roots.
-// Leaf ACLs alone do not prevent a non-administrator who controls the parent
-// from replacing the selected directory between privileged actions.
+// namespaceParentSafe audits the nearest existing parent. Native creation pins
+// all components; private managed roots then keep this parent nonempty between
+// actions. Ordinary users may create siblings, never replace the managed root.
 func namespaceParentSafe(path string) error {
-	parent := filepath.Clean(filepath.Dir(path))
-	d, e := winfs.OpenDirectory(parent)
-	if e != nil {
-		return e
-	}
-	defer d.Close()
-	sd, e := d.SecurityDescriptor()
-	if e != nil {
-		return e
-	}
-	acl, _, e := sd.DACL()
-	if e != nil || acl == nil {
-		return ErrRefused
-	}
-	user, e := windows.GetCurrentProcessToken().GetTokenUser()
-	if e != nil {
-		return e
-	}
-	allowed := map[string]bool{
-		"S-1-5-18":    true,
-		"S-1-5-32-544": true,
-		"S-1-3-0":     true,
-		user.User.Sid.String(): true,
-	}
-	for i := uint32(0); i < uint32(acl.AceCount); i++ {
-		var ace *windows.ACCESS_ALLOWED_ACE
-		if e = windows.GetAce(acl, i, &ace); e != nil {
-			return e
-		}
-		if ace.Header.AceType != windows.ACCESS_ALLOWED_ACE_TYPE {
-			continue
-		}
-		sid := (*windows.SID)(unsafe.Pointer(&ace.SidStart)).String()
-		trustedService := strings.HasPrefix(sid, "S-1-5-80-")
-		if uint32(ace.Mask)&namespaceWriteMask != 0 && !allowed[sid] && !trustedService {
-			return ErrRefused
-		}
-	}
-	return nil
+ if !filepath.IsAbs(path) { return ErrRefused }
+ for _, part := range strings.Split(strings.ReplaceAll(path, "/", `\`), `\`) {
+  if part == "." || part == ".." { return ErrRefused }
+ }
+ parent := filepath.Clean(filepath.Dir(path))
+ var d *winfs.Directory
+ for {
+  var e error
+  d, e = winfs.OpenDirectory(parent)
+  if e == nil { break }
+  next := filepath.Dir(parent)
+  if !missingCleanup(e) || next == parent { return e }
+  parent = next
+ }
+ defer d.Close()
+ sd, e := d.SecurityDescriptor()
+ if e != nil { return e }
+ grants, _, owner, e := descriptorGrants(sd)
+ if e != nil { return e }
+ user, e := windows.GetCurrentProcessToken().GetTokenUser()
+ if e != nil { return e }
+ trusted := func(sid string) bool {
+  return sid == "S-1-5-18" || sid == "S-1-5-32-544" || sid == user.User.Sid.String() || strings.HasPrefix(sid, "S-1-5-80-")
+ }
+ if !trusted(owner) { return ErrRefused }
+ for _, grant := range grants {
+  if grant.sid == "" || grant.flags & ^byte(31) != 0 { return ErrRefused }
+  if grant.flags & 8 != 0 { continue } // Inherit-only grants do not affect this parent.
+  if grant.mask & namespaceReplacementMask != 0 && !trusted(grant.sid) { return ErrRefused }
+ }
+ return nil
 }
+
+// AuditNamespaceParents is read-only and runs before Setup stops a service or
+// creates private roots. Unsafe replacement rights refuse without side effects.
+func AuditNamespaceParents(paths ...string) error { return validateNamespaceParents(paths...) }
 
 func validateNamespaceParents(paths ...string) error {
 	for _, path := range paths {

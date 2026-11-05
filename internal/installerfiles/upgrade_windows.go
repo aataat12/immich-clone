@@ -180,6 +180,9 @@ func BeginUpgrade(app, data, root string, hadService bool) (err error) {
 	if e != nil {
 		return e
 	}
+	// Existing names can have won a create-only parent race. Revalidate the
+	// actual opened root too, before any transaction or Inno metadata writes.
+	if e = trustedDirectory(a); e != nil { a.Close(); return e }
 	id, e := a.Identity()
 	ce := a.Close()
 	if e != nil || ce != nil {

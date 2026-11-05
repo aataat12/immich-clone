@@ -26,7 +26,7 @@ func label(value, values string) bool {
 	return false
 }
 func validStage(stage string) bool {
-	return label(stage, "inspect service|audit code permissions|audit storage permissions|snapshot previous installation|publish application payload|validate state location|configure state ACL|initialize state|register LocalService|configure automatic startup|start service|verify service health")
+	return label(stage, "inspect service|recover pending upgrade|audit code permissions|audit storage permissions|snapshot previous installation|publish application payload|validate state location|configure state ACL|initialize state|register LocalService|configure automatic startup|start service|verify service health")
 }
 func fileDescriptor(f *os.File) (*windows.SECURITY_DESCRIPTOR, error) {
 	return windows.GetSecurityInfo(windows.Handle(f.Fd()), windows.SE_FILE_OBJECT, windows.OWNER_SECURITY_INFORMATION|windows.DACL_SECURITY_INFORMATION)

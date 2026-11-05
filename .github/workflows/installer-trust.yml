@@ -41,7 +41,7 @@ jobs:
       - name: Canonicalize changed Go sources before validation
         shell: pwsh
         run: |
-          gofmt -w cmd/installerfiles/main_windows.go internal/installerfiles/files_windows.go internal/installerfiles/publication_windows.go internal/installerfiles/publication_interruption_windows_test.go internal/installerfiles/upgrade_windows.go internal/installerfiles/upgrade_windows_test.go
+          gofmt -w internal/installerfiles/namespace_windows_test.go cmd/installerfiles/main_windows.go internal/installerfiles/files_windows.go internal/installerfiles/publication_windows.go internal/installerfiles/publication_interruption_windows_test.go internal/installerfiles/upgrade_windows.go internal/installerfiles/upgrade_windows_test.go
           if ($LASTEXITCODE -ne 0) { throw 'Source formatting failed' }
           Write-Host 'CANONICAL_FORMAT_BEGIN'
           git diff --no-ext-diff -- cmd/installerfiles internal/installerfiles

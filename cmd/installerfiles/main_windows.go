@@ -33,6 +33,8 @@ func main() {
 	}
 	var err error
 	switch *action {
+	case "audit-namespace":
+		err = installerfiles.AuditNamespaceParents(*app, *data, *root)
 	case "audit-upgrade":
 		err = installerfiles.AuditUpgrade(*app, *data, *root)
 	case "begin-upgrade":

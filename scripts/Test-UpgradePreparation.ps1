@@ -191,10 +191,11 @@ while (Get-Process -Id $args[0] -ErrorAction SilentlyContinue) {
     }
 }
 
-$root = Join-Path $env:RUNNER_TEMP ('upgrade preparation '+[guid]::NewGuid().ToString('N')+' é')
+$root = Join-Path $env:RUNNER_TEMP ('upgrade preparation '+[guid]::NewGuid().ToString('N')+' ÃƒÆ’Ã‚Â©')
 $repo = Split-Path $PSScriptRoot -Parent
 $currentApp = ''
 $programApp = ''
+$freshState = ''
 $junction = ''
 $serviceOwned = $false
 $ordinaryUser = 'ICUpgrade'+[guid]::NewGuid().ToString('N').Substring(0,8)
@@ -208,6 +209,18 @@ using System.Security.Principal;
 public static class UpgradeWriteProbe {
  [DllImport("advapi32.dll", CharSet=CharSet.Unicode, SetLastError=true)] static extern bool LogonUser(string u,string d,string p,int t,int v,out IntPtr token);
  [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr token);
+ public static bool CreateOnlyBoundary(string user,string password,string parent,string managed) {
+  IntPtr token;
+  if(!LogonUser(user,".",password,2,0,out token)) throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+  try { using(var identity=new WindowsIdentity(token)) using(var context=identity.Impersonate()) {
+   string own=Path.Combine(parent,"actor-owned");
+   Directory.CreateDirectory(own);
+   File.WriteAllText(Path.Combine(own,"marker"),"actor");
+   Directory.Move(own,own+"-renamed");
+   try { Directory.Move(managed,managed+"-replaced"); return false; }
+   catch(UnauthorizedAccessException) { return true; }
+  }} finally { CloseHandle(token); }
+ }
  public static bool CanWrite(string user,string password,string path) {
   IntPtr token;
   if(!LogonUser(user,".",password,2,0,out token)) throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
@@ -284,6 +297,20 @@ try {
     $unsafeResult = Run-Setup $unsafeApp $unsafeState
     Assert ($unsafeResult -ne 0) 'actual Setup refuses an actor-writable application namespace before privileged writes'
     Assert (!(Test-Path -LiteralPath (Join-Path $unsafeApp 'immichclone.exe')) -and !(Test-Path -LiteralPath $unsafeState) -and !(Test-Path -LiteralPath ($unsafeApp+'-upgrade-recovery')) -and !(Get-Service ImmichClone -ErrorAction SilentlyContinue)) 'unsafe namespace refusal leaves no managed app, state, recovery metadata or service'
+
+    # Standard ProgramData-like creation rights permit actor-owned siblings but
+    # grant no replacement authority over an existing private managed child.
+    $createParent = Join-Path $root 'create-only-parent'
+    New-Item -ItemType Directory -Path $createParent | Out-Null
+    $createAcl = New-Object Security.AccessControl.DirectorySecurity
+    $createAcl.SetSecurityDescriptorSddlForm(('D:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;'+$installerSid+')(A;;0x1201bf;;;BU)(A;OICIIO;GA;;;CO)'))
+    Set-Acl -LiteralPath $createParent -AclObject $createAcl
+    $createChild = Join-Path $createParent 'private-managed'
+    $nativeHelper = Join-Path $source 'dist/installer-files.exe'
+    Native $nativeHelper @('-action','audit-namespace','-app-dir',$createChild,'-data-dir',(Join-Path $createParent 'state'),'-root-dir',(Join-Path $createParent 'recovery'))
+    Native $nativeHelper @('-action','ensure-private-root','-root-dir',$createChild)
+    Assert ([UpgradeWriteProbe]::CreateOnlyBoundary($ordinaryUser,$ordinaryPassword,$createParent,$createChild)) 'separate standard account creates and renames its sibling but cannot replace private managed child'
+    Assert (Test-Path -LiteralPath $createChild) 'create-only actor control retains managed root identity'
 
     # Create an actual service-owned existing library without using the retained
     # helper. It deliberately represents old files, not an older runtime version.
@@ -636,7 +663,7 @@ try {
     New-Item -ItemType Directory -Path $programApp | Out-Null
     Assert-TrustedCodeTree $programApp
     $currentApp = $programApp
-    $freshState = Join-Path $root 'fresh LocalService state'
+    $freshState = Join-Path $env:ProgramData ('ImmichClone-state-'+[guid]::NewGuid().ToString('N'))
     Assert (!(Test-Path -LiteralPath $freshState)) 'fresh Setup fixture starts without state or application metadata'
     $commandLog = Join-Path $env:ProgramData 'ImmichCloneDiagnostics/commands.jsonl'
     $commandLogBefore = 'absent'
@@ -652,7 +679,7 @@ try {
             }
         }
     }
-    Assert ($freshSetupResult -eq 0) 'actual fresh Setup works with default Program Files code inheritance'
+    Assert ($freshSetupResult -eq 0) 'actual fresh Setup works with default Program Files and ProgramData parent permissions'
     Wait-Health
     Assert (![UpgradeWriteProbe]::CanWrite($ordinaryUser,$ordinaryPassword,(Join-Path $currentApp 'Manage-Service.ps1'))) 'Program Files installed helper denies actual standard-user modification'
     Assert ((Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").StartName -eq 'NT AUTHORITY\LocalService') 'fresh installer initializes through the existing LocalService account'
@@ -680,7 +707,14 @@ try {
     }
     if ($currentApp -and (Test-Path (Join-Path $currentApp 'unins000.exe'))) { $null = Start-Process (Join-Path $currentApp 'unins000.exe') -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru }
     if ($junction -and (Test-Path -LiteralPath $junction)) { [IO.Directory]::Delete($junction) }
-    if ($programApp -and (Test-Path -LiteralPath $programApp)) { Remove-Item -LiteralPath $programApp -Recurse -Force }
+    foreach ($target in @($programApp,$freshState)) {
+        if (!$target) { continue }
+        $absolute = [IO.Path]::GetFullPath($target)
+        $parent = Split-Path $absolute -Parent
+        $leaf = Split-Path $absolute -Leaf
+        if (!(($parent -eq $env:ProgramFiles -and $leaf -match '^ImmichClone-trust-[0-9a-f]{32}$') -or ($parent -eq $env:ProgramData -and $leaf -match '^ImmichClone-state-[0-9a-f]{32}$'))) { throw 'Default-layout cleanup escaped disposable fixture' }
+        if (Test-Path -LiteralPath $absolute) { Remove-Item -LiteralPath $absolute -Recurse -Force }
+    }
     if ($ordinaryCreated) { Remove-LocalUser -Name $ordinaryUser -ErrorAction SilentlyContinue }
     if (Test-Path -LiteralPath $root) { Remove-Item -LiteralPath $root -Recurse -Force }
 }
