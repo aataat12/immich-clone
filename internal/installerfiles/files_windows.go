@@ -130,6 +130,7 @@ func namespaceParentSafe(path string) error {
 	allowed := map[string]bool{
 		"S-1-5-18":    true,
 		"S-1-5-32-544": true,
+		"S-1-3-0":     true,
 		user.User.Sid.String(): true,
 	}
 	for i := uint32(0); i < uint32(acl.AceCount); i++ {
@@ -141,7 +142,8 @@ func namespaceParentSafe(path string) error {
 			continue
 		}
 		sid := (*windows.SID)(unsafe.Pointer(&ace.SidStart)).String()
-		if uint32(ace.Mask)&namespaceWriteMask != 0 && !allowed[sid] {
+		trustedService := strings.HasPrefix(sid, "S-1-5-80-")
+		if uint32(ace.Mask)&namespaceWriteMask != 0 && !allowed[sid] && !trustedService {
 			return ErrRefused
 		}
 	}
