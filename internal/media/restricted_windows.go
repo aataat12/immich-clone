@@ -36,10 +36,11 @@ func restrictedToken() (windows.Token, error) {
 	// restricted token must succeed for both the normal token and this SID.
 	sid, err := windows.StringToSid("S-1-5-12")
 	if err != nil { return 0, fmt.Errorf("token: %w", err) }
+	restricted := windows.SIDAndAttributes{Sid: sid}
 	var out windows.Token
 	r, _, callErr := createRestrictedToken.Call(
 		uintptr(base), disableMaxPrivilege,
-		0, 0, 0, 0, 1, uintptr(unsafe.Pointer(&sid)), uintptr(unsafe.Pointer(&out)))
+		0, 0, 0, 0, 1, uintptr(unsafe.Pointer(&restricted)), uintptr(unsafe.Pointer(&out)))
 	if r == 0 {
 		if callErr != syscall.Errno(0) { return 0, fmt.Errorf("token: %w", callErr) }
 		return 0, fmt.Errorf("token: %w", windows.GetLastError())
