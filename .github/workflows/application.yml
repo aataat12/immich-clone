@@ -186,21 +186,3 @@ jobs:
             docs/validation-0.1.41.md
             docs/release-notes-0.1.41.md
           retention-days: 7
-      - name: Publish approved 0.1.41 prototype from the tested source
-        if: github.ref == 'refs/heads/work/release-0.1.41'
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $installer = 'dist/ImmichClone-0.1.41-prototype-x64-setup.exe'
-          $expected = ((Get-Content dist/SHA256SUMS.txt -Raw).Trim() -split '\s+')[0]
-          if ((Get-FileHash $installer).Hash.ToLowerInvariant() -ne $expected) { throw 'Tested installer checksum changed' }
-          $tag = 'v0.1.41-prototype'
-          $prior = & gh release view $tag --repo $env:GITHUB_REPOSITORY --json tagName 2>$null
-          if ($LASTEXITCODE -eq 0) { throw 'Release already exists; published assets are never overwritten' }
-          $body = (Get-Content docs/release-notes-0.1.41.md -Raw) + "`n`nValidated source: $env:GITHUB_SHA`nValidation run: https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID`nInstaller SHA256: $expected`n"
-          $bodyFile = Join-Path $env:RUNNER_TEMP 'release-0.1.41-notes.md'
-          [IO.File]::WriteAllText($bodyFile,$body,[Text.UTF8Encoding]::new($false))
-          & gh release create $tag --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title 'Immich Clone 0.1.41 prototype' --prerelease --notes-file $bodyFile $installer 'dist/SHA256SUMS.txt' 'docs/validation-0.1.41.md' 'docs/release-notes-0.1.41.md'
-          if ($LASTEXITCODE -ne 0) { throw 'Prototype release publication failed' }
