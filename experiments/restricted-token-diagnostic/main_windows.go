@@ -84,7 +84,7 @@ func main() {
 	var pi windows.ProcessInformation
 	if err = windows.CreateProcessAsUser(out, app, line, nil, nil, false, windows.CREATE_NO_WINDOW, nil, nil, &startup, &pi); err != nil { r.Error = err.Error(); _ = out.Close(); writeReport(r); return }
 	r.ProcessCreated = true
-	_ = windows.WaitForSingleObject(pi.Process, 5000)
+	_, _ = windows.WaitForSingleObject(pi.Process, 5000)
 	var code uint32
 	if windows.GetExitCodeProcess(pi.Process, &code) == nil { r.ProcessExitedZero = code == 0 }
 	_ = windows.CloseHandle(pi.Process)
