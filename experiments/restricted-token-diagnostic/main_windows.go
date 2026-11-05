@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 	"syscall"
 	"unsafe"
@@ -81,9 +82,12 @@ func main() {
 	if err != nil { r.Error = err.Error(); _ = out.Close(); writeReport(r); return }
 	line, err := windows.UTF16PtrFromString(windows.ComposeCommandLine([]string{exe, "child"}))
 	if err != nil { r.Error = err.Error(); _ = out.Close(); writeReport(r); return }
+	cwd, err := windows.UTF16PtrFromString(filepath.Dir(exe))
+	if err != nil { r.Error = err.Error(); _ = out.Close(); writeReport(r); return }
+	env := syscall.StringToUTF16Ptr("PATH=" + os.Getenv("PATH") + "\x00SystemRoot=" + os.Getenv("SystemRoot") + "\x00\x00")
 	startup := windows.StartupInfo{Cb: uint32(unsafe.Sizeof(windows.StartupInfo{}))}
 	var pi windows.ProcessInformation
-	if err = windows.CreateProcessAsUser(out, app, line, nil, nil, false, windows.CREATE_NO_WINDOW, nil, nil, &startup, &pi); err != nil { r.Error = err.Error(); _ = out.Close(); writeReport(r); return }
+	if err = windows.CreateProcessAsUser(out, app, line, nil, nil, false, windows.CREATE_NO_WINDOW|windows.CREATE_UNICODE_ENVIRONMENT, env, cwd, &startup, &pi); err != nil { r.Error = err.Error(); _ = out.Close(); writeReport(r); return }
 	r.ProcessCreated = true
 	_, _ = windows.WaitForSingleObject(pi.Process, 5000)
 	var code uint32
