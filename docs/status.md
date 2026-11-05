@@ -324,7 +324,7 @@ Worker review/tests complete. One test-only process-exit capture fix retained
 all exact assertions and unchanged product bytes on rerun.
 [Evidence and residual implementation](filesystem-boundary-milestone7.md#accepted-entrypoint-and-stationary-metadata-checkpoint).
 
-Corrected best estimate **5 additional passes**, planning range5â€“7. Previous2
+Corrected best estimate **5 additional passes**, planning range5–7. Previous2
 undercounted implementation as validation. The table decomposes original SEC03:
 admin verify/backup1; restore supervisor/worker1; durable interrupted payload1;
 actual installer/metadata concurrency1; genuine prior-release/fullprovider1.

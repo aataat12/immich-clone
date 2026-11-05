@@ -191,7 +191,7 @@ while (Get-Process -Id $args[0] -ErrorAction SilentlyContinue) {
     }
 }
 
-$root = Join-Path $env:RUNNER_TEMP ('upgrade preparation '+[guid]::NewGuid().ToString('N')+' ÃƒÆ’Ã‚Â©')
+$root = Join-Path $env:RUNNER_TEMP ('upgrade preparation '+[guid]::NewGuid().ToString('N')+' '+[char]0x00e9)
 $repo = Split-Path $PSScriptRoot -Parent
 $currentApp = ''
 $programApp = ''

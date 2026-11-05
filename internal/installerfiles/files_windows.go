@@ -110,37 +110,59 @@ const namespaceReplacementMask uint32 = 0x00010000 | 0x00000040 | 0x00040000 | 0
 // all components; private managed roots then keep this parent nonempty between
 // actions. Ordinary users may create siblings, never replace the managed root.
 func namespaceParentSafe(path string) error {
- if !filepath.IsAbs(path) { return ErrRefused }
- for _, part := range strings.Split(strings.ReplaceAll(path, "/", `\`), `\`) {
-  if part == "." || part == ".." { return ErrRefused }
- }
- parent := filepath.Clean(filepath.Dir(path))
- var d *winfs.Directory
- for {
-  var e error
-  d, e = winfs.OpenDirectory(parent)
-  if e == nil { break }
-  next := filepath.Dir(parent)
-  if !missingCleanup(e) || next == parent { return e }
-  parent = next
- }
- defer d.Close()
- sd, e := d.SecurityDescriptor()
- if e != nil { return e }
- grants, _, owner, e := descriptorGrants(sd)
- if e != nil { return e }
- user, e := windows.GetCurrentProcessToken().GetTokenUser()
- if e != nil { return e }
- trusted := func(sid string) bool {
-  return sid == "S-1-5-18" || sid == "S-1-5-32-544" || sid == user.User.Sid.String() || strings.HasPrefix(sid, "S-1-5-80-")
- }
- if !trusted(owner) { return ErrRefused }
- for _, grant := range grants {
-  if grant.sid == "" || grant.flags & ^byte(31) != 0 { return ErrRefused }
-  if grant.flags & 8 != 0 { continue } // Inherit-only grants do not affect this parent.
-  if grant.mask & namespaceReplacementMask != 0 && !trusted(grant.sid) { return ErrRefused }
- }
- return nil
+	if !filepath.IsAbs(path) {
+		return ErrRefused
+	}
+	for _, part := range strings.Split(strings.ReplaceAll(path, "/", `\`), `\`) {
+		if part == "." || part == ".." {
+			return ErrRefused
+		}
+	}
+	parent := filepath.Clean(filepath.Dir(path))
+	var d *winfs.Directory
+	for {
+		var e error
+		d, e = winfs.OpenDirectory(parent)
+		if e == nil {
+			break
+		}
+		next := filepath.Dir(parent)
+		if !missingCleanup(e) || next == parent {
+			return e
+		}
+		parent = next
+	}
+	defer d.Close()
+	sd, e := d.SecurityDescriptor()
+	if e != nil {
+		return e
+	}
+	grants, _, owner, e := descriptorGrants(sd)
+	if e != nil {
+		return e
+	}
+	user, e := windows.GetCurrentProcessToken().GetTokenUser()
+	if e != nil {
+		return e
+	}
+	trusted := func(sid string) bool {
+		return sid == "S-1-5-18" || sid == "S-1-5-32-544" || sid == user.User.Sid.String() || strings.HasPrefix(sid, "S-1-5-80-")
+	}
+	if !trusted(owner) {
+		return ErrRefused
+	}
+	for _, grant := range grants {
+		if grant.sid == "" || grant.flags & ^byte(31) != 0 {
+			return ErrRefused
+		}
+		if grant.flags&8 != 0 {
+			continue
+		} // Inherit-only grants do not affect this parent.
+		if grant.mask&namespaceReplacementMask != 0 && !trusted(grant.sid) {
+			return ErrRefused
+		}
+	}
+	return nil
 }
 
 // AuditNamespaceParents is read-only and runs before Setup stops a service or
