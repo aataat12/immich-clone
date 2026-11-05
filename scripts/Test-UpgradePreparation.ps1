@@ -148,11 +148,11 @@ try {
     }
 }
 function Run-UninstallMetadataRace([string]$Application) {
+    $control = Join-Path $root 'uninstall-metadata-control'
     $actor = Join-Path $control 'uninstall-metadata-actor.ps1'
     $result = Join-Path $control 'uninstall-metadata-result.json'
     $target = Join-Path $Application 'Manage-Service.ps1'
     $journal = Join-Path $Application 'unins000.dat'
-    $control = Join-Path $root 'uninstall-metadata-control'
     New-Item -ItemType Directory -Path $control | Out-Null
     Native icacls @($control,'/grant',('*'+$ordinarySid+':(OI)(CI)M'))
     $outside = Join-Path $root 'uninstall-race-outside.txt'
