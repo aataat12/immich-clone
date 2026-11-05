@@ -9,6 +9,7 @@ package media
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -34,14 +35,14 @@ func restrictedToken() (windows.Token, error) {
 	// S-1-5-12 is the documented Restricted Code SID. Access checks for a
 	// restricted token must succeed for both the normal token and this SID.
 	sid, err := windows.StringToSid("S-1-5-12")
-	if err != nil { return 0, err }
+	if err != nil { return 0, fmt.Errorf("token: %w", err) }
 	var out windows.Token
 	r, _, callErr := createRestrictedToken.Call(
 		uintptr(base), disableMaxPrivilege,
 		0, 0, 0, 0, 1, uintptr(unsafe.Pointer(&sid)), uintptr(unsafe.Pointer(&out)))
 	if r == 0 {
-		if callErr != syscall.Errno(0) { return 0, callErr }
-		return 0, windows.GetLastError()
+		if callErr != syscall.Errno(0) { return 0, fmt.Errorf("token: %w", callErr) }
+		return 0, fmt.Errorf("token: %w", windows.GetLastError())
 	}
 	return out, nil
 }
@@ -51,7 +52,7 @@ func RunRestricted(ctx context.Context, exe string, args []string, onStart func(
 	if !filepath.IsAbs(exe) { return result, errors.New("absolute executable required") }
 	if err := ctx.Err(); err != nil { return result, err }
 	token, err := restrictedToken()
-	if err != nil { return result, err }
+	if err != nil { return result, fmt.Errorf("token: %w", err) }
 	defer token.Close()
 	r, w, err := os.Pipe(); if err != nil { return result, err }
 	defer r.Close(); defer w.Close()
@@ -66,15 +67,15 @@ func RunRestricted(ctx context.Context, exe string, args []string, onStart func(
 	env := syscall.StringToUTF16Ptr("PATH=" + filepath.Dir(exe) + "\x00SystemRoot=" + os.Getenv("SystemRoot") + "\x00\x00")
 	startup := windows.StartupInfo{Cb: uint32(unsafe.Sizeof(windows.StartupInfo{})), Flags: windows.STARTF_USESTDHANDLES, StdInput: windows.Handle(nul.Fd()), StdOutput: windows.Handle(w.Fd()), StdErr: windows.Handle(nul.Fd())}
 	var pi windows.ProcessInformation
-	if err = windows.CreateProcessAsUser(token, app, line, nil, nil, true, windows.CREATE_NO_WINDOW|windows.CREATE_UNICODE_ENVIRONMENT, env, cwd, &startup, &pi); err != nil { return result, err }
+	if err = windows.CreateProcessAsUser(token, app, line, nil, nil, true, windows.CREATE_NO_WINDOW|windows.CREATE_UNICODE_ENVIRONMENT, env, cwd, &startup, &pi); err != nil { return result, fmt.Errorf("process: %w", err) }
 	job, jobErr := windows.CreateJobObject(nil, nil)
-	if jobErr != nil { windows.TerminateProcess(pi.Process, 1); return result, jobErr }
+	if jobErr != nil { windows.TerminateProcess(pi.Process, 1); return result, fmt.Errorf("job: %w", jobErr) }
 	defer windows.CloseHandle(job)
 	limits := windows.JOBOBJECT_EXTENDED_LIMIT_INFORMATION{ProcessMemoryLimit: MemoryLimit, JobMemoryLimit: MemoryLimit}
 	limits.BasicLimitInformation.LimitFlags = windows.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE | windows.JOB_OBJECT_LIMIT_ACTIVE_PROCESS | windows.JOB_OBJECT_LIMIT_PROCESS_MEMORY | windows.JOB_OBJECT_LIMIT_JOB_MEMORY
 	limits.BasicLimitInformation.ActiveProcessLimit = 1
-	if _, jobErr = windows.SetInformationJobObject(job, windows.JobObjectExtendedLimitInformation, uintptr(unsafe.Pointer(&limits)), uint32(unsafe.Sizeof(limits))); jobErr != nil { windows.TerminateProcess(pi.Process, 1); return result, jobErr }
-	if jobErr = windows.AssignProcessToJobObject(job, pi.Process); jobErr != nil { windows.TerminateProcess(pi.Process, 1); return result, jobErr }
+	if _, jobErr = windows.SetInformationJobObject(job, windows.JobObjectExtendedLimitInformation, uintptr(unsafe.Pointer(&limits)), uint32(unsafe.Sizeof(limits))); jobErr != nil { windows.TerminateProcess(pi.Process, 1); return result, fmt.Errorf("job: %w", jobErr) }
+	if jobErr = windows.AssignProcessToJobObject(job, pi.Process); jobErr != nil { windows.TerminateProcess(pi.Process, 1); return result, fmt.Errorf("job: %w", jobErr) }
 	defer windows.CloseHandle(pi.Process); windows.CloseHandle(pi.Thread); w.Close()
 	result.PID = pi.ProcessId; if onStart != nil { onStart(pi.ProcessId) }
 	done := make(chan struct{}); var output []byte; var readErr error

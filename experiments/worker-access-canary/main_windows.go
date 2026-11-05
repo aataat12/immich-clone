@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"golang.org/x/sys/windows"
@@ -76,7 +77,7 @@ func restrictedProbe(ctx context.Context, root string) map[string]bool {
 	bounded, err := media.RunRestricted(jobCtx, exe, []string{"-mode", "child", "-root", root}, nil)
 	cancel()
 	var childResult accessResult
-	if err != nil { result["restricted_launcher_failed"] = true; result["probe_complete"] = false; return result }
+	if err != nil { message := err.Error(); result["restricted_launcher_failed"] = true; result["restricted_failure_token"] = strings.HasPrefix(message, "token:"); result["restricted_failure_process"] = strings.HasPrefix(message, "process:"); result["restricted_failure_job"] = strings.HasPrefix(message, "job:"); result["probe_complete"] = false; return result }
 	if json.Unmarshal(bounded.Output, &childResult) != nil { result["restricted_output_invalid"] = true; result["probe_complete"] = false; return result }
 	result["restricted_identity_localservice"] = childResult.LocalService
 	result["restricted_input_read_allowed"] = childResult.InputRead
