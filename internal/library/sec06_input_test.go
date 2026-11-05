@@ -91,6 +91,8 @@ func TestSEC06CatalogInputValidation(t *testing.T) {
   {"asset key mismatch","assets",Asset{ID:strings.Repeat("b",64)}},
 
   {"asset control","assets",Asset{ID:strings.Repeat("a",64),Name:"bad\x00name"}},
+  {"preview status size","assets",Asset{ID:strings.Repeat("a",64),Preview:strings.Repeat("x",17)}},
+  {"preview revision","assets",Asset{ID:strings.Repeat("a",64),PreviewRevision:-1}},
 
   {"source traversal","assets",Asset{ID:strings.Repeat("a",64),Sources:[]string{"../escape"}}},
 

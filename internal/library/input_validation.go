@@ -56,6 +56,7 @@ func validateCatalogInput(tx *bolt.Tx) error {
     case reanalysisBucket:
      var j reanalysisJob
      if json.Unmarshal(v,&j)!=nil || !validReanalysis(j,string(k)) || !textOK(j.Provider,128) || !textOK(j.MediaProvider,128) || len(j.Error)>4096 || !validCatalogTags(j.Objects,80) || (j.Video!=nil && !validCatalogVideo(j.Video)) {return errCatalogInput}
+     for _,face:=range j.Faces {if !textOK(face.Provider,128) {return errCatalogInput}}
     case analysisBucket:
      var a Analysis
      if !validID(string(k)) || json.Unmarshal(v, &a) != nil || a.AssetID != string(k) || !textOK(a.Provider,128) || len(a.Error) > 4096 || !validCatalogTags(a.Objects,80) { return errCatalogInput }
@@ -76,7 +77,7 @@ func validCatalogTags(tags []string, max int) bool {
  return true
 }
 func validCatalogAsset(a Asset, key string) bool {
- if !validID(key) || a.ID != key || !textOK(a.Name,1024) || !textOK(a.MIME,128) || a.Size < 0 || a.Size > MaxUpload || a.Width < 0 || a.Height < 0 || len(a.Error)>4096 || len(a.Sources)>4096 { return false }
+ if !validID(key) || a.ID != key || !textOK(a.Name,1024) || !textOK(a.MIME,128) || a.Size < 0 || a.Size > MaxUpload || a.Width < 0 || a.Height < 0 || !textOK(a.Preview,16) || a.PreviewRevision<0 || len(a.Error)>4096 || len(a.Sources)>4096 { return false }
  for _, source := range a.Sources { if _,e:=cleanRelative(source); e!=nil { return false } }
  p:=a.Photo
  if p.Orientation<0 || p.Orientation>8 || !textOK(p.Make,256) || !textOK(p.Model,256) || !textOK(p.Captured,64) || !textOK(p.Warning,128) { return false }
