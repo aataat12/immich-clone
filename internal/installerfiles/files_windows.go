@@ -323,7 +323,7 @@ func snapshot(app, data string, beforeCopy func(int) error) (err error) {
 }
 
 func Restore(app, data string) error {
-    return restoreSnapshot(app, data, nil)
+	return restoreSnapshot(app, data, nil)
 }
 
 // The optional payload recovery runs with the verified state snapshot and live
@@ -374,15 +374,23 @@ func restoreSnapshot(app, data string, recoverPayload func() error) (err error) 
 			return ErrRefused
 		}
 	}
-    if recoverPayload != nil {
-        for i, name := range names {
-            if i == 0 { continue }
-            if o.target[i], err = r.data.OpenFile(name, true); err != nil { return err }
-        }
-        if err = recoverPayload(); err != nil { return err }
-    }
+	if recoverPayload != nil {
+		for i, name := range names {
+			if i == 0 {
+				continue
+			}
+			if o.target[i], err = r.data.OpenFile(name, true); err != nil {
+				return err
+			}
+		}
+		if err = recoverPayload(); err != nil {
+			return err
+		}
+	}
 	for i, name := range names {
-        if o.target[i] != nil { continue }
+		if o.target[i] != nil {
+			continue
+		}
 		dst := r.data
 		if i == 0 {
 			dst = r.app

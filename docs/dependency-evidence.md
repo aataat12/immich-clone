@@ -1021,3 +1021,20 @@ catalog baseline41912052098 passed. Native tests/cross-build/vet and Linux basel
 backup checks passed; two worker reviews/tests done. Full untrusted restore,
 durable installer interruption, metadata races and genuine release/providers
 remain original SEC03 rows. Published0.1.39 unchanged; not Win10 certification.
+
+
+## Persistent interrupted-upgrade recovery integration
+
+No new product dependency/runtime/provider/model or application catalog schema.
+Existing pinned Go/x/sys held-file creation, identity/security queries, Sync/Close
+and handle-bound deletion implement private transaction metadata and full-payload
+recovery. Standard-library SHA256 binds the state selection without storing the
+raw state path in transaction JSON. Existing Inno/PowerShell orchestrate stopped/
+disabled, explicit candidate health and post-commit automatic service startup.
+Windows Server2022 source649c145/run41947440346/job126983031492 passed native/build/
+vet and actual production Setup process-tree termination during a synthetic1GiB
+copy, persistent recovery/resnapshot/retry, exact preservation, private intent,
+retirement, normal/fresh/rollback/uninstall and SEC01 compatibility. Pinned Go's
+formatter canonicalized source before this validation; its exact formatting is
+saved in the checkpoint. Full prior-release/provider/concurrency integration and
+Windows10 remain separate. No end-user SDK or local setup is requested; keep0.1.39.

@@ -571,3 +571,25 @@
   SAME first outstanding row. Do not reduce the three-workstream forecast or
   claim power-loss/Windows10 acceptance. Separate candidate branch only; no
   security-baseline update, release, dependency/provider/cost/Group3 expansion.
+
+
+- SEC03 interrupted-upgrade integration accepted: persistent private sibling
+  transaction/payload roots; exclusive synced pending metadata after the prior
+  snapshot, resolve pending recovery before the next snapshot, and identity-bound
+  prewrite full-payload recovery. Verify/hold all state snapshot sources and live
+  state leaves before code rollback. Disable service during mixed copies, start
+  complete candidate manually for health, commit before automatic startup. Write
+  synced terminal metadata before held fixed-leaf retirement; delete terminal
+  last so interrupted cleanup cannot roll back a committed candidate. Unknown or
+  unsafe objects retain recovery data and refuse, never guessed success.
+  Source649c145/run41947440346/job126983031492 passes native controls plus actual
+  production Setup process-tree kill during synthetic1GiB publication, recovery
+  before resnapshot/retry, exact old catalog/executable and access-code/original
+  preservation, private intent denied to a real standard user, commit/retirement,
+  auto-start return, normal/fresh/explicit rollback/uninstall/SEC01 controls.
+  Final canonical Go formatting from the tested runner is saved without behavior
+  changes. Initial integrated8604f4/run41946697550 also passed; subsequent state
+  preflight refinement and its corruption/empty-root/fresh tests passed final gate.
+  Same outstanding row closes, forecast3 to2; remaining concurrency and genuine
+  release/fullprovider/recovery rows unchanged. No release/provider/dependency/
+  catalog-schema/cost/Group3 work or Windows10/physical-powerloss certification.

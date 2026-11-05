@@ -22,9 +22,9 @@ const publicationReceipt = "publication-ready.json"
 const publicationIntent = "publication-intent.json"
 
 type payloadEntry struct {
-	Path     string
-	HadOld   bool
-	Old, New fileReceipt
+	Path        string
+	HadOld      bool
+	Old, New    fileReceipt
 	Destination winfs.Identity
 }
 type payloadReceipt struct {

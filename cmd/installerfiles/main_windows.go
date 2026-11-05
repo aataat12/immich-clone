@@ -33,16 +33,19 @@ func main() {
 	}
 	var err error
 	switch *action {
-    case "audit-upgrade":
-        err = installerfiles.AuditUpgrade(*app, *data, *root)
-    case "begin-upgrade":
-        err = installerfiles.BeginUpgrade(*app, *data, *root, *hadService)
-    case "commit-upgrade":
-        err = installerfiles.CommitUpgrade(*app, *data, *root)
-    case "recover-upgrade":
-        var kind string
-        kind, err = installerfiles.RecoverUpgrade(*app, *data, *root)
-        if err == nil { fmt.Println(kind); return }
+	case "audit-upgrade":
+		err = installerfiles.AuditUpgrade(*app, *data, *root)
+	case "begin-upgrade":
+		err = installerfiles.BeginUpgrade(*app, *data, *root, *hadService)
+	case "commit-upgrade":
+		err = installerfiles.CommitUpgrade(*app, *data, *root)
+	case "recover-upgrade":
+		var kind string
+		kind, err = installerfiles.RecoverUpgrade(*app, *data, *root)
+		if err == nil {
+			fmt.Println(kind)
+			return
+		}
 
 	case "audit-code":
 		err = installerfiles.AuditCode(*app)

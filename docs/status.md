@@ -73,7 +73,7 @@ proved that fresh read really is denied. Production policy was not weakened.
 
 User definition: one pass is a work session ending with completion/pause. Latest
 forecast was7 remaining, conditional on proof/integration; this completed ACL
-integration reduced it to6 remaining passes; initialization reduced it to5; the code-permission checkpoint reduced it to4; application payload publication reduced it to3; bounded uninstall/cleanup reduced it to2. Residual implementation review below corrected that forecast to5; accepted verify/backup reduced it to4; accepted restore below reduces it to **3**, not a guarantee.
+integration reduced it to6 remaining passes; initialization reduced it to5; the code-permission checkpoint reduced it to4; application payload publication reduced it to3; bounded uninstall/cleanup reduced it to2. Residual implementation review below corrected that forecast to5; accepted verify/backup reduced it to4; accepted restore reduced it to3; accepted interrupted-upgrade recovery below reduces it to **2**, not a guarantee.
 
 | SEC-03 workstream | Current checkpoint | More passes, best estimate |
 |---|---|---:|
@@ -81,16 +81,48 @@ integration reduced it to6 remaining passes; initialization reduced it to5; the 
 | Command entrypoint guards, existing-code reads and stationary metadata aliases | Focused Windows checkpoint accepted | 0 |
 | Administrative verify/backup held read-only paths and archive output | Focused Windows checkpoint accepted | 0 |
 | Restore supervisor and pre-main worker path boundary | Focused Windows checkpoint accepted | 0 |
-| Durable full-payload intent and interrupted/mixed-copy recovery | Native component tested; Setup integration remaining | 1 |
+| Durable full-payload intent and interrupted/mixed-copy recovery | Focused Windows Setup kill/retry checkpoint accepted | 0 |
 | Separate-account installer/metadata concurrency controls | Remaining | 1 |
 | Genuine prior-release/full-provider/recovery closure | Remaining | 1 |
-| Total | SEC-03 remains open | 3 |
+| Total | SEC-03 remains open | 2 |
 
-No worker/CI remains active. No new feature/provider/version/release, cost,
+No recovery CI remains active. No new feature/provider/version/release, cost,
 Group3 work or PC action; keep published0.1.39. Security remains4 closed/4 open.
 Windows Server results do not certify Windows10.
 
-### SEC-03 interrupted payload recovery: native component checkpoint
+### SEC-03 interrupted-upgrade recovery accepted
+
+Final source `649c1450b9e2d3e0e14afbb855ad8918d79f2001` passed
+[run41947440346](https://github.com/aataat12/immich-clone/actions/runs/41947440346),
+job126983031492 on Windows Server 2022. Persistent private sibling transaction
+storage replaces temporary payload backups. Preparation resolves pending recovery
+before overwriting the prior snapshot. Synced prewrite intent binds exact payload
+destinations; held prior state sources are verified before code rollback. Service
+startup is disabled during mixed copying, manual for candidate health, automatic
+only after healthy commit. Terminal-first/terminal-deleted-last retirement admits
+only audited fixed metadata and numbered backup leaves, retaining unsafe residue.
+
+The actual production Inno Setup process tree was killed during native publication
+of a synthetic 1 GiB payload. The helper was confirmed killed, service stopped and
+disabled, and intent retained without completion. New bundled Setup recovered and
+retried successfully; saved catalog/executable and independent access-code/original
+hashes were preserved. Complete large payload, private intent against a separate
+standard user, healthy commit/retirement, startup restoration, normal/fresh Setup,
+explicit rollback/uninstall, native tests/build/vet and SEC-01 compatibility passed.
+Corrupt prior catalog refuses before code rollback; prepared-only/empty-root and
+fresh-state recovery controls passed. The runner's canonical Go formatting is
+saved unchanged; no additional behavioral edits after this successful gate.
+[Ordering, exact evidence and limits](interrupted-upgrade-milestone7.md).
+
+This closes the SAME tracked interrupted-upgrade row. Best remaining passes
+**3 to2**, unchanged remaining rows: separate-account installer/metadata races and
+genuine prior-release/full-provider/recovery combined validation. SEC03 remains
+open; security4 closed/4 open. Published0.1.39 unchanged. No provider/dependency/
+application catalog schema/release/cost/Group3 expansion or PC action. Process-exit
+execution does not certify physical power-loss or Windows10 behavior. All recovery
+CI is complete. The concurrency and combined rows retain their own acceptance.
+
+### Earlier SEC-03 interrupted payload recovery native component checkpoint
 
 Development resumed from accepted restore checkpoint `9a9d89c` on a separate
 `work/sec03-durable-recovery` branch. Native component source `5e17f2c` passed
