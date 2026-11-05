@@ -29,4 +29,12 @@ jobs:
       - name: Run restricted-token and ACL canary
         shell: pwsh
         run: ./scripts/Test-WorkerIsolationCandidate.ps1
+      - name: Capture native crash evidence
+        if: always()
+        shell: pwsh
+        run: |
+          Get-WinEvent -LogName System -MaxEvents 100 |
+            Where-Object { $_.ProviderName -in @('Service Control Manager', 'Application Error', 'Windows Error Reporting') } |
+            Select-Object TimeCreated, ProviderName, Id, LevelDisplayName, Message |
+            Format-List
 
