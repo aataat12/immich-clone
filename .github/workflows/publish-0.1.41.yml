@@ -37,7 +37,7 @@ jobs:
           if ($artifact.name -ne 'prototype-0.1.41-server-tested' -or $artifact.expired -or $artifact.workflow_run.head_sha -ne $source -or $artifact.digest -ne ('sha256:'+$zipHash)) { throw 'Accepted artifact identity changed' }
           $prior = & gh release view $tag --repo $repo --json tagName 2>$null
           if ($LASTEXITCODE -eq 0) { throw 'Release exists; existing releases are never overwritten' }
-          $existingTags = @(Invoke-RestMethod ($api+'/git/matching-refs/tags/'+$tag) -Headers $headers)
+          $existingTags = Invoke-RestMethod ($api+'/git/matching-refs/tags/'+$tag) -Headers $headers
           if ($existingTags.Count -ne 0) { throw 'Tag exists; existing tags are never overwritten' }
           $zip = Join-Path $env:RUNNER_TEMP 'tested-0.1.41.zip'
           Invoke-WebRequest ($api+'/actions/artifacts/13396906359/zip') -Headers $headers -OutFile $zip
@@ -78,7 +78,8 @@ jobs:
           [IO.File]::WriteAllText($bodyFile,$body,[Text.UTF8Encoding]::new($false))
           & gh release create $tag --repo $repo --target $source --title 'Immich Clone 0.1.41 prototype' --draft --prerelease --notes-file $bodyFile @files
           if ($LASTEXITCODE -ne 0) { throw 'Approved draft release creation failed' }
-          $drafts = @(Invoke-RestMethod ($api+'/releases?per_page=100') -Headers $headers | Where-Object tag_name -eq $tag)
+          $allReleases = Invoke-RestMethod ($api+'/releases?per_page=100') -Headers $headers
+          $drafts = @($allReleases | Where-Object tag_name -eq $tag)
           if ($drafts.Count -ne 1) { throw 'Approved draft release could not be uniquely identified' }
           $release = Invoke-RestMethod ($api+'/releases/'+$drafts[0].id) -Headers $headers
           if (!$release.draft -or !$release.prerelease -or $release.target_commitish -ne $source -or @($release.assets).Count -ne 4) { throw 'Draft release identity mismatch' }
