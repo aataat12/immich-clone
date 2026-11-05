@@ -1,0 +1,29 @@
+name: Restricted token portable diagnostic
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'experiments/restricted-token-diagnostic/**'
+      - '.github/workflows/restricted-token-diagnostic.yml'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Build portable diagnostic
+        shell: pwsh
+        run: |
+          go build -trimpath -o restricted-token-diagnostic.exe ./experiments/restricted-token-diagnostic
+          Compress-Archive -Path restricted-token-diagnostic.exe -DestinationPath restricted-token-diagnostic.zip
+      - name: Upload portable diagnostic
+        uses: actions/upload-artifact@v4
+        with:
+          name: restricted-token-diagnostic-windows
+          path: restricted-token-diagnostic.zip
+
