@@ -86,8 +86,7 @@ function Run-SetupMetadataRace([string]$Application,[string]$State) {
     $script = @'
 $attempts=0; $writeSuccess=0; $renameSuccess=0; $linkSuccess=0; $aclSuccess=0
 while (Get-Process -Id $args[0] -ErrorAction SilentlyContinue) {
-  if (Test-Path -LiteralPath '__P__') {
-    $attempts++
+  $attempts++
     try { Add-Content -LiteralPath '__P__' -Value 'race' -ErrorAction Stop; $writeSuccess++ } catch {}
     try {
       Rename-Item -LiteralPath '__P__' -NewName 'upgrade-pending.swap' -ErrorAction Stop
@@ -102,7 +101,6 @@ while (Get-Process -Id $args[0] -ErrorAction SilentlyContinue) {
       & icacls.exe '__P__' /grant ('*'+ '__U__'+':F') | Out-Null
       if ($LASTEXITCODE -eq 0) { $aclSuccess++ }
     } catch {}
-  }
   try { Add-Content -LiteralPath '__O__' -Value 'race' -ErrorAction Stop } catch {}
   Start-Sleep -Milliseconds 10
 }
