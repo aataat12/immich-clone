@@ -131,7 +131,7 @@ function RunManagementFrom(ScriptPath, Action: String; var ResultCode: Integer):
 begin
   Result := Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
     '-NoProfile -NonInteractive -ExecutionPolicy Bypass -File "' + ScriptPath +
-    '" -Action ' + Action + ' -AppDir "' + ExpandConstant('{app}') + '" -DataDir "' + GetState('') + '" -BoundaryHelper "' + ExpandConstant('{tmp}\installer-files.exe') + '" -PayloadSource "' + ExpandConstant('{tmp}\payload') + '" -PayloadBackup "' + ExpandConstant('{tmp}\payload-backup') + '"',
+    '" -Action ' + Action + ' -AppDir "' + ExpandConstant('{app}') + '" -DataDir "' + GetState('') + '" -BoundaryHelper "' + ExpandConstant('{tmp}\installer-files.exe') + '" -PayloadSource "' + ExpandConstant('{tmp}\payload') + '" -PayloadBackup "' + ExpandConstant('{app}-upgrade-recovery\payload') + '"',
     '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
 end;
 

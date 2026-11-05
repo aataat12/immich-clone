@@ -22,6 +22,10 @@ $pathsValidated = $false
 $stoppedForAcl = $false
 $owned = $null
 $diagnosticsReady = $false
+$durablePayload = [bool]($PayloadSource -and $PayloadBackup)
+$upgradeRoot = if ($durablePayload) { Split-Path -Parent $PayloadBackup } else { '' }
+$safeToStartPrior = !($durablePayload -and $Action -eq 'Install')
+$upgradeCommitted = $false
 $logRoot = Join-Path $env:ProgramData 'ImmichCloneDiagnostics'
 function Diagnostic([string]$event,[int]$result=0) {
     if (!$diagnosticsReady) { return }
@@ -32,6 +36,11 @@ function Diagnostic([string]$event,[int]$result=0) {
 }
 
 function Checked([string]$exe,[string[]]$arguments) { & $exe @arguments | Out-Null; if ($LASTEXITCODE -ne 0) { Diagnostic 'native_operation_failed' $LASTEXITCODE; throw 'A required installation operation failed' } }
+function Recover-Upgrade {
+    $kind = @(& $BoundaryHelper '-action' 'recover-upgrade' '-app-dir' $AppDir '-data-dir' $DataDir '-root-dir' $upgradeRoot)
+    if ($LASTEXITCODE -ne 0 -or $kind.Count -ne 1 -or $kind[0] -notin @('none','prior','fresh')) { throw 'Pending upgrade recovery refused; saved recovery data was retained' }
+    return $kind[0]
+}
 function Own-Service {
     $service = Get-CimInstance Win32_Service -Filter "Name='$name'"
     if ($service -and !$service.PathName.StartsWith(('"'+$binary+'"'),[StringComparison]::OrdinalIgnoreCase)) { throw 'Service name belongs to a different installation' }
@@ -99,12 +108,30 @@ try {
     Diagnostic 'installer_begin'
     $owned = Own-Service
     if ($Action -eq 'Prepare') {
+        if ($durablePayload) {
+            # Prevent boot/failure restart from executing a mixed installation.
+            # Recovery MUST precede replacement of the three-file state snapshot.
+            $safeToStartPrior = $false
+            if ($owned) { Checked sc.exe @('config',$name,'start=','disabled') }
+            $recovered = Recover-Upgrade
+            if ($recovered -eq 'fresh' -and $owned) {
+                Checked sc.exe @('delete',$name)
+                $owned = $null
+            }
+            $safeToStartPrior = $true
+        }
         if ($owned) {
             $stage = 'snapshot previous installation'
             Diagnostic 'upgrade_prepare'
             Stop-Service $name
             Set-PrivateDirectoryAcl -CreationHelper $BoundaryHelper -Path $rollback
             Checked $BoundaryHelper @('-action','snapshot','-app-dir',$AppDir,'-data-dir',$DataDir)
+        }
+        if ($durablePayload) {
+            $beginArgs = @('-action','begin-upgrade','-app-dir',$AppDir,'-data-dir',$DataDir,'-root-dir',$upgradeRoot)
+            if ($owned) { $beginArgs += '-had-service' }
+            Checked $BoundaryHelper $beginArgs
+            $safeToStartPrior = $false
         }
         Diagnostic 'installer_complete'
     exit 0
@@ -115,7 +142,7 @@ try {
     if ((Test-Path $DataDir) -and !(Test-Path "$DataDir/state-format.txt") -and @(Get-ChildItem -LiteralPath $DataDir -Force).Count -gt 0) { throw 'Refusing an unrelated nonempty data directory' }
         if ($PayloadSource -and $PayloadBackup) {
             $stage = 'publish application payload'
-            Checked $BoundaryHelper @('-action','ensure-private-root','-root-dir',$PayloadBackup)
+            Checked $BoundaryHelper @('-action','audit-upgrade','-app-dir',$AppDir,'-data-dir',$DataDir,'-root-dir',$upgradeRoot)
             Checked $BoundaryHelper @('-action','publish-payload','-app-dir',$AppDir,'-source-dir',$PayloadSource,'-backup-dir',$PayloadBackup)
         }
     $stage = 'configure state ACL'
@@ -129,18 +156,24 @@ try {
         $created = Invoke-CimMethod -ClassName Win32_Service -MethodName Create -Arguments @{
             Name=$name; DisplayName='Immich Clone (prototype)'; PathName=('"'+$binary+'" -mode service -data "'+$DataDir+'"')
             ServiceType=[byte]16; ErrorControl=[byte]1; DesktopInteract=$false
-            StartMode='Automatic'; StartName='NT AUTHORITY\LocalService'; StartPassword=''
+            StartMode='Manual'; StartName='NT AUTHORITY\LocalService'; StartPassword=''
         }
         if ($created.ReturnValue -ne 0) { Diagnostic 'service_registration_failed' $created.ReturnValue; throw 'Native service registration failed' }
     }
     $stage = 'configure automatic startup'
-    Checked sc.exe @('config',$name,'start=','delayed-auto')
-    Checked sc.exe @('failure',$name,'reset=','86400','actions=','restart/5000/restart/15000/none/0')
+    Checked sc.exe @('config',$name,'start=','demand')
+    Checked sc.exe @('failure',$name,'reset=','86400','actions=','none/0')
     $stage = 'start service'
     Start-Service $name
     $stage = 'verify service health'
     Health
     if ($env:IMMICH_INSTALL_TEST_FAILURE -eq '1') { throw 'Injected post-initialization upgrade failure' }
+    if ($durablePayload) {
+        Checked $BoundaryHelper @('-action','commit-upgrade','-app-dir',$AppDir,'-data-dir',$DataDir,'-root-dir',$upgradeRoot)
+        $upgradeCommitted = $true
+    }
+    Checked sc.exe @('config',$name,'start=','delayed-auto')
+    Checked sc.exe @('failure',$name,'reset=','86400','actions=','restart/5000/restart/15000/none/0')
     Diagnostic 'installer_complete'
     exit 0
 } catch {
@@ -149,7 +182,7 @@ try {
         exit 1
     }
     if (!$pathsValidated) {
-        if ($stoppedForAcl) {
+        if ($stoppedForAcl -and $safeToStartPrior) {
             try {
                 Assert-PrivateDirectoryTree -Path $DataDir -ReaderSid $identity -ServiceAccess -VerifyInherited
                 Assert-PrivateDirectoryTree -Path $logRoot -ReaderSid $identity -ServiceAccess -VerifyInherited
@@ -176,6 +209,29 @@ try {
         & $BoundaryHelper '-action' 'failure-note' '-app-dir' $AppDir '-stage' $stage '-result' $_.Exception.HResult | Out-Null
         if ($LASTEXITCODE -ne 0) { Write-Warning 'Installation failure note could not be saved' }
     } catch { Write-Warning 'Installation failure note could not be saved' }
+    if ($durablePayload -and $Action -eq 'Install') {
+        if (!$upgradeCommitted) {
+            try {
+                $recoveryService = Own-Service
+                if ($recoveryService) {
+                    Stop-Service $name -Force -ErrorAction Stop
+                    Checked sc.exe @('config',$name,'start=','disabled')
+                }
+                $recovered = Recover-Upgrade
+                if ($recovered -eq 'prior') {
+                    Checked sc.exe @('config',$name,'start=','delayed-auto')
+                    Checked sc.exe @('failure',$name,'reset=','86400','actions=','restart/5000/restart/15000/none/0')
+                    Start-Service $name
+                    Health
+                    Diagnostic 'rollback_complete'
+                } elseif ($recovered -eq 'fresh' -and $recoveryService) {
+                    Checked sc.exe @('delete',$name)
+                }
+            } catch { Write-Warning 'Upgrade recovery incomplete; service remains stopped and private recovery data was retained' }
+        }
+        Write-Error 'Installation action failed; review the saved recovery state before retrying.' -ErrorAction Continue
+        exit 1
+    }
     # Schema 1 installer never mutates originals. Restore prior catalog and binary
     # after startup/configuration failure; retained orphan blobs are never deleted.
     if ($Action -eq 'Install' -and (Test-Path "$rollback/immichclone.exe")) {
@@ -190,7 +246,8 @@ try {
             Diagnostic 'rollback_complete'
             Write-Error 'Upgrade failed; previous service restored and healthy' -ErrorAction Continue
         } catch { Write-Error 'Installation failed; rollback requires recovery from retained backup' -ErrorAction Continue }
-    } elseif ($Action -eq 'Prepare' -and $owned) {
+    } elseif ($Action -eq 'Prepare' -and $owned -and $safeToStartPrior) {
+        Checked sc.exe @('config',$name,'start=','delayed-auto')
         Start-Service $name -ErrorAction SilentlyContinue
     } elseif ($Action -eq 'Install' -and !$owned) {
         if (Get-Service $name -ErrorAction SilentlyContinue) { Stop-Service $name -ErrorAction SilentlyContinue; & sc.exe delete $name | Out-Null }

@@ -14,10 +14,26 @@ function Wait-Health {
     }
     throw 'Preparation probe service did not become healthy'
 }
-function Run-Setup([string]$Application,[string]$State,[switch]$ObserveStaging) {
-    $process = Start-Process $script:setup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$Application+'"'),('/STATE="'+$State+'"')) -PassThru
+function Run-Setup([string]$Application,[string]$State,[switch]$ObserveStaging,[switch]$InterruptPublication) {
+    $process = Start-Process $script:setup -WindowStyle Hidden -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$Application+'"'),('/STATE="'+$State+'"')) -PassThru
     $observed = $false
     while (!$process.HasExited) {
+        if ($InterruptPublication) {
+            $intent = Join-Path ($Application+'-upgrade-recovery') 'payload/publication-intent.json'
+            $ready = Join-Path ($Application+'-upgrade-recovery') 'payload/publication-ready.json'
+            if ((Test-Path -LiteralPath $intent) -and (Test-Path -LiteralPath $ready) -and (Get-Item -LiteralPath $ready).Length -eq 0) {
+                $helpers = @(Get-CimInstance Win32_Process -Filter "Name='installer-files.exe'" | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($Application) -and $_.CommandLine.Contains('publish-payload') })
+                if ($helpers.Count -eq 1 -and (Get-Item -LiteralPath $ready).Length -eq 0) {
+                    $service = Get-CimInstance Win32_Service -Filter "Name='ImmichClone'"
+                    Assert ($service.State -eq 'Stopped' -and $service.StartMode -eq 'Disabled') 'actual publication keeps service stopped and disabled before process-tree termination'
+                    Native taskkill.exe @('/PID',[string]$process.Id,'/T','/F')
+                    $process.WaitForExit()
+                    Assert (!(Get-Process -Id $helpers[0].ProcessId -ErrorAction SilentlyContinue)) 'actual Setup publication helper was killed with its parent process tree'
+                    Assert ((Test-Path -LiteralPath $intent) -and (Get-Item -LiteralPath $ready).Length -eq 0) 'terminated Setup retains prewrite intent without a completion receipt'
+                    return 73
+                }
+            }
+        }
         if ($ObserveStaging -and !$observed) {
             $children = @(Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($Application) -and $_.CommandLine.Contains('-Action ') })
             foreach ($child in $children) {
@@ -44,6 +60,7 @@ function Run-Setup([string]$Application,[string]$State,[switch]$ObserveStaging) 
     }
     $process.WaitForExit()
     if ($ObserveStaging) { Assert $observed 'actual staged helper process observed during production Setup' }
+    if ($InterruptPublication) { throw 'Setup completed before the required publication interruption' }
     return $process.ExitCode
 }
 function Write-RetainedHelper([string]$Application) {
@@ -405,6 +422,26 @@ try {
     Assert (![UpgradeWriteProbe]::CanWrite($ordinaryUser,$ordinaryPassword,(Join-Path $currentApp 'Manage-Service.ps1'))) 'normal installed helper denies real standard-user modification'
     Assert ((Run-Setup $currentApp $state -ObserveStaging) -eq 0) 'protected custom application remains upgradeable after negative controls'
     Wait-Health
+    # Enlarge only the final fixture candidate to expose a real native copy
+    # window. This is synthetic zero-filled test data, never a release provider.
+    $copyWindow = Join-Path $source 'dist/ai/recovery-window.bin'
+    $stream = [IO.File]::Open($copyWindow,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
+    try { $stream.SetLength(1GB); $stream.Flush($true) } finally { $stream.Dispose() }
+    Native $Compiler @('/DAppVersion=0.0.0',(Join-Path $source 'packaging/immichclone.iss'))
+    Assert ((Run-Setup $currentApp $state -InterruptPublication) -eq 73) 'actual production Setup was terminated during native payload publication'
+    $pendingRoot = $currentApp+'-upgrade-recovery'
+    $pendingIntent = Join-Path $pendingRoot 'payload/publication-intent.json'
+    Assert (![UpgradeWriteProbe]::CanWrite($ordinaryUser,$ordinaryPassword,$pendingIntent)) 'persistent interrupted-recovery intent denies actual standard-user modification'
+    $savedCatalogHash = (Get-FileHash -LiteralPath (Join-Path $currentApp 'rollback/catalog.db')).Hash
+    $savedExecutableHash = (Get-FileHash -LiteralPath (Join-Path $currentApp 'rollback/immichclone.exe')).Hash
+    Assert ((Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").StartMode -eq 'Disabled') 'terminated upgrade cannot automatically start its mixed code on reboot'
+    Assert ((Run-Setup $currentApp $state) -eq 0) 'new bundled Setup recovers pending publication before taking a new snapshot and completes retry'
+    Wait-Health
+    Assert ((Get-FileHash -LiteralPath (Join-Path $currentApp 'rollback/catalog.db')).Hash -eq $savedCatalogHash -and (Get-FileHash -LiteralPath (Join-Path $currentApp 'rollback/immichclone.exe')).Hash -eq $savedExecutableHash) 'retry snapshots restored prior catalog and executable rather than interrupted candidate bytes'
+    Assert ((Get-FileHash -LiteralPath (Join-Path $state 'access-code.txt')).Hash -eq $codeHash -and (Get-FileHash -LiteralPath (Join-Path $state ('originals/'+$asset.id))).Hash -eq $originalHash) 'killed Setup and retry preserve independent access-code and original hashes'
+    Assert ((Get-FileHash -LiteralPath (Join-Path $currentApp 'ai/recovery-window.bin')).Hash -eq (Get-FileHash -LiteralPath $copyWindow).Hash) 'retry publishes and verifies the complete synthetic large payload'
+    Assert (@(Get-ChildItem -LiteralPath (Join-Path $pendingRoot 'payload') -Force).Count -eq 0 -and !(Test-Path (Join-Path $pendingRoot 'upgrade-pending.json')) -and !(Test-Path (Join-Path $pendingRoot 'upgrade-terminal.json'))) 'healthy commit retires saved payload and transaction metadata'
+    Assert ((Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").StartMode -eq 'Auto') 'automatic startup returns only after healthy transaction commit'
     # Real uninstaller refusals must happen before service stop, metadata removal,
     # retained-script execution or any app/data deletion.
     $uninstallMarker = Join-Path $currentApp 'unexpected-uninstall-script.txt'
