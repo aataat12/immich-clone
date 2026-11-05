@@ -57,7 +57,6 @@ function Run-Setup([string]$Application,[string]$State,[switch]$ObserveStaging,[
         }
         Start-Sleep -Milliseconds 30
         $process.Refresh()
-        $script:uninstallRaceExitCode = $process.ExitCode
     }
     $process.WaitForExit()
     if ($ObserveStaging) { Assert $observed 'actual staged helper process observed during production Setup' }
@@ -180,6 +179,7 @@ while (Get-Process -Id $args[0] -ErrorAction SilentlyContinue) {
     try {
         $process.WaitForExit()
         $process.Refresh()
+        $script:uninstallRaceExitCode = $process.ExitCode
         if (!$actorProcess.WaitForExit(30000)) { $actorProcess.Kill(); $actorProcess.WaitForExit(); throw 'uninstall metadata actor timeout' }
         Assert ($process.ExitCode -eq 0) 'real uninstall completes while separate account races metadata'
         $counts = Get-Content -LiteralPath $result -Raw | ConvertFrom-Json
@@ -602,8 +602,8 @@ try {
     Run-UninstallMetadataRace $currentApp
     $uninstallTrace = Join-Path $root 'uninstall-boundary.log'
     $uninstallExitCode = $script:uninstallRaceExitCode
-    if ($process.ExitCode -ne 0) {
-        Write-Host ('Uninstall boundary: exit_code='+$process.ExitCode)
+    if ($uninstallExitCode -ne 0) {
+        Write-Host ('Uninstall boundary: exit_code='+$uninstallExitCode)
         if (Test-Path -LiteralPath $uninstallTrace) { Get-Content -LiteralPath $uninstallTrace | Where-Object { $_ -match 'Uninstall boundary:' } | ForEach-Object { Write-Host ($_.Substring($_.IndexOf('Uninstall boundary:'))) } }
         $remainingService = Get-Service ImmichClone -ErrorAction SilentlyContinue
         Write-Host ('Uninstall boundary: service_present='+[bool]$remainingService)
@@ -614,93 +614,7 @@ try {
  
  
  
-A
-s
-s
-e
-r
-t
- 
-(
-$
-u
-n
-i
-n
-s
-t
-a
-l
-l
-E
-x
-i
-t
-C
-o
-d
-e
- 
--
-e
-q
- 
-0
-)
- 
-'
-d
-i
-s
-p
-o
-s
-a
-b
-l
-e
- 
-p
-r
-e
-p
-a
-r
-a
-t
-i
-o
-n
- 
-i
-n
-s
-t
-a
-l
-l
-e
-r
- 
-u
-n
-i
-n
-s
-t
-a
-l
-l
-s
- 
-c
-l
-e
-a
-n
-l
-y
-'
+    Assert ($uninstallExitCode -eq 0) 'disposable preparation installer uninstalls cleanly'
     foreach ($path in @($unknownRoot,$unknownRollback)) { Assert ([IO.File]::ReadAllText($path) -eq 'unrelated retained bytes') 'native uninstall preserves unrelated root and rollback contents' }
     Assert (!(Get-Service ImmichClone -ErrorAction SilentlyContinue) -and !(Test-Path 'HKLM:\SOFTWARE\ImmichClone')) 'completed native uninstall removes owned service and product registration'
     foreach ($leaf in $payloadNames) { Assert (!(Test-Path -LiteralPath (Join-Path $currentApp $leaf))) 'uninstall removes fixed native-published payload and provider fixture files' }
