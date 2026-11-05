@@ -79,12 +79,17 @@ function Run-SetupMetadataRace([string]$Application,[string]$State) {
     $actor = Join-Path $control 'metadata-race-actor.ps1'
     $result = Join-Path $control 'metadata-race-result.json'
     [IO.File]::WriteAllText($outside,'outside-sentinel')
+    $outsideAcl = Get-Acl -LiteralPath $outside
+    $rootAcl = Get-Acl -LiteralPath $root
+    # Make the transaction's parent actor-writable only for this boundary race.
+    Native icacls @($root,'/grant',('*'+$ordinarySid+':(OI)(CI)M'))
+    Native icacls @($outside,'/inheritance:r','/grant:r','*S-1-5-18:F','*S-1-5-32-544:F',('*'+$installerSid+':F'))
     if (Test-Path -LiteralPath $transaction) { Remove-Item -LiteralPath $transaction -Recurse -Force }
     $pending = Join-Path $transaction 'upgrade-pending.json'
     $payload = Join-Path $transaction 'payload'
-    $p = $pending.Replace("'","''"); $o = $outside.Replace("'","''"); $r = $result.Replace("'","''"); $u = $ordinarySid.Replace("'","''")
+    $p = $pending.Replace("'","''"); $o = $outside.Replace("'","''"); $r = $result.Replace("'","''"); $u = $ordinarySid.Replace("'","''"); $tr = $transaction.Replace("'","''")
     $script = @'
-$attempts=0; $writeSuccess=0; $renameSuccess=0; $linkSuccess=0; $aclSuccess=0
+$attempts=0; $writeSuccess=0; $renameSuccess=0; $linkSuccess=0; $aclSuccess=0; $parentRenameSuccess=0; $reparseSuccess=0
 while (Get-Process -Id $args[0] -ErrorAction SilentlyContinue) {
   $attempts++
     try { Add-Content -LiteralPath '__P__' -Value 'race' -ErrorAction Stop; $writeSuccess++ } catch {}
@@ -101,12 +106,25 @@ while (Get-Process -Id $args[0] -ErrorAction SilentlyContinue) {
       & icacls.exe '__P__' /grant ('*'+ '__U__'+':F') | Out-Null
       if ($LASTEXITCODE -eq 0) { $aclSuccess++ }
     } catch {}
+    try {
+      $swap = '__TR__' + '.swap'
+      Rename-Item -LiteralPath '__TR__' -NewName (Split-Path $swap -Leaf) -ErrorAction Stop
+      $parentRenameSuccess++
+      try {
+        New-Item -ItemType Junction -Path '__TR__' -Target (Split-Path '__O__' -Parent) -ErrorAction Stop | Out-Null
+        $reparseSuccess++
+      } catch {}
+      if (Test-Path -LiteralPath '__TR__') { Remove-Item -LiteralPath '__TR__' -Force -ErrorAction SilentlyContinue }
+      if (Test-Path -LiteralPath $swap) { Rename-Item -LiteralPath $swap -NewName (Split-Path '__TR__' -Leaf) -ErrorAction SilentlyContinue }
+    } catch {
+      if (Test-Path -LiteralPath $swap) { Rename-Item -LiteralPath $swap -NewName (Split-Path '__TR__' -Leaf) -ErrorAction SilentlyContinue }
+    }
   try { Add-Content -LiteralPath '__O__' -Value 'race' -ErrorAction Stop } catch {}
   Start-Sleep -Milliseconds 10
 }
-[ordered]@{attempts=$attempts;writeSuccess=$writeSuccess;renameSuccess=$renameSuccess;linkSuccess=$linkSuccess;aclSuccess=$aclSuccess} | ConvertTo-Json | Set-Content -LiteralPath '__R__'
+[ordered]@{attempts=$attempts;writeSuccess=$writeSuccess;renameSuccess=$renameSuccess;linkSuccess=$linkSuccess;aclSuccess=$aclSuccess;parentRenameSuccess=$parentRenameSuccess;reparseSuccess=$reparseSuccess} | ConvertTo-Json | Set-Content -LiteralPath '__R__'
 '@
-    $script.Replace('__P__',$p).Replace('__O__',$o).Replace('__R__',$r).Replace('__U__',$u) | Set-Content -LiteralPath $actor
+    $script.Replace('__P__',$p).Replace('__O__',$o).Replace('__R__',$r).Replace('__U__',$u).Replace('__TR__',$tr) | Set-Content -LiteralPath $actor
     $credential = [PSCredential]::new(($env:COMPUTERNAME+'\'+$ordinaryUser),(ConvertTo-SecureString $ordinaryPassword -AsPlainText -Force))
     $positive = Join-Path $control 'permissive-parent'
     New-Item -ItemType Directory -Path $positive | Out-Null
@@ -139,12 +157,14 @@ try {
         Assert ($process.ExitCode -eq 0) 'real Setup completes while separate account races recovery metadata'
         Assert (Test-Path -LiteralPath $result) 'separate-account Setup race emitted result'
         $counts = Get-Content -LiteralPath $result -Raw | ConvertFrom-Json
-        Assert ($counts.attempts -gt 0 -and $counts.writeSuccess -eq 0 -and $counts.renameSuccess -eq 0 -and $counts.linkSuccess -eq 0 -and $counts.aclSuccess -eq 0) 'protected Setup metadata rejects all separate-account mutation attempts'
+        Assert ($counts.attempts -gt 0 -and $counts.writeSuccess -eq 0 -and $counts.renameSuccess -eq 0 -and $counts.linkSuccess -eq 0 -and $counts.aclSuccess -eq 0 -and $counts.parentRenameSuccess -eq 0 -and $counts.reparseSuccess -eq 0) 'protected Setup metadata and namespace reject all separate-account mutation attempts'
         Assert ([IO.File]::ReadAllText($outside) -eq 'outside-sentinel') 'Setup metadata race preserves outside bytes'
         Assert (!(Test-Path -LiteralPath (Join-Path $transaction 'upgrade-pending.json')) -and !(Test-Path -LiteralPath (Join-Path $transaction 'upgrade-terminal.json'))) 'successful Setup retires transaction metadata without stale markers'
     } finally {
         if (!$process.HasExited) { $process.Kill(); $process.WaitForExit() }
         if (!$actorProcess.HasExited) { $actorProcess.Kill(); $actorProcess.WaitForExit() }
+        Set-Acl -LiteralPath $outside -AclObject $outsideAcl
+        Set-Acl -LiteralPath $root -AclObject $rootAcl
     }
 }
 function Run-UninstallMetadataRace([string]$Application) {
