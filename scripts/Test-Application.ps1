@@ -9,6 +9,24 @@ $priorExpectedBuild=$env:IMMICH_EXPECTED_BUILD
 $env:IMMICH_EXPECTED_BUILD=$Version
 function Checked([string]$exe,[string[]]$arguments) { & $exe @arguments; if ($LASTEXITCODE -ne 0) { throw "$exe failed: $LASTEXITCODE" } }
 function Assert([bool]$condition,[string]$message) { if (!$condition) { throw $message }; Write-Output "PASS: $message" }
+function Wait-Health {
+    for ($healthAttempt=0;$healthAttempt -lt 40;$healthAttempt++) {
+        try { if ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') { return } } catch {}
+        Start-Sleep -Milliseconds 250
+    }
+    throw 'application service health timed out'
+}
+function Remove-FixtureService {
+    if (Get-Service $name -ErrorAction SilentlyContinue) {
+        Stop-Service $name -Force -ErrorAction Stop
+        Checked sc.exe @('delete',$name)
+        for ($i=0;$i -lt 80;$i++) {
+            if (!(Get-CimInstance Win32_Service -Filter "Name='$name'" -ErrorAction SilentlyContinue)) { return }
+            Start-Sleep -Milliseconds 100
+        }
+        throw 'application fixture service was not removed'
+    }
+}
 function Login {
     $code = (Get-Content "$state/access-code.txt" -Raw).Trim()
     $script:session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
@@ -27,10 +45,7 @@ try {
     New-Item -ItemType Directory -Force -Path $diagnosticRoot | Out-Null
     Checked icacls @($diagnosticRoot,'/grant','*S-1-5-19:(OI)(CI)M')
     Start-Service $name
-    for ($healthAttempt=0;$healthAttempt -lt 40;$healthAttempt++) {
-        try { if ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') { break } } catch {}
-        Start-Sleep -Milliseconds 250
-    }
+    Wait-Health
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'actual application starts as LocalService'
     if (!$UIReview) {
         Assert (![string]::IsNullOrWhiteSpace($env:IMMICH_BROWSER_MODULE)) 'pinned browser module supplied for hidden-navigation acceptance'
@@ -43,6 +58,15 @@ try {
         } finally {
             $env:IMMICH_NAV_ATTACH=$oldNavAttach;$env:IMMICH_TEST_STATE=$oldTestState
         }
+        # The navigation fixture writes one disposable original. Recreate only
+        # this temporary state so the application fixture starts from empty data.
+        Remove-FixtureService
+        Remove-Item -LiteralPath $state -Recurse -Force
+        New-Item -ItemType Directory -Path $state | Out-Null
+        Checked icacls @($state,'/grant','*S-1-5-19:(OI)(CI)M')
+        New-Service -Name $name -BinaryPathName ('"'+$binary+'" -mode service -data "'+$state+'"') -Credential $credential | Out-Null
+        Start-Service $name
+        Wait-Health
     }
     Login
     # Generate a fixture using the already-executed standard image encoders in tests.
