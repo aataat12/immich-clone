@@ -1,3 +1,8 @@
+> November 5, 2026 update: SEC-06 input/parent-decoder mitigation is implemented
+> and Windows-validated in the unpublished candidate; see [SEC-06 evidence](sec06-input-hardening.md).
+> Earlier open SEC-06/WI-02 rows below are historical. SEC-03/05/08 remain open;
+> final installer/Windows 10 acceptance is unchanged.
+
 # SEC-07 review closeout — 2026-11-02
 
 Scope is the complete original **review closeout** item: current threat and

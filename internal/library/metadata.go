@@ -4,10 +4,10 @@ package library
 // external/native dependency, arbitrary directory traversal or maker-note decode.
 import (
 	"bytes"
- "context"
+	"context"
 	"encoding/binary"
 	"image"
- "image/color"
+	"image/color"
 	"io"
 	"strings"
 	"time"
@@ -164,11 +164,13 @@ func readTIFF(b []byte) PhotoMetadata {
 	return m
 }
 func oriented(img image.Image, orientation int) image.Image {
- out, _ := orientedContext(context.Background(), img, orientation)
- return out
+	out, _ := orientedContext(context.Background(), img, orientation)
+	return out
 }
 func orientedContext(ctx context.Context, img image.Image, orientation int) (image.Image, error) {
- if err := ctx.Err(); err != nil { return nil, err }
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if orientation <= 1 || orientation > 8 {
 		return img, nil
 	}
@@ -179,9 +181,11 @@ func orientedContext(ctx context.Context, img image.Image, orientation int) (ima
 		ow, oh = h, w
 	}
 	out := image.NewRGBA(image.Rect(0, 0, ow, oh))
- rgba64,fast:=img.(image.RGBA64Image)
+	rgba64, fast := img.(image.RGBA64Image)
 	for y := 0; y < h; y++ {
- if err := ctx.Err(); err != nil { return nil, err }
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		for x := 0; x < w; x++ {
 			dx, dy := x, y
 			switch orientation {
@@ -201,12 +205,12 @@ func orientedContext(ctx context.Context, img image.Image, orientation int) (ima
 				dx, dy = y, w-1-x
 			}
 			if fast {
-    c:=rgba64.RGBA64At(bounds.Min.X+x,bounds.Min.Y+y)
-    out.SetRGBA(dx,dy,color.RGBA{R:uint8(c.R>>8),G:uint8(c.G>>8),B:uint8(c.B>>8),A:uint8(c.A>>8)})
-   } else {
-    r,g,b,a:=img.At(bounds.Min.X+x,bounds.Min.Y+y).RGBA()
-    out.SetRGBA(dx,dy,color.RGBA{R:uint8(r>>8),G:uint8(g>>8),B:uint8(b>>8),A:uint8(a>>8)})
-   }
+				c := rgba64.RGBA64At(bounds.Min.X+x, bounds.Min.Y+y)
+				out.SetRGBA(dx, dy, color.RGBA{R: uint8(c.R >> 8), G: uint8(c.G >> 8), B: uint8(c.B >> 8), A: uint8(c.A >> 8)})
+			} else {
+				r, g, b, a := img.At(bounds.Min.X+x, bounds.Min.Y+y).RGBA()
+				out.SetRGBA(dx, dy, color.RGBA{R: uint8(r >> 8), G: uint8(g >> 8), B: uint8(b >> 8), A: uint8(a >> 8)})
+			}
 		}
 	}
 	return out, nil

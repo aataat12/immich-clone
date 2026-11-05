@@ -119,7 +119,9 @@ func Open(root string) (*Store, error) {
 	}
 	s := &Store{root: root, db: db, mediaAnalysisGate: make(chan struct{}, 1)}
 	e = db.Update(func(tx *bolt.Tx) error {
-		if err := validateCatalogInput(tx); err != nil { return err }
+		if err := validateCatalogInput(tx); err != nil {
+			return err
+		}
 		for _, n := range []string{"meta", "assets"} {
 			if _, e := tx.CreateBucketIfNotExists([]byte(n)); e != nil {
 				return e
@@ -293,8 +295,12 @@ func (s *Store) PutWithPath(name, relative string, r io.Reader) (Asset, bool, er
 }
 func (s *Store) putWithPath(name, relative string, r io.Reader, size int64, expected string, receipt func(*bolt.Tx, Asset, bool) error) (result Asset, duplicate bool, returnErr error) {
 	name = filepath.Base(strings.ReplaceAll(name, "\\", "/"))
-	if name == "." || name == "/" || name == "" { name = "original" }
-	if !textOK(name, 256) { return result, false, errors.New("invalid original filename") }
+	if name == "." || name == "/" || name == "" {
+		name = "original"
+	}
+	if !textOK(name, 256) {
+		return result, false, errors.New("invalid original filename")
+	}
 
 	if relative != "" {
 		clean, e := cleanRelative(relative)
@@ -516,14 +522,18 @@ func (s *Store) makePreviewContext(ctx context.Context, a *Asset) error {
 	if _, e = f.Seek(0, 0); e != nil {
 		return e
 	}
-	encodedLimit:=maxParentImageBytes
- if a.MIME=="image/jpeg" || a.MIME=="image/png" {encodedLimit=MaxUpload}
- img, e := decodeParentImageLimit(ctx, f,encodedLimit)
+	encodedLimit := maxParentImageBytes
+	if a.MIME == "image/jpeg" || a.MIME == "image/png" {
+		encodedLimit = MaxUpload
+	}
+	img, e := decodeParentImageLimit(ctx, f, encodedLimit)
 	if e != nil {
 		return e
 	}
 	img, e = orientedContext(ctx, img, a.Photo.Orientation)
-	if e != nil { return e }
+	if e != nil {
+		return e
+	}
 	a.Width, a.Height = img.Bounds().Dx(), img.Bounds().Dy()
 	return s.publishPreview(a.ID, img)
 }

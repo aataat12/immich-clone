@@ -41,7 +41,7 @@ against unknown vulnerabilities. No configuration/exposure expansion is authoriz
 | SEC-03 Filesystem boundaries | Group 2 | Active in milestone7. Local junction/reparse replacement paths remain open. |
 | SEC-04 Hostile backup limits | Group 2 | Existing validated resource protections retained; no further mitigation work. |
 | SEC-05 Native worker isolation | Group 2 | Active in milestone7. Local/imported-media worker authority remains open. |
-| SEC-06 Remaining input review | Group 2 | Active in milestone7 under current authenticated local-import/catalog deployment. No demonstrated remote bypass. |
+| SEC-06 Remaining input review | Group 2 | Closed in Windows-validated unpublished candidate for current authenticated local-import/catalog deployment. See sec06-input-hardening.md; no demonstrated remote bypass or exposure expansion. |
 | SEC-07 Review closeout | Group 2 | Existing completed review retained; no broad new review. |
 | SEC-08 Release validation | Group 2 | Active in milestone7; candidate combined checks passed, final target/release gates remain open. |
 

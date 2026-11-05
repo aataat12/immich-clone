@@ -1,72 +1,97 @@
-# SEC-06 input hardening candidate — November 5, 2026
+# SEC-06 input hardening — accepted candidate, November 5, 2026
 
-Status: implemented locally, NOT executed or accepted. SEC-06 remains open.
-Published prototype remains 0.1.39. No dependency/provider/model/schema change.
+SEC-06 is closed in the validated unpublished candidate for the current
+loopback/authenticated local-import/catalog deployment. The original item was
+implemented and exercised, including parent Go decoding; this is not a claim of
+absence of parser defects or an OS sandbox. Published prototype remains 0.1.39.
+SEC-03, SEC-05 and SEC-08 remain open. No dependency/provider/model/schema change.
 
-## Candidate changes
+## Implemented controls
 
-- Shared parent Go image decoder for preview and AI: overflow-safe 40-megapixel
-  check, decoded/config bounds and format agreement, cancellation before/after
-  decoding. Preserve existing encoded limits: JPEG/PNG previews and originals
-  4 GiB, GIF/BMP/TIFF previews and all parent AI decoding 64 MiB. A proposed
-  uniform 64 MiB cutoff was removed during review before acceptance because it
-  would narrow existing JPEG/PNG preview compatibility.
-- TIFF uses the same pinned upstream parser with context-checked bounded random
-  reads, allowing repeated compressed strips to observe the existing 45-second
-  preview/75-second AI deadlines. Orientation checks cancellation per row and
-  uses typed pixel access to avoid per-pixel heap allocation. Preflight also bounds
-  TIFF padded tile storage to 40MP plus 1MP of padding before upstream Decode;
-  image dimensions alone do not constrain a skinny padded tile. A guarded test
-  advertises 1x40M output with 17x40M tiles and verifies no payload read.
-- EXIF structural failure discards partial fields; malformed metadata remains a
-  warning and does not prevent otherwise valid media previews. Orientation copy
-  checks cancellation between rows.
-- Direct upload validates display basename length/UTF-8/control characters before
-  reading any file bytes. Relative import paths reject invalid UTF-8. Names remain
-  display data; originals use SHA256 storage names and downloads retain existing
-  mime.FormatMediaType handling. Unicode and script-like labels remain supported.
-- Names/tags reject controls before whitespace trimming. Organization/import JSON
-  requests require valid UTF-8, bounded complete bodies, one JSON value and known
-  fields before library calls.
-- Catalog input validation runs before Open repairs/index rebuilding and on
-  OpenReadOnly. Checks bounded leaf/key/tree shapes, UTF-8 and authoritative asset,
-  face/label/tag/analysis/reanalysis/deletion/import records. Asset records allow
-  32 MiB to preserve 4096 maximum-length source aliases even with JSON escaping;
-  other leaves retain the existing 1 MiB organization-record bound. Existing
-  structural bbolt checking and hard-limited restore processing remain separate.
+- Preview and AI share overflow-safe 40-megapixel preflight and decoded/config
+  size/format agreement checks. Existing encoded limits are preserved: JPEG/PNG
+  previews and originals 4 GiB, GIF/BMP/TIFF previews and parent AI 64 MiB. A proposed
+  uniform 64 MiB JPEG/PNG cutoff was removed before acceptance; a valid encoded
+  JPEG above 64 MiB still previews, while its existing AI size refusal remains.
+- TIFF uses the same pinned upstream parser through bounded context-checked random
+  reads. Repeated compressed strips now consult cancellation rather than replaying
+  an internal input cache. Existing production preview/AI deadlines are 45/75 s.
+- TIFF padded tiles have a separate pre-decode budget of 40MP plus 1MP for ordinary
+  edge padding. Image dimensions alone permit a skinny 1x40M image with 17x40M
+  tiles to advertise 5.44 GB of decompression storage. The guarded regression proves
+  refusal before pixel-payload reads, without allocating/decompressing that amount.
+  The [pinned upstream implementation](https://raw.githubusercontent.com/golang/image/v0.47.0/tiff/reader.go)
+  was reviewed for scalar, strip, tile and decompression behavior; this finding is
+  resource amplification, not a demonstrated memory-corruption exploit.
+- EXIF structural failure resets partially parsed fields. A corrupt EXIF pointer
+  inside valid JPEG produces a metadata warning and a normal unrotated preview.
+  Rotation checks cancellation per row and uses typed pixel access to avoid
+  per-pixel heap allocation while retaining all eight transforms and color parity.
+- Direct upload validates display basename length/UTF-8/controls before reading
+  bytes; relative import paths reject invalid UTF-8. Names remain display data,
+  storage paths remain SHA256 identifiers, and downloads use existing safe MIME
+  disposition formatting. Unicode and script-like names/tags remain supported.
+- Names/tags reject controls before trimming. Organization/import JSON requires
+  valid UTF-8, bounded complete bodies, one value and known fields. Existing
+  textContent/browser escaping, nosniff, attachment-only arbitrary originals,
+  safe inline-media allowlist and script-hash CSP were reviewed and retained.
+- Catalog validation precedes Open repairs/index rebuild and also runs for
+  OpenReadOnly. It checks bounded record/key/tree shapes and authoritative assets,
+  faces/labels/tags, analysis/reanalysis/video samples, deletion and import records.
+  IDs/key bindings, field/status/size/encoding bounds and source paths are checked.
+  Asset records allow 32 MiB for the existing 4096 maximum-length aliases including
+  worst-case JSON escaping; other leaves retain the 1 MiB organization bound.
+  Malformed Open refuses without changing catalog or original bytes. Structural
+  bbolt checking remains inside the existing hard-limited untrusted restore worker.
 
-## Prepared validation
+## Executed evidence
 
-The dedicated sec06-input workflow runs pinned Go 1.27.3 on Windows Server 2022:
-module verification, canonical formatting, focused tests, full internal/CLI tests,
-vet and build. It publishes no product installer. New tests cover actual truncated
-JPEG/PNG/GIF/BMP/TIFF decoding, persisted preview failure, AI failure, subsequent
-valid work and unchanged originals; dimension/encoded bombs; read/rotation
-cancellation; malformed EXIF inside valid JPEG; rejected names before reads;
-invalid JSON framing/encoding; catalog identity/field/shape/size checks; valid
-Unicode, imports and maximum alias counts. A real 40MP 16-bit PNG/rotation probe
-logs wall time and Go TotalAlloc. These are finite measurements, not peak RSS or
-hard CPU/memory containment guarantees.
+All runs below used disposable Windows Server 2022, pinned Go 1.27.3, GOAMD64=v1
+and CGO disabled. No end-user toolchain or local dependency setup was requested.
 
-## Execution blocker and remaining acceptance
+| Candidate / run | Result |
+|---|---|
+| Initial 3c03df2, [42073757825](https://github.com/aataat12/immich-clone/actions/runs/42073757825), job127408339355 | Focused/full internal/CLI tests, module verification, vet and build passed. Initial 40MP PNG16+rotation allocated 1120197168 bytes in 2.305 s. |
+| 2c7b511, [42074997508](https://github.com/aataat12/immich-clone/actions/runs/42074997508), job127412730456 | Typed rotation, TIFF strip/tile/count/expansion/cancellation and large encoded JPEG parity passed; full tests and actual media matrix passed. |
+| 5605eeb7e91e12129260ff2439312af579dbcdda, [42075603671](https://github.com/aataat12/immich-clone/actions/runs/42075603671), job127414841336 | Padding-amplification guard passed focused/full tests, vet/build and the complete configured media/restore matrix. |
+| d9f4146a1e0138e80d0e21a50f7b83cad2691439, [42076364254](https://github.com/aataat12/immich-clone/actions/runs/42076364254), job127417509993 | Final catalog display/reanalysis bounds and all focused/full internal/CLI tests, module verification, vet/build passed. Native steps intentionally reused the preceding passing run: no native/media/rotation code changed. |
 
-No local Go toolchain is available. Initial candidate 3c03df2 passed Windows Server
-2022 run42073757825/job127408339355: focused tests, full internal/command tests,
-module verification, vet and build. Initial 40MP PNG16+rotation took 2.305s and
-allocated 1120197168 bytes (TotalAlloc, not peak RSS). The next revision reduces
-rotation allocation, preserves large encoded JPEG previews, and adds adversarial
-TIFF, catalog no-write refusal and configured native/media/restore checks; those
-changes are pending execution. The baseline catalog probe42073757656 also passed.
-The user explicitly authorized uploading this SEC-06 source/test payload to a
-separate branch of the existing public project repository and running Windows
-checks on November 5. Earlier automatic-review rejections were not bypassed.
+Final finite resource probe: actual 40MP PNG16 decode+rotation took 1.078 s and
+allocated 480197136 bytes, versus 1120197168 initially. These are Go TotalAlloc
+measurements, not process peak RSS, a speed guarantee or a hard memory boundary.
+A 1 MiB compressed TIFF stream advertising one pixel allocated 49208 bytes;
+1024 repeated strips stopped after eight payload reads in deterministic
+cancellation testing. Oversized/overflowing dimensions, tile/strip counts,
+truncated JPEG/PNG/GIF/BMP/TIFF, read/rotation cancellation, original hashes,
+persisted failed previews and subsequent valid preview/AI work all passed.
 
-Upload procedure: refresh the candidate snapshot, verify each uploaded blob
-against its local Git hash, then move only the separate branch with an expected
-head check. Inspect focused/full results, correct
-failures, retain exact evidence and canonical formatting. Do not claim SEC-06
-closure based only on this corpus: evaluate actual parent resource behavior,
-remaining malformed native media/application integration, cancellation/usability
-and original/restore parity. Existing patched NR-01 evidence is reused; SEC-05
-native authority and SEC-08 frozen installer/Windows 10 acceptance remain separate.
-No new charges, local setup, release or Windows 10 certification is implied.
+Configured production-media checks passed 24 independently generated image
+fixtures, three reduced public camera EXIF samples, all eight JPEG transforms,
+DateTimeOriginal precedence, progressive/CMYK JPEG, PNG color/alpha/palette/gray,
+BMP, animated GIF first frame, four compressed/multipage TIFF first pages and
+12MP JPEG, with aliases/original hashes and independently restored regenerated
+previews. Actual pinned FFmpeg/ffprobe rejected malformed HEIC/MP4/MOV containers,
+then resumed valid video thumbnail/probe/frame work and recovered after
+cancellation. Audio-first and nonzero-start timestamp fixtures passed. Existing
+native process/memory/output/death controls passed in the full Windows suite;
+existing patched NR-01 inference/application evidence remains opencv-nr01.md.
+
+Initial actual installer/trust regression42073757491 also passed; catalog probes
+42073757656/42074997951/42075603808 passed. The final catalog baseline was checked
+separately before closeout. The runner's canonical Go formatting was copied back;
+all 14 formatted-file hashes match its diff receipt. No behavioral edits follow
+final validation. User-authorized worker review/tests and independent TIFF guard
+review are complete. Uploaded blobs are verified against local Git object hashes.
+Source/test/doc uploads exclude private media, support logs and personal machine/
+network details; normal existing GitHub account attribution remains Git metadata.
+
+## Limits retained in the original worklist
+
+Parent decoders remain in the Go service with finite byte/pixel/block limits and
+cooperative cancellation; these controls do not claim an OS-enforced parent
+memory/CPU quota. Native children retain their existing finite JobObject/output/
+time controls, but filesystem/network authority remains original SEC-05, not
+cleared by hostile-media tests. Unknown future parser defects require servicing.
+SEC-03 concurrency and SEC-08 frozen combined installer/full-provider/rollback/
+restore/browser and final Windows 10 gates remain unchanged. Server results do
+not certify Windows 10. No release, main merge, paid resource or Group 3 work.

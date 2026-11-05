@@ -1,37 +1,45 @@
 package web
 
 import (
+	"bytes"
 	"encoding/json"
- "bytes"
- "unicode/utf8"
 	"errors"
 	"image/png"
 	"immichclone/internal/library"
 	"io"
 	"net/http"
 	"strings"
+	"unicode/utf8"
 )
 
 // Read through EOF before decoding so invalid UTF-8 cannot be silently replaced
 // by encoding/json and oversized/trailing input cannot hide after a valid prefix.
 func boundedJSON(w http.ResponseWriter, r *http.Request, limit int64, out any) error {
- r.Body = http.MaxBytesReader(w, r.Body, limit)
- raw, err := io.ReadAll(r.Body)
- if err != nil { return err }
- if !utf8.Valid(raw) { return errors.New("invalid JSON encoding") }
- d := json.NewDecoder(bytes.NewReader(raw))
- d.DisallowUnknownFields()
- if err = d.Decode(out); err != nil { return err }
- var extra any
- if !errors.Is(d.Decode(&extra), io.EOF) { return errors.New("trailing JSON data") }
- return nil
+	r.Body = http.MaxBytesReader(w, r.Body, limit)
+	raw, err := io.ReadAll(r.Body)
+	if err != nil {
+		return err
+	}
+	if !utf8.Valid(raw) {
+		return errors.New("invalid JSON encoding")
+	}
+	d := json.NewDecoder(bytes.NewReader(raw))
+	d.DisallowUnknownFields()
+	if err = d.Decode(out); err != nil {
+		return err
+	}
+	var extra any
+	if !errors.Is(d.Decode(&extra), io.EOF) {
+		return errors.New("trailing JSON data")
+	}
+	return nil
 }
 func organizationInput(w http.ResponseWriter, r *http.Request, out any) bool {
- if boundedJSON(w,r,64<<10,out) != nil {
-  http.Error(w,"invalid review request",400)
-  return false
- }
- return true
+	if boundedJSON(w, r, 64<<10, out) != nil {
+		http.Error(w, "invalid review request", 400)
+		return false
+	}
+	return true
 }
 
 func (s *Server) organizationHTTP(w http.ResponseWriter, r *http.Request) bool {

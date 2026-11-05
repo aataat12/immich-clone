@@ -1038,3 +1038,18 @@ retirement, normal/fresh/rollback/uninstall and SEC01 compatibility. Pinned Go's
 formatter canonicalized source before this validation; its exact formatting is
 saved in the checkpoint. Full prior-release/provider/concurrency integration and
 Windows10 remain separate. No end-user SDK or local setup is requested; keep0.1.39.
+
+
+## SEC-06 parent and media input validation
+
+No new dependency/provider/model/runtime/schema. Pinned Go1.27.3/x-image0.47.0
+TIFF parser now consumes bounded context-checked random reads; a finite padded-
+tile budget precedes Decode. Typed Go pixel access retains orientation parity
+while reducing measured40MP PNG16+rotation TotalAlloc1120197168 to480197136 bytes.
+Windows Server2022 final d9f4146/run42076364254/job127417509993 passed focused/full
+internal/CLI tests, modverify, vet/build. Prior5605eeb/run42075603671/job127414841336
+passed the final media code plus actual pinned FFmpeg malformed/recovery checks,
+24 independent image fixtures and regenerated independent restores. Final catalog
+bounds reuse that unchanged media evidence. Full receipt/limits: sec06-input-hardening.md.
+Canonical formatted-file hashes match runner evidence. Server is not Windows10;
+no published installer/dependency setup/new cost. SEC06 closes in candidate only.

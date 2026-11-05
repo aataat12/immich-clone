@@ -11,7 +11,8 @@ workers or new charges are authorized. Final target acceptance remains distinct.
 These are the original eight items. Keep these IDs and titles stable. New findings
 belong under the relevant item; genuinely additional work gets a new explicit ID,
 never a replacement list. A diagnostic or source review alone cannot close an item.
-Security scope progress: **4 closed, 4 open**. SEC-02 closed in the validated
+Security scope progress: **5 closed, 3 open**. SEC-06 closed in the validated
+unpublished input-hardening candidate; see sec06-input-hardening.md. SEC-02 closed in the validated
 unpublished milestone7 candidate; see installer-trust-milestone7.md. Original SEC-04 protection remains
 implemented/validated; the later normal-restore observation is separately recorded
 as deferred Group 3, not represented as a demonstrated security-limit failure.
@@ -30,7 +31,7 @@ of those findings is not implied. Release delivery is separately item 8.
 | SEC-03 | Filesystem boundaries | Open | Protect against concurrent junction/reparse replacement during privileged operations; static preflight does not close this item. |
 | SEC-04 | Hostile backup limits | Closed — security protections validated; Group 2 further mitigation paused | Aggregate/catalog/process protections remain enforced and passed hostile/valid controls. R-RESTORE-01 is separate deferred Group 3 reliability evidence; no root-cause fix is claimed. |
 | SEC-05 | Native worker isolation | Open | Enforce required-input/scratch-only authority; current Windows canaries confirm same-token secret/catalog/original access remains possible despite working resource limits. A probe is not a fix. |
-| SEC-06 | Remaining input review | Open | Complete malformed media/filename/metadata/tag/catalog review and applicable negative tests; parent Go decoding is included. NR-01 has a patched, native/application-validated candidate (opencv-nr01.md); final installer acceptance remains SEC-08. |
+| SEC-06 | Remaining input review | Closed — implemented and Windows-validated candidate | Malformed media/filename/metadata/tag/catalog and parent Go review/mitigation passed negative and valid controls, actual native/compatibility/restore checks and measured parent decoding. See sec06-input-hardening.md. NR-01 patched-provider evidence retained; final combined installer/target acceptance remains SEC-08. |
 | SEC-07 | Review closeout | Closed — complete review and executed controls | Complete threat-model/applicability checklist, dependency/secret-scan coverage record, residual-risk decisions and update/recheck procedure. |
 | SEC-08 | Release validation | Open | Validate the combined real installer against actual prior package, injected failure/rollback, full providers, backup/restore/browser and applicable Windows 10 gates. |
 

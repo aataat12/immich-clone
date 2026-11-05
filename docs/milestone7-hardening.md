@@ -28,12 +28,12 @@ security deferrals. No workers or new charges are authorized.
 | Safe upgrades: SEC-02 | Staged helper token/sharing and static code trust controls plus genuine prior-release/full-provider/rollback passed. See installer-trust-milestone7.md. | Closed in validated unpublished candidate; SEC-03 races and SEC-08 final gates remain separate. |
 | Filesystem boundaries: SEC-03 | Concurrent junction/reparse replacement; static checks are insufficient. | Active under explicit milestone7 authorization; implementation/evidence remains. |
 | Native isolation: SEC-05 | Same-token children retain service-readable authority beyond required input/scratch. | Active under explicit milestone7 authorization; implementation/evidence remains. |
-| Remaining input review: SEC-06 | Full declared malformed media/filename/metadata/tag/catalog review, including parent Go decoding. | Active under explicit milestone7 authorization; review/mitigation remains. |
+| Remaining input review: SEC-06 | Declared malformed media/filename/metadata/tag/catalog and parent Go controls passed negative/valid and actual media/restore checks; see sec06-input-hardening.md. | Closed in validated unpublished candidate; final release/target gates remain SEC-08. |
 | Release validation: SEC-08 | Final target/clean-install/reboot and broader acceptance gates; routine prototype gates are already covered above. | Open and authorized; final target gates remain with milestone 8. |
 
 Milestone 7 is **in progress, not delivered**. No delivered release number is assigned.
-Current original security status is **4 closed / 4 open**: SEC-01/02/04/07 closed;
-SEC-03/05/06/08 open. SEC-02 is validated in the unpublished candidate. Group 1 has no demonstrated open original item; all eight
+Current original security status is **5 closed / 3 open**: SEC-01/02/04/06/07 closed;
+SEC-03/05/08 open. SEC-02 is validated in the unpublished candidate. Group 1 has no demonstrated open original item; all eight
 are currently Group 2. New issues remain Group 3, record only.
 
 ## Original scope decision (now approved)

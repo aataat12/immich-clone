@@ -1,14 +1,22 @@
 # Current status
 
-## November 5, 2026: SEC-06 candidate, Windows validation pending
+## November 5, 2026: SEC-06 mitigation accepted in unpublished candidate
 
-Parent decode/rotation, filename/metadata/tag, JSON and catalog hardening changes
-and synthetic negative/valid tests are prepared. [Scope and execution blocker](sec06-input-hardening.md).
-No Go toolchain is available locally; no compilation/test/resource acceptance is
-claimed. The user explicitly authorized this source/test payload upload to a separate
-branch of the existing public repository and Windows checks. Validation is
-pending; no compilation or resource acceptance is claimed. SEC-06 remains open, security4 closed/4 open,
-published0.1.39 unchanged. No new dependency/schema/provider/cost or PC action.
+SEC-06 is closed for the current authenticated local-import/catalog deployment.
+[Controls, exact evidence and limits](sec06-input-hardening.md). Final Windows
+Server2022 run42076364254/source d9f4146/job127417509993 passed focused/full tests,
+module verification, vet/build. Preceding5605eeb/run42075603671 passed the final TIFF
+padding guard plus actual native malformed media, the24-image compatibility
+matrix and independent restore. Typed rotation reduced the40MP probe from1.12GB
+to480MB TotalAlloc; this is not peakRSS or an OS parent quota. All14 canonical Go
+file hashes match the tested runner receipt. Worker review/tests complete.
+
+Original security count is **5 closed / 3 open**: SEC-01/02/04/06/07 closed in the
+validated candidate; SEC-03/05/08 remain open. Prior dated4/4 snapshots below are
+historical. Published0.1.39 is unchanged; no main merge, new installer/provider/
+dependency/schema/cost, Group3 work or PC action. Final Windows10 acceptance
+remains separate. The user authorized the separate public source/test branch;
+private media/logs and personal machine/network details were excluded.
 
 ## November 4, 2026: 0.1.39 local regression accepted; milestone 7 started
 

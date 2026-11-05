@@ -593,3 +593,13 @@
   Same outstanding row closes, forecast3 to2; remaining concurrency and genuine
   release/fullprovider/recovery rows unchanged. No release/provider/dependency/
   catalog-schema/cost/Group3 work or Windows10/physical-powerloss certification.
+
+
+- November5 SEC06: retain supported formats and existing JPEG/PNG preview4GiB /
+  parentAI64MiB encoded limits. Share overflow-safe40MP preflight and preserve
+  cancellation through TIFF random reads, with40MP+1MP padded-tile budget before
+  upstream decoding. Use typed rotation to avoid per-pixel allocation. Validate
+  catalog input before repairs and in read-only recovery; retain4096 alias parity
+  including JSON escaping. Actual Windows negative/normal/native/restore checks
+  passed (sec06-input-hardening.md). Same original SEC06 closes; SEC03/05/08 remain.
+  No new process/provider/schema/dependency/cost, release or Windows10 claim.

@@ -1,3 +1,8 @@
+> November 5, 2026 update: SEC-06 input/parent-decoder mitigation is implemented
+> and Windows-validated in the unpublished candidate; see [SEC-06 evidence](sec06-input-hardening.md).
+> Earlier open SEC-06/WI-02 rows below are historical. SEC-03/05/08 remain open;
+> final installer/Windows 10 acceptance is unchanged.
+
 # SEC-07 independent verification — 2026-11-02
 
 This is the independent evidence companion to [the review closeout](security-review-closeout.md). It reviews original SEC-07, not the completion of SEC-02/03/05/06/08 or Windows 10 certification. The review must retain every unresolved mitigation as an owned closure gate. A clean signature/advisory scan does not establish that the application has no vulnerabilities.
