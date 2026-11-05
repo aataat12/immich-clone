@@ -111,7 +111,7 @@ while (Get-Process -Id $args[0] -ErrorAction SilentlyContinue) {
     $script.Replace('__P__',$p).Replace('__O__',$o).Replace('__R__',$r).Replace('__U__',$u) | Set-Content -LiteralPath $actor
     $credential = [PSCredential]::new(($env:COMPUTERNAME+'\'+$ordinaryUser),(ConvertTo-SecureString $ordinaryPassword -AsPlainText -Force))
     $process = Start-Process $script:setup -WindowStyle Hidden -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$Application+'"'),('/STATE="'+$State+'"')) -PassThru
-    $actorProcess = Start-Process powershell.exe -Credential $credential -ArgumentList @('-NoProfile','-File',$actor,[string]$process.Id) -PassThru
+    $actorProcess = Start-Process powershell.exe -Credential $credential -ArgumentList @('-NoProfile','-File',('"'+$actor+'"'),[string]$process.Id) -PassThru
     try {
         $process.WaitForExit()
         $process.Refresh()
