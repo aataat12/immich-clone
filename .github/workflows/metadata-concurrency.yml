@@ -1,0 +1,49 @@
+name: SEC-03 separate-account native metadata concurrency
+on:
+  push:
+    branches: ['work/sec03-metadata-concurrency']
+    paths:
+      - '.github/workflows/metadata-concurrency.yml'
+      - 'scripts/Test-InstallerMetadataConcurrency.ps1'
+      - 'internal/installerfiles/**'
+permissions:
+  contents: read
+jobs:
+  metadata-concurrency:
+    runs-on: windows-2022
+    timeout-minutes: 7
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Verify and build native test fixture
+        shell: pwsh
+        run: |
+          go mod verify
+          if ($LASTEXITCODE -ne 0) { throw 'Dependency verification failed' }
+          gofmt -w internal/installerfiles/upgrade_windows.go internal/installerfiles/metadata_concurrency_windows_test.go
+          Write-Host 'CANONICAL_FORMAT_BEGIN'
+          git diff --no-ext-diff -- internal/installerfiles
+          Write-Host 'CANONICAL_FORMAT_END'
+          go test -mod=readonly -v -count=1 -timeout=120s ./internal/installerfiles
+          if ($LASTEXITCODE -ne 0) { throw 'Native installer regressions failed' }
+          go vet ./internal/installerfiles ./cmd/installerfiles
+          if ($LASTEXITCODE -ne 0) { throw 'Native installer vet failed' }
+          go build -mod=readonly -o "$env:RUNNER_TEMP/metadata-helper.exe" ./cmd/installerfiles
+          if ($LASTEXITCODE -ne 0) { throw 'Native helper build failed' }
+          go test -mod=readonly -c -o "$env:RUNNER_TEMP/metadata-tests.exe" ./internal/installerfiles
+          if ($LASTEXITCODE -ne 0) { throw 'Native test fixture build failed' }
+      - name: Execute actual separate-account attempts and held retirement barrier
+        shell: powershell
+        run: |
+          $tokens=$null;$errors=$null
+          $null=[Management.Automation.Language.Parser]::ParseFile((Resolve-Path scripts/Test-InstallerMetadataConcurrency.ps1),[ref]$tokens,[ref]$errors)
+          if ($errors.Count) { throw 'Fixture parser failed' }
+          ./scripts/Test-InstallerMetadataConcurrency.ps1 -InstallerFiles "$env:RUNNER_TEMP/metadata-helper.exe" -NativeTests "$env:RUNNER_TEMP/metadata-tests.exe"
+          if ($LASTEXITCODE -ne 0) { throw 'Separate-account metadata checkpoint failed' }

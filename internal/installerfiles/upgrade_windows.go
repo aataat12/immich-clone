@@ -226,7 +226,13 @@ func BeginUpgrade(app, data, root string, hadService bool) (err error) {
 // retireUpgrade admits only fixed metadata and numbered flat backup leaves.
 // All surviving objects are held and audited before the first deletion. A valid
 // terminal record remains until all payload/other metadata deletion completes.
-func retireUpgrade(d *winfs.Directory) (err error) {
+func retireUpgrade(d *winfs.Directory) error {
+    return retireUpgradeWithHook(d, nil)
+}
+
+// The nil production hook leaves the retirement protocol unchanged. Package
+// tests can stop at held-object deletion boundaries without a public bypass.
+func retireUpgradeWithHook(d *winfs.Directory, beforeDelete func(int) error) (err error) {
 	names, e := d.Names()
 	if e != nil {
 		return e
@@ -312,7 +318,10 @@ func retireUpgrade(d *winfs.Directory) (err error) {
 			return e
 		}
 	}
-	for _, f := range files {
+	for i, f := range files {
+        if beforeDelete != nil {
+            if e = beforeDelete(i); e != nil { return e }
+        }
 		if e = f.n.Delete(); e != nil {
 			return e
 		}
