@@ -72,14 +72,17 @@ exit 0
 }
 function Run-SetupMetadataRace([string]$Application,[string]$State) {
     $transaction = $Application+'-upgrade-recovery'
+    $control = Join-Path $root 'metadata-race-control'
+    New-Item -ItemType Directory -Path $control | Out-Null
+    Native icacls @($control,'/grant',('*'+$ordinarySid+':(OI)(CI)M'))
     $outside = Join-Path $root 'metadata-race-outside.txt'
-    $actor = Join-Path $root 'metadata-race-actor.ps1'
-    $result = Join-Path $root 'metadata-race-result.json'
+    $actor = Join-Path $control 'metadata-race-actor.ps1'
+    $result = Join-Path $control 'metadata-race-result.json'
     [IO.File]::WriteAllText($outside,'outside-sentinel')
     if (Test-Path -LiteralPath $transaction) { Remove-Item -LiteralPath $transaction -Recurse -Force }
     $pending = Join-Path $transaction 'upgrade-pending.json'
     $payload = Join-Path $transaction 'payload'
-    $p = $pending.Replace("'","''"); $o = $outside.Replace("'","''"); $r = $result.Replace("'","''"); $u = $ordinaryUser.Replace("'","''")
+    $p = $pending.Replace("'","''"); $o = $outside.Replace("'","''"); $r = $result.Replace("'","''"); $u = $ordinarySid.Replace("'","''")
     $script = @'
 $attempts=0; $writeSuccess=0; $renameSuccess=0; $linkSuccess=0; $aclSuccess=0
 while (Get-Process -Id $args[0] -ErrorAction SilentlyContinue) {
@@ -96,7 +99,7 @@ while (Get-Process -Id $args[0] -ErrorAction SilentlyContinue) {
       if ($LASTEXITCODE -eq 0) { $linkSuccess++ }
     } catch {}
     try {
-      & icacls.exe '__P__' /grant ('__U__'+':F') | Out-Null
+      & icacls.exe '__P__' /grant ('*'+ '__U__'+':F') | Out-Null
       if ($LASTEXITCODE -eq 0) { $aclSuccess++ }
     } catch {}
   }
@@ -125,10 +128,13 @@ while (Get-Process -Id $args[0] -ErrorAction SilentlyContinue) {
     }
 }
 function Run-UninstallMetadataRace([string]$Application) {
-    $actor = Join-Path $root 'uninstall-metadata-actor.ps1'
-    $result = Join-Path $root 'uninstall-metadata-result.json'
+    $actor = Join-Path $control 'uninstall-metadata-actor.ps1'
+    $result = Join-Path $control 'uninstall-metadata-result.json'
     $target = Join-Path $Application 'Manage-Service.ps1'
     $journal = Join-Path $Application 'unins000.dat'
+    $control = Join-Path $root 'uninstall-metadata-control'
+    New-Item -ItemType Directory -Path $control | Out-Null
+    Native icacls @($control,'/grant',('*'+$ordinarySid+':(OI)(CI)M'))
     $outside = Join-Path $root 'uninstall-race-outside.txt'
     [IO.File]::WriteAllText($outside,'outside-sentinel')
     $t = $target.Replace("'","''"); $j = $journal.Replace("'","''"); $o = $outside.Replace("'","''"); $r = $result.Replace("'","''")
