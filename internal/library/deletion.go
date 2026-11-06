@@ -197,7 +197,9 @@ func (s *Store) DeleteHidden(ctx context.Context, id, confirmation string, added
 				return e
 			}
 		}
-		if e:=deleteAssetCuration(tx,id);e!=nil{return e}
+		if e := deleteAssetCuration(tx, id); e != nil {
+			return e
+		}
 		if e := markDeletedImports(ctx, tx, id); e != nil {
 			return e
 		}

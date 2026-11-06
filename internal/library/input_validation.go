@@ -13,7 +13,9 @@ var errCatalogInput = errors.New("invalid catalog input")
 // Validate authoritative display/input records before rebuilding derived indexes.
 // Structural bbolt validation and hard resource limits remain restore-worker work.
 func validateCatalogInput(tx *bolt.Tx) error {
- if e:=validateCuration(tx);e!=nil{return e}
+	if e := validateCuration(tx); e != nil {
+		return e
+	}
 	return tx.ForEach(func(name []byte, b *bolt.Bucket) error {
 		var walk func(*bolt.Bucket, int) error
 		walk = func(bucket *bolt.Bucket, depth int) error {

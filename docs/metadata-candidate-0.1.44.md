@@ -13,6 +13,8 @@ Organization bounds: UTF-8 title 256 bytes, album description 4096 bytes, captio
 16 KiB, notes 64 KiB, 1000 albums, 5000 members per album, 100000 memberships
 total and 64 MiB total serialized organization values. Existing backup/restore
 resource bounds are retained. These limits are enforced before committing writes.
+Metadata mutations require the same 16 MiB free-space reserve as recoverable
+deletion, so already exhausted storage is refused before database growth.
 
 The existing installer failure injection has bounded observation delays only
 when both IMMICH_INSTALL_TEST_FAILURE and IMMICH_CURATION_INSTALL_TEST equal 1.

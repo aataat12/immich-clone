@@ -294,7 +294,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.organizationHTTP(w, r) {
 		return
 	}
-	if s.curationHTTP(w,r){return}
+	if s.curationHTTP(w, r) {
+		return
+	}
 	if s.galleryHTTP(w, r) {
 		return
 	}
