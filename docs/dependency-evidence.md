@@ -1,5 +1,20 @@
 # Dependency and environment evidence
 
+## 0.1.44 selection and manual albums, November 6, 2026
+
+No new product dependency/provider/model. Full Windows Server 2022 run
+42254361898 passed all runnable Go/CLI regressions, vet/modules, actual bounded
+NTFS capacity recovery, LocalService/Edge, independent restoration with pending
+operations paused, and actual Setup/genuine 0.1.43 refusal/rollback for starting
+catalogs 1/2. The final service/browser run 42259007001 passed mixed photo/H264
+manual albums, selection/receipt/cancel/restart, actual playback cleanup,
+favorite-read retry and concurrent-client intent/text preservation at the same
+accepted canonical Go source. Desktop/narrow screenshots were inspected and
+downloaded artifact digests verified. Existing bundled provider artifacts and
+pinned test tooling were reused; no broader native quality or format claims.
+See selection-albums-0.1.44.md for exact source, package/checksum and reused scopes.
+These checkpoints do not certify Windows 10, reboot, endurance, signing or release.
+
 ## 0.1.44 viewer and metadata checkpoint, November 6, 2026
 
 No new product dependency/provider/model. Existing pinned Go, bbolt, bundled

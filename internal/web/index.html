@@ -177,7 +177,7 @@ async function refreshAlbumControls(sequence=null){
  const rows=[];let after='';do{const result=await(await request('/api/metadata/album-summaries?limit=100&after='+encodeURIComponent(after))).json();rows.push(...result.albums);after=result.next||'';}while(after);
  if(sequence!==null&&sequence!==loadSequence)return rows;const scope=galleryContext.query.get('album')||'',target=$('batchAlbum').value;$('albumScope').replaceChildren(new Option('All media',''));$('batchAlbum').replaceChildren(new Option('Choose target album',''));
  for(const row of rows){$('albumScope').add(new Option(row.album.title,row.album.id));$('batchAlbum').add(new Option(row.album.title,row.album.id));}
- $('albumScope').value=scope;$('batchAlbum').value=target;const row=rows.find(x=>x.album.id===scope);currentAlbum=row?.album||null;$('albumScopeInfo').replaceChildren();
+ $('albumScope').value=scope;$('batchAlbum').value=rows.some(row=>row.album.id===target)?target:'';const row=rows.find(x=>x.album.id===scope);currentAlbum=row?.album||null;$('albumScopeInfo').replaceChildren();
  if(row){const title=document.createElement('h2');title.textContent=row.album.title;const text=document.createElement('p');text.textContent=row.album.description+' · '+row.visible+' visible · '+row.hidden+' hidden members retained';$('albumScopeInfo').append(title,text);if(row.cover?.preview==='ready'){const img=new Image();img.src='/api/assets/'+row.cover.id+'/preview';img.alt='Album cover: '+row.cover.name;img.style.cssText='max-width:140px;max-height:100px';$('albumScopeInfo').append(img);}}
  $('editAlbum').hidden=!row;$('sort').querySelector('[value=manual]').disabled=!scope;
  return rows;

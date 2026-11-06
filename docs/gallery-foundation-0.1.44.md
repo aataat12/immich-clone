@@ -3,6 +3,11 @@
 Scope: implementation steps 1 and 2 only. Viewer controls/zoom/full screen and
 organization persistence are subsequent checkpoints. This is not a release.
 
+Subsequent checkpoints are accepted in viewer-metadata-0.1.44.md and
+selection-albums-0.1.44.md. Steps 5–6 extend the shared query with favorites,
+albums/manual order and semantic result snapshots, so unrelated preview/receipt
+writes no longer invalidate filtered paging. This earlier record is historical.
+
 ## Released baseline
 
 The public `v0.1.43-prototype` tag was independently resolved to

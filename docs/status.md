@@ -1,18 +1,26 @@
-## November 6, 2026: 0.1.44 steps 1–4 accepted development checkpoint
+## November 6, 2026: 0.1.44 steps 1–6 accepted development checkpoint
 
-The released baseline and shared gallery foundation remain accepted. Viewer
-previous/next across pages, keyboard controls, zoom/pan/Fit, full screen and
-current-card grid return are implemented. Catalog-3 favorites, albums and user
-text storage, bounded authenticated access, versioned export, independent restore,
-genuine 0.1.43 refusal and actual failed-upgrade recovery passed Windows Server
-2022 acceptance. See [viewer-metadata-0.1.44.md](viewer-metadata-0.1.44.md) for
-exact source, run 42226330751, artifacts, bounds and limitations.
+The released baseline, shared gallery and full viewer remain accepted. Selection
+now spans pages with exact target review, durable 25-item chunks, stop/cancel/
+resume and bounded receipts. Favorites work in grid, viewer and shared queries;
+custom tags, reversible hiding and album membership support batch actions.
+Flat manual albums support creation/edit/removal, descriptions, covers, hidden
+fallback, empty/multiple albums and accessible manual order. Album and membership
+removal preserve media. Shared semantic snapshots avoid resets from preview or
+receipt bookkeeping while still invalidating changed result metadata.
 
-Next: step 5 selection/batch behavior, followed by album and caption interfaces.
-New organization fields are stored through the API; their full user interfaces
-and gallery-search integration remain later work. No release or user-library
-migration occurred. Windows 10, reboot, endurance, signing and final release
-acceptance remain separate gates. Older checkpoint text below is historical.
+Windows Server 2022 full regressions/vet/NTFS, LocalService/Edge, lost-response
+and restart recovery, independent restore including paused work, genuine 0.1.43
+refusal and actual Setup rollback passed. Full run 42254361898 and final browser
+run 42259007001 provide the evidence. See
+[selection-albums-0.1.44.md](selection-albums-0.1.44.md) for exact source, hashes,
+contracts, retention and limits; earlier steps 3–4 remain in
+[viewer-metadata-0.1.44.md](viewer-metadata-0.1.44.md).
+
+Next: step 7 searchable captions/title/notes and source browsing, then step 8
+combined filter/calendar interfaces and final combined/release gates. No release
+or user-library migration occurred. Windows 10, reboot, endurance, signing and
+final release acceptance remain separate. Older checkpoint text is historical.
 
 ## November 5, 2026: 0.1.42 release candidate
 

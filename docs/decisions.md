@@ -1,5 +1,19 @@
 # Decisions
 
+- November 6, 2026: 0.1.44 steps 5–6 use explicit selections (maximum 500),
+  current-state exact-target review and durable 25-target transactions with
+  processed-count replay guards. Stop pauses; Cancel marks only pending targets
+  not attempted, preserving successes. Reopen/restore never resumes work
+  automatically. History is bounded to 64 receipts and 30-day availability, with
+  expired records pruned on new review and early completed retirement at capacity.
+  Keep receipts within catalog 3's existing 64 MiB organization budget. Album
+  incarnation/revision guards reject old drafts/batches after recreation. Use
+  shared favorite/album/manual-order queries and semantic result fingerprints;
+  cache only committed read state. Preserve originals, recognition provenance
+  and other albums on removal. Full Server run 42254361898 and final browser
+  42259007001 passed; see selection-albums-0.1.44.md. No new provider/dependency,
+  release or Windows 10/reboot/endurance/signing acceptance.
+
 - November 6, 2026: 0.1.44 steps 3–4 share the gallery query/snapshot for viewer
   navigation and page anchors. Catalog-3 organization is authoritative, separate
   from recognition and originals, and promoted only by a real new write. Preserve
