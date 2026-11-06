@@ -7,8 +7,8 @@ import (
 )
 
 type GalleryOrganization struct {
-	Favorite bool `json:"favorite"`
- Title string `json:"title,omitempty"`
+	Favorite bool   `json:"favorite"`
+	Title    string `json:"title,omitempty"`
 }
 
 func galleryOrganization(tx *bolt.Tx, id string) (GalleryOrganization, error) {

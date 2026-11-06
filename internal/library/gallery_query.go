@@ -14,19 +14,19 @@ import (
 type GalleryQuery struct {
 	SourceFolder string        `json:"source_folder,omitempty"`
 	ImportBatch  string        `json:"import_batch,omitempty"`
-	Favorite   string        `json:"favorite,omitempty"`
-	Album      string        `json:"album,omitempty"`
-	Sort       string        `json:"sort"`
-	Visibility string        `json:"visibility"`
-	Text       string        `json:"q,omitempty"`
-	Filename   string        `json:"filename,omitempty"`
-	Media      string        `json:"media,omitempty"`
-	People     GalleryLabels `json:"people,omitempty"`
-	Tags       GalleryLabels `json:"tags,omitempty"`
-	DateBasis  string        `json:"date_basis,omitempty"`
-	From       string        `json:"from,omitempty"`
-	Until      string        `json:"until,omitempty"`
-	NoCapture  bool          `json:"no_capture,omitempty"`
+	Favorite     string        `json:"favorite,omitempty"`
+	Album        string        `json:"album,omitempty"`
+	Sort         string        `json:"sort"`
+	Visibility   string        `json:"visibility"`
+	Text         string        `json:"q,omitempty"`
+	Filename     string        `json:"filename,omitempty"`
+	Media        string        `json:"media,omitempty"`
+	People       GalleryLabels `json:"people,omitempty"`
+	Tags         GalleryLabels `json:"tags,omitempty"`
+	DateBasis    string        `json:"date_basis,omitempty"`
+	From         string        `json:"from,omitempty"`
+	Until        string        `json:"until,omitempty"`
+	NoCapture    bool          `json:"no_capture,omitempty"`
 }
 
 // Exact case-insensitive labels; groups AND together. Exclude rejects any hit.
@@ -74,10 +74,14 @@ func normalizeGalleryLabels(group GalleryLabels) (GalleryLabels, error) {
 func (q GalleryQuery) Normalize() (GalleryQuery, error) {
 	if q.SourceFolder != "" && q.SourceFolder != "." {
 		folder, e := cleanRelative(q.SourceFolder)
-		if e != nil { return q, ErrGalleryInput }
+		if e != nil {
+			return q, ErrGalleryInput
+		}
 		q.SourceFolder = folder
 	}
-	if q.ImportBatch != "" && !validID(q.ImportBatch) { return q, ErrGalleryInput }
+	if q.ImportBatch != "" && !validID(q.ImportBatch) {
+		return q, ErrGalleryInput
+	}
 	if q.Favorite != "" && q.Favorite != "true" && q.Favorite != "false" {
 		return q, ErrGalleryInput
 	}
@@ -203,9 +207,13 @@ func (q GalleryQuery) matches(row gallerySearchRow) bool {
 	if q.ImportBatch != "" {
 		var ok bool
 		sources, ok = row.batches[q.ImportBatch]
-		if !ok { return false }
+		if !ok {
+			return false
+		}
 	}
-	if q.SourceFolder != "" && !galleryFolderMatches(sources, q.SourceFolder) { return false }
+	if q.SourceFolder != "" && !galleryFolderMatches(sources, q.SourceFolder) {
+		return false
+	}
 	if q.Favorite != "" && row.favorite != (q.Favorite == "true") {
 		return false
 	}

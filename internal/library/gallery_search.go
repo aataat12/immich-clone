@@ -83,7 +83,9 @@ func (s *Store) gallerySearchFor(tx *bolt.Tx) (*gallerySearchIndex, error) {
 	}); e != nil {
 		return nil, e
 	}
-	if e := index.recordImportSources(tx); e != nil { return nil, e }
+	if e := index.recordImportSources(tx); e != nil {
+		return nil, e
+	}
 	// Only assigned names are searchable; inferred suggestions never enter terms.
 	// Hidden media has its own searchable view without exposing it in the library.
 	if e := tx.Bucket([]byte(facesBucket)).ForEach(func(k, v []byte) error {

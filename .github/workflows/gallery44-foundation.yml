@@ -1,5 +1,5 @@
 name: Frameout 0.1.44 captions sources filters and calendar acceptance
-# Steps 5â€“6: frozen displayed favorite intent and complete mixed-album evidence.
+# Steps 7-8: reviewed text/source/calendar integration and delayed response guards.
 on:
   push:
     branches: ['work/release-0.1.44-foundation']

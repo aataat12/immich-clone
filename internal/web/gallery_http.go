@@ -14,9 +14,13 @@ func galleryRequest(r *http.Request) (library.GalleryQuery, error) {
 		return library.GalleryQuery{}, library.ErrGalleryInput
 	}
 	singles := map[string]bool{"source_folder": true, "import_batch": true, "favorite": true, "album": true, "sort": true, "visibility": true, "q": true, "filename": true, "media": true, "date_basis": true, "from": true, "until": true, "no_capture": true, "after": true, "limit": true, "asset": true, "snapshot": true}
-	if r.URL.Path == "/api/gallery/sources" { singles["source_after"] = true }
+	if r.URL.Path == "/api/gallery/sources" {
+		singles["source_after"] = true
+	}
 	if r.URL.Path == "/api/gallery/calendar" {
-		for _, name := range []string{"calendar_basis", "calendar_zone", "year", "month"} { singles[name] = true }
+		for _, name := range []string{"calendar_basis", "calendar_zone", "year", "month"} {
+			singles[name] = true
+		}
 	}
 	lists := map[string]bool{"person_any": true, "person_all": true, "person_exclude": true, "tag_any": true, "tag_all": true, "tag_exclude": true}
 	// Reject unsupported or ambiguous fields instead of silently broadening results.
@@ -29,7 +33,7 @@ func galleryRequest(r *http.Request) (library.GalleryQuery, error) {
 	if noCapture != "" && noCapture != "true" && noCapture != "false" {
 		e = library.ErrGalleryInput
 	}
-	q := library.GalleryQuery{SourceFolder:p.Get("source_folder"), ImportBatch:p.Get("import_batch"), Favorite: p.Get("favorite"), Album: p.Get("album"), Sort: p.Get("sort"), Visibility: p.Get("visibility"), Text: p.Get("q"), Filename: p.Get("filename"), Media: p.Get("media"), DateBasis: p.Get("date_basis"), From: p.Get("from"), Until: p.Get("until"), NoCapture: noCapture == "true", People: library.GalleryLabels{Any: p["person_any"], All: p["person_all"], Exclude: p["person_exclude"]}, Tags: library.GalleryLabels{Any: p["tag_any"], All: p["tag_all"], Exclude: p["tag_exclude"]}}
+	q := library.GalleryQuery{SourceFolder: p.Get("source_folder"), ImportBatch: p.Get("import_batch"), Favorite: p.Get("favorite"), Album: p.Get("album"), Sort: p.Get("sort"), Visibility: p.Get("visibility"), Text: p.Get("q"), Filename: p.Get("filename"), Media: p.Get("media"), DateBasis: p.Get("date_basis"), From: p.Get("from"), Until: p.Get("until"), NoCapture: noCapture == "true", People: library.GalleryLabels{Any: p["person_any"], All: p["person_all"], Exclude: p["person_exclude"]}, Tags: library.GalleryLabels{Any: p["tag_any"], All: p["tag_all"], Exclude: p["tag_exclude"]}}
 	if e != nil {
 		return q, e
 	}
@@ -51,7 +55,10 @@ func (s *Server) galleryHTTP(w http.ResponseWriter, r *http.Request) bool {
 	if r.URL.Path != "/api/gallery" && r.URL.Path != "/api/gallery/neighbors" && r.URL.Path != "/api/gallery/anchor" && r.URL.Path != "/api/gallery/sources" && r.URL.Path != "/api/gallery/calendar" {
 		return false
 	}
-	if r.Method != "GET" { w.WriteHeader(http.StatusMethodNotAllowed); return true }
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return true
+	}
 	q, e := galleryRequest(r)
 	if e != nil {
 		galleryError(w, e)
@@ -59,21 +66,52 @@ func (s *Server) galleryHTTP(w http.ResponseWriter, r *http.Request) bool {
 	}
 	p := r.URL.Query()
 	if r.URL.Path == "/api/gallery/sources" || r.URL.Path == "/api/gallery/calendar" {
-		if p.Has("after") || p.Has("asset") || p.Has("snapshot") { galleryError(w, library.ErrGalleryInput); return true }
-		if r.URL.Path == "/api/gallery/sources" {
-			limit := 100
-			if p.Has("limit") { limit, e = strconv.Atoi(p.Get("limit")) }
-			if e != nil { galleryError(w, library.ErrGalleryInput); return true }
-			result, e := s.Store.GallerySources(q, p.Get("source_after"), limit)
-			if e != nil { galleryError(w,e) } else { jsonResponse(w,result) }
+		if p.Has("after") || p.Has("asset") || p.Has("snapshot") {
+			galleryError(w, library.ErrGalleryInput)
 			return true
 		}
-		if p.Has("limit") { galleryError(w, library.ErrGalleryInput); return true }
+		if r.URL.Path == "/api/gallery/sources" {
+			limit := 100
+			if p.Has("limit") {
+				limit, e = strconv.Atoi(p.Get("limit"))
+			}
+			if e != nil {
+				galleryError(w, library.ErrGalleryInput)
+				return true
+			}
+			result, e := s.Store.GallerySources(q, p.Get("source_after"), limit)
+			if e != nil {
+				galleryError(w, e)
+			} else {
+				jsonResponse(w, result)
+			}
+			return true
+		}
+		if p.Has("limit") {
+			galleryError(w, library.ErrGalleryInput)
+			return true
+		}
 		year, month := 0, 0
-		if p.Has("year") { year, e = strconv.Atoi(p.Get("year")); if e != nil || year < 1 { galleryError(w, library.ErrGalleryInput); return true } }
-		if p.Has("month") { month, e = strconv.Atoi(p.Get("month")); if e != nil || month < 1 { galleryError(w, library.ErrGalleryInput); return true } }
+		if p.Has("year") {
+			year, e = strconv.Atoi(p.Get("year"))
+			if e != nil || year < 1 {
+				galleryError(w, library.ErrGalleryInput)
+				return true
+			}
+		}
+		if p.Has("month") {
+			month, e = strconv.Atoi(p.Get("month"))
+			if e != nil || month < 1 {
+				galleryError(w, library.ErrGalleryInput)
+				return true
+			}
+		}
 		result, e := s.Store.GalleryCalendar(q, p.Get("calendar_basis"), p.Get("calendar_zone"), year, month)
-		if e != nil { galleryError(w,e) } else { jsonResponse(w,result) }
+		if e != nil {
+			galleryError(w, e)
+		} else {
+			jsonResponse(w, result)
+		}
 		return true
 	}
 	if r.URL.Path == "/api/gallery/anchor" {
