@@ -1,4 +1,4 @@
-name: Frameout 0.1.44 baseline and shared gallery foundation
+name: Frameout 0.1.44 viewer and metadata acceptance
 on:
   push:
     branches: ['work/release-0.1.44-foundation']
@@ -46,7 +46,7 @@ jobs:
         if: ${{ !contains(github.event.head_commit.message, '[browser-only]') }}
         shell: pwsh
         run: |
-          $files=@('internal/library/gallery.go','internal/library/gallery_query.go','internal/library/gallery_search.go','internal/library/gallery_foundation_test.go','internal/web/gallery_http.go','internal/web/gallery_foundation_test.go','internal/web/server.go')
+          $files=@('internal/library/gallery.go','internal/library/gallery_query.go','internal/library/gallery_search.go','internal/library/gallery_foundation_test.go','internal/library/gallery_anchor.go','internal/library/gallery_anchor_test.go','internal/web/gallery_http.go','internal/web/gallery_foundation_test.go','internal/web/server.go')
           gofmt -w @files
           if ($LASTEXITCODE -ne 0) {throw 'Formatting failed'}
           Write-Host 'GALLERY44_FORMAT_BEGIN'
@@ -69,13 +69,15 @@ jobs:
           $env:IMMICH_BROWSER_MODULE="$env:RUNNER_TEMP/gallery44-browser/node_modules/playwright"
           $env:IMMICH_BROWSER_OUTPUT="$env:GITHUB_WORKSPACE/browser-evidence"
           New-Item -ItemType Directory -Path $env:IMMICH_BROWSER_OUTPUT|Out-Null
+          $env:IMMICH_VIEWER_VIDEO=Join-Path $env:RUNNER_TEMP 'gallery44-video.mp4'
+          ./scripts/New-MediaFixture.ps1 -Destination $env:IMMICH_VIEWER_VIDEO
           ./scripts/Test-Gallery44Foundation.ps1
       - name: Retain only canonical patch and synthetic screenshots
         if: always()
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force gallery44-evidence|Out-Null
-          git diff --no-ext-diff -- internal/library/gallery.go internal/library/gallery_query.go internal/library/gallery_search.go internal/library/gallery_foundation_test.go internal/web/gallery_http.go internal/web/gallery_foundation_test.go internal/web/server.go | Set-Content -Encoding utf8NoBOM gallery44-evidence/canonical.patch
+          git diff --no-ext-diff -- '*.go' | Set-Content -Encoding utf8NoBOM gallery44-evidence/canonical.patch
       - if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
