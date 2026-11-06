@@ -224,9 +224,14 @@ try {
     Stop-Service ImmichClone
     & $previousBinary -mode verify -data $state
     Assert ($LASTEXITCODE -eq 0) 'actual previous executable verifies catalog containing a pending intent'
-    $oldProcess=$null
+    # 0.1.41 refuses elevated direct serve; exercise the real previous binary
+    # under the existing LocalService registration on this disposable host.
+    $currentBinary=Join-Path $root 'current-before-older-writer.exe'
+    Copy-Item "$app/immichclone.exe" $currentBinary
     try {
-        $oldProcess=Start-Process $previousBinary -ArgumentList @('-mode','serve','-data',('"'+$state+'"')) -PassThru -RedirectStandardOutput "$root/older-writer.out" -RedirectStandardError "$root/older-writer.err"
+        Copy-Item $previousBinary "$app/immichclone.exe" -Force
+        Assert ((Get-FileHash "$app/immichclone.exe").Hash -eq (Get-FileHash $previousBinary).Hash) 'older-writer service uses exact published previous executable'
+        Start-Service ImmichClone
         $oldReady=$false
         for($i=0;$i -lt 40;$i++) {
             try { if((Invoke-RestMethod http://127.0.0.1:2283/health -TimeoutSec 2).build -eq '0.1.41-prototype'){$oldReady=$true;break} } catch {}
@@ -244,7 +249,9 @@ try {
         Assert (@($oldPending.pending | Where-Object {$_.id -eq $deleteID -and $_.status -eq 'pending'}).Count -eq 1 -and @($oldAssets | Where-Object id -eq $deleteID).Count -eq 0) 'previous writer preserves the intent without republishing the removed catalog item'
         Assert ((Get-FileHash "$state/originals/$deleteID").Hash -eq (Get-FileHash $oldSource).Hash) 'rejected previous-writer import preserves pending original bytes'
     } finally {
-        if($oldProcess -and !$oldProcess.HasExited){Stop-Process -Id $oldProcess.Id -Force;$null=$oldProcess.WaitForExit(10000)}
+        Stop-Service ImmichClone -Force -ErrorAction SilentlyContinue
+        Copy-Item $currentBinary "$app/immichclone.exe" -Force
+        Assert ((Get-FileHash "$app/immichclone.exe").Hash -eq (Get-FileHash $currentBinary).Hash) 'older-writer fixture restores exact candidate executable'
         Start-Service ImmichClone
     }
     Remove-Item -LiteralPath $deleteBlock

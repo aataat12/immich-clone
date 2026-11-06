@@ -1,4 +1,5 @@
 name: Release 0.1.42 combined acceptance
+# Prior-writer fixture uses real LocalService because 0.1.41 refuses elevated serve.
 # Prototype0.1.42 delivery: genuine0.1.41 upgrade/rollback, full providers and independent recovery.
 on:
   push:
