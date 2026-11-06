@@ -125,7 +125,7 @@ func TestAutomaticNamesReanalysisKeepsExistingCorrections(t *testing.T) {
 	before:=automaticLabel(t,s,face)
 	if e:=s.ControlReanalysis(id,"start");e!=nil{t.Fatal(e)}
 	if _,e:=s.ProcessAnalysis(context.Background());e!=nil{t.Fatal(e)}
-	if e:=s.ControlReanalysis(id,"apply");e!=nil{t.Fatal(e)}
+	if e:=s.ApplyReanalysis(context.Background(),id);e!=nil{t.Fatal(e)}
 	after:=automaticLabel(t,s,face)
 	if before!=after{t.Fatal("reanalysis altered explicit correction or dismissal")}
 }

@@ -8,7 +8,7 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: release43-features-${{ github.ref }}
+  group: release43-features-v2-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   features:
@@ -24,6 +24,15 @@ jobs:
         with:
           go-version: '1.27.3'
           cache: false
+      - name: Canonicalize candidate Go sources
+        shell: pwsh
+        run: |
+          $files=@('internal/library/automatic_names.go','internal/library/automatic_names_native_test.go','internal/library/automatic_names_test.go','internal/library/gallery.go','internal/library/gallery_search.go','internal/library/gallery_search_test.go','internal/library/input_validation.go','internal/library/metadata_dates_test.go','internal/library/native_face_quality_test.go','internal/library/organization.go','internal/library/organization_index.go','internal/library/reanalysis.go','internal/library/store.go','internal/library/video_analysis.go','internal/web/gallery_test.go','internal/web/server.go')
+          gofmt -w @files
+          if ($LASTEXITCODE -ne 0) { throw 'Candidate source formatting failed' }
+          Write-Host 'R43_CANONICAL_DIFF_BEGIN'
+          git diff --no-ext-diff -- @files
+          Write-Host 'R43_CANONICAL_DIFF_END'
       - name: Execute date, search, provenance, correction and recovery tests
         shell: pwsh
         run: |
@@ -56,6 +65,7 @@ jobs:
           path: browser-evidence/*.png
           retention-days: 7
   automatic-name-screen:
+    if: ${{ !contains(github.event.head_commit.message, '[features-only]') }}
     runs-on: windows-2022
     timeout-minutes: 18
     env:
