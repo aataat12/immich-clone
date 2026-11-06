@@ -31,9 +31,10 @@ func seedGalleryFoundation(t *testing.T,s *Store,n int) {
    names:=[]string{"Alice"}
    if i%2==0 {names=append(names,"Bob")}
    if i%3==0 {names=[]string{"Alicia"}}
+   embedding:=make([]float64,128);embedding[0]=1
    for j,name:=range names {
     faceID:=fmt.Sprintf("%064x",100000+i*10+j)
-    if e:=writeJSON(tx.Bucket([]byte(facesBucket)),faceID,StoredFace{ID:faceID,AssetID:id,Box:[]float64{.1,.1,.2,.2},Provider:"synthetic"});e!=nil{return e}
+    if e:=writeJSON(tx.Bucket([]byte(facesBucket)),faceID,StoredFace{ID:faceID,AssetID:id,Box:[]float64{.1,.1,.2,.2},Embedding:embedding,Provider:"synthetic"});e!=nil{return e}
     label:=FaceLabel{Name:name,Source:"manual"}
     if i%4==0 {label.Source="automatic";label.Policy=automaticNamePolicyID;label.Score=.99;if e:=requireAutomaticCatalog(tx);e!=nil{return e}}
     if i%11==0 {label.Dismissed=true}
@@ -119,9 +120,14 @@ func TestGalleryFoundationValidation(t *testing.T) {
   func(q *GalleryQuery){q.People.All=[]string{""}},func(q *GalleryQuery){q.From="2024-01-01T00:00:00"},
   func(q *GalleryQuery){q.DateBasis="capture";q.From="2024-02-30T00:00:00"},
   func(q *GalleryQuery){q.DateBasis="upload";q.From="2024-01-01T00:00:00"},
+  func(q *GalleryQuery){q.DateBasis="upload";q.From="0001-01-01T00:00:00+01:00"},
   func(q *GalleryQuery){q.DateBasis="capture";q.From="2025-01-01T00:00:00";q.Until="2024-01-01T00:00:00"},
   func(q *GalleryQuery){q.NoCapture=true;q.DateBasis="capture"},
  } {q:=valid;change(&q);if _,e:=q.Normalize();!errors.Is(e,ErrGalleryInput){b,_:=json.Marshal(q);t.Fatal(string(b),e)}}
+ for _,captured:=range []string{"","invalid","2024-02-29T12:00:00.5"} {
+  q:=valid;q.NoCapture=true
+  if !q.matches(gallerySearchRow{captured:captured}) {t.Fatal("malformed capture must be missing",captured)}
+ }
 }
 
 func TestGalleryFoundationFilteredScale(t *testing.T) {

@@ -76,7 +76,11 @@ func (q GalleryQuery) Normalize() (GalleryQuery,error) {
   parsed,err:=time.Parse(layout,*pair.value)
   if err!=nil||parsed.Year()<1||parsed.Year()>9999 {return q,ErrGalleryInput}
   if q.DateBasis=="capture"&&parsed.Format(layout)!=*pair.value {return q,ErrGalleryInput}
-  if q.DateBasis=="upload" {*pair.value=parsed.UTC().Format(time.RFC3339Nano)}
+  if q.DateBasis=="upload" {
+   parsed=parsed.UTC()
+   if parsed.Year()<1||parsed.Year()>9999{return q,ErrGalleryInput}
+   *pair.value=parsed.Format(time.RFC3339Nano)
+  }
   *pair.parsed=parsed
  }
  if q.From!=""&&q.Until!=""&&!from.Before(until){return q,ErrGalleryInput}
@@ -105,9 +109,10 @@ func (q GalleryQuery) matches(row gallerySearchRow) bool {
  if q.Media=="photo"&&!strings.HasPrefix(row.mime,"image/") {return false}
  if q.Media=="video"&&!strings.HasPrefix(row.mime,"video/") {return false}
  captured,e:=time.Parse("2006-01-02T15:04:05",row.captured)
- if q.NoCapture {return e!=nil}
+ validCapture:=e==nil&&captured.Format("2006-01-02T15:04:05")==row.captured
+ if q.NoCapture {return !validCapture}
  if q.DateBasis=="capture" {
-  if e!=nil {return false}
+  if !validCapture {return false}
   value:=captured.Format("2006-01-02T15:04:05")
   return (q.From==""||value>=q.From)&&(q.Until==""||value<q.Until)
  }
