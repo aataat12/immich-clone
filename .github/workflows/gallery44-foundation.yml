@@ -1,5 +1,5 @@
 name: Frameout 0.1.44 captions sources filters and calendar acceptance
-# Steps 7-8: reviewed text/source/calendar integration and delayed response guards.
+# Steps 7-8: final UI, real restart/restore and installed compatibility; exact backend evidence may be reused.
 on:
   push:
     branches: ['work/release-0.1.44-foundation']
@@ -48,7 +48,7 @@ jobs:
             if ($LASTEXITCODE -ne 0) {throw 'Released date regression failed'}
           } finally {Pop-Location}
       - name: Format candidate and execute shared contract and all retained regressions
-        if: ${{ !contains(github.event.head_commit.message, '[browser-only]') }}
+        if: ${{ !contains(github.event.head_commit.message, '[browser-only]') && !contains(github.event.head_commit.message, '[reuse-backend]') }}
         shell: pwsh
         run: |
           ./scripts/Format-Gallery44.ps1
@@ -64,7 +64,7 @@ jobs:
           node tests/gallery-dates.cjs
           if ($LASTEXITCODE -ne 0) {throw 'Date helpers failed'}
       - name: Prove actual bounded NTFS metadata failure and recovery
-        if: ${{ !contains(github.event.head_commit.message, '[browser-only]') }}
+        if: ${{ !contains(github.event.head_commit.message, '[browser-only]') && !contains(github.event.head_commit.message, '[reuse-backend]') }}
         shell: pwsh
         run: ./scripts/Test-FullDisk.ps1
       - name: Exercise real LocalService and Edge with synthetic catalogs
