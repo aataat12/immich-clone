@@ -1,5 +1,5 @@
 name: Frameout 0.1.44 viewer and metadata acceptance
-# Viewer reverse paging passed; isolate the browser regression with stage markers.
+# Full-screen targets the viewer content surface rather than the dialog element.
 on:
   push:
     branches: ['work/release-0.1.44-foundation']
