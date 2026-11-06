@@ -1,4 +1,4 @@
-name: Release 0.1.43 feature development gate
+name: Release 0.1.43 feature and catalog compatibility gate
 on:
   push:
     branches: ['work/release-0.1.43']
@@ -27,7 +27,7 @@ jobs:
       - name: Canonicalize candidate Go sources
         shell: pwsh
         run: |
-          $files=@('internal/library/automatic_names.go','internal/library/automatic_names_native_test.go','internal/library/automatic_names_test.go','internal/library/gallery.go','internal/library/gallery_search.go','internal/library/gallery_search_test.go','internal/library/input_validation.go','internal/library/metadata_dates_test.go','internal/library/native_face_quality_test.go','internal/library/organization.go','internal/library/organization_index.go','internal/library/reanalysis.go','internal/library/store.go','internal/library/video_analysis.go','internal/web/gallery_test.go','internal/web/server.go')
+          $files=@('internal/library/automatic_names.go','internal/library/automatic_names_native_test.go','internal/library/automatic_names_test.go','internal/library/automatic_names_schema_test.go','internal/library/automatic_names_pipeline_test.go','internal/library/catalog_schema.go','internal/library/offline.go','internal/library/offline_windows_test.go','internal/library/gallery.go','internal/library/gallery_search.go','internal/library/gallery_search_test.go','internal/library/input_validation.go','internal/library/metadata_dates_test.go','internal/library/native_face_quality_test.go','internal/library/organization.go','internal/library/organization_index.go','internal/library/reanalysis.go','internal/library/store.go','internal/library/video_analysis.go','internal/web/gallery_test.go','internal/web/server.go')
           gofmt -w @files
           if ($LASTEXITCODE -ne 0) { throw 'Candidate source formatting failed' }
           Write-Host 'R43_CANONICAL_DIFF_BEGIN'
@@ -64,6 +64,26 @@ jobs:
           name: release43-feature-screenshots
           path: browser-evidence/*.png
           retention-days: 7
+  schema-compatibility:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Execute genuine published old writer and new catalog compatibility
+        shell: pwsh
+        run: |
+          $tokens=$null;$parseErrors=$null
+          $null=[Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'scripts/Test-AutomaticNameSchemaCompatibility.ps1'),[ref]$tokens,[ref]$parseErrors)
+          if ($parseErrors.Count) { throw 'Schema compatibility fixture syntax invalid' }
+          ./scripts/Test-AutomaticNameSchemaCompatibility.ps1
   automatic-name-screen:
     if: ${{ !contains(github.event.head_commit.message, '[features-only]') }}
     runs-on: windows-2022

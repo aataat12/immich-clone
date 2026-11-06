@@ -168,6 +168,7 @@ func applyAutomaticNames(tx *bolt.Tx, faces []StoredFace, p automaticNamePolicy)
 		if e := writeJSON(lb, f.ID, l); e != nil {
 			return e
 		}
+		if e := requireAutomaticCatalog(tx); e != nil { return e }
 	}
 	return nil
 }

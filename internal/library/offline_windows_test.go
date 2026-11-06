@@ -246,7 +246,7 @@ func TestOfflineMissingOrUnsupportedStateNeverInitialized(t *testing.T) {
 				if e != nil {
 					t.Fatal(e)
 				}
-				e = db.Update(func(tx *bolt.Tx) error { return tx.Bucket([]byte("meta")).Put([]byte("schema"), []byte("2")) })
+				e = db.Update(func(tx *bolt.Tx) error { return tx.Bucket([]byte("meta")).Put([]byte("schema"), []byte("3")) })
 				ce := db.Close()
 				if e != nil || ce != nil {
 					t.Fatal(errors.Join(e, ce))

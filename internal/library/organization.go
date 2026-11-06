@@ -700,6 +700,7 @@ func (s *Store) OrganizationExport() (map[string]any, error) {
 	out := map[string]any{"schema": 1}
 	organization := map[string]any{"version": 1}
 	e := s.db.View(func(tx *bolt.Tx) error {
+		out["catalog_schema"] = string(tx.Bucket([]byte("meta")).Get([]byte("schema")))
 		for _, name := range []string{analysisBucket, facesBucket, labelsBucket, tagsBucket, "dismissed_ai_tags_v1", batchMembers, batchMeta, reanalysisBucket} {
 			items := map[string]json.RawMessage{}
 			e := tx.Bucket([]byte(name)).ForEach(func(k, v []byte) error {

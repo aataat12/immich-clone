@@ -98,10 +98,11 @@ func OpenReadOnly(root string) (_ *Store, err error) {
 	e = db.View(func(tx *bolt.Tx) error {
 		meta := tx.Bucket([]byte("meta"))
 		assets := tx.Bucket([]byte("assets"))
-		if meta == nil || assets == nil || string(meta.Get([]byte("schema"))) != "1" {
+		if meta == nil || assets == nil || !supportedCatalogSchema(meta.Get([]byte("schema"))) {
 			return errors.New("unsupported catalog schema")
 		}
-		return validateCatalogInput(tx)
+		if e := validateCatalogInput(tx); e != nil { return e }
+		return protectAutomaticCatalog(tx, false)
 	})
 	if e == nil {
 		_, e = s.List()

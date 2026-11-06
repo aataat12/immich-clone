@@ -130,12 +130,13 @@ func Open(root string) (*Store, error) {
 		}
 		b := tx.Bucket([]byte("meta"))
 		v := b.Get([]byte("schema"))
-		if v != nil && string(v) != "1" {
+		if v != nil && !supportedCatalogSchema(v) {
 			return errors.New("unsupported schema; refusing migration")
 		}
-		if e := b.Put([]byte("schema"), []byte("1")); e != nil {
-			return e
+		if v == nil {
+			if e := b.Put([]byte("schema"), []byte("1")); e != nil { return e }
 		}
+		if e := protectAutomaticCatalog(tx, true); e != nil { return e }
 		if e := initDeletions(tx); e != nil {
 			return e
 		}
