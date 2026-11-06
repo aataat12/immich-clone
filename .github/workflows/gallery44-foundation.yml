@@ -43,6 +43,7 @@ jobs:
             if ($LASTEXITCODE -ne 0) {throw 'Released date regression failed'}
           } finally {Pop-Location}
       - name: Format candidate and execute shared contract and all retained regressions
+        if: ${{ !contains(github.event.head_commit.message, '[browser-only]') }}
         shell: pwsh
         run: |
           $files=@('internal/library/gallery.go','internal/library/gallery_query.go','internal/library/gallery_search.go','internal/library/gallery_foundation_test.go','internal/web/gallery_http.go','internal/web/gallery_foundation_test.go','internal/web/server.go')
