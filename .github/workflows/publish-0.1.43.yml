@@ -44,7 +44,8 @@ jobs:
           $tags=Invoke-RestMethod ($api+'/git/matching-refs/tags/'+$tag) -Headers $headers
           if($tags.Count -ne 0){throw 'Existing tag is never overwritten'}
           $releases=Invoke-RestMethod ($api+'/releases?per_page=100') -Headers $headers
-          if(@($releases|Where-Object tag_name -eq $tag).Count){throw 'Existing release is never overwritten'}
+          $existing=@($releases|Where-Object tag_name -eq $tag)
+          if($existing.Count -ne 1 -or [int64]$existing[0].id -ne 436147652 -or !$existing[0].draft){throw 'Only the already verified unpublished draft may be completed'}
           $zip=Join-Path $env:RUNNER_TEMP 'tested-0.1.43.zip'
           Invoke-WebRequest ($api+'/actions/artifacts/'+$artifactId+'/zip') -Headers $headers -OutFile $zip
           if((Get-FileHash $zip).Hash.ToLowerInvariant() -ne $zipHash){throw 'Artifact ZIP hash mismatch'}
@@ -67,17 +68,21 @@ jobs:
           $body+="`nExact tested source: $source`n`nCombined Windows Server 2022 acceptance: https://github.com/$repo/actions/runs/42170003998`n`nFocused installer trust: https://github.com/$repo/actions/runs/42169084769`n`nEnabled feature, catalog compatibility and actual-native recovery acceptance: https://github.com/$repo/actions/runs/42166864007`n`nIndependent frozen-policy quality screen: https://github.com/$repo/actions/runs/42164599554`n`nInstaller SHA256: 96670e90c4abc55cdc07f480267c6f896b784a2a6c11de9f9f5333edb4158415`n`nPublished from the exact tested artifact without rebuilding. Milestones 7 and 8 remain incomplete; SEC-05 and SEC-08 remain open. Final Windows 10 clean-machine, reboot and endurance acceptance remains open.`n"
           $bodyFile=Join-Path $env:RUNNER_TEMP 'release-body.md'
           [IO.File]::WriteAllText($bodyFile,$body,[Text.UTF8Encoding]::new($false))
-          & gh release create $tag --repo $repo --target $source --title 'Immich Clone 0.1.43 prototype' --draft --prerelease --notes-file $bodyFile @files
-          if($LASTEXITCODE -ne 0){throw 'Draft creation failed'}
+          # The prior attempt created this exact unpublished draft and verified its assets.
+          # Revalidate without replacing the release or uploading any assets again.
           $all=Invoke-RestMethod ($api+'/releases?per_page=100') -Headers $headers
           $drafts=@($all|Where-Object tag_name -eq $tag)
-          if($drafts.Count -ne 1){throw 'Draft identity is not unique'}
+          if($drafts.Count -ne 1 -or [int64]$drafts[0].id -ne 436147652){throw 'Draft identity is not unique'}
           $release=Invoke-RestMethod ($api+'/releases/'+$drafts[0].id) -Headers $headers
           if(!$release.draft -or !$release.prerelease -or $release.target_commitish -ne $source -or @($release.assets).Count -ne 4){throw 'Draft identity mismatch'}
           foreach($asset in $assets){
             $actual=@($release.assets|Where-Object name -eq (Split-Path $asset.Path -Leaf))
             if($actual.Count -ne 1 -or $actual[0].size -ne $asset.Size -or $actual[0].digest -ne ('sha256:'+$asset.Hash)){throw 'Draft asset mismatch'}
           }
+          # Draft releases do not create their tag until publication. Create it explicitly
+          # only after all source, archive, draft and asset identities have passed.
+          $tagBody=@{ref=('refs/tags/'+$tag);sha=$source}|ConvertTo-Json
+          $null=Invoke-RestMethod ($api+'/git/refs') -Method Post -Headers $headers -ContentType 'application/json' -Body $tagBody
           $draftRef=Invoke-RestMethod ($api+'/git/ref/tags/'+$tag) -Headers $headers
           if($draftRef.object.type -ne 'commit' -or $draftRef.object.sha -ne $source){throw 'Draft tag does not point to the accepted source'}
           & gh release edit $tag --repo $repo --draft=false --prerelease
