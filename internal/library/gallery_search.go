@@ -2,6 +2,8 @@ package library
 
 import (
 	"bytes"
+ "crypto/sha256"
+ "encoding/hex"
 	"encoding/json"
 	"errors"
 	bolt "go.etcd.io/bbolt"
@@ -12,6 +14,7 @@ import (
 )
 
 type gallerySearchRow struct {
+ organization string
 	favorite bool
  albums map[string]uint64
  hidden   bool
@@ -27,6 +30,7 @@ type gallerySearchRow struct {
 // This derived metadata cache never retains image bytes or face embeddings and
 // is never exported. Reopen and every committed catalog edit invalidate it.
 type gallerySearchIndex struct {
+ state string
 	transaction int
 	assets      map[string]gallerySearchRow
 	queries     map[string]map[string]bool
@@ -106,9 +110,14 @@ func (s *Store) gallerySearchFor(tx *bolt.Tx) (*gallerySearchIndex, error) {
 	}); e != nil {
 		return nil, e
 	}
- if b:=tx.Bucket([]byte(assetOrganizationBucket));b!=nil{if e:=b.ForEach(func(k,v []byte)error{var o AssetOrganization;if e:=json.Unmarshal(v,&o);e!=nil{return e};row:=index.assets[string(k)];row.favorite=o.Favorite;index.assets[string(k)]=row;return nil});e!=nil{return nil,e}}
+ if b:=tx.Bucket([]byte(assetOrganizationBucket));b!=nil{if e:=b.ForEach(func(k,v []byte)error{var o AssetOrganization;if e:=json.Unmarshal(v,&o);e!=nil{return e};row:=index.assets[string(k)];row.favorite=o.Favorite;sum:=sha256.Sum256(v);row.organization=hex.EncodeToString(sum[:]);index.assets[string(k)]=row;return nil});e!=nil{return nil,e}}
  if b:=tx.Bucket([]byte(albumMembersBucket));b!=nil{if e:=b.ForEach(func(k,v []byte)error{var m AlbumMember;if e:=json.Unmarshal(v,&m);e!=nil{return e};row:=index.assets[m.AssetID];if row.albums==nil{row.albums=map[string]uint64{}};row.albums[m.AlbumID]=m.Position;index.assets[m.AssetID]=row;return nil});e!=nil{return nil,e}}
-	// A rolled-back write transaction may reuse its ID for a later, different
+ // Snapshot the shared matching/order inputs, not unrelated transaction IDs.
+ // Preview dimensions/status and durable batch receipts do not redefine results.
+ ids:=make([]string,0,len(index.assets));for id:=range index.assets{ids=append(ids,id)};sort.Strings(ids);digest:=sha256.New()
+ for _,id:=range ids{row:=index.assets[id];raw,e:=json.Marshal(struct{ID string;Hidden bool;Terms string;Filename string;MIME string;Captured string;Added string;People []string;Tags []string;Favorite bool;Albums map[string]uint64;Organization string}{id,row.hidden,row.terms,row.filename,row.mime,row.captured,row.added.UTC().Format(time.RFC3339Nano),row.people,row.tags,row.favorite,row.albums,row.organization});if e!=nil{return nil,e};digest.Write(raw)}
+ index.state=hex.EncodeToString(digest.Sum(nil))
+ // A rolled-back write transaction may reuse its ID for a later, different
 	// commit. Never publish a cache built from uncommitted transaction state.
 	if !tx.Writable() { s.gallerySearch = index }
 	return index, nil

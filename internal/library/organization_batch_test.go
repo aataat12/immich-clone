@@ -1,6 +1,6 @@
 package library
 
-import("bytes";"errors";"fmt";"reflect";"testing";"time";"strings";bolt "go.etcd.io/bbolt")
+import("bytes";"encoding/json";"errors";"fmt";"reflect";"testing";"time";"strings";bolt "go.etcd.io/bbolt")
 
 func prepareBatchFixture(t *testing.T,s *Store,action,album string,limit int)OrganizationBatch{t.Helper();q:=GalleryQuery{Sort:"name",Visibility:"library"};p,e:=s.QueryGalleryPage(q,"",100);if e!=nil{t.Fatal(e)};targets:=[]OrganizationTarget{};for _,a:=range p.Assets{if len(targets)==limit{break};targets=append(targets,OrganizationTarget{ID:a.ID,Added:a.Added})};b,e:=s.PrepareOrganizationBatch(OrganizationBatchRequest{Action:action,AlbumID:album,Query:q,Snapshot:p.Snapshot,Targets:targets});if e!=nil{t.Fatal(e)};return b}
 func completeBatchFixture(t *testing.T,s *Store,b OrganizationBatch)OrganizationBatch{t.Helper();for b.Status!="done"{step:=0;for _,x:=range b.Targets{if x.Outcome!="pending"{step++}};var e error;b,e=s.ContinueOrganizationBatch(b.ID,step);if e!=nil{t.Fatal(e)}};return b}
@@ -86,4 +86,34 @@ func TestOrganizationBatchPreviewRechecksCurrentTargetsBeforeAcceptance(t *testi
  q=GalleryQuery{Sort:"name",Visibility:"library",Text:"Latest custom tag"};p,_=s.QueryGalleryPage(q,"",60);s.SetTags(a.ID,[]string{"Latest custom tag","Another client"});in.Query=q;in.Snapshot=p.Snapshot
  b,e=s.PrepareOrganizationBatch(in);if e!=nil||!b.Refreshed{t.Fatal("changed result snapshot was not explicitly refreshed for review",e)}
  s.SetHidden(a.ID,true);p,_=s.QueryGalleryPage(GalleryQuery{Sort:"name",Visibility:"library"},"",60);in.Query=GalleryQuery{Sort:"name",Visibility:"library"};in.Snapshot=p.Snapshot;if _,e=s.PrepareOrganizationBatch(in);!errors.Is(e,ErrCurationConflict){t.Fatal("out-of-scope selection accepted",e)}
+}
+
+func TestOrganizationBatchCancelKeepsCommittedWorkAndCannotResumeCanceledTargets(t *testing.T){
+ s,_:=openTest(t);seedGalleryFoundation(t,s,187);b:=prepareBatchFixture(t,s,"favorite_on","",70);first,e:=s.ContinueOrganizationBatch(b.ID,0);if e!=nil{t.Fatal(e)}
+ canceled,e:=s.CancelOrganizationBatch(b.ID,25);if e!=nil||canceled.Status!="done"{t.Fatal(e)};saved,notAttempted:=0,0;for i,target:=range canceled.Targets{switch target.Outcome{case "saved":saved++;case "canceled":notAttempted++;default:t.Fatal(target.Outcome)};o,_:=s.AssetOrganization(target.ID);if o.Favorite!=(i<25){t.Fatal("cancellation changed committed or unattempted metadata")}}
+ if saved!=25||notAttempted!=45||first.Targets[25].Outcome!="pending"{t.Fatal("cancellation accounting")}
+ replay,e:=s.CancelOrganizationBatch(b.ID,25);if e!=nil||!reflect.DeepEqual(replay,canceled){t.Fatal("cancellation replay",e)};replay,e=s.ContinueOrganizationBatch(b.ID,70);if e!=nil||!reflect.DeepEqual(replay,canceled){t.Fatal("canceled work resumed",e)}
+ if e=s.db.View(validateCuration);e!=nil{t.Fatal(e)}
+}
+
+func TestGalleryOrganizationSnapshotIgnoresPreviewProgressAndReceiptBookkeeping(t *testing.T){
+ s,_:=openTest(t);seedGalleryFoundation(t,s,187);q:=GalleryQuery{Sort:"name",Visibility:"library",Text:"Trip"};p,e:=s.QueryGalleryPage(q,"",60);if e!=nil||p.Next==""{t.Fatal(e)};a:=p.Assets[0]
+ a.Preview="ready";a.Error="";a.Width=120;a.Height=80;s.gate.Lock();e=s.save(a);s.gate.Unlock();if e!=nil{t.Fatal(e)}
+ if _,e=s.QueryGalleryPage(q,p.Next,60);e!=nil{t.Fatal("preview processing invalidated the current results",e)}
+ b,e:=s.PrepareOrganizationBatch(OrganizationBatchRequest{Action:"favorite_on",Query:q,Snapshot:p.Snapshot,Targets:[]OrganizationTarget{{ID:a.ID,Added:a.Added}}});if e!=nil{t.Fatal(e)}
+ if _,e=s.QueryGalleryPage(q,p.Next,60);e!=nil{t.Fatal("receipt bookkeeping invalidated the current results",e)}
+ completeBatchFixture(t,s,b)
+ if _,e=s.QueryGalleryPage(q,p.Next,60);!errors.Is(e,ErrGalleryChanged){t.Fatal("favorite edit did not invalidate organization snapshot",e)}
+ fresh,_:=s.QueryGalleryPage(q,"",60);s.SetTags(a.ID,[]string{"Trip","Changed metadata"});if _,e=s.GalleryNeighbors(q,a.ID,fresh.Snapshot);!errors.Is(e,ErrGalleryChanged){t.Fatal("tag edit did not invalidate viewer snapshot",e)}
+}
+
+func TestOrganizationBatchChunkBudgetFailureRollsBackTargetsAndReceipt(t *testing.T){
+ s,_:=openTest(t);seedGalleryFoundation(t,s,187);b:=prepareBatchFixture(t,s,"favorite_on","",2)
+ before,_:=s.OrganizationBatch(b.ID);rawBefore,_:=json.Marshal(before);var original uint64
+ first,_:=s.AssetOrganization(b.Targets[0].ID);second,_:=s.AssetOrganization(b.Targets[1].ID);first.Revision=1;first.Favorite=true;first.Token="";second.Revision=1;second.Favorite=true;second.Token="";one,_:=json.Marshal(first);two,_:=json.Marshal(second)
+ s.db.Update(func(tx *bolt.Tx)error{meta:=tx.Bucket([]byte("meta"));original=galleryNumber(meta,"curation_bytes");return setGalleryNumber(meta,"curation_bytes",maxCurationBytes-uint64(len(one)+len(two)/2))})
+ if _,e:=s.ContinueOrganizationBatch(b.ID,0);!errors.Is(e,ErrCurationLimit){t.Fatal("chunk did not encounter its budget boundary",e)}
+ after,_:=s.OrganizationBatch(b.ID);rawAfter,_:=json.Marshal(after);if !bytes.Equal(rawBefore,rawAfter){t.Fatal("failed chunk changed its durable outcomes")};for _,target:=range b.Targets{o,_:=s.AssetOrganization(target.ID);if o.Favorite{t.Fatal("failed chunk partially changed a target")}}
+ s.db.Update(func(tx *bolt.Tx)error{return setGalleryNumber(tx.Bucket([]byte("meta")),"curation_bytes",original)})
+ completeBatchFixture(t,s,b);if e:=s.db.View(validateCuration);e!=nil{t.Fatal(e)}
 }

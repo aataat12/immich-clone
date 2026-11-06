@@ -44,7 +44,7 @@ func(s *Store) PrepareOrganizationBatch(in OrganizationBatchRequest)(Organizatio
  q,e:=in.Query.Normalize();if e!=nil||len(in.Targets)<1||len(in.Targets)>500||!batchActionOK(in.Action,in.Tag,in.AlbumID){return out,ErrCurationInput}
  s.gate.Lock();defer s.gate.Unlock();if e=s.batchWriteReady();e!=nil{return out,e}
  e=s.db.Update(func(tx *bolt.Tx)error{
-  results,e:=s.galleryResultsFor(tx,q);if e!=nil{return e};if q.filtered(){results.token.SearchRevision=tx.ID()-1};_,e=results.validate(in.Snapshot,false);refreshed:=errors.Is(e,ErrGalleryChanged);if e!=nil&&!refreshed{return e}
+  results,e:=s.galleryResultsFor(tx,q);if e!=nil{return e};_,e=results.validate(in.Snapshot,false);refreshed:=errors.Is(e,ErrGalleryChanged);if e!=nil&&!refreshed{return e}
   stamp,e:=batchAlbumStamp(tx,in.AlbumID);if e!=nil{return e}
   out=OrganizationBatch{Refreshed:refreshed,Created:time.Now().UTC(),Action:in.Action,Tag:strings.TrimSpace(in.Tag),AlbumID:in.AlbumID,AlbumToken:stamp,Query:q,Status:"paused",Targets:[]OrganizationTarget{}}
   if in.AlbumID!=""{a,e:=curationAlbum(tx,in.AlbumID);if e!=nil{return e};out.AlbumTitle=a.Title}
@@ -67,9 +67,12 @@ func(s *Store) OrganizationBatches()([]OrganizationBatchSummary,error){out:=[]Or
 
 // Each explicit Continue commits at most 25 targets and their outcomes together.
 // There is no automatic worker: reopen and backup restore always leave work paused.
-func(s *Store) ContinueOrganizationBatch(id string,expected int)(OrganizationBatch,error){
+func(s *Store) ContinueOrganizationBatch(id string,expected int)(OrganizationBatch,error){return s.resolveOrganizationBatch(id,expected,false)}
+func(s *Store) CancelOrganizationBatch(id string,expected int)(OrganizationBatch,error){return s.resolveOrganizationBatch(id,expected,true)}
+func(s *Store) resolveOrganizationBatch(id string,expected int,cancel bool)(OrganizationBatch,error){
  var out OrganizationBatch;s.gate.Lock();defer s.gate.Unlock();if e:=s.batchWriteReady();e!=nil{return out,e}
  e:=s.db.Update(func(tx *bolt.Tx)error{var e error;out,e=readOrganizationBatch(tx,id);if e!=nil{return e};processed:=0;for _,t:=range out.Targets{if t.Outcome!="pending"{processed++}};if expected<0||expected>len(out.Targets){return ErrCurationInput};if expected!=processed||out.Status=="done"{return nil}
+  if cancel{for i:=range out.Targets{if out.Targets[i].Outcome=="pending"{out.Targets[i].Outcome="canceled"}};out.Status="done";return curationWrite(tx,organizationBatchesBucket,id,out)}
   stamp,e:=batchAlbumStamp(tx,out.AlbumID);albumConflict:=e!=nil||stamp!=out.AlbumToken
   n:=0;for i:=range out.Targets{target:=&out.Targets[i];if target.Outcome!="pending"{continue};if n>=25{break};n++
    a,e:=curationAsset(tx,target.ID);if e!=nil||!a.Added.Equal(target.Added){target.Outcome="missing";continue}
@@ -92,5 +95,5 @@ func applyOrganizationTarget(tx *bolt.Tx,b OrganizationBatch,a Asset)(bool,error
 
 func validateOrganizationBatches(tx *bolt.Tx)(uint64,error){
  b:=tx.Bucket([]byte(organizationBatchesBucket));if b==nil{return 0,nil};if b.Stats().KeyN>maxOrganizationBatches{return 0,errCatalogInput};var size uint64
- e:=b.ForEach(func(k,v []byte)error{var row OrganizationBatch;if len(v)>1<<20||json.Unmarshal(v,&row)!=nil||row.ID!=string(k)||!validID(row.ID)||row.Created.IsZero()||!curationText(row.AlbumTitle,256,false)||!batchActionOK(row.Action,row.Tag,row.AlbumID)||len(row.Targets)<1||len(row.Targets)>500||(row.Status!="paused"&&row.Status!="done"){return errCatalogInput};if _,e:=row.Query.Normalize();e!=nil{return errCatalogInput};seen:=map[string]bool{};pending:=false;for _,t:=range row.Targets{if !validID(t.ID)||seen[t.ID]||t.Added.IsZero()||!textOK(t.Name,1024)||len(t.Expected)!=64{return errCatalogInput};seen[t.ID]=true;switch t.Outcome{case "pending":pending=true;case "saved","skipped","conflict","missing":default:return errCatalogInput}};if (row.Status=="paused")!=pending{return errCatalogInput};size+=uint64(len(v));return nil});return size,e
+ e:=b.ForEach(func(k,v []byte)error{var row OrganizationBatch;if len(v)>1<<20||json.Unmarshal(v,&row)!=nil||row.ID!=string(k)||!validID(row.ID)||row.Created.IsZero()||!curationText(row.AlbumTitle,256,false)||!batchActionOK(row.Action,row.Tag,row.AlbumID)||len(row.Targets)<1||len(row.Targets)>500||(row.Status!="paused"&&row.Status!="done"){return errCatalogInput};if _,e:=row.Query.Normalize();e!=nil{return errCatalogInput};seen:=map[string]bool{};pending:=false;for _,t:=range row.Targets{if !validID(t.ID)||seen[t.ID]||t.Added.IsZero()||!textOK(t.Name,1024)||len(t.Expected)!=64{return errCatalogInput};seen[t.ID]=true;switch t.Outcome{case "pending":pending=true;case "saved","skipped","conflict","missing","canceled":default:return errCatalogInput}};if (row.Status=="paused")!=pending{return errCatalogInput};size+=uint64(len(v));return nil});return size,e
 }

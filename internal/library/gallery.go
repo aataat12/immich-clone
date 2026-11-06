@@ -37,6 +37,7 @@ type galleryCursor struct {
 	Key            []byte `json:"key"`
 	Query          string `json:"query,omitempty"`
 	SearchRevision int    `json:"search_revision,omitempty"`
+ SearchState string `json:"search_state,omitempty"`
 	QueryKey       string `json:"query_key,omitempty"`
 }
 
@@ -227,11 +228,11 @@ func (s *Store) galleryResultsFor(tx *bolt.Tx, q GalleryQuery) (*galleryResults,
 	}
 	r.token = galleryCursor{Epoch: string(root.Get([]byte("epoch"))), Revision: galleryNumber(root, "revision"), Sort: q.Sort, Visibility: q.Visibility, Query: q.Text, QueryKey: q.key()}
 	if q.filtered() {
-		r.token.SearchRevision = tx.ID()
 		search, e := s.gallerySearchFor(tx)
 		if e != nil {
 			return nil, e
 		}
+		r.token.SearchState=search.state
 		r.matches = search.matching(q)
 		r.ordered = search.orderedKeys(q)
 		r.count = uint64(len(r.matches))
@@ -253,7 +254,7 @@ func (r *galleryResults) validate(encoded string, page bool) (galleryCursor, err
 	if e != nil || json.Unmarshal(b, &c) != nil || c.QueryKey != r.token.QueryKey || c.Sort != r.query.Sort || c.Visibility != r.query.Visibility || len(c.Key) > 1100 || (page && len(c.Key) == 0) || (!page && len(c.Key) != 0) {
 		return c, ErrGalleryInput
 	}
-	if c.Epoch != r.token.Epoch || c.Revision != r.token.Revision || c.SearchRevision != r.token.SearchRevision {
+	if c.Epoch != r.token.Epoch || c.Revision != r.token.Revision || c.SearchRevision != r.token.SearchRevision || c.SearchState!=r.token.SearchState {
 		return c, ErrGalleryChanged
 	}
 	if page && r.query.Sort=="manual" {if !r.matches[string(c.Key)]{return c,ErrGalleryInput};return c,nil}
