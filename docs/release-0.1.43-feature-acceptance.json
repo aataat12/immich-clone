@@ -1,0 +1,47 @@
+{
+  "accepted": true,
+  "feature_source": "204c5a5abc0237b54f71f3f9242dbdbcf70d4c77",
+  "feature_run": 42166864007,
+  "feature_jobs": [
+    127725247984,
+    127725248385,
+    127725248391
+  ],
+  "independent_source": "d6cfd0968d5c5b8d9671520fcabeb71dd1f7254a",
+  "independent_run": 42164599554,
+  "independent_jobs": [
+    127718001981
+  ],
+  "canonical_sha256": {
+    "internal/library/automatic_names.go": "22577aa2216eb3b4053b00e56d51da563a397bef34f3f0d7a2759bae21d03235",
+    "internal/library/catalog_schema.go": "89cf1a8a93486672813a900ad22414a341246c07016c5dda9031a19a64bd67c9",
+    "internal/library/organization.go": "c94a4ee26cf1c09d90c83c9a13f17c0b4f6753acfa77bb35139792384d05640e",
+    "internal/library/organization_index.go": "dcea36e0d577e0457176d1854356f2b43d0aa15c1d1e0202afdf8974afb3c098",
+    "internal/library/reanalysis.go": "fc1abb5f52abc6297500d8e120b9df4793bd72af17a93feaae2269424aa0b56d",
+    "internal/library/video_analysis.go": "4389e118035088dbfcc0aab05cd4c66b14b3e1717c639fb60adb9f1419249677",
+    "internal/library/store.go": "842e4fb412ba6cacc80607889331a9caaf4156e2ee4a0c93a4326bf978980764",
+    "internal/library/offline.go": "a1a572e71b2b39004699276b926d4f6ef666b8cc2a774fa35756767378a7f75a",
+    "internal/library/input_validation.go": "a44ca18aa93d5bcb325f426cc033736b4f22fe207a68c22efcc30943b6527464",
+    "internal/library/gallery.go": "7e78187de6c0b6a18ff368040da19fd688a292576adf698dd3c64fcd78b0602a",
+    "internal/library/gallery_search.go": "29a9df477a40208e060747790a6655916031a6c2f933ab31303f79e81094c9e4",
+    "internal/web/server.go": "0be1eeef2417d4a669414be8ba99e98ca77c80ddad22eba38f2f6163fefa230e",
+    "internal/web/people.html": "c98f1ef804f237cccca28fba72fd5ef2154711063c1d255cc4ed9aa1ed190520",
+    "internal/web/index.html": "9d20b08832557071398fec5ba2b6005c6295fad300cc313fcb4040035bf6b3b1"
+  },
+  "canonical_git_blobs": {
+    "internal/library/automatic_names.go": "4449cb16db8af042111602d73a34a22f02141316",
+    "internal/library/catalog_schema.go": "ffa136576a8bdcb20227d78def694df4e6c74bb4",
+    "internal/library/organization.go": "73a8043550d8e307428efe10aefccbb13365fcc3",
+    "internal/library/organization_index.go": "89e6bfbff31541042f8f9211484aed1dbfed0e34",
+    "internal/library/reanalysis.go": "1a0d308d5a05a7966301649ed1298d542a90ef4e",
+    "internal/library/video_analysis.go": "58d338d544d7e39f988aae0fc26b65bfd76ed60d",
+    "internal/library/store.go": "a8a68ad5cc030436b214507594856b7fbdff3a03",
+    "internal/library/offline.go": "f0e9faa2fda71d9a985efc574398282f3910ce91",
+    "internal/library/input_validation.go": "2f5c240536f9cbe21004b3779db907409c222488",
+    "internal/library/gallery.go": "e055deebdae7d8366bccd6380d3d36f27c6d7196",
+    "internal/library/gallery_search.go": "31fb67dce9315b53b42558971f3e6e99c014d79e",
+    "internal/web/server.go": "4894326b4fb417999fbe3b9e034b4309a65c0bd6",
+    "internal/web/people.html": "7cf1e6abed1a9baa7a18eb07c1b8ba63aef8140d",
+    "internal/web/index.html": "bf681c1d2b5b3a95384f407330d3ace9f97d9d4f"
+  }
+}

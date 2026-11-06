@@ -1,5 +1,5 @@
 #ifndef AppVersion
-#define AppVersion "0.1.23"
+#define AppVersion "0.1.43"
 #endif
 #define ManagementSHA256 GetSHA256OfFile(AddBackslash(SourcePath) + "Manage-Service.ps1")
 #define BoundaryHelperSHA256 GetSHA256OfFile(AddBackslash(SourcePath) + "..\dist\installer-files.exe")
@@ -23,7 +23,7 @@ CloseApplications=no
 SetupLogging=no
 UninstallLogMode=overwrite
 UninstallDisplayIcon={app}\immichclone.exe
-InfoBeforeFile=..\docs\prototype-notes.txt
+InfoBeforeFile=..\dist\prototype-notes.txt
 
 [Files]
 ; Bootstrap only; normal Inno copying never writes application payload files.
@@ -36,7 +36,7 @@ Source: "..\dist\installer-files.exe"; DestDir: "{tmp}\payload"; Flags: dontcopy
 Source: "..\dist\immichclone.exe"; DestDir: "{tmp}\payload"; Flags: dontcopy
 Source: "Export-Diagnostics.ps1"; DestDir: "{tmp}\payload"; Flags: dontcopy
 Source: "..\dist\THIRD-PARTY-LICENSES.txt"; DestDir: "{tmp}\payload"; Flags: dontcopy
-Source: "..\docs\prototype-notes.txt"; DestDir: "{tmp}\payload"; Flags: dontcopy
+Source: "..\dist\prototype-notes.txt"; DestDir: "{tmp}\payload"; Flags: dontcopy
 Source: "..\dist\media\*"; DestDir: "{tmp}\payload\media"; Flags: dontcopy recursesubdirs createallsubdirs
 Source: "..\dist\ai\*"; DestDir: "{tmp}\payload\ai"; Flags: dontcopy recursesubdirs createallsubdirs
 

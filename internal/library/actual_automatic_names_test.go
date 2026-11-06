@@ -196,8 +196,8 @@ func TestActualAutomaticNamesPublicationLifecycle(t *testing.T) {
 		t.Fatal(e)
 	}
 	for _, checkpoint := range []struct {
-		name string
-		data []byte
+		name  string
+		data  []byte
 		label FaceLabel
 	}{{"automatic", automaticBackup.Bytes(), label}, {"corrected", correctedBackup.Bytes(), corrected}} {
 		t.Run(checkpoint.name+" independent restore", func(t *testing.T) {

@@ -37,16 +37,16 @@ type nottinghamQualityCounts struct {
 	Unresolved int `json:"unresolved"`
 }
 
-var nottinghamKnownIDs = []int{3,8,11,23,34,37,39,44,48,50,51,52,53,56,58,59,60,62,63,64,66,67,70,71,73,75,76,81,85,90,91,92,93,95,99,100}
-var nottinghamUnknownIDs = []int{1,2,4,5,10,13,17,25,30,32,36,38,41,42,43,45,47,49,54,55,57,65,68,69,72,74,77,78,80,83,84,86,88,94,96}
+var nottinghamKnownIDs = []int{3, 8, 11, 23, 34, 37, 39, 44, 48, 50, 51, 52, 53, 56, 58, 59, 60, 62, 63, 64, 66, 67, 70, 71, 73, 75, 76, 81, 85, 90, 91, 92, 93, 95, 99, 100}
+var nottinghamUnknownIDs = []int{1, 2, 4, 5, 10, 13, 17, 25, 30, 32, 36, 38, 41, 42, 43, 45, 47, 49, 54, 55, 57, 65, 68, 69, 72, 74, 77, 78, 80, 83, 84, 86, 88, 94, 96}
 
 func nottinghamConfigurationGroup(configuration int) string {
 	switch configuration {
-	case 3,4:
+	case 3, 4:
 		return "frontal_expressions_3_4"
-	case 1,2:
+	case 1, 2:
 		return "frontal_1_2"
-	case 5,6:
+	case 5, 6:
 		return "three_quarter_5_6"
 	case 7:
 		return "cap_7"
@@ -107,17 +107,23 @@ func TestActualNativeIndependentNottinghamAutomaticQuality(t *testing.T) {
 	all := make([]nottinghamQualityRecord, 0, 498)
 	detected, noFace, multipleFaces, missing, processed := 0, 0, 0, 0, 0
 	knownIDs := map[int]bool{}
-	for _, id := range nottinghamKnownIDs { knownIDs[id] = true }
+	for _, id := range nottinghamKnownIDs {
+		knownIDs[id] = true
+	}
 	ids := append(append([]int(nil), nottinghamKnownIDs...), nottinghamUnknownIDs...)
 	for _, subject := range ids {
 		last := 7
-		if subject == 39 { last = 8 }
+		if subject == 39 {
+			last = 8
+		}
 		for configuration := 1; configuration <= last; configuration++ {
 			entry := entries[fmt.Sprintf("m%d-%d.gif", subject, configuration)]
 			if entry == nil {
-				if !(subject == 5 && (configuration == 4 || configuration == 5) || subject == 13 && configuration == 4) { t.Fatal("Nottingham research unexpected missing entry") }
+				if !(subject == 5 && (configuration == 4 || configuration == 5) || subject == 13 && configuration == 4) {
+					t.Fatal("Nottingham research unexpected missing entry")
+				}
 				missing++
-				all = append(all, nottinghamQualityRecord{subject:subject, configuration:configuration, missing:true})
+				all = append(all, nottinghamQualityRecord{subject: subject, configuration: configuration, missing: true})
 				continue
 			}
 			reader, err := entry.Open()
@@ -158,7 +164,9 @@ func TestActualNativeIndependentNottinghamAutomaticQuality(t *testing.T) {
 			}
 			all = append(all, record)
 			processed++
-			if processed%100 == 0 { t.Logf("Independent native Nottingham inference completed for %d of 495 originals",processed) }
+			if processed%100 == 0 {
+				t.Logf("Independent native Nottingham inference completed for %d of 495 originals", processed)
+			}
 		}
 
 	}
@@ -177,7 +185,9 @@ func TestActualNativeIndependentNottinghamAutomaticQuality(t *testing.T) {
 			continue
 		}
 		outcome := nottinghamQualityCounts{Total: 1}
-		if record.missing { outcome.Missing = 1 }
+		if record.missing {
+			outcome.Missing = 1
+		}
 		if record.face == nil {
 			outcome.Unresolved = 1
 		} else {
@@ -198,7 +208,7 @@ func TestActualNativeIndependentNottinghamAutomaticQuality(t *testing.T) {
 			}
 		}
 		add := func(a nottinghamQualityCounts, b nottinghamQualityCounts) nottinghamQualityCounts {
-			return nottinghamQualityCounts{Total: a.Total + b.Total, Missing: a.Missing+b.Missing, Detected: a.Detected + b.Detected, Correct: a.Correct + b.Correct, Wrong: a.Wrong + b.Wrong, Rejected: a.Rejected + b.Rejected, Unresolved: a.Unresolved + b.Unresolved}
+			return nottinghamQualityCounts{Total: a.Total + b.Total, Missing: a.Missing + b.Missing, Detected: a.Detected + b.Detected, Correct: a.Correct + b.Correct, Wrong: a.Wrong + b.Wrong, Rejected: a.Rejected + b.Rejected, Unresolved: a.Unresolved + b.Unresolved}
 		}
 		group := nottinghamConfigurationGroup(record.configuration)
 		if isKnown {
@@ -247,13 +257,13 @@ func TestActualNativeIndependentNottinghamAutomaticQuality(t *testing.T) {
 		t.Fatal("Nottingham native scratch retained")
 	}
 	central := knownGroups["frontal_expressions_3_4"]
-	pass := len(refs)==72 && detected>=420 && central.Detected>=66 && central.Correct>=54 && known.Correct>=90 && known.Wrong==0 && unknown.Detected>=210 && unknown.Wrong==0 && flatPass==3 && naturalPass
+	pass := len(refs) == 72 && detected >= 420 && central.Detected >= 66 && central.Correct >= 54 && known.Correct >= 90 && known.Wrong == 0 && unknown.Detected >= 210 && unknown.Wrong == 0 && flatPass == 3 && naturalPass
 	report := map[string]any{
 		"scope":          "independent fixed PICS Nottingham monochrome expression/pose/cap evaluation; not universal accuracy",
 		"credit":         "Psychological Image Collection at Stirling / University of Stirling; Nottingham original face set",
 		"archive_sha256": nottinghamArchiveSHA, "provider": recognition.AnalysisID,
 		"policy": automaticNamePolicyID, "threshold": policy.threshold, "margin": policy.margin,
-		"images_total": processed, "scheduled_observations":len(all), "missing_originals":missing, "detected_exactly_one": detected, "no_face": noFace, "multiple_faces": multipleFaces,
+		"images_total": processed, "scheduled_observations": len(all), "missing_originals": missing, "detected_exactly_one": detected, "no_face": noFace, "multiple_faces": multipleFaces,
 		"fixed_references_available": len(refs), "known": known, "unknown": unknown,
 		"known_configuration_groups": knownGroups, "unknown_configuration_groups": unknownGroups,
 		"flat_no_face_controls_passed": flatPass, "natural_no_face_control_passed": naturalPass,

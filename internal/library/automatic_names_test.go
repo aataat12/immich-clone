@@ -272,7 +272,9 @@ func TestAutomaticNamingProductionGateMatchesNewAnalysis(t *testing.T) {
 		if f.AssetID == a.ID {
 			found = true
 			if automaticNamesValidated {
-				if f.Name != "Alice" || f.Source != "automatic" { t.Fatal("validated new-import assignment missing") }
+				if f.Name != "Alice" || f.Source != "automatic" {
+					t.Fatal("validated new-import assignment missing")
+				}
 			} else if f.Name != "" || f.Source != "" {
 				t.Fatal("unvalidated automatic naming ran during new-import analysis")
 			}

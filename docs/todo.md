@@ -3,8 +3,10 @@
 ## Release 0.1.43 planning
 
 Development checkpoint: the three items are accepted scope for 0.1.43. Candidate
-date/gallery search passed the Windows feature gate; automatic assignment remains disabled until
-its independent quality/compatibility gates pass. No released behavior is claimed.
+date/gallery search and enabled automatic naming passed Windows feature/native
+lifecycle gates. Independent policy evaluation and older-writer protection passed.
+Combined installer acceptance and publication remain pending; no released behavior
+is claimed.
 
 All three improvements below were identified in the November 5, 2026
 **Release 0.1.42 discussion** and are confirmed backlog items. They are not yet
@@ -37,8 +39,9 @@ instruction to implement all of them in 0.1.43.
 
 ## Automatic identification of known people
 
-Requested November 5, 2026, during the 0.1.42 discussion. Assigned to 0.1.43. Candidate mechanisms and a narrow native policy screen passed;
-production assignment remains disabled pending broader quality and compatibility evidence.
+Requested November 5, 2026, during the 0.1.42 discussion. Assigned to0.1.43. The unchanged policy passed independent Nottingham evaluation,
+actual native assignment/recovery and genuine older-writer compatibility. Enabled
+prototype behavior remains subject to combined installer acceptance before release.
 
 - Use manually confirmed faces as references to automatically name strong,
   unambiguous matches in newly imported and analyzed photos.

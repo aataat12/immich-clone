@@ -107,27 +107,60 @@ func TestAutomaticNamesEnabledAnalysisPublication(t *testing.T) {
 		return result, e
 	}, true)
 	partial := batchPhoto(t, s, 4)
-	if e = s.QueueAnalysis(partial.ID); e != nil { t.Fatal(e) }
-	if worked, e := s.ProcessAnalysis(context.Background()); !worked || e != nil { t.Fatal(e) }
+	if e = s.QueueAnalysis(partial.ID); e != nil {
+		t.Fatal(e)
+	}
+	if worked, e := s.ProcessAnalysis(context.Background()); !worked || e != nil {
+		t.Fatal(e)
+	}
 	page, e = s.OrganizationPage("", "", "")
-	if e != nil { t.Fatal(e) }
+	if e != nil {
+		t.Fatal(e)
+	}
 	clearedID := ""
-	for _, f := range page.Faces { if f.AssetID == partial.ID { clearedID = f.ID } }
-	if clearedID == "" { t.Fatal("partial analysis face missing") }
-	if e = s.LabelFaces([]string{clearedID}, ""); e != nil { t.Fatal(e) }
+	for _, f := range page.Faces {
+		if f.AssetID == partial.ID {
+			clearedID = f.ID
+		}
+	}
+	if clearedID == "" {
+		t.Fatal("partial analysis face missing")
+	}
+	if e = s.LabelFaces([]string{clearedID}, ""); e != nil {
+		t.Fatal(e)
+	}
 	s.SetRecognizer(pipelineTwoPeople, true)
-	if e = s.ControlReanalysis(partial.ID, "start"); e != nil { t.Fatal(e) }
-	if worked, e := s.ProcessAnalysis(context.Background()); !worked || e != nil { t.Fatal(e) }
-	if e = s.ApplyReanalysis(context.Background(), partial.ID); e != nil { t.Fatal(e) }
+	if e = s.ControlReanalysis(partial.ID, "start"); e != nil {
+		t.Fatal(e)
+	}
+	if worked, e := s.ProcessAnalysis(context.Background()); !worked || e != nil {
+		t.Fatal(e)
+	}
+	if e = s.ApplyReanalysis(context.Background(), partial.ID); e != nil {
+		t.Fatal(e)
+	}
 	page, e = s.OrganizationPage("", "", "")
-	if e != nil { t.Fatal(e) }
+	if e != nil {
+		t.Fatal(e)
+	}
 	addedBob := false
 	for _, f := range page.Faces {
-		if f.AssetID != partial.ID { continue }
-		if f.ID == clearedID { if f.Name != "" { t.Fatal("reanalysis renamed explicitly cleared face") }; continue }
-		if f.Name == "Bob" && f.Source == "automatic" { addedBob = true }
+		if f.AssetID != partial.ID {
+			continue
+		}
+		if f.ID == clearedID {
+			if f.Name != "" {
+				t.Fatal("reanalysis renamed explicitly cleared face")
+			}
+			continue
+		}
+		if f.Name == "Bob" && f.Source == "automatic" {
+			addedBob = true
+		}
 	}
-	if !addedBob { t.Fatal("additive reanalysis did not name newly found Bob") }
+	if !addedBob {
+		t.Fatal("additive reanalysis did not name newly found Bob")
+	}
 	// A sampled video is a new original, but its multiple frames cannot create
 	// more independent references for later media. The prior Alice correction is
 	// a competing manually named identity with the same vector; Alice must now

@@ -3,7 +3,9 @@
 Latest checkpoint: [catalog compatibility accepted](release-0.1.43-catalog-compatibility.md).
 Version2 now protects automatic provenance; genuine published0.1.42 refusal and
 full Windows feature/recovery tests passed. The [independent quality decision](automatic-naming-quality-0.1.43.md) now supports
-enabling the unchanged prototype policy for actual pipeline/release validation.
+enabling the unchanged prototype policy. Enabled unit/browser, actual CPU native
+assignment/recovery and genuine old-writer compatibility passed run42166864007;
+combined installer acceptance is next.
 The original checkpoint below is historical.
 
 Accepted scope: R43-01 clearer date provenance, R43-02 gallery search, and R43-03

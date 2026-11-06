@@ -58,3 +58,20 @@ writers from losing automatic provenance. Enabled photo/video/reanalysis hooks,
 real native assignment lifecycle, UI confirmation, restart and independent recovery
 remain required functional evidence before packaging. Model/provider/dependencies
 are unchanged; no new charge, product training or cloud exposure is introduced.
+
+## Enabled functional acceptance
+
+Source `204c5a5abc0237b54f71f3f9242dbdbcf70d4c77`,
+[run42166864007](https://github.com/aataat12/immich-clone/actions/runs/42166864007)
+passed all jobs:127725247984 full Go/vet/date/Edge search,127725248385 genuine
+old-writer compatibility,127725248391 actual native publication/recovery.
+Actual native Store.ProcessAnalysis assigned the third managed original after
+two manual references, retained automatic provenance, confirmed/undid/corrected,
+performed actual native reanalysis, restarted and independently restored both
+an automatic and a corrected backup with the old source unavailable. Original
+bytes and names/history survived. This uses one public capture with declared
+synthetic variants as functional evidence only, not as independent captures or
+recognition accuracy evidence. Enabled mock publication also passed multi-person
+photos, sampled-video ambiguity rejection and naming a newly found reanalysis
+face while preserving a cleared detection. Canonical runner formatting is retained.
+Combined installer/source/provider/upgrade/rollback acceptance is next.
