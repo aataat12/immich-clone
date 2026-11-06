@@ -93,5 +93,70 @@ page/count/neighbor agreement, endpoints, stale edits/hiding/reopen, invalid
 queries and API authentication. Existing backup/rebuild/provenance tests remain.
 The Windows workflow first executes the exact released baseline, then candidate
 regressions/vet and actual LocalService/Edge journeys with synthetic originals.
-Execution results are recorded separately after the gate completes. Windows
-Server results do not certify Windows 10 or installer/release acceptance.
+Execution results are recorded below. Windows Server results do not certify
+Windows 10 or installer/release acceptance.
+
+## Accepted checkpoint — November 6, 2026
+
+Steps 1 and 2 are complete on `work/release-0.1.44-foundation`. Final tested
+application source is `3bc29f2292b52a4a1a52dd0af340776d53fbcefe`. The following
+evidence is sequential and cumulative; no untested production changes followed.
+
+| Gate | Exact source | Windows Server 2022 run / job | Result |
+|---|---|---|---|
+| Exact released 0.1.43 baseline, candidate regressions and first browser journeys | `7d42fba0389e6d099cc354c1eb51aabca0a69350` (baseline checkout separately pinned to `90d86bd932234d703c4166e4c47585cfbfd047d5`) | [42178779852](https://github.com/aataat12/immich-clone/actions/runs/42178779852) / 127763273123 | PASS |
+| Final server query/API, all runnable retained internal/CLI tests, module verification, vet, date helpers and LocalService/Edge journeys | `3d5085232eafa751e9a88c3c66e865314b2f63ee` | [42179929183](https://github.com/aataat12/immich-clone/actions/runs/42179929183) / 127766930506 | PASS; no formatting diff |
+| Final layout and browser journeys, real application rebuild and temporary LocalService execution | `3bc29f2292b52a4a1a52dd0af340776d53fbcefe` | [42180516257](https://github.com/aataat12/immich-clone/actions/runs/42180516257) / 127768792771 | PASS |
+
+The final run reuses the proven baseline/server checks; its only production
+change is search-field CSS. Browser tests additionally enforce readable field
+widths (at least 140px), not just absence of horizontal overflow. Screenshots
+were inspected at 1280px and 390px. A narrow search-field collapse found in the
+first visual review was corrected before acceptance.
+
+Malformed percent-encoded filters now return 400 instead of silently dropping
+the filter. Import-boundary tests include an exact inclusive/exclusive minute,
+and capture tests reject malformed values without an import-date substitution.
+The final server run's synthetic 50,000-row metadata case measured a cold
+filtered query at 207.0503ms and warm 60-row page allocation count at 1568,
+under its 5000-allocation guard. This is one disposable-runner observation,
+not peak-memory, media-ingestion, endurance or a general speed guarantee.
+
+The real browser fixture uses 65 synthetic PNG originals. It proves released
+search/date behavior, filtered page boundaries, viewer query/snapshot/focus/scroll
+context, no polling while open, history/back/forward, reload, filename/media
+combinations, stale edits, selection reset, errors, narrow layout and all original
+hashes. The mixed-format representative catalogs are metadata fixtures; the full
+actual decoder/provider matrix is separate evidence.
+
+Accepted synthetic artifacts:
+
+- First formatting/screenshots ZIP, artifact 13484168620: SHA256
+  `d3ddf192238e871a71e71808c258fbb5b2766449fdce35c1c9902fc5083d2e2f`.
+- Final server screenshots/empty formatting patch, artifact 13485072592: GitHub
+  digest `457fb69d712c134d1fcd9bd83703a46d8a2c51994820f59900a77a8907065c0a`.
+- Final browser screenshots, artifact 13485540602: SHA256
+  `a73c4f499837ac43b5d48c6512fd32fb6df9cafbb4a8ab16cf7ef7ff10d0b088`.
+
+First/final browser ZIPs were downloaded and independently hashed; the first
+artifact's formatting patch matches the job-log patch after removing Git's
+line-ending notices. The canonical patch was applied locally. Every uploaded
+source blob was verified against its local Git object hash before branch updates.
+The final server run proves that the resulting Go files need no further formatting.
+Local date/script checks passed; 18 privacy-tool tests completed with one existing
+platform-gated skip (17 passed).
+
+Existing environment-gated tests remained skipped where they require additional
+fixtures: actual native naming/quality and media providers, genuine older-writer
+fixture, full-disk/mounted-volume cases, installed/large-volume/ZIP64 restores,
+larger People-index acceptance, exact 4GiB HTTP boundary and separate-account
+retirement actor. This foundation gate does not replace the 0.1.43 release's
+broader acceptance or claim those special scenarios were rerun. Native naming,
+providers/models, catalog 1/2 formats, installer and recovery implementation files
+are unchanged. General catalog/rebuild/backup/restore/provenance tests passed.
+
+Next checkpoint is step 3: visible previous/next across pages, keyboard behavior,
+zoom/pan/full screen and materializing the current item's page on viewer return.
+It should consume GalleryNeighbors and the frozen browser context rather than
+reimplement matching. Metadata schema/recovery work remains step 4. No installer,
+release publication, live PC installation or user-media operation occurred here.
