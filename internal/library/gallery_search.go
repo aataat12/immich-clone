@@ -10,14 +10,14 @@ import (
 )
 
 type gallerySearchRow struct {
-	hidden bool
-	terms  string
+	hidden   bool
+	terms    string
 	filename string
-	mime string
+	mime     string
 	captured string
-	added time.Time
-	people []string
-	tags []string
+	added    time.Time
+	people   []string
+	tags     []string
 }
 
 // This derived metadata cache never retains image bytes or face embeddings and
@@ -25,7 +25,7 @@ type gallerySearchRow struct {
 type gallerySearchIndex struct {
 	transaction int
 	assets      map[string]gallerySearchRow
-	queries map[string]map[string]bool
+	queries     map[string]map[string]bool
 }
 
 func (s *Store) gallerySearchFor(tx *bolt.Tx) (*gallerySearchIndex, error) {
@@ -52,7 +52,7 @@ func (s *Store) gallerySearchFor(tx *bolt.Tx) (*gallerySearchIndex, error) {
 			}
 		}
 		terms := append([]string{a.Name}, tags...)
-		activeTags := append([]string{},tags...)
+		activeTags := append([]string{}, tags...)
 		blocked := map[string]bool{}
 		for _, tag := range dismissed {
 			blocked[tag] = true
@@ -60,11 +60,13 @@ func (s *Store) gallerySearchFor(tx *bolt.Tx) (*gallerySearchIndex, error) {
 		for _, tag := range analysis.Objects {
 			if !blocked[tag] {
 				terms = append(terms, tag)
-				activeTags = append(activeTags,tag)
+				activeTags = append(activeTags, tag)
 			}
 		}
-		for i,tag:=range activeTags {activeTags[i]=strings.ToLower(strings.TrimSpace(tag))}
-		index.assets[a.ID] = gallerySearchRow{hidden:a.Hidden,terms:strings.ToLower(strings.Join(terms,"\x00")),filename:strings.ToLower(a.Name),mime:a.MIME,captured:a.Photo.Captured,added:a.Added,tags:activeTags}
+		for i, tag := range activeTags {
+			activeTags[i] = strings.ToLower(strings.TrimSpace(tag))
+		}
+		index.assets[a.ID] = gallerySearchRow{hidden: a.Hidden, terms: strings.ToLower(strings.Join(terms, "\x00")), filename: strings.ToLower(a.Name), mime: a.MIME, captured: a.Photo.Captured, added: a.Added, tags: activeTags}
 		return nil
 	}); e != nil {
 		return nil, e
@@ -92,7 +94,7 @@ func (s *Store) gallerySearchFor(tx *bolt.Tx) (*gallerySearchIndex, error) {
 		}
 		if label.Name != "" && !label.Dismissed {
 			row.terms += "\x00" + strings.ToLower(label.Name)
-			row.people=append(row.people,strings.ToLower(strings.TrimSpace(label.Name)))
+			row.people = append(row.people, strings.ToLower(strings.TrimSpace(label.Name)))
 			index.assets[face.AssetID] = row
 		}
 		return nil
@@ -106,11 +108,19 @@ func (s *Store) gallerySearchFor(tx *bolt.Tx) (*gallerySearchIndex, error) {
 // Keep at most eight query membership sets per committed metadata snapshot.
 // Count and paging reuse this set; the browser never needs the full ID list.
 func (index *gallerySearchIndex) matching(q GalleryQuery) map[string]bool {
- key:=q.key()
- if ids,ok:=index.queries[key];ok{return ids}
- ids:=map[string]bool{}
- for id,row:=range index.assets {if q.matches(row){ids[id]=true}}
- if len(index.queries)>=8 {index.queries=map[string]map[string]bool{}}
- index.queries[key]=ids
- return ids
+	key := q.key()
+	if ids, ok := index.queries[key]; ok {
+		return ids
+	}
+	ids := map[string]bool{}
+	for id, row := range index.assets {
+		if q.matches(row) {
+			ids[id] = true
+		}
+	}
+	if len(index.queries) >= 8 {
+		index.queries = map[string]map[string]bool{}
+	}
+	index.queries[key] = ids
+	return ids
 }
