@@ -45,20 +45,20 @@ type StoredFace struct {
 	Provider  string    `json:"provider"`
 }
 type FaceLabel struct {
-	Source string `json:"name_source,omitempty"`
-	Policy string `json:"automatic_policy,omitempty"`
-	Score float64 `json:"automatic_score,omitempty"`
-	PreviousSource string `json:"previous_source,omitempty"`
-	PreviousPolicy string `json:"previous_policy,omitempty"`
-	PreviousScore float64 `json:"previous_score,omitempty"`
-	Dismissed bool   `json:"dismissed,omitempty"`
-	Name      string `json:"name"`
-	Previous  string `json:"previous,omitempty"`
-	CanUndo   bool   `json:"can_undo"`
+	Source         string  `json:"name_source,omitempty"`
+	Policy         string  `json:"automatic_policy,omitempty"`
+	Score          float64 `json:"automatic_score,omitempty"`
+	PreviousSource string  `json:"previous_source,omitempty"`
+	PreviousPolicy string  `json:"previous_policy,omitempty"`
+	PreviousScore  float64 `json:"previous_score,omitempty"`
+	Dismissed      bool    `json:"dismissed,omitempty"`
+	Name           string  `json:"name"`
+	Previous       string  `json:"previous,omitempty"`
+	CanUndo        bool    `json:"can_undo"`
 }
 type FaceView struct {
-	Source string `json:"name_source,omitempty"`
-	Policy string `json:"automatic_policy,omitempty"`
+	Source     string    `json:"name_source,omitempty"`
+	Policy     string    `json:"automatic_policy,omitempty"`
 	SampleUS   *int64    `json:"sample_us,omitempty"`
 	Dismissed  bool      `json:"dismissed"`
 	ID         string    `json:"id"`
@@ -78,14 +78,14 @@ type OrganizationAsset struct {
 	Dismissed  []string        `json:"dismissed"`
 }
 type Organization struct {
-	AutomaticNaming bool `json:"automatic_naming"`
-	MediaAvailable bool                `json:"media_available"`
-	Faces          []FaceView          `json:"faces"`
-	Names          []string            `json:"names"`
-	Assets         []OrganizationAsset `json:"assets"`
-	After          string              `json:"after,omitempty"`
-	FaceAfter      string              `json:"face_after,omitempty"`
-	Available      bool                `json:"available"`
+	AutomaticNaming bool                `json:"automatic_naming"`
+	MediaAvailable  bool                `json:"media_available"`
+	Faces           []FaceView          `json:"faces"`
+	Names           []string            `json:"names"`
+	Assets          []OrganizationAsset `json:"assets"`
+	After           string              `json:"after,omitempty"`
+	FaceAfter       string              `json:"face_after,omitempty"`
+	Available       bool                `json:"available"`
 }
 
 func initOrganization(tx *bolt.Tx) error {
@@ -352,7 +352,9 @@ func (s *Store) ProcessAnalysis(ctx context.Context) (bool, error) {
 			}
 		}
 		if a.Status == "ready" {
-			if e := applyAutomaticNames(tx, faces, productionAutomaticNamePolicy()); e != nil { return e }
+			if e := applyAutomaticNames(tx, faces, productionAutomaticNamePolicy()); e != nil {
+				return e
+			}
 		}
 		if e := writeJSON(tx.Bucket([]byte(analysisBucket)), id, a); e != nil {
 			return e

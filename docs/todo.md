@@ -3,7 +3,7 @@
 ## Release 0.1.43 planning
 
 Development checkpoint: the three items are accepted scope for 0.1.43. Candidate
-code and validation are in progress; automatic assignment remains disabled until
+date/gallery search passed the Windows feature gate; automatic assignment remains disabled until
 its independent quality/compatibility gates pass. No released behavior is claimed.
 
 All three improvements below were identified in the November 5, 2026
@@ -37,7 +37,8 @@ instruction to implement all of them in 0.1.43.
 
 ## Automatic identification of known people
 
-Requested November 5, 2026, during the 0.1.42 discussion. Assigned to 0.1.43; implementation and separate quality validation in progress.
+Requested November 5, 2026, during the 0.1.42 discussion. Assigned to 0.1.43. Candidate mechanisms and a narrow native policy screen passed;
+production assignment remains disabled pending broader quality and compatibility evidence.
 
 - Use manually confirmed faces as references to automatically name strong,
   unambiguous matches in newly imported and analyzed photos.

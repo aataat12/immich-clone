@@ -533,7 +533,9 @@ func (s *Store) ApplyReanalysis(parent context.Context, id string) error {
 			added = append(added, f)
 			j.Added++
 		}
-		if e := applyAutomaticNames(tx, added, productionAutomaticNamePolicy()); e != nil { return e }
+		if e := applyAutomaticNames(tx, added, productionAutomaticNamePolicy()); e != nil {
+			return e
+		}
 		a.Objects = j.Objects
 		a.Provider = j.Provider
 		a.Video = j.Video

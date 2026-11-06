@@ -49,8 +49,8 @@ type Asset struct {
 	Error           string        `json:"error,omitempty"`
 }
 type Store struct {
-	offline     *offlineState
-	reviewIndex *organizationIndex // protected by gate; derived from committed catalog state
+	offline       *offlineState
+	reviewIndex   *organizationIndex  // protected by gate; derived from committed catalog state
 	gallerySearch *gallerySearchIndex // protected by gate; rebuilt after every committed write
 
 	analysisStill          func(context.Context, string) (image.Image, int, int, error)

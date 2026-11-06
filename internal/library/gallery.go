@@ -25,13 +25,13 @@ type GalleryPage struct {
 	Count  uint64  `json:"count"`
 }
 type galleryCursor struct {
-	Epoch      string `json:"epoch"`
-	Revision   uint64 `json:"revision"`
-	Sort       string `json:"sort"`
-	Visibility string `json:"visibility"`
-	Key        []byte `json:"key"`
-	Query      string `json:"query,omitempty"`
-	SearchRevision int `json:"search_revision,omitempty"`
+	Epoch          string `json:"epoch"`
+	Revision       uint64 `json:"revision"`
+	Sort           string `json:"sort"`
+	Visibility     string `json:"visibility"`
+	Key            []byte `json:"key"`
+	Query          string `json:"query,omitempty"`
+	SearchRevision int    `json:"search_revision,omitempty"`
 }
 
 func galleryGroup(a Asset) string {
@@ -198,7 +198,9 @@ func (s *Store) GalleryPage(order, visibility, after string, limit int) (Gallery
 // The unfiltered path retains its index-only traversal and ordering cursors.
 func (s *Store) SearchGalleryPage(order, visibility, after, query string, limit int) (GalleryPage, error) {
 	out := GalleryPage{Assets: []Asset{}}
-	if !textOK(query, 128) { return out, ErrGalleryInput }
+	if !textOK(query, 128) {
+		return out, ErrGalleryInput
+	}
 	query = strings.ToLower(strings.TrimSpace(query))
 	if (order != "capture" && order != "upload" && order != "name") || (visibility != "library" && visibility != "hidden") || limit < 1 || limit > 100 || len(after) > 4096 {
 		return out, ErrGalleryInput
@@ -210,7 +212,10 @@ func (s *Store) SearchGalleryPage(order, visibility, after, query string, limit 
 			return out, ErrGalleryInput
 		}
 	}
-	if query != "" { s.gate.Lock(); defer s.gate.Unlock() }
+	if query != "" {
+		s.gate.Lock()
+		defer s.gate.Unlock()
+	}
 	e := s.db.View(func(tx *bolt.Tx) error {
 		root := tx.Bucket([]byte(galleryBucket))
 		if root == nil {
@@ -229,13 +234,19 @@ func (s *Store) SearchGalleryPage(order, visibility, after, query string, limit 
 		}
 		var search *gallerySearchIndex
 		if query != "" {
-			if after != "" && cursor.SearchRevision != tx.ID() { return ErrGalleryChanged }
+			if after != "" && cursor.SearchRevision != tx.ID() {
+				return ErrGalleryChanged
+			}
 			var e error
 			search, e = s.gallerySearchFor(tx)
-			if e != nil { return e }
+			if e != nil {
+				return e
+			}
 			out.Count = 0
 			for _, row := range search.assets {
-				if row.hidden == (visibility == "hidden") && strings.Contains(row.terms, query) { out.Count++ }
+				if row.hidden == (visibility == "hidden") && strings.Contains(row.terms, query) {
+					out.Count++
+				}
 			}
 		}
 		index := root.Bucket([]byte(visibility + "_" + order))
@@ -250,10 +261,14 @@ func (s *Store) SearchGalleryPage(order, visibility, after, query string, limit 
 		}
 		var last []byte
 		for ; k != nil; k, v = c.Next() {
-			if search != nil && !strings.Contains(search.assets[string(v)].terms, query) { continue }
+			if search != nil && !strings.Contains(search.assets[string(v)].terms, query) {
+				continue
+			}
 			if len(out.Assets) == limit {
 				next := galleryCursor{Epoch: epoch, Revision: revision, Sort: order, Visibility: visibility, Key: last, Query: query}
-				if query != "" { next.SearchRevision = tx.ID() }
+				if query != "" {
+					next.SearchRevision = tx.ID()
+				}
 				b, e := json.Marshal(next)
 				if e != nil {
 					return e

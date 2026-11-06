@@ -381,7 +381,9 @@ func (s *Store) processVideoAnalysis(parent context.Context, asset Asset, a Anal
 			}
 		}
 		if workErr == nil {
-			if e := applyAutomaticNames(tx, faces, productionAutomaticNamePolicy()); e != nil { return e }
+			if e := applyAutomaticNames(tx, faces, productionAutomaticNamePolicy()); e != nil {
+				return e
+			}
 		}
 		if e := writeJSON(tx.Bucket([]byte(analysisBucket)), asset.ID, a); e != nil {
 			return e

@@ -31,7 +31,7 @@ search and acceptance. Unrelated development was not changed.
 Local tooling: bundled Node executes actual gallery date helpers; gallery/People
 inline scripts and browser fixtures pass syntax checks. PowerShell feature fixture
 parses. Go is not installed locally; no dependency setup was requested. Windows
-Server 2022 feature/regression and pinned-native policy screens are the next gate.
+Server 2022 feature/regression and pinned-native policy screens passed below.
 The development workflow builds only a disposable test executable, not an installer.
 Only synthetic/public fixtures and aggregate native metrics may be retained.
 
@@ -62,3 +62,37 @@ preservation, no new charges, unsigned-installer limits and open SEC-05/SEC-08
 remain unchanged. Finish all three accepted features and their evidence before
 packaging; then validate genuine0.1.42 upgrade, injected rollback, pinned providers,
 full browser journeys and independent restore/reinstall before publication.
+
+## Executed checkpoint evidence
+
+Feature acceptance: source `112c0ec159f877f90786fb417424ec10c6c0a0dc`,
+[Windows Server 2022 run42158716082](https://github.com/aataat12/immich-clone/actions/runs/42158716082),
+job127698964272. Pinned Go1.27.3 module verification, all internal/command tests,
+vet and actual date helpers passed. Real LocalService/Edge acceptance passed:
+assigned Alice/Bob and multi-person matches, filename/custom-tag queries,65-item
+filtered paging, viewer return/page/scroll, clear/empty/error handling, hidden
+scope and reload, desktop/narrow layout and all65 original SHA256 values.
+The unit/API suite also covers suggestions/dismissals, stale/query-bound cursors,
+and distant matches across10,003 catalog records. Synthetic screenshot artifact
+13476190940, ZIP SHA256
+`6366ec32f6c3010cf375d344c8842448efb69038f5b7959d56ed2f7d86bc4535`.
+An initial run failed only a new test's incorrect reanalysis method call; corrected
+source passed the full gate. Runner gofmt normalization was copied back locally;
+it changes formatting only, with no product behavior change.
+
+Separate native screen: source `cc34b4d9eef39aa0a092893e1f14019edab5ebe5`,
+[run42158326967](https://github.com/aataat12/immich-clone/actions/runs/42158326967),
+job127697698876 passed. Native policy/mechanism code is unchanged in the corrected
+feature source. The overall initial workflow is red because of the separate,
+subsequently corrected feature fixture; this native job itself is successful.
+All400 corpus images produced exactly one face;40 fixed reference enrollments
+were available. Of160 known queries,147 correct,0 wrong,13 unresolved; of100
+unknown queries,0 false accepts and100 rejected. Existing review/native original
+integrity, no-face and scratch cleanup checks also passed. This establishes only
+the declared narrow screen; it does not justify general-library accuracy or
+turning on automatic naming. Production remains disabled.
+
+This checkpoint completes the first development/validation slice requested by
+the user, not the0.1.43 release. Next: address old-writer provenance retention,
+obtain independent representative quality evidence without tuning to this test,
+and validate enabled hooks/recovery before the combined packaging gate.
