@@ -1,6 +1,6 @@
 package library
 
-import("bytes";"errors";"fmt";"reflect";"testing";"time";bolt "go.etcd.io/bbolt")
+import("bytes";"errors";"fmt";"reflect";"testing";"time";"strings";bolt "go.etcd.io/bbolt")
 
 func prepareBatchFixture(t *testing.T,s *Store,action,album string,limit int)OrganizationBatch{t.Helper();q:=GalleryQuery{Sort:"name",Visibility:"library"};p,e:=s.QueryGalleryPage(q,"",100);if e!=nil{t.Fatal(e)};targets:=[]OrganizationTarget{};for _,a:=range p.Assets{if len(targets)==limit{break};targets=append(targets,OrganizationTarget{ID:a.ID,Added:a.Added})};b,e:=s.PrepareOrganizationBatch(OrganizationBatchRequest{Action:action,AlbumID:album,Query:q,Snapshot:p.Snapshot,Targets:targets});if e!=nil{t.Fatal(e)};return b}
 func completeBatchFixture(t *testing.T,s *Store,b OrganizationBatch)OrganizationBatch{t.Helper();for b.Status!="done"{step:=0;for _,x:=range b.Targets{if x.Outcome!="pending"{step++}};var e error;b,e=s.ContinueOrganizationBatch(b.ID,step);if e!=nil{t.Fatal(e)}};return b}
@@ -38,4 +38,23 @@ func TestOrganizationBatchTagsAlbumsManualOrderAndRollback(t *testing.T){
  // A failed transaction rolls back both target mutation and its receipt state.
  before,_:=s.OrganizationExport();sentinel:=errors.New("synthetic write failure");e=s.db.Update(func(tx *bolt.Tx)error{asset,_:=curationAsset(tx,b.Targets[1].ID);if _,e:=applyOrganizationTarget(tx,OrganizationBatch{Action:"favorite_on"},asset);e!=nil{return e};return sentinel});if !errors.Is(e,sentinel){t.Fatal(e)};after,_:=s.OrganizationExport();raw1,_:=jsonCuration(before);raw2,_:=jsonCuration(after);if !bytes.Equal(raw1,raw2){t.Fatal("partial metadata transaction")}
  a,_=s.AlbumPage(album,"",100);curationEdit(t,s,CurationEdit{Action:"delete_album",AlbumID:album,Expected:a.Album.Token});if _,e=s.Get(b.Targets[0].ID);e!=nil{t.Fatal("album deletion removed media")};empty,_:=s.AlbumPage(other,"",100);if empty.Count!=0{t.Fatal("other album changed")};if e=s.db.View(validateCuration);e!=nil{t.Fatal(e)}
+}
+
+func TestOrganizationBatchBoundsTagsAndReceiptRetirement(t *testing.T){
+ s,_:=openTest(t);seedGalleryFoundation(t,s,187)
+ q:=GalleryQuery{Sort:"name",Visibility:"library",Text:"Trip"};p,e:=s.QueryGalleryPage(q,"",60);if e!=nil{t.Fatal(e)}
+ target:=OrganizationTarget{ID:p.Assets[0].ID,Added:p.Assets[0].Added}
+ in:=OrganizationBatchRequest{Action:"add_tag",Tag:"Custom <family>",Query:q,Snapshot:p.Snapshot,Targets:[]OrganizationTarget{target}}
+ before:=map[string][]byte{};s.db.View(func(tx *bolt.Tx)error{for _,name:=range []string{analysisBucket,"dismissed_ai_tags_v1",labelsBucket}{b:=tx.Bucket([]byte(name));if b!=nil{b.ForEach(func(k,v []byte)error{before[name+string(k)]=append([]byte(nil),v...);return nil})}};return nil})
+ b,e:=s.PrepareOrganizationBatch(in);if e!=nil{t.Fatal("filtered snapshot preview",e)};b=completeBatchFixture(t,s,b);if b.Targets[0].Outcome!="saved"{t.Fatal("tag add")}
+ p,_=s.QueryGalleryPage(q,"",60);in.Snapshot=p.Snapshot;in.Action="remove_tag";b,e=s.PrepareOrganizationBatch(in);if e!=nil{t.Fatal(e)};completeBatchFixture(t,s,b)
+ s.db.View(func(tx *bolt.Tx)error{for key,want:=range before{for _,name:=range []string{analysisBucket,"dismissed_ai_tags_v1",labelsBucket}{if strings.HasPrefix(key,name)&&!bytes.Equal(want,tx.Bucket([]byte(name)).Get([]byte(strings.TrimPrefix(key,name)))){t.Fatal("recognition/correction provenance changed")}}};return nil})
+ p,_=s.QueryGalleryPage(q,"",60);in.Snapshot=p.Snapshot;in.Targets=make([]OrganizationTarget,501);if _,e=s.PrepareOrganizationBatch(in);!errors.Is(e,ErrCurationInput){t.Fatal("selection bound",e)}
+ in.Targets=[]OrganizationTarget{target,target};if _,e=s.PrepareOrganizationBatch(in);!errors.Is(e,ErrCurationConflict){t.Fatal("duplicate targets",e)}
+ // Filled unfinished history refuses more work without evicting pending receipts.
+ for i:=0;i<maxOrganizationBatches;i++{rows,_:=s.OrganizationBatches();if len(rows)==maxOrganizationBatches{break};prepareBatchFixture(t,s,"favorite_on","",1)}
+ rows,_:=s.OrganizationBatches();for _,r:=range rows{if r.Status=="done"{s.db.Update(func(tx *bolt.Tx)error{old,_:=readOrganizationBatch(tx,r.ID);old.Status="paused";for i:=range old.Targets{old.Targets[i].Outcome="pending"};return curationWrite(tx,organizationBatchesBucket,r.ID,old)})}}
+ p,_=s.QueryGalleryPage(q,"",60);in.Action="favorite_on";in.Tag="";in.Snapshot=p.Snapshot;in.Targets=[]OrganizationTarget{target};if _,e=s.PrepareOrganizationBatch(in);!errors.Is(e,ErrCurationLimit){t.Fatal("unfinished history was evicted",e)}
+ rows,_=s.OrganizationBatches();old,e:=s.OrganizationBatch(rows[0].ID);if e!=nil{t.Fatal(e)};completeBatchFixture(t,s,old);p,_=s.QueryGalleryPage(q,"",60);in.Snapshot=p.Snapshot;if _,e=s.PrepareOrganizationBatch(in);e!=nil{t.Fatal("completed retirement",e)};if _,e=s.OrganizationBatch(old.ID);!errors.Is(e,ErrBatchExpired){t.Fatal("retired ID replay",e)}
+ if e=s.db.View(validateCuration);e!=nil{t.Fatal("history byte accounting",e)}
 }

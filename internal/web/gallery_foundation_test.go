@@ -32,7 +32,7 @@ func TestGalleryFoundationHTTPContract(t *testing.T) {
 	if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &n) != nil || n.Previous != nil || n.Next == nil || n.Count != 2 {
 		t.Fatal(w.Code, w.Body.String())
 	}
-	for _, suffix := range []string{"&filename=%ZZ", "&tag_any=%", "&favorite=true", "&limit=0", "&media=unknown", "&q=a&q=b", "&no_capture=maybe", "&date_basis=upload&from=2024-01-01T00:00:00", "&asset=" + p.Assets[0].ID} {
+	for _, suffix := range []string{"&filename=%ZZ", "&tag_any=%", "&favorite=maybe", "&album=invalid", "&limit=0", "&media=unknown", "&q=a&q=b", "&no_capture=maybe", "&date_basis=upload&from=2024-01-01T00:00:00", "&asset=" + p.Assets[0].ID} {
 		if w := request(s, "GET", base+suffix, "", c); w.Code != 400 {
 			t.Fatal(suffix, w.Code)
 		}

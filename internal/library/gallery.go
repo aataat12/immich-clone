@@ -18,7 +18,7 @@ var ErrGalleryInput = errors.New("invalid gallery page")
 var ErrGalleryChanged = errors.New("gallery ordering changed; refresh from first page")
 
 type GalleryPage struct {
-	Organization map[string]AssetOrganization `json:"organization"`
+	Organization map[string]GalleryOrganization `json:"organization"`
  Previous    string       `json:"previous,omitempty"`
 	HasPrevious bool         `json:"has_previous"`
 	Assets      []Asset      `json:"assets"`

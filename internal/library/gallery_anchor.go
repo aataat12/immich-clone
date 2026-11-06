@@ -141,7 +141,7 @@ func (r *galleryResults) page(after string, limit int) (GalleryPage, error) {
 			return out, e
 		}
 		out.Assets = append(out.Assets, a)
- if out.Organization==nil{out.Organization=map[string]AssetOrganization{}};o,e:=assetOrganization(r.tx,a.ID);if e!=nil{return out,e};out.Organization[a.ID]=o
+ if out.Organization==nil{out.Organization=map[string]GalleryOrganization{}};o,e:=galleryOrganization(r.tx,a.ID);if e!=nil{return out,e};out.Organization[a.ID]=o
 		last = append(last[:0], k...)
 	}
 	return out, nil
