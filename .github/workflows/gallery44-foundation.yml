@@ -1,5 +1,5 @@
 name: Frameout 0.1.44 captions sources filters and calendar acceptance
-# Steps 7-8: final UI, real restart/restore and installed compatibility; exact backend evidence may be reused.
+# Steps 7-8: complete direct/no-folder scopes, receipt outcomes/export and caption draft acceptance.
 on:
   push:
     branches: ['work/release-0.1.44-foundation']

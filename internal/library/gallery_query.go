@@ -13,6 +13,8 @@ import (
 // viewer neighbors. New durable organization fields belong here as they land.
 type GalleryQuery struct {
 	SourceFolder string        `json:"source_folder,omitempty"`
+	SourceMode   string        `json:"source_mode,omitempty"`
+	SourceMissing bool         `json:"source_missing,omitempty"`
 	ImportBatch  string        `json:"import_batch,omitempty"`
 	Favorite     string        `json:"favorite,omitempty"`
 	Album        string        `json:"album,omitempty"`
@@ -72,6 +74,9 @@ func normalizeGalleryLabels(group GalleryLabels) (GalleryLabels, error) {
 // Import boundaries are explicit instants, resolved by the caller's display zone.
 // Both use inclusive From / exclusive Until. Missing capture dates never fall back.
 func (q GalleryQuery) Normalize() (GalleryQuery, error) {
+	if q.SourceMode != "" && q.SourceMode != "subtree" && q.SourceMode != "direct" { return q, ErrGalleryInput }
+	if q.SourceMode == "subtree" || q.SourceFolder == "" { q.SourceMode = "" }
+	if q.SourceMissing && q.SourceFolder != "" { return q, ErrGalleryInput }
 	if q.SourceFolder != "" && q.SourceFolder != "." {
 		folder, e := cleanRelative(q.SourceFolder)
 		if e != nil {
@@ -169,7 +174,7 @@ func (q GalleryQuery) key() string {
 	return hex.EncodeToString(sum[:])
 }
 func (q GalleryQuery) filtered() bool {
-	return q.SourceFolder != "" || q.ImportBatch != "" || q.Favorite != "" || q.Album != "" || q.Text != "" || q.Filename != "" || q.Media != "" || q.From != "" || q.Until != "" || q.NoCapture || len(q.People.Any)+len(q.People.All)+len(q.People.Exclude)+len(q.Tags.Any)+len(q.Tags.All)+len(q.Tags.Exclude) > 0
+	return q.SourceMissing || q.SourceFolder != "" || q.ImportBatch != "" || q.Favorite != "" || q.Album != "" || q.Text != "" || q.Filename != "" || q.Media != "" || q.From != "" || q.Until != "" || q.NoCapture || len(q.People.Any)+len(q.People.All)+len(q.People.Exclude)+len(q.Tags.Any)+len(q.Tags.All)+len(q.Tags.Exclude) > 0
 }
 
 func (g GalleryLabels) matches(values []string) bool {
@@ -211,7 +216,8 @@ func (q GalleryQuery) matches(row gallerySearchRow) bool {
 			return false
 		}
 	}
-	if q.SourceFolder != "" && !galleryFolderMatches(sources, q.SourceFolder) {
+	if q.SourceMissing && len(sources) > 0 { return false }
+	if q.SourceFolder != "" && !galleryFolderMatchesMode(sources, q.SourceFolder, q.SourceMode) {
 		return false
 	}
 	if q.Favorite != "" && row.favorite != (q.Favorite == "true") {

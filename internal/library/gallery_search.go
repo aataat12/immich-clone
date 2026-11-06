@@ -33,6 +33,7 @@ type gallerySearchRow struct {
 // is never exported. Reopen and every committed catalog edit invalidate it.
 type gallerySearchIndex struct {
 	batches     []ImportSession
+	batchOutcomes map[string]GalleryImportOutcomes
 	state       string
 	transaction int
 	assets      map[string]gallerySearchRow

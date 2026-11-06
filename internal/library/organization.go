@@ -701,6 +701,9 @@ func (s *Store) OrganizationExport() (map[string]any, error) {
 	organization := map[string]any{"version": 1}
 	e := s.db.View(func(tx *bolt.Tx) error {
 		out["catalog_schema"] = string(tx.Bucket([]byte("meta")).Get([]byte("schema")))
+		imports, e := exportImportHistory(tx, maxImportHistoryExportBytes)
+		if e != nil { return e }
+		out["import_history"] = imports
 		curation, e := exportCuration(tx)
 		if e != nil {
 			return e
@@ -765,6 +768,7 @@ func (s *Store) OrganizationExport() (map[string]any, error) {
 		out["organization"] = organization
 		return nil
 	})
+	if e != nil { return nil,e }
 	return out, e
 }
 
