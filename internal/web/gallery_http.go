@@ -53,14 +53,27 @@ func (s *Server) galleryHTTP(w http.ResponseWriter, r *http.Request) bool {
 		return true
 	}
 	p := r.URL.Query()
- if r.URL.Path=="/api/gallery/anchor" {
-  limit:=60
-  if p.Has("after"){galleryError(w,library.ErrGalleryInput);return true}
-  if p.Has("limit"){limit,e=strconv.Atoi(p.Get("limit"));if e!=nil{galleryError(w,library.ErrGalleryInput);return true}}
-  anchor,e:=s.Store.GalleryAnchorPage(q,p.Get("asset"),p.Get("snapshot"),limit)
-  if e!=nil{galleryError(w,e)}else{jsonResponse(w,anchor)}
-  return true
- }
+	if r.URL.Path == "/api/gallery/anchor" {
+		limit := 60
+		if p.Has("after") {
+			galleryError(w, library.ErrGalleryInput)
+			return true
+		}
+		if p.Has("limit") {
+			limit, e = strconv.Atoi(p.Get("limit"))
+			if e != nil {
+				galleryError(w, library.ErrGalleryInput)
+				return true
+			}
+		}
+		anchor, e := s.Store.GalleryAnchorPage(q, p.Get("asset"), p.Get("snapshot"), limit)
+		if e != nil {
+			galleryError(w, e)
+		} else {
+			jsonResponse(w, anchor)
+		}
+		return true
+	}
 	if r.URL.Path == "/api/gallery/neighbors" {
 		if p.Has("after") || p.Has("limit") {
 			galleryError(w, library.ErrGalleryInput)

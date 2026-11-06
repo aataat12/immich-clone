@@ -18,15 +18,15 @@ var ErrGalleryInput = errors.New("invalid gallery page")
 var ErrGalleryChanged = errors.New("gallery ordering changed; refresh from first page")
 
 type GalleryPage struct {
- Previous string `json:"previous,omitempty"`
- HasPrevious bool `json:"has_previous"`
-	Assets   []Asset      `json:"assets"`
-	Next     string       `json:"next,omitempty"`
-	Total    uint64       `json:"total"`
-	Hidden   uint64       `json:"hidden"`
-	Count    uint64       `json:"count"`
-	Query    GalleryQuery `json:"query"`
-	Snapshot string       `json:"snapshot"`
+	Previous    string       `json:"previous,omitempty"`
+	HasPrevious bool         `json:"has_previous"`
+	Assets      []Asset      `json:"assets"`
+	Next        string       `json:"next,omitempty"`
+	Total       uint64       `json:"total"`
+	Hidden      uint64       `json:"hidden"`
+	Count       uint64       `json:"count"`
+	Query       GalleryQuery `json:"query"`
+	Snapshot    string       `json:"snapshot"`
 }
 type galleryCursor struct {
 	Epoch          string `json:"epoch"`
@@ -204,6 +204,7 @@ func (s *Store) SearchGalleryPage(order, visibility, after, query string, limit 
 }
 
 type galleryResults struct {
+	ordered [][]byte
 	tx                   *bolt.Tx
 	query                GalleryQuery
 	index                *bolt.Bucket
@@ -230,6 +231,7 @@ func (s *Store) galleryResultsFor(tx *bolt.Tx, q GalleryQuery) (*galleryResults,
 			return nil, e
 		}
 		r.matches = search.matching(q)
+		r.ordered = search.orderedKeys(q)
 		r.count = uint64(len(r.matches))
 	}
 	return r, nil
@@ -286,7 +288,7 @@ func (s *Store) QueryGalleryPage(query GalleryQuery, after string, limit int) (G
 		if e != nil {
 			return e
 		}
-		out,e=r.page(after,limit)
+		out, e = r.page(after, limit)
 		return e
 	})
 	return out, e
