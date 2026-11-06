@@ -1,5 +1,5 @@
-name: Frameout 0.1.44 selection and albums acceptance
-# Steps 5–6: frozen displayed favorite intent and complete mixed-album evidence.
+name: Frameout 0.1.44 captions sources filters and calendar acceptance
+# Steps 5â€“6: frozen displayed favorite intent and complete mixed-album evidence.
 on:
   push:
     branches: ['work/release-0.1.44-foundation']
@@ -21,6 +21,7 @@ jobs:
       GOTOOLCHAIN: local
       IMMICH_TEST_CURATION: '1'
       IMMICH_TEST_ORGANIZATION: '1'
+      IMMICH_TEST_BROWSE78: '1'
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683

@@ -31,6 +31,17 @@ try {
   $env:IMMICH_ORG_STAGE='recover'
   Checked node @('tests/organization56.cjs')
  }
+ if($env:IMMICH_TEST_BROWSE78 -eq '1'){
+  $env:IMMICH_BROWSE78_STAGE='prepare'
+  Checked node @('tests/browse78.cjs')
+  Stop-Service ImmichClone
+  Start-Service ImmichClone
+  $ready=$false
+  for($i=0;$i -lt 80;$i++){try{if((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok'){$ready=$true;break}}catch{};Start-Sleep -Milliseconds 250}
+  if(!$ready){throw 'Source browsing restart fixture service health timed out'}
+  $env:IMMICH_BROWSE78_STAGE='verify'
+  Checked node @('tests/browse78.cjs')
+ }
  if($env:IMMICH_TEST_CURATION -eq '1'){
   Checked node @('tests/metadata-recovery.cjs')
   Stop-Service ImmichClone
@@ -44,6 +55,11 @@ try {
   $env:IMMICH_CURATION_ROOT=$restore;$env:IMMICH_CURATION_STAGE='inspect';$env:IMMICH_CURATION_EXPECTED=Join-Path $root 'expected-curation.json'
   if($env:IMMICH_TEST_ORGANIZATION -eq '1'){$env:IMMICH_EXPECT_PAUSED_BATCH='1'}
   Checked go @('test','-mod=readonly','-count=1','-timeout=120s','./internal/library','-run','^TestCurationPublishedFixture$')
+  if($env:IMMICH_TEST_BROWSE78 -eq '1'){
+   $env:IMMICH_BROWSE78_ROOT=$restore;$env:IMMICH_BROWSE78_EXPECTED=Join-Path $root 'expected-browse78.json'
+   Checked go @('test','-mod=readonly','-count=1','-timeout=120s','./internal/library','-run','^TestGalleryBrowse78RestoredFixture$')
+   Remove-Item Env:IMMICH_BROWSE78_ROOT,Env:IMMICH_BROWSE78_EXPECTED -ErrorAction SilentlyContinue
+  }
   Remove-Item Env:IMMICH_EXPECT_PAUSED_BATCH -ErrorAction SilentlyContinue
   Remove-Item Env:IMMICH_CURATION_ROOT,Env:IMMICH_CURATION_STAGE,Env:IMMICH_CURATION_EXPECTED -ErrorAction SilentlyContinue
  }

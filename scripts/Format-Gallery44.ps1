@@ -2,5 +2,6 @@ $ErrorActionPreference='Stop'
 $files=@('internal/library/gallery.go','internal/library/gallery_query.go','internal/library/gallery_search.go','internal/library/gallery_foundation_test.go','internal/library/gallery_anchor.go','internal/library/gallery_anchor_test.go','internal/library/catalog_schema.go','internal/library/input_validation.go','internal/library/organization.go','internal/library/deletion.go','internal/library/automatic_names_schema_test.go','internal/library/offline_windows_test.go','internal/library/curation.go','internal/library/curation_test.go','internal/library/curation_fixture_test.go','internal/library/curation_failure_test.go','internal/web/gallery_http.go','internal/web/gallery_foundation_test.go','internal/web/server.go','internal/web/curation.go','internal/web/curation_test.go')
 $files+=@('internal/library/curation_relationship_test.go')
 $files+=@('internal/library/gallery_organization.go','internal/library/album_summary.go','internal/library/organization_batch.go','internal/web/organization_batch.go','internal/library/organization_batch_test.go','internal/web/organization_batch_test.go')
+$files+=@(Get-ChildItem internal/library/gallery_browse*.go,internal/web/gallery_browse*.go -ErrorAction SilentlyContinue | ForEach-Object {$_.FullName})
 gofmt -w @files
 if($LASTEXITCODE -ne 0){throw 'Candidate source formatting failed'}

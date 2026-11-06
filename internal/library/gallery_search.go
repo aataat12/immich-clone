@@ -14,6 +14,8 @@ import (
 )
 
 type gallerySearchRow struct {
+	sources      []string
+	batches      map[string][]string
 	organization string
 	favorite     bool
 	albums       map[string]uint64
@@ -30,6 +32,7 @@ type gallerySearchRow struct {
 // This derived metadata cache never retains image bytes or face embeddings and
 // is never exported. Reopen and every committed catalog edit invalidate it.
 type gallerySearchIndex struct {
+	batches     []ImportSession
 	state       string
 	transaction int
 	assets      map[string]gallerySearchRow
@@ -75,11 +78,12 @@ func (s *Store) gallerySearchFor(tx *bolt.Tx) (*gallerySearchIndex, error) {
 		for i, tag := range activeTags {
 			activeTags[i] = strings.ToLower(strings.TrimSpace(tag))
 		}
-		index.assets[a.ID] = gallerySearchRow{hidden: a.Hidden, terms: strings.ToLower(strings.Join(terms, "\x00")), filename: strings.ToLower(a.Name), mime: a.MIME, captured: a.Photo.Captured, added: a.Added, tags: activeTags}
+		index.assets[a.ID] = gallerySearchRow{sources: append([]string{}, a.Sources...), hidden: a.Hidden, terms: strings.ToLower(strings.Join(terms, "\x00")), filename: strings.ToLower(a.Name), mime: a.MIME, captured: a.Photo.Captured, added: a.Added, tags: activeTags}
 		return nil
 	}); e != nil {
 		return nil, e
 	}
+	if e := index.recordImportSources(tx); e != nil { return nil, e }
 	// Only assigned names are searchable; inferred suggestions never enter terms.
 	// Hidden media has its own searchable view without exposing it in the library.
 	if e := tx.Bucket([]byte(facesBucket)).ForEach(func(k, v []byte) error {
@@ -118,6 +122,7 @@ func (s *Store) gallerySearchFor(tx *bolt.Tx) (*gallerySearchIndex, error) {
 			}
 			row := index.assets[string(k)]
 			row.favorite = o.Favorite
+			row.terms += "\x00" + strings.ToLower(strings.Join([]string{o.Title, o.Caption, o.Notes}, "\x00"))
 			sum := sha256.Sum256(v)
 			row.organization = hex.EncodeToString(sum[:])
 			index.assets[string(k)] = row
@@ -166,7 +171,9 @@ func (s *Store) gallerySearchFor(tx *bolt.Tx) (*gallerySearchIndex, error) {
 			Favorite     bool
 			Albums       map[string]uint64
 			Organization string
-		}{id, row.hidden, row.terms, row.filename, row.mime, row.captured, row.added.UTC().Format(time.RFC3339Nano), row.people, row.tags, row.favorite, row.albums, row.organization})
+			Sources      []string
+			Batches      map[string][]string
+		}{id, row.hidden, row.terms, row.filename, row.mime, row.captured, row.added.UTC().Format(time.RFC3339Nano), row.people, row.tags, row.favorite, row.albums, row.organization, row.sources, row.batches})
 		if e != nil {
 			return nil, e
 		}

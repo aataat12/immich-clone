@@ -12,6 +12,8 @@ import (
 // GalleryQuery is the single membership/order contract for pages, counts and
 // viewer neighbors. New durable organization fields belong here as they land.
 type GalleryQuery struct {
+	SourceFolder string        `json:"source_folder,omitempty"`
+	ImportBatch  string        `json:"import_batch,omitempty"`
 	Favorite   string        `json:"favorite,omitempty"`
 	Album      string        `json:"album,omitempty"`
 	Sort       string        `json:"sort"`
@@ -70,6 +72,12 @@ func normalizeGalleryLabels(group GalleryLabels) (GalleryLabels, error) {
 // Import boundaries are explicit instants, resolved by the caller's display zone.
 // Both use inclusive From / exclusive Until. Missing capture dates never fall back.
 func (q GalleryQuery) Normalize() (GalleryQuery, error) {
+	if q.SourceFolder != "" && q.SourceFolder != "." {
+		folder, e := cleanRelative(q.SourceFolder)
+		if e != nil { return q, ErrGalleryInput }
+		q.SourceFolder = folder
+	}
+	if q.ImportBatch != "" && !validID(q.ImportBatch) { return q, ErrGalleryInput }
 	if q.Favorite != "" && q.Favorite != "true" && q.Favorite != "false" {
 		return q, ErrGalleryInput
 	}
@@ -157,7 +165,7 @@ func (q GalleryQuery) key() string {
 	return hex.EncodeToString(sum[:])
 }
 func (q GalleryQuery) filtered() bool {
-	return q.Favorite != "" || q.Album != "" || q.Text != "" || q.Filename != "" || q.Media != "" || q.From != "" || q.Until != "" || q.NoCapture || len(q.People.Any)+len(q.People.All)+len(q.People.Exclude)+len(q.Tags.Any)+len(q.Tags.All)+len(q.Tags.Exclude) > 0
+	return q.SourceFolder != "" || q.ImportBatch != "" || q.Favorite != "" || q.Album != "" || q.Text != "" || q.Filename != "" || q.Media != "" || q.From != "" || q.Until != "" || q.NoCapture || len(q.People.Any)+len(q.People.All)+len(q.People.Exclude)+len(q.Tags.Any)+len(q.Tags.All)+len(q.Tags.Exclude) > 0
 }
 
 func (g GalleryLabels) matches(values []string) bool {
@@ -191,6 +199,13 @@ func (g GalleryLabels) matches(values []string) bool {
 }
 
 func (q GalleryQuery) matches(row gallerySearchRow) bool {
+	sources := row.sources
+	if q.ImportBatch != "" {
+		var ok bool
+		sources, ok = row.batches[q.ImportBatch]
+		if !ok { return false }
+	}
+	if q.SourceFolder != "" && !galleryFolderMatches(sources, q.SourceFolder) { return false }
 	if q.Favorite != "" && row.favorite != (q.Favorite == "true") {
 		return false
 	}
@@ -209,7 +224,7 @@ func (q GalleryQuery) matches(row gallerySearchRow) bool {
 		return false
 	}
 	captured, e := time.Parse("2006-01-02T15:04:05", row.captured)
-	validCapture := e == nil && captured.Format("2006-01-02T15:04:05") == row.captured
+	validCapture := e == nil && captured.Year() >= 1 && captured.Year() <= 9999 && captured.Format("2006-01-02T15:04:05") == row.captured
 	if q.NoCapture {
 		return !validCapture
 	}
