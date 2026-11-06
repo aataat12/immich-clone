@@ -23,6 +23,8 @@ type GalleryPage struct {
 	Total  uint64  `json:"total"`
 	Hidden uint64  `json:"hidden"`
 	Count  uint64  `json:"count"`
+	Query GalleryQuery `json:"query"`
+	Snapshot string `json:"snapshot"`
 }
 type galleryCursor struct {
 	Epoch          string `json:"epoch"`
@@ -32,6 +34,7 @@ type galleryCursor struct {
 	Key            []byte `json:"key"`
 	Query          string `json:"query,omitempty"`
 	SearchRevision int    `json:"search_revision,omitempty"`
+	QueryKey string `json:"query_key,omitempty"`
 }
 
 func galleryGroup(a Asset) string {
@@ -189,102 +192,123 @@ func updateGallery(tx *bolt.Tx, a Asset) error {
 	return nil
 }
 
-// GalleryPage visits only requested indexed rows; legacy List remains for explicit export/backup callers.
+// GalleryPage retains the 0.1.43 public entry point.
 func (s *Store) GalleryPage(order, visibility, after string, limit int) (GalleryPage, error) {
-	return s.SearchGalleryPage(order, visibility, after, "", limit)
+ return s.SearchGalleryPage(order,visibility,after,"",limit)
 }
 
-// SearchGalleryPage filters the entire eligible catalog before bounded paging.
-// The unfiltered path retains its index-only traversal and ordering cursors.
-func (s *Store) SearchGalleryPage(order, visibility, after, query string, limit int) (GalleryPage, error) {
-	out := GalleryPage{Assets: []Asset{}}
-	if !textOK(query, 128) {
-		return out, ErrGalleryInput
-	}
-	query = strings.ToLower(strings.TrimSpace(query))
-	if (order != "capture" && order != "upload" && order != "name") || (visibility != "library" && visibility != "hidden") || limit < 1 || limit > 100 || len(after) > 4096 {
-		return out, ErrGalleryInput
-	}
-	var cursor galleryCursor
-	if after != "" {
-		b, e := base64.RawURLEncoding.DecodeString(after)
-		if e != nil || json.Unmarshal(b, &cursor) != nil || cursor.Sort != order || cursor.Visibility != visibility || cursor.Query != query || len(cursor.Key) == 0 || len(cursor.Key) > 1100 {
-			return out, ErrGalleryInput
-		}
-	}
-	if query != "" {
-		s.gate.Lock()
-		defer s.gate.Unlock()
-	}
-	e := s.db.View(func(tx *bolt.Tx) error {
-		root := tx.Bucket([]byte(galleryBucket))
-		if root == nil {
-			return errors.New("gallery index unavailable")
-		}
-		epoch := string(root.Get([]byte("epoch")))
-		revision := galleryNumber(root, "revision")
-		if after != "" && (cursor.Epoch != epoch || cursor.Revision != revision) {
-			return ErrGalleryChanged
-		}
-		out.Total = galleryNumber(root, "total")
-		out.Hidden = galleryNumber(root, "hidden")
-		out.Count = out.Total - out.Hidden
-		if visibility == "hidden" {
-			out.Count = out.Hidden
-		}
-		var search *gallerySearchIndex
-		if query != "" {
-			if after != "" && cursor.SearchRevision != tx.ID() {
-				return ErrGalleryChanged
-			}
-			var e error
-			search, e = s.gallerySearchFor(tx)
-			if e != nil {
-				return e
-			}
-			out.Count = 0
-			for _, row := range search.assets {
-				if row.hidden == (visibility == "hidden") && strings.Contains(row.terms, query) {
-					out.Count++
-				}
-			}
-		}
-		index := root.Bucket([]byte(visibility + "_" + order))
-		c := index.Cursor()
-		k, v := c.First()
-		if after != "" {
-			if index.Get(cursor.Key) == nil {
-				return ErrGalleryInput
-			}
-			k, v = c.Seek(cursor.Key)
-			k, v = c.Next()
-		}
-		var last []byte
-		for ; k != nil; k, v = c.Next() {
-			if search != nil && !strings.Contains(search.assets[string(v)].terms, query) {
-				continue
-			}
-			if len(out.Assets) == limit {
-				next := galleryCursor{Epoch: epoch, Revision: revision, Sort: order, Visibility: visibility, Key: last, Query: query}
-				if query != "" {
-					next.SearchRevision = tx.ID()
-				}
-				b, e := json.Marshal(next)
-				if e != nil {
-					return e
-				}
-				out.Next = base64.RawURLEncoding.EncodeToString(b)
-				break
-			}
-			var a Asset
-			raw := tx.Bucket([]byte("assets")).Get(v)
-			if raw == nil || json.Unmarshal(raw, &a) != nil || a.ID != string(v) || !validID(a.ID) || galleryGroup(a) != visibility {
-				return errors.New("gallery index inconsistent; reopen library")
-			}
-			out.Assets = append(out.Assets, a)
-			last = append(last[:0], k...)
-		}
-		return nil
-	})
-	return out, e
+func (s *Store) SearchGalleryPage(order,visibility,after,query string,limit int) (GalleryPage,error) {
+ return s.QueryGalleryPage(GalleryQuery{Sort:order,Visibility:visibility,Text:query},after,limit)
+}
+
+type galleryResults struct {
+ tx *bolt.Tx
+ query GalleryQuery
+ index *bolt.Bucket
+ token galleryCursor
+ matches map[string]bool
+ total,hidden,count uint64
+}
+
+func (s *Store) galleryResultsFor(tx *bolt.Tx,q GalleryQuery) (*galleryResults,error) {
+ root:=tx.Bucket([]byte(galleryBucket))
+ if root==nil {return nil,errors.New("gallery index unavailable")}
+ r:=&galleryResults{tx:tx,query:q,index:root.Bucket([]byte(q.Visibility+"_"+q.Sort)),total:galleryNumber(root,"total"),hidden:galleryNumber(root,"hidden")}
+ r.count=r.total-r.hidden
+ if q.Visibility=="hidden" {r.count=r.hidden}
+ r.token=galleryCursor{Epoch:string(root.Get([]byte("epoch"))),Revision:galleryNumber(root,"revision"),Sort:q.Sort,Visibility:q.Visibility,Query:q.Text,QueryKey:q.key()}
+ if q.filtered() {
+  r.token.SearchRevision=tx.ID()
+  search,e:=s.gallerySearchFor(tx)
+  if e!=nil{return nil,e}
+  r.matches=search.matching(q)
+  r.count=uint64(len(r.matches))
+ }
+ return r,nil
+}
+
+func encodeGalleryCursor(c galleryCursor) string {
+ b,_:=json.Marshal(c);return base64.RawURLEncoding.EncodeToString(b)
+}
+
+func (r *galleryResults) validate(encoded string,page bool) (galleryCursor,error) {
+ var c galleryCursor
+ if len(encoded)>4096 {return c,ErrGalleryInput}
+ b,e:=base64.RawURLEncoding.DecodeString(encoded)
+ if e!=nil||json.Unmarshal(b,&c)!=nil||c.QueryKey!=r.token.QueryKey||c.Sort!=r.query.Sort||c.Visibility!=r.query.Visibility||len(c.Key)>1100||(page&&len(c.Key)==0)||(!page&&len(c.Key)!=0) {return c,ErrGalleryInput}
+ if c.Epoch!=r.token.Epoch||c.Revision!=r.token.Revision||c.SearchRevision!=r.token.SearchRevision{return c,ErrGalleryChanged}
+ if page && r.index.Get(c.Key)==nil {return c,ErrGalleryInput}
+ return c,nil
+}
+
+func (r *galleryResults) includes(id []byte) bool {return r.matches==nil||r.matches[string(id)]}
+func (r *galleryResults) asset(id []byte) (Asset,error) {
+ var a Asset
+ raw:=r.tx.Bucket([]byte("assets")).Get(id)
+ if raw==nil||json.Unmarshal(raw,&a)!=nil||a.ID!=string(id)||!validID(a.ID)||galleryGroup(a)!=r.query.Visibility {return a,errors.New("gallery index inconsistent; reopen library")}
+ return a,nil
+}
+
+// Unfiltered requests still visit only bounded indexed rows, without building
+// metadata caches or taking the metadata gate. Filtered counts and rows share
+// one membership set at the same read transaction.
+func (s *Store) QueryGalleryPage(query GalleryQuery,after string,limit int) (GalleryPage,error) {
+ out:=GalleryPage{Assets:[]Asset{}}
+ q,e:=query.Normalize()
+ if e!=nil||limit<1||limit>100||len(after)>4096 {return out,ErrGalleryInput}
+ if q.filtered() {s.gate.Lock();defer s.gate.Unlock()}
+ e=s.db.View(func(tx *bolt.Tx)error {
+  r,e:=s.galleryResultsFor(tx,q)
+  if e!=nil{return e}
+  c:=r.index.Cursor();k,v:=c.First()
+  if after!="" {
+   token,e:=r.validate(after,true);if e!=nil{return e}
+   c.Seek(token.Key);k,v=c.Next()
+  }
+  out.Total,out.Hidden,out.Count,out.Query,out.Snapshot=r.total,r.hidden,r.count,q,encodeGalleryCursor(r.token)
+  var last []byte
+  for ;k!=nil;k,v=c.Next() {
+   if !r.includes(v){continue}
+   if len(out.Assets)==limit {
+    token:=r.token;token.Key=last;out.Next=encodeGalleryCursor(token);break
+   }
+   a,e:=r.asset(v);if e!=nil{return e}
+   out.Assets=append(out.Assets,a);last=append(last[:0],k...)
+  }
+  return nil
+ })
+ return out,e
+}
+
+type GalleryNeighbors struct {
+ Current Asset `json:"current"`
+ Previous *Asset `json:"previous,omitempty"`
+ Next *Asset `json:"next,omitempty"`
+ Count uint64 `json:"count"`
+ Query GalleryQuery `json:"query"`
+ Snapshot string `json:"snapshot"`
+}
+
+// Neighbors seek the active item's key and scan only until the nearest matches.
+// A token is mandatory: never silently navigate across a changed result set.
+func (s *Store) GalleryNeighbors(query GalleryQuery,id,snapshot string) (GalleryNeighbors,error) {
+ var out GalleryNeighbors
+ q,e:=query.Normalize()
+ if e!=nil||!validID(id)||snapshot=="" {return out,ErrGalleryInput}
+ if q.filtered(){s.gate.Lock();defer s.gate.Unlock()}
+ e=s.db.View(func(tx *bolt.Tx)error {
+  r,e:=s.galleryResultsFor(tx,q);if e!=nil{return e}
+  if _,e=r.validate(snapshot,false);e!=nil{return e}
+  if !r.includes([]byte(id)){return ErrGalleryChanged}
+  a,e:=r.asset([]byte(id));if e!=nil{return ErrGalleryChanged}
+  key:=galleryKeys(a)[q.Sort]
+  if !bytes.Equal(r.index.Get(key),[]byte(id)){return ErrGalleryChanged}
+  out.Current,out.Count,out.Query,out.Snapshot=a,r.count,q,encodeGalleryCursor(r.token)
+  c:=r.index.Cursor();c.Seek(key)
+  for k,v:=c.Prev();k!=nil;k,v=c.Prev(){if r.includes(v){a,e:=r.asset(v);if e!=nil{return e};out.Previous=&a;break}}
+  c.Seek(key)
+  for k,v:=c.Next();k!=nil;k,v=c.Next(){if r.includes(v){a,e:=r.asset(v);if e!=nil{return e};out.Next=&a;break}}
+  return nil
+ })
+ return out,e
 }
