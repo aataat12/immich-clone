@@ -1,4 +1,5 @@
 name: Frameout 0.1.44 viewer and metadata acceptance
+# Viewer reverse paging reuses bounded query-key caches.
 on:
   push:
     branches: ['work/release-0.1.44-foundation']
