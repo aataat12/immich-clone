@@ -1,3 +1,7 @@
+## 0.1.42 combined candidate accepted
+
+Corrected run42147333212/job127661889239 passed genuine published 0.1.41 upgrade, injected rollback, exact prior-writer LocalService checks, full providers, browser/privacy, integrated SEC-06 corpus/media and independent restore/reinstall/uninstall. Exact tested source f37f61f2fe79deb92eeb3ff614ea6b245180a391. Security is now 6 closed / 2 open: SEC-05 paused/open; SEC-08 open. Milestones 7 and 8 remain in progress. [Acceptance identity and limits](release-0.1.42-acceptance.md). Publication uses the exact artifact without rebuilding.
+
 ## November 5, 2026: 0.1.42 release candidate
 
 Based on exact published 0.1.41 source e1212539511ee3413a7049e318dc0c2699e8ee0c. SEC-06 source/tests integrated from 8d3fa47fc5d2b2ff4fd5726da6a43e4f35eb852b without replacing later SEC-03 recovery controls. SEC-05 experiments are excluded. All five workstream owners confirmed the handoff; SEC-08 sanitized target notes are included, private receipts excluded.
