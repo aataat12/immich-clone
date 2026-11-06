@@ -1,16 +1,15 @@
 # Project to-do list
 
-## Release 0.1.43 planning
+## Release 0.1.43 delivered
 
-Development checkpoint: the three items are accepted scope for 0.1.43. Candidate
-date/gallery search and enabled automatic naming passed Windows feature/native
-lifecycle gates. Independent policy evaluation and older-writer protection passed.
-Combined installer acceptance and publication remain pending; no released behavior
-is claimed.
+The three agreed improvements are implemented and published in the 0.1.43 prototype.
+Feature/native lifecycle, independent policy evaluation, older-writer protection and
+combined installer acceptance passed. The exact tested artifact was published without
+rebuilding; all four public downloads were independently verified. See
+[release acceptance](release-0.1.43-acceptance.md) for identities and remaining limits.
 
 All three improvements below were identified in the November 5, 2026
-**Release 0.1.42 discussion** and are confirmed backlog items. They are not yet
-released; implementation and acceptance are tracked in release-0.1.43-development.md.
+**Release 0.1.42 discussion** and completed for 0.1.43.
 See the [documentation research and prioritized candidates](release-0.1.43-feature-research.md)
 for the wider feature review. Newly researched candidates are proposals, not an
 instruction to implement all of them in 0.1.43.
@@ -39,9 +38,9 @@ instruction to implement all of them in 0.1.43.
 
 ## Automatic identification of known people
 
-Requested November 5, 2026, during the 0.1.42 discussion. Assigned to0.1.43. The unchanged policy passed independent Nottingham evaluation,
-actual native assignment/recovery and genuine older-writer compatibility. Enabled
-prototype behavior remains subject to combined installer acceptance before release.
+Requested November 5, 2026, during the 0.1.42 discussion and delivered in 0.1.43.
+The unchanged policy passed independent Nottingham evaluation, actual native
+assignment/recovery, genuine older-writer compatibility and combined installer acceptance.
 
 - Use manually confirmed faces as references to automatically name strong,
   unambiguous matches in newly imported and analyzed photos.
@@ -55,4 +54,4 @@ prototype behavior remains subject to combined installer acceptance before relea
 - Support multiple people per photo: each identified face retains its person
   association, and the photo can be found under each person's name.
 
-This records future feature scope; 0.1.42 remains review-only.
+These three items are delivered in 0.1.43. Broader research candidates remain future scope.
