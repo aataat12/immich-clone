@@ -126,14 +126,18 @@ func TestActualCurationDiskFull(t *testing.T) {
 	for _, a := range assets {
 		m, _ := s.AssetOrganization(a.ID)
 		before, exportErr := s.OrganizationExport()
-		if exportErr!=nil{t.Fatal("pre-failure export unavailable",exportErr)}
+		if exportErr != nil {
+			t.Fatal("pre-failure export unavailable", exportErr)
+		}
 		b, _ := jsonCuration(before)
 		_, e = s.EditCuration(CurationEdit{Action: "set_asset", AssetID: a.ID, Added: a.Added, Expected: m.Token, Notes: strings.Repeat("x", 64<<10)})
 		if e != nil {
 			after, exportErr := s.OrganizationExport()
-			if exportErr!=nil{t.Fatal("post-failure export unavailable",exportErr)}
+			if exportErr != nil {
+				t.Fatal("post-failure export unavailable", exportErr)
+			}
 			v, _ := jsonCuration(after)
-			if !bytes.Equal(b, v)||before["catalog_schema"]!=after["catalog_schema"] {
+			if !bytes.Equal(b, v) || before["catalog_schema"] != after["catalog_schema"] {
 				t.Fatal("failed full-disk mutation changed organization")
 			}
 			copy := a

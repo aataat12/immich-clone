@@ -1,5 +1,16 @@
 # Dependency and environment evidence
 
+## 0.1.44 viewer and metadata checkpoint, November 6, 2026
+
+No new product dependency/provider/model. Existing pinned Go, bbolt, bundled
+media/AI payloads and installer tooling were reused. Windows Server 2022 run
+42226330751 passed actual LocalService/Edge/H264 viewer, metadata export and
+independent restore, bounded NTFS capacity refusal/recovery, genuine released
+0.1.43 reader/writer refusal and actual Setup upgrade/rollback/restored enrollment
+for starting catalogs 1/2. See viewer-metadata-0.1.44.md for exact hashes, job
+identities and skipped scopes. This does not certify Windows 10, reboot,
+endurance, signing, broad format/recognition quality or final release acceptance.
+
 Historical candidate table below describes the original diagnostic. Later executed
 component and release checkpoints supersede its initial unselected status.
 

@@ -1,3 +1,19 @@
+## November 6, 2026: 0.1.44 steps 1–4 accepted development checkpoint
+
+The released baseline and shared gallery foundation remain accepted. Viewer
+previous/next across pages, keyboard controls, zoom/pan/Fit, full screen and
+current-card grid return are implemented. Catalog-3 favorites, albums and user
+text storage, bounded authenticated access, versioned export, independent restore,
+genuine 0.1.43 refusal and actual failed-upgrade recovery passed Windows Server
+2022 acceptance. See [viewer-metadata-0.1.44.md](viewer-metadata-0.1.44.md) for
+exact source, run 42226330751, artifacts, bounds and limitations.
+
+Next: step 5 selection/batch behavior, followed by album and caption interfaces.
+New organization fields are stored through the API; their full user interfaces
+and gallery-search integration remain later work. No release or user-library
+migration occurred. Windows 10, reboot, endurance, signing and final release
+acceptance remain separate gates. Older checkpoint text below is historical.
+
 ## November 5, 2026: 0.1.42 release candidate
 
 Based on exact published 0.1.41 source e1212539511ee3413a7049e318dc0c2699e8ee0c. SEC-06 source/tests integrated from 8d3fa47fc5d2b2ff4fd5726da6a43e4f35eb852b without replacing later SEC-03 recovery controls. SEC-05 experiments are excluded. All five workstream owners confirmed the handoff; SEC-08 sanitized target notes are included, private receipts excluded.

@@ -1,5 +1,15 @@
 # Decisions
 
+- November 6, 2026: 0.1.44 steps 3–4 share the gallery query/snapshot for viewer
+  navigation and page anchors. Catalog-3 organization is authoritative, separate
+  from recognition and originals, and promoted only by a real new write. Preserve
+  versions monotonically; reject stale revision/epoch/incarnation tokens. Keep
+  existing backup/restore bounds, explicit organization limits and the 16 MiB
+  metadata-write reserve. Genuine 0.1.43 refusal and actual Setup rollback before
+  and after a version-3 write passed for starting catalogs 1 and 2. Durable storage
+  and API precede selection/batch, album and caption interfaces. No new dependency
+  or release; see viewer-metadata-0.1.44.md for exact evidence and platform limits.
+
 - 2026-11-01: Project source requirements copied verbatim to repository root and
   authoritative. The prior diagnostic's proposed immediate feature build is
   superseded by compatibility/dependency acceptance gates.

@@ -305,7 +305,11 @@ func (s *Store) EditCuration(in CurationEdit) (any, error) {
 	defer s.gate.Unlock()
 	// As with recoverable deletion, do not start database growth on already
 	// exhausted storage: a Windows mapping failure can invalidate the handle.
-	if free,e:=AvailableBytes(s.root);e!=nil{return nil,e}else if free<16<<20{return nil,ErrCurationCapacity}
+	if free, e := AvailableBytes(s.root); e != nil {
+		return nil, e
+	} else if free < 16<<20 {
+		return nil, ErrCurationCapacity
+	}
 	var out any
 	e := s.db.Update(func(tx *bolt.Tx) error {
 		if in.Action == "set_asset" {
