@@ -182,7 +182,7 @@ func TestActualNativeIndependentFEIAutomaticQuality(t *testing.T) {
 			}
 		}
 		add := func(a feiQualityCounts, b feiQualityCounts) feiQualityCounts {
-			return feiQualityCounts{Total: a.Total+b.Total, Detected: a.Detected+b.Detected, Correct: a.Correct+b.Correct, Wrong: a.Wrong+b.Wrong, Rejected: a.Rejected+b.Rejected, Unresolved: a.Unresolved+b.Unresolved}
+			return feiQualityCounts{Total: a.Total + b.Total, Detected: a.Detected + b.Detected, Correct: a.Correct + b.Correct, Wrong: a.Wrong + b.Wrong, Rejected: a.Rejected + b.Rejected, Unresolved: a.Unresolved + b.Unresolved}
 		}
 		group := feiConfigurationGroup(record.configuration)
 		if isKnown {
@@ -198,40 +198,62 @@ func TestActualNativeIndependentFEIAutomaticQuality(t *testing.T) {
 		img := image.NewRGBA(image.Rect(0, 0, 640, 480))
 		draw.Draw(img, img.Bounds(), image.NewUniform(color.RGBA{level, level, level, 255}), image.Point{}, draw.Src)
 		result, err := provider.Analyze(ctx, img, scratch)
-		if err != nil { t.Fatal("FEI native flat control inference failed") }
-		if len(result.Faces) == 0 { flatPass++ }
+		if err != nil {
+			t.Fatal("FEI native flat control inference failed")
+		}
+		if len(result.Faces) == 0 {
+			flatPass++
+		}
 	}
 	coffee, e := os.ReadFile(filepath.Join(root, "coffee.png"))
-	if e != nil { t.Fatal("FEI natural no-face control unavailable") }
+	if e != nil {
+		t.Fatal("FEI natural no-face control unavailable")
+	}
 	coffeeHash := sha256.Sum256(coffee)
-	if hex.EncodeToString(coffeeHash[:]) != "cc02f8ca188b167c775a7101b5d767d1e71792cf762c33d6fa15a4599b5a8de7" { t.Fatal("FEI natural control integrity mismatch") }
+	if hex.EncodeToString(coffeeHash[:]) != "cc02f8ca188b167c775a7101b5d767d1e71792cf762c33d6fa15a4599b5a8de7" {
+		t.Fatal("FEI natural control integrity mismatch")
+	}
 	coffeeImage, _, e := image.Decode(bytes.NewReader(coffee))
-	if e != nil { t.Fatal("FEI natural control decode failed") }
+	if e != nil {
+		t.Fatal("FEI natural control decode failed")
+	}
 	coffeeResult, e := provider.Analyze(ctx, coffeeImage, scratch)
-	if e != nil { t.Fatal("FEI natural control native inference failed") }
+	if e != nil {
+		t.Fatal("FEI natural control native inference failed")
+	}
 	naturalPass := len(coffeeResult.Faces) == 0
 	afterHash, e := fileHashContext(ctx, archivePath)
-	if e != nil || afterHash != feiArchiveSHA { t.Fatal("FEI original archive changed/unavailable after evaluation") }
+	if e != nil || afterHash != feiArchiveSHA {
+		t.Fatal("FEI original archive changed/unavailable after evaluation")
+	}
 	scratchEntries, e := os.ReadDir(scratch)
-	if e != nil || len(scratchEntries) != 0 { t.Fatal("FEI native scratch retained") }
+	if e != nil || len(scratchEntries) != 0 {
+		t.Fatal("FEI native scratch retained")
+	}
 	central := knownGroups["central_sweep_04_07"]
-	pass := len(refs)==60 && detected>=420 && central.Detected>=108 && central.Correct>=90 && known.Correct>=144 && known.Wrong==0 && unknown.Detected>=160 && unknown.Wrong==0 && flatPass==3 && naturalPass
+	pass := len(refs) == 60 && detected >= 420 && central.Detected >= 108 && central.Correct >= 90 && known.Correct >= 144 && known.Wrong == 0 && unknown.Detected >= 160 && unknown.Wrong == 0 && flatPass == 3 && naturalPass
 	report := map[string]any{
-		"scope":"independent fixed FEI controlled-adult color/pose/configuration evaluation; not universal accuracy",
-		"credit":"Centro Universitario da FEI; Carlos Eduardo Thomaz and Gilson Antonio Giraldi",
-		"archive_sha256":feiArchiveSHA, "provider":recognition.AnalysisID,
-		"policy":automaticNamePolicyID, "threshold":policy.threshold, "margin":policy.margin,
-		"images_total":len(all), "detected_exactly_one":detected, "no_face":noFace, "multiple_faces":multipleFaces,
-		"fixed_references_available":len(refs), "known":known, "unknown":unknown,
-		"known_configuration_groups":knownGroups, "unknown_configuration_groups":unknownGroups,
-		"flat_no_face_controls_passed":flatPass, "natural_no_face_control_passed":naturalPass,
-		"original_archive_unchanged":true, "native_scratch_empty":true,
-		"independent_frozen_fei_gates_passed":pass, "production_automatic_naming_enabled":automaticNamesValidated,
-		"elapsed_seconds":time.Since(started).Seconds(),
+		"scope":          "independent fixed FEI controlled-adult color/pose/configuration evaluation; not universal accuracy",
+		"credit":         "Centro Universitario da FEI; Carlos Eduardo Thomaz and Gilson Antonio Giraldi",
+		"archive_sha256": feiArchiveSHA, "provider": recognition.AnalysisID,
+		"policy": automaticNamePolicyID, "threshold": policy.threshold, "margin": policy.margin,
+		"images_total": len(all), "detected_exactly_one": detected, "no_face": noFace, "multiple_faces": multipleFaces,
+		"fixed_references_available": len(refs), "known": known, "unknown": unknown,
+		"known_configuration_groups": knownGroups, "unknown_configuration_groups": unknownGroups,
+		"flat_no_face_controls_passed": flatPass, "natural_no_face_control_passed": naturalPass,
+		"original_archive_unchanged": true, "native_scratch_empty": true,
+		"independent_frozen_fei_gates_passed": pass, "production_automatic_naming_enabled": automaticNamesValidated,
+		"elapsed_seconds": time.Since(started).Seconds(),
 	}
 	encoded, e := json.Marshal(report)
-	if e != nil { t.Fatal("FEI aggregate report encoding failed") }
+	if e != nil {
+		t.Fatal("FEI aggregate report encoding failed")
+	}
 	t.Log(string(encoded))
-	if known.Total!=360 || unknown.Total!=280 || central.Total!=120 || known.Correct+known.Wrong+known.Unresolved!=360 || unknown.Wrong+unknown.Rejected+unknown.Unresolved!=280 || detected+noFace+multipleFaces!=700 { t.Fatal("FEI denominator accounting invalid") }
-	if !pass { t.Fatal("independent frozen FEI automatic naming gates failed; policy and references left unchanged") }
+	if known.Total != 360 || unknown.Total != 280 || central.Total != 120 || known.Correct+known.Wrong+known.Unresolved != 360 || unknown.Wrong+unknown.Rejected+unknown.Unresolved != 280 || detected+noFace+multipleFaces != 700 {
+		t.Fatal("FEI denominator accounting invalid")
+	}
+	if !pass {
+		t.Fatal("independent frozen FEI automatic naming gates failed; policy and references left unchanged")
+	}
 }

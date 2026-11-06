@@ -9,10 +9,11 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// Automatic naming has its own frozen candidate policy. Existing review-only
-// quality evidence does not approve this policy. Enable only after independent
-// native evaluation and release acceptance; there is no runtime bypass switch.
-const automaticNamesValidated = false
+// Frozen policy passed separate ORL and independent Nottingham native screens.
+// See docs/release-0.1.43-catalog-compatibility.md for evidence and limits.
+// Reversible prototype assignments still require review; there is no runtime
+// switch that bypasses the trusted-reference or competitor-margin rules.
+const automaticNamesValidated = true
 const automaticNamePolicyID = "known-person-two-sources-065-015-v1"
 
 type automaticNamePolicy struct {
@@ -168,7 +169,9 @@ func applyAutomaticNames(tx *bolt.Tx, faces []StoredFace, p automaticNamePolicy)
 		if e := writeJSON(lb, f.ID, l); e != nil {
 			return e
 		}
-		if e := requireAutomaticCatalog(tx); e != nil { return e }
+		if e := requireAutomaticCatalog(tx); e != nil {
+			return e
+		}
 	}
 	return nil
 }

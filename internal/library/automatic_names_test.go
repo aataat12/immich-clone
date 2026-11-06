@@ -54,8 +54,9 @@ func TestAutomaticNamePolicyRequiresIndependentTrustedReferences(t *testing.T) {
 	if name, _ := matchAutomaticFace(subject, []reviewReference{a, bad}, p); name != "" {
 		t.Fatal("nonfinite embedding accepted")
 	}
-	if name, _ := matchAutomaticFace(subject, []reviewReference{a, b}, productionAutomaticNamePolicy()); name != "" {
-		t.Fatal("unvalidated production gate bypassed")
+	name, _ := matchAutomaticFace(subject, []reviewReference{a, b}, productionAutomaticNamePolicy())
+	if automaticNamesValidated && name != "Alice" || !automaticNamesValidated && name != "" {
+		t.Fatal("production policy does not match validated enablement")
 	}
 }
 
@@ -248,7 +249,7 @@ func TestAutomaticNamesReanalysisKeepsExistingCorrections(t *testing.T) {
 	}
 }
 
-func TestAutomaticNamingGateLeavesNewAnalysisUnassigned(t *testing.T) {
+func TestAutomaticNamingProductionGateMatchesNewAnalysis(t *testing.T) {
 	s, _, _ := seedAutomaticNames(t)
 	s.SetRecognizer(fakeAnalysis, true)
 	data := append(append([]byte(nil), fixture(t)...), byte(99))
@@ -270,7 +271,9 @@ func TestAutomaticNamingGateLeavesNewAnalysisUnassigned(t *testing.T) {
 	for _, f := range page.Faces {
 		if f.AssetID == a.ID {
 			found = true
-			if f.Name != "" || f.Source != "" {
+			if automaticNamesValidated {
+				if f.Name != "Alice" || f.Source != "automatic" { t.Fatal("validated new-import assignment missing") }
+			} else if f.Name != "" || f.Source != "" {
 				t.Fatal("unvalidated automatic naming ran during new-import analysis")
 			}
 		}
@@ -278,7 +281,7 @@ func TestAutomaticNamingGateLeavesNewAnalysisUnassigned(t *testing.T) {
 	if !found {
 		t.Fatal("new-import analysis did not publish face")
 	}
-	if page.AutomaticNaming {
-		t.Fatal("API claims automatic naming enabled")
+	if page.AutomaticNaming != automaticNamesValidated {
+		t.Fatal("API automatic naming enablement disagrees with production policy")
 	}
 }

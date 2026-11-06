@@ -22,7 +22,9 @@ func requireAutomaticCatalog(tx *bolt.Tx) error {
 	if meta == nil || !supportedCatalogSchema(meta.Get([]byte("schema"))) {
 		return errors.New("unsupported catalog schema")
 	}
-	if string(meta.Get([]byte("schema"))) == "2" { return nil }
+	if string(meta.Get([]byte("schema"))) == "2" {
+		return nil
+	}
 	return meta.Put([]byte("schema"), []byte("2"))
 }
 
@@ -34,17 +36,31 @@ func protectAutomaticCatalog(tx *bolt.Tx, writable bool) error {
 	if meta == nil || !supportedCatalogSchema(meta.Get([]byte("schema"))) {
 		return errors.New("unsupported catalog schema")
 	}
-	if string(meta.Get([]byte("schema"))) == "2" { return nil }
+	if string(meta.Get([]byte("schema"))) == "2" {
+		return nil
+	}
 	labels := tx.Bucket([]byte(labelsBucket))
-	if labels == nil { return nil }
+	if labels == nil {
+		return nil
+	}
 	requires := false
 	if e := labels.ForEach(func(_, data []byte) error {
 		var label FaceLabel
-		if e := json.Unmarshal(data, &label); e != nil { return e }
-		if automaticProvenance(label) { requires = true }
+		if e := json.Unmarshal(data, &label); e != nil {
+			return e
+		}
+		if automaticProvenance(label) {
+			requires = true
+		}
 		return nil
-	}); e != nil { return e }
-	if !requires { return nil }
-	if !writable { return errors.New("automatic provenance requires catalog upgrade") }
+	}); e != nil {
+		return e
+	}
+	if !requires {
+		return nil
+	}
+	if !writable {
+		return errors.New("automatic provenance requires catalog upgrade")
+	}
 	return requireAutomaticCatalog(tx)
 }

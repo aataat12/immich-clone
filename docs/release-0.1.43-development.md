@@ -1,5 +1,11 @@
 # Release 0.1.43 development checkpoint
 
+Latest checkpoint: [catalog compatibility accepted](release-0.1.43-catalog-compatibility.md).
+Version2 now protects automatic provenance; genuine published0.1.42 refusal and
+full Windows feature/recovery tests passed. The [independent quality decision](automatic-naming-quality-0.1.43.md) now supports
+enabling the unchanged prototype policy for actual pipeline/release validation.
+The original checkpoint below is historical.
+
 Accepted scope: R43-01 clearer date provenance, R43-02 gallery search, and R43-03
 automatic known-person identification. The wider research recommendations remain
 0.1.44 planning. Baseline is published 0.1.42 source

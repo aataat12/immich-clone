@@ -101,7 +101,9 @@ func OpenReadOnly(root string) (_ *Store, err error) {
 		if meta == nil || assets == nil || !supportedCatalogSchema(meta.Get([]byte("schema"))) {
 			return errors.New("unsupported catalog schema")
 		}
-		if e := validateCatalogInput(tx); e != nil { return e }
+		if e := validateCatalogInput(tx); e != nil {
+			return e
+		}
 		return protectAutomaticCatalog(tx, false)
 	})
 	if e == nil {
