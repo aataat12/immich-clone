@@ -1,4 +1,4 @@
-param([string]$Version='0.1.41-prototype')
+param([string]$Version='0.1.42-prototype')
 $ErrorActionPreference='Stop'
 function Checked([string]$Exe,[string[]]$Arguments){ & $Exe @Arguments; if($LASTEXITCODE -ne 0){throw 'UI fixture operation failed'} }
 function Assert([bool]$Value,[string]$Label){if(!$Value){throw $Label};Write-Host ('PASS: '+$Label)}

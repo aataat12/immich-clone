@@ -41,11 +41,7 @@ func (s *Server) importHTTP(w http.ResponseWriter, r *http.Request) bool {
 			var input struct {
 				Files []library.ImportFile `json:"files"`
 			}
-			r.Body = http.MaxBytesReader(w, r.Body, 16<<20)
-			d := json.NewDecoder(r.Body)
-			d.DisallowUnknownFields()
-			var extra any
-			if d.Decode(&input) != nil || !errors.Is(d.Decode(&extra), io.EOF) {
+			if boundedJSON(w, r, 16<<20, &input) != nil {
 				http.Error(w, "invalid or oversized import selection", 400)
 				return true
 			}

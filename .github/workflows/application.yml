@@ -1,33 +1,9 @@
-name: Application originals slice
-# Prototype0.1.41 delivery: genuine0.1.39 upgrade/rollback, full providers and independent recovery.
+name: Release 0.1.42 combined acceptance
+# Prototype0.1.42 delivery: genuine0.1.41 upgrade/rollback, full providers and independent recovery.
 on:
   push:
-    paths:
-      - 'cmd/immichclone/**'
-      - 'go.mod'
-      - 'go.sum'
-      - 'internal/library/**'
-      - 'internal/recognition/**'
-      - 'scripts/Prepare-AIProvider.ps1'
-      - 'internal/media/**'
-      - 'scripts/Prepare-MediaProvider.ps1'
-      - 'internal/web/**'
-      - 'internal/diagnostics/**'
-      - 'scripts/Test-Application.ps1'
-      - '.github/workflows/application.yml'
-      - 'packaging/**'
-      - 'scripts/Build-Installer.ps1'
-      - 'docs/validation-0.1.41.md'
-      - 'docs/release-notes-0.1.41.md'
-      - 'scripts/Test-Installer.ps1'
-      - 'scripts/Test-LocalPrototype.ps1'
-      - 'scripts/Test-FullDisk.ps1'
-      - 'scripts/New-MediaFixture.ps1'
-      - 'tests/browser.cjs'
-      - 'tests/people.cjs'
-      - 'tests/import.cjs'
-      - 'tests/gallery.cjs'
-      - 'tests/backup.cjs'
+    branches: ['work/release-0.1.42']
+    paths: ['.github/workflows/application.yml']
   workflow_dispatch:
 permissions:
   contents: write
@@ -64,16 +40,16 @@ jobs:
           path: native-ai-candidate
           run-id: 41551816976
           github-token: ${{ github.token }}
-      - name: Download and verify permanent published 0.1.39 baseline
+      - name: Download and verify permanent published 0.1.41 baseline
         shell: pwsh
         run: |
-          $url = 'https://github.com/aataat12/immich-clone/releases/download/v0.1.39-prototype/ImmichClone-0.1.39-prototype-x64-setup.exe'
-          $dest = Join-Path $env:GITHUB_WORKSPACE 'previous-installer/ImmichClone-0.1.39-prototype-x64-setup.exe'
+          $url = 'https://github.com/aataat12/immich-clone/releases/download/v0.1.41-prototype/ImmichClone-0.1.41-prototype-x64-setup.exe'
+          $dest = Join-Path $env:GITHUB_WORKSPACE 'previous-installer/ImmichClone-0.1.41-prototype-x64-setup.exe'
           New-Item -ItemType Directory -Force (Split-Path $dest) | Out-Null
           Invoke-WebRequest $url -OutFile $dest
-          $expected = '543e5742a00e2cf79522e4ddc7bd2c6a9647426c46bb0ca0564644f7d3ea3605'
+          $expected = '2f61cca971e9d4bcbdd390f3809e9fcc55c7c1988ce40ce2e399dda799e2740a'
           $actual = (Get-FileHash $dest).Hash.ToLowerInvariant()
-          if ($actual -ne $expected) { throw 'Published 0.1.39 installer checksum mismatch' }
+          if ($actual -ne $expected) { throw 'Published 0.1.41 installer checksum mismatch' }
           "IMMICH_PRIOR_INSTALLER=$dest" >> $env:GITHUB_ENV
       - name: Require accepted full Setup concurrency handoff
         shell: pwsh
@@ -141,7 +117,7 @@ jobs:
           "IMMICH_BROWSER_MODULE=$env:IMMICH_BROWSER_MODULE" >> $env:GITHUB_ENV
           $env:IMMICH_BROWSER_OUTPUT = "$env:GITHUB_WORKSPACE/browser-evidence"
           New-Item -ItemType Directory $env:IMMICH_BROWSER_OUTPUT | Out-Null
-          ./scripts/Test-UIRedesign.ps1 -Version '0.1.41-prototype'
+          ./scripts/Test-UIRedesign.ps1 -Version '0.1.42-prototype'
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.12.10'
@@ -161,6 +137,13 @@ jobs:
           python -B experiments/media-compatibility/prepare.py $compatRoot
           if ($LASTEXITCODE -ne 0) { throw 'Independent media compatibility fixtures failed' }
           "IMMICH_COMPAT_FIXTURES=$compatRoot" >> $env:GITHUB_ENV
+      - name: Execute integrated SEC-06 hostile corpus and media parity
+        shell: pwsh
+        run: |
+          go test -mod=readonly -v -count=1 -timeout=4m ./internal/library ./internal/web -run SEC06
+          if ($LASTEXITCODE -ne 0) { throw 'Integrated SEC-06 tests failed' }
+          ./scripts/Test-MediaCompatibility.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Integrated media compatibility failed' }
       - name: Build pinned installer and test install upgrade rollback and uninstall
         shell: pwsh
         run: |
@@ -179,10 +162,10 @@ jobs:
       - name: Retain tested prototype only after all checks pass
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: prototype-0.1.41-server-tested
+          name: prototype-0.1.42-server-tested
           path: |
-            dist/ImmichClone-0.1.41-prototype-x64-setup.exe
+            dist/ImmichClone-0.1.42-prototype-x64-setup.exe
             dist/SHA256SUMS.txt
-            docs/validation-0.1.41.md
-            docs/release-notes-0.1.41.md
+            docs/validation-0.1.42.md
+            docs/release-notes-0.1.42.md
           retention-days: 7

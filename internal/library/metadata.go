@@ -4,8 +4,10 @@ package library
 // external/native dependency, arbitrary directory traversal or maker-note decode.
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"image"
+	"image/color"
 	"io"
 	"strings"
 	"time"
@@ -59,7 +61,7 @@ func ReadPhotoMetadata(r io.Reader) PhotoMetadata {
 }
 func readTIFF(b []byte) PhotoMetadata {
 	m := PhotoMetadata{Orientation: 1}
-	bad := func() PhotoMetadata { m.Warning = "invalid_exif"; return m }
+	bad := func() PhotoMetadata { return PhotoMetadata{Orientation: 1, Warning: "invalid_exif"} }
 	if len(b) < 8 {
 		return bad()
 	}
@@ -162,8 +164,15 @@ func readTIFF(b []byte) PhotoMetadata {
 	return m
 }
 func oriented(img image.Image, orientation int) image.Image {
+	out, _ := orientedContext(context.Background(), img, orientation)
+	return out
+}
+func orientedContext(ctx context.Context, img image.Image, orientation int) (image.Image, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if orientation <= 1 || orientation > 8 {
-		return img
+		return img, nil
 	}
 	bounds := img.Bounds()
 	w, h := bounds.Dx(), bounds.Dy()
@@ -172,7 +181,11 @@ func oriented(img image.Image, orientation int) image.Image {
 		ow, oh = h, w
 	}
 	out := image.NewRGBA(image.Rect(0, 0, ow, oh))
+	rgba64, fast := img.(image.RGBA64Image)
 	for y := 0; y < h; y++ {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		for x := 0; x < w; x++ {
 			dx, dy := x, y
 			switch orientation {
@@ -191,8 +204,14 @@ func oriented(img image.Image, orientation int) image.Image {
 			case 8:
 				dx, dy = y, w-1-x
 			}
-			out.Set(dx, dy, img.At(bounds.Min.X+x, bounds.Min.Y+y))
+			if fast {
+				c := rgba64.RGBA64At(bounds.Min.X+x, bounds.Min.Y+y)
+				out.SetRGBA(dx, dy, color.RGBA{R: uint8(c.R >> 8), G: uint8(c.G >> 8), B: uint8(c.B >> 8), A: uint8(c.A >> 8)})
+			} else {
+				r, g, b, a := img.At(bounds.Min.X+x, bounds.Min.Y+y).RGBA()
+				out.SetRGBA(dx, dy, color.RGBA{R: uint8(r >> 8), G: uint8(g >> 8), B: uint8(b >> 8), A: uint8(a >> 8)})
+			}
 		}
 	}
-	return out
+	return out, nil
 }

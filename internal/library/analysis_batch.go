@@ -42,7 +42,7 @@ func (s *Store) AnalysisBatch() (AnalysisBatch, error) {
 	return b, e
 }
 func eligibleAnalysis(a Asset) bool {
-	return !a.Hidden && supportsStillAI(a.MIME) && a.Size <= 64<<20 && (a.Width <= 0 || a.Height <= 0 || int64(a.Width)*int64(a.Height) <= 40_000_000)
+	return !a.Hidden && supportsStillAI(a.MIME) && a.Size <= 64<<20 && (a.Width <= 0 || a.Height <= 0 || validImageDimensions(a.Width, a.Height))
 }
 
 // ControlAnalysisBatch changes only this batch's pending work. An in-flight

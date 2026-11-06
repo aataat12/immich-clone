@@ -1,3 +1,9 @@
+## November 5, 2026: 0.1.42 release candidate
+
+Based on exact published 0.1.41 source e1212539511ee3413a7049e318dc0c2699e8ee0c. SEC-06 source/tests integrated from 8d3fa47fc5d2b2ff4fd5726da6a43e4f35eb852b without replacing later SEC-03 recovery controls. SEC-05 experiments are excluded. All five workstream owners confirmed the handoff; SEC-08 sanitized target notes are included, private receipts excluded.
+
+Security closure becomes 6 closed / 2 open only after combined candidate acceptance: SEC-01/02/03/04/06/07 closed; SEC-05 paused/open and SEC-08 open. All original items remain Group 2; Group 1 has no demonstrated open original item; Group 3 stays record-only/deferred. Milestones 7 and 8 remain in progress. Signing remains deferred. Genuine 0.1.41 upgrade, injected rollback, full providers, browser, input regression and independent recovery must pass before publishing this prototype. Clean-machine Windows 10, reboot, endurance and final candidate target acceptance remain open.
+
 > Corrective release in progress: 0.1.40 target preparation refused normal
 > ProgramData creation rights before payload replacement and left the prior
 > owned service stopped/disabled. 0.1.41 fixes that bounded compatibility case;
