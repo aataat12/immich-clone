@@ -1,3 +1,4 @@
+param([string[]]$Versions=@('0.1.43','0.1.44'),[string]$NotesPath='docs/release-notes-0.1.43.md')
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 # All three accepted features must be enabled before producing a release candidate.
@@ -11,7 +12,7 @@ $compilerDir = Join-Path $env:RUNNER_TEMP 'inno-6.7.4'
 $process = Start-Process $compilerSetup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$compilerDir+'"')) -Wait -PassThru -WindowStyle Hidden
 if ($process.ExitCode -ne 0) { throw 'Compiler provisioning failed' }
 New-Item -ItemType Directory -Force dist | Out-Null
-Copy-Item -LiteralPath docs/release-notes-0.1.43.md -Destination dist/prototype-notes.txt
+Copy-Item -LiteralPath $NotesPath -Destination dist/prototype-notes.txt
 ./scripts/Prepare-MediaProvider.ps1 -Destination 'dist/media/ffmpeg-8.1.3-7eb77d88e2e9'
 ./scripts/Prepare-AIProvider.ps1 -Destination 'dist/ai/opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3'
 $goRoot = & go env GOROOT
@@ -22,8 +23,8 @@ $licenses = @('Go 1.27.3', (Get-Content (Join-Path $goRoot 'LICENSE') -Raw), 'bb
 $licenses += @('golang.org/x/image 0.47.0', (Get-Content (Join-Path $imageDir 'LICENSE') -Raw))
 $licenses -join "`r`n`r`n" | Set-Content dist/THIRD-PARTY-LICENSES.txt
 Checked go @('build','-trimpath','-ldflags','-s -w','-o','dist/installer-files.exe','./cmd/installerfiles')
-foreach ($version in @('0.1.43','0.1.44')) {
+foreach ($version in $Versions) {
     Checked go @('build','-trimpath','-ldflags',('-s -w -X main.version='+$version+'-prototype'),'-o','dist/immichclone.exe','./cmd/immichclone')
     Checked "$compilerDir/ISCC.exe" @(('/DAppVersion='+$version),'packaging/immichclone.iss')
 }
-Get-Item dist/ImmichClone-0.1.43-prototype-x64-setup.exe | ForEach-Object { ((Get-FileHash $_.FullName).Hash.ToLowerInvariant()+'  '+$_.Name) } | Set-Content dist/SHA256SUMS.txt
+Get-Item ("dist/ImmichClone-"+$Versions[0]+"-prototype-x64-setup.exe") | ForEach-Object { ((Get-FileHash $_.FullName).Hash.ToLowerInvariant()+'  '+$_.Name) } | Set-Content dist/SHA256SUMS.txt

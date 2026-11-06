@@ -20,10 +20,14 @@ function Test-BoundedVolume([int]$sizeMiB,[string]$pattern) {
         Remove-Item Env:IMMICH_SMALL_VOLUME -ErrorAction SilentlyContinue
         @("select vdisk file=`"$disk`"", 'detach vdisk') | Set-Content $commands
         & diskpart.exe /s $commands
-        Remove-Item $root -Recurse -Force -ErrorAction Continue
+        $resolved=[IO.Path]::GetFullPath($root)
+        $parent=[IO.Path]::GetFullPath($env:RUNNER_TEMP).TrimEnd('\')+'\'
+        if(!$resolved.StartsWith($parent,[StringComparison]::OrdinalIgnoreCase)){throw 'Volume fixture cleanup target refused'}
+        Remove-Item -LiteralPath $resolved -Recurse -Force -ErrorAction Continue
     }
 }
 Test-BoundedVolume 96 '^TestActualDiskFull$'
+Test-BoundedVolume 96 '^TestActualCurationDiskFull$'
 Test-BoundedVolume 96 '^TestActualDeletionDiskFull$'
 # Backup preflight intentionally reserves space; this separate fixture must first fit.
 Test-BoundedVolume 192 '^TestActualBackupDiskFull$'

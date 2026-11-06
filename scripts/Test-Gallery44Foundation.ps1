@@ -20,6 +20,20 @@ try {
  Checked node @('tests/gallery-search.cjs')
  Checked node @('tests/gallery-foundation.cjs')
  Checked node @('tests/gallery-viewer.cjs')
+ if($env:IMMICH_TEST_CURATION -eq '1'){
+  Checked node @('tests/metadata-recovery.cjs')
+  Stop-Service ImmichClone
+  Checked sc.exe @('delete','ImmichClone')
+  $owned=$false
+  $offline=$state+'.offline';$restore=Join-Path $root 'restored'
+  if([IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($offline)) -cne [IO.Path]::GetFullPath($root)){throw 'Fixture move target refused'}
+  Move-Item -LiteralPath $state -Destination $offline
+  Checked $binary @('-mode','restore','-data',$restore,'-archive',(Join-Path $root 'metadata-backup.zip'))
+  Checked $binary @('-mode','verify','-data',$restore)
+  $env:IMMICH_CURATION_ROOT=$restore;$env:IMMICH_CURATION_STAGE='inspect';$env:IMMICH_CURATION_EXPECTED=Join-Path $root 'expected-curation.json'
+  Checked go @('test','-mod=readonly','-count=1','-timeout=120s','./internal/library','-run','^TestCurationPublishedFixture$')
+  Remove-Item Env:IMMICH_CURATION_ROOT,Env:IMMICH_CURATION_STAGE,Env:IMMICH_CURATION_EXPECTED -ErrorAction SilentlyContinue
+ }
 } finally {
  if($owned){
   Stop-Service ImmichClone -Force -ErrorAction Stop

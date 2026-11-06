@@ -173,7 +173,12 @@ try {
     Start-Service $name
     $stage = 'verify service health'
     Health
-    if ($env:IMMICH_INSTALL_TEST_FAILURE -eq '1') { throw 'Injected post-initialization upgrade failure' }
+    if ($env:IMMICH_INSTALL_TEST_FAILURE -eq '1') {
+        # Bounded window for disposable acceptance to commit ordinary metadata
+        # before the already-requested injected failure. No migration bypass.
+        if ($env:IMMICH_CURATION_INSTALL_TEST -eq '1') { Start-Sleep -Seconds 15 }
+        throw 'Injected post-initialization upgrade failure'
+    }
     if ($durablePayload) {
         Checked $BoundaryHelper @('-action','commit-upgrade','-app-dir',$AppDir,'-data-dir',$DataDir,'-root-dir',$upgradeRoot)
         $upgradeCommitted = $true
@@ -225,6 +230,9 @@ try {
                 }
                 $recovered = Recover-Upgrade
                 if ($recovered -eq 'prior') {
+                    # Permit independent exact-catalog verification before the
+                    # restored service rebuilds its derived indexes.
+                    if ($env:IMMICH_INSTALL_TEST_FAILURE -eq '1' -and $env:IMMICH_CURATION_INSTALL_TEST -eq '1') { Start-Sleep -Seconds 15 }
                     Checked sc.exe @('config',$name,'start=','delayed-auto')
                     Checked sc.exe @('failure',$name,'reset=','86400','actions=','restart/5000/restart/15000/none/0')
                     Start-Service $name

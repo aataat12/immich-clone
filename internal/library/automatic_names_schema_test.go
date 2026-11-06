@@ -276,7 +276,7 @@ func TestAutomaticSchemaTwoReadOnlyRestartExportBackupAndIndependentRestore(t *t
 func TestAutomaticSchemaUnsupportedThreeRefusedWithoutMutation(t *testing.T) {
 	s, root := openTest(t)
 	if e := s.db.Update(func(tx *bolt.Tx) error {
-		return tx.Bucket([]byte("meta")).Put([]byte("schema"), []byte("3"))
+		return tx.Bucket([]byte("meta")).Put([]byte("schema"), []byte("99"))
 	}); e != nil {
 		t.Fatal(e)
 	}

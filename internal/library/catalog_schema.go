@@ -10,7 +10,7 @@ import (
 // Catalog version 2 protects automatic-assignment provenance from old writers,
 // which explicitly reject any catalog version other than 1 before committing.
 func supportedCatalogSchema(version []byte) bool {
-	return string(version) == "1" || string(version) == "2"
+	return string(version) == "1" || string(version) == "2" || string(version) == "3"
 }
 
 func automaticProvenance(l FaceLabel) bool {
@@ -22,7 +22,7 @@ func requireAutomaticCatalog(tx *bolt.Tx) error {
 	if meta == nil || !supportedCatalogSchema(meta.Get([]byte("schema"))) {
 		return errors.New("unsupported catalog schema")
 	}
-	if string(meta.Get([]byte("schema"))) == "2" {
+	if string(meta.Get([]byte("schema"))) == "2" || string(meta.Get([]byte("schema"))) == "3" {
 		return nil
 	}
 	return meta.Put([]byte("schema"), []byte("2"))
@@ -36,7 +36,7 @@ func protectAutomaticCatalog(tx *bolt.Tx, writable bool) error {
 	if meta == nil || !supportedCatalogSchema(meta.Get([]byte("schema"))) {
 		return errors.New("unsupported catalog schema")
 	}
-	if string(meta.Get([]byte("schema"))) == "2" {
+	if string(meta.Get([]byte("schema"))) == "2" || string(meta.Get([]byte("schema"))) == "3" {
 		return nil
 	}
 	labels := tx.Bucket([]byte(labelsBucket))
