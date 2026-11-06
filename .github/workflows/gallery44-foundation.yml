@@ -1,5 +1,5 @@
 name: Frameout 0.1.44 selection and albums acceptance
-# Steps 5–6: trace foreground paging and periodic refresh transitions.
+# Steps 5–6: album moves hold the organization transaction UI through lookup.
 on:
   push:
     branches: ['work/release-0.1.44-foundation']
