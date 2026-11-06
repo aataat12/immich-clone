@@ -1,0 +1,84 @@
+name: Release 0.1.43 feature development gate
+on:
+  push:
+    branches: ['work/release-0.1.43']
+    paths: ['.github/workflows/release43-features.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: release43-features-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  features:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Execute date, search, provenance, correction and recovery tests
+        shell: pwsh
+        run: |
+          go mod verify
+          if ($LASTEXITCODE -ne 0) { throw 'Module verification failed' }
+          go test -mod=readonly -count=1 -timeout=8m ./internal/... ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'Feature and regression tests failed' }
+          go vet ./internal/... ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'Vet failed' }
+          node tests/gallery-dates.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Date helper acceptance failed' }
+      - name: Exercise real LocalService and Edge search journeys
+        shell: pwsh
+        run: |
+          $tokens=$null;$parseErrors=$null
+          $null=[Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'scripts/Test-Release43Features.ps1'),[ref]$tokens,[ref]$parseErrors)
+          if ($parseErrors.Count) { throw 'Feature fixture syntax invalid' }
+          $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD='1'
+          npm install --prefix "$env:RUNNER_TEMP/release43-browser" --no-audit --no-fund playwright@1.62.1
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned browser tooling acquisition failed' }
+          $env:IMMICH_BROWSER_MODULE="$env:RUNNER_TEMP/release43-browser/node_modules/playwright"
+          $env:IMMICH_BROWSER_OUTPUT="$env:GITHUB_WORKSPACE/browser-evidence"
+          New-Item -ItemType Directory -Path $env:IMMICH_BROWSER_OUTPUT|Out-Null
+          ./scripts/Test-Release43Features.ps1
+      - name: Retain synthetic screenshots only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: release43-feature-screenshots
+          path: browser-evidence/*.png
+          retention-days: 7
+  automatic-name-screen:
+    runs-on: windows-2022
+    timeout-minutes: 18
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12.10'
+          architecture: x64
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: experimental-native-ai-build-not-accepted
+          path: native-ai-candidate
+          run-id: 41551816976
+          github-token: ${{ github.token }}
+      - name: Execute separate frozen automatic naming screen with pinned native provider
+        shell: pwsh
+        run: |
+          ./scripts/Test-NativeFaceQuality.ps1 -AutomaticNames

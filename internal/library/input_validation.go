@@ -60,7 +60,7 @@ func validateCatalogInput(tx *bolt.Tx) error {
 					}
 				case labelsBucket:
 					var l FaceLabel
-					if !validID(string(k)) || json.Unmarshal(v, &l) != nil || !textOK(l.Name, 128) || !textOK(l.Previous, 128) {
+					if !validID(string(k)) || json.Unmarshal(v, &l) != nil || !validFaceLabel(l) {
 						return errCatalogInput
 					}
 				case tagsBucket, "dismissed_ai_tags_v1":

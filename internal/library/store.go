@@ -51,6 +51,7 @@ type Asset struct {
 type Store struct {
 	offline     *offlineState
 	reviewIndex *organizationIndex // protected by gate; derived from committed catalog state
+	gallerySearch *gallerySearchIndex // protected by gate; rebuilt after every committed write
 
 	analysisStill          func(context.Context, string) (image.Image, int, int, error)
 	videoInfo              func(context.Context, string) (media.Clip, error)

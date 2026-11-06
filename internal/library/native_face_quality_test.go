@@ -52,10 +52,7 @@ func TestActualNativeCrossPhotoQuality(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Minute)
 	defer cancel()
 	started := time.Now()
-	type record struct {
-		subject, index int
-		face           *StoredFace
-	}
+	type record = automaticQualityRecord
 	all := make([]record, 0, 400)
 	detected, calibrationDetected, heldoutDetected := 0, 0, 0
 	for subject := 1; subject <= 40; subject++ {
@@ -224,6 +221,9 @@ func TestActualNativeCrossPhotoQuality(t *testing.T) {
 	scratchFiles, e := os.ReadDir(scratch)
 	if e != nil || len(scratchFiles) != 0 {
 		t.Fatal("native analysis scratch retained")
+	}
+	if os.Getenv("IMMICH_AUTOMATIC_QUALITY") == "1" {
+		evaluateAutomaticNativeQuality(t, all)
 	}
 	pass := calibrationPass && detected >= 360 && knownCorrect >= 144 && knownWrong == 0 && unknownAccept == 0 && noFacePass == 3 && naturalNoFace
 	report := map[string]any{"scope": "ORL narrow identity-disjoint native Go/provider screen; not general-library quality", "credit": "AT&T Laboratories Cambridge / Olivetti Research Laboratory", "provider": recognition.AnalysisID, "images_total": 400, "detected_exactly_one": detected, "calibration_detected": calibrationDetected, "heldout_detected": heldoutDetected, "calibration_max_negative": maxNegative, "calibration_negative_pairs": calibrationPairs, "threshold": .363, "margin": .05, "calibration_pass": calibrationPass, "known_total": 180, "known_correct": knownCorrect, "known_wrong": knownWrong, "known_unresolved": knownUnresolved, "unknown_total": 100, "unknown_false_accept": unknownAccept, "unknown_rejected": unknownRejected, "unknown_unprocessed": unknownUnprocessed, "enrollments_available": len(refs), "scored_same_pairs": samePairs, "same_pair_misses": sameMisses, "scored_different_pairs": differentPairs, "different_pair_accepts": differentAccepts, "unscored_same_pairs": unscoredSame, "unscored_different_pairs": unscoredDifferent, "flat_no_face_controls_passed": noFacePass, "natural_no_face_control_passed": naturalNoFace, "elapsed_seconds": time.Since(started).Seconds(), "originals_unchanged": true, "narrow_quality_screen_passed": pass}

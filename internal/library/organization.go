@@ -45,12 +45,20 @@ type StoredFace struct {
 	Provider  string    `json:"provider"`
 }
 type FaceLabel struct {
+	Source string `json:"name_source,omitempty"`
+	Policy string `json:"automatic_policy,omitempty"`
+	Score float64 `json:"automatic_score,omitempty"`
+	PreviousSource string `json:"previous_source,omitempty"`
+	PreviousPolicy string `json:"previous_policy,omitempty"`
+	PreviousScore float64 `json:"previous_score,omitempty"`
 	Dismissed bool   `json:"dismissed,omitempty"`
 	Name      string `json:"name"`
 	Previous  string `json:"previous,omitempty"`
 	CanUndo   bool   `json:"can_undo"`
 }
 type FaceView struct {
+	Source string `json:"name_source,omitempty"`
+	Policy string `json:"automatic_policy,omitempty"`
 	SampleUS   *int64    `json:"sample_us,omitempty"`
 	Dismissed  bool      `json:"dismissed"`
 	ID         string    `json:"id"`
@@ -70,6 +78,7 @@ type OrganizationAsset struct {
 	Dismissed  []string        `json:"dismissed"`
 }
 type Organization struct {
+	AutomaticNaming bool `json:"automatic_naming"`
 	MediaAvailable bool                `json:"media_available"`
 	Faces          []FaceView          `json:"faces"`
 	Names          []string            `json:"names"`
@@ -342,6 +351,9 @@ func (s *Store) ProcessAnalysis(ctx context.Context) (bool, error) {
 				}
 			}
 		}
+		if a.Status == "ready" {
+			if e := applyAutomaticNames(tx, faces, productionAutomaticNamePolicy()); e != nil { return e }
+		}
 		if e := writeJSON(tx.Bucket([]byte(analysisBucket)), id, a); e != nil {
 			return e
 		}
@@ -491,10 +503,10 @@ func (s *Store) LabelFaces(ids []string, name string) error {
 			if label.Dismissed {
 				return ErrOrganizationInput
 			}
-			if label.Name == name {
+			if label.Name == name && faceNameSource(label) != "automatic" && name != "" {
 				continue
 			}
-			label = FaceLabel{Name: name, Previous: label.Name, CanUndo: true}
+			label = FaceLabel{Name: name, Source: "manual", Previous: label.Name, PreviousSource: faceNameSource(label), PreviousPolicy: label.Policy, PreviousScore: label.Score, CanUndo: true}
 			if e = writeJSON(tx.Bucket([]byte(labelsBucket)), id, label); e != nil {
 				return e
 			}
@@ -516,8 +528,8 @@ func (s *Store) UndoFace(id string) error {
 		if !l.CanUndo {
 			return ErrOrganizationInput
 		}
-		l.Name = l.Previous
-		l.Previous = ""
+		l.Name, l.Source, l.Policy, l.Score = l.Previous, l.PreviousSource, l.PreviousPolicy, l.PreviousScore
+		l.Previous, l.PreviousSource, l.PreviousPolicy, l.PreviousScore = "", "", "", 0
 		l.CanUndo = false
 		return writeJSON(tx.Bucket([]byte(labelsBucket)), id, l)
 	})
@@ -580,6 +592,7 @@ func (s *Store) OrganizationFilteredPage(after, faceAfter, query string, dismiss
 	defer s.gate.Unlock()
 	out.Available = s.recognitionAvailable.Load()
 	out.MediaAvailable = s.mediaAnalysisAvailable.Load()
+	out.AutomaticNaming = automaticNamesValidated
 	e := s.db.View(func(tx *bolt.Tx) error {
 		index, err := s.organizationIndexFor(tx)
 		if err != nil {
@@ -599,7 +612,7 @@ func (s *Store) OrganizationFilteredPage(after, faceAfter, query string, dismiss
 			if unnamed && r.l.Name != "" {
 				continue
 			}
-			view := FaceView{SampleUS: r.f.SampleUS, Dismissed: r.l.Dismissed, ID: r.f.ID, AssetID: r.f.AssetID, AssetName: assets[r.f.AssetID].Name, Box: append([]float64(nil), r.f.Box...), Name: r.l.Name, CanUndo: r.l.CanUndo}
+			view := FaceView{Source: faceNameSource(r.l), Policy: r.l.Policy, SampleUS: r.f.SampleUS, Dismissed: r.l.Dismissed, ID: r.f.ID, AssetID: r.f.AssetID, AssetName: assets[r.f.AssetID].Name, Box: append([]float64(nil), r.f.Box...), Name: r.l.Name, CanUndo: r.l.CanUndo}
 			if view.SampleUS != nil {
 				position := *view.SampleUS
 				view.SampleUS = &position
@@ -789,7 +802,7 @@ func (s *Store) ManualFace(ctx context.Context, id string, box []float64, name s
 		if e := writeJSON(tx.Bucket([]byte(facesBucket)), key, f); e != nil {
 			return e
 		}
-		return writeJSON(tx.Bucket([]byte(labelsBucket)), key, FaceLabel{Name: strings.TrimSpace(name)})
+		return writeJSON(tx.Bucket([]byte(labelsBucket)), key, FaceLabel{Name: strings.TrimSpace(name), Source: "manual"})
 	})
 }
 

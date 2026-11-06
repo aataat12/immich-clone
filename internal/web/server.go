@@ -306,13 +306,17 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		page, e := s.Store.GalleryPage(r.URL.Query().Get("sort"), r.URL.Query().Get("visibility"), r.URL.Query().Get("after"), limit)
+		page, e := s.Store.SearchGalleryPage(r.URL.Query().Get("sort"), r.URL.Query().Get("visibility"), r.URL.Query().Get("after"), r.URL.Query().Get("q"), limit)
 		if errors.Is(e, library.ErrGalleryChanged) {
 			http.Error(w, "Library ordering changed. Refresh from the first page.", 409)
 			return
 		}
 		if e != nil {
-			http.Error(w, "gallery unavailable or invalid page", 400)
+			if errors.Is(e, library.ErrGalleryInput) {
+				http.Error(w, "invalid gallery search or page", 400)
+			} else {
+				http.Error(w, "gallery search unavailable; try Refresh", 500)
+			}
 			return
 		}
 		jsonResponse(w, page)

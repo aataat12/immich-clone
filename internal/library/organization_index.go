@@ -69,7 +69,9 @@ func (s *Store) organizationIndexFor(tx *bolt.Tx) (*organizationIndex, error) {
 		if label.Name != "" && !label.Dismissed {
 			names[label.Name] = true
 			index.namesByAsset[f.AssetID] = append(index.namesByAsset[f.AssetID], label.Name)
-			index.references = append(index.references, reviewReference{f, label})
+			if trustedFaceLabel(label) {
+				index.references = append(index.references, reviewReference{f, label})
+			}
 		}
 		// Only named reference embeddings stay resident. Unnamed vectors are read
 		// for the requested page rather than retained for the whole face library.
@@ -123,7 +125,7 @@ func (s *Store) organizationIndexFor(tx *bolt.Tx) (*organizationIndex, error) {
 func suggestReviewFace(subject StoredFace, refs []reviewReference) (string, float64) {
 	scores := map[string]float64{}
 	for _, ref := range refs {
-		if ref.l.Dismissed || ref.l.Name == "" || !recognition.CompatibleEmbeddings(ref.f.Provider, subject.Provider) || len(ref.f.Embedding) != 128 || len(subject.Embedding) != 128 {
+		if !trustedFaceLabel(ref.l) || !recognition.CompatibleEmbeddings(ref.f.Provider, subject.Provider) || len(ref.f.Embedding) != 128 || len(subject.Embedding) != 128 {
 			continue
 		}
 		score := 0.

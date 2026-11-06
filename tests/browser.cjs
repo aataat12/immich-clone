@@ -12,7 +12,7 @@ const path = require('path');
   await page.click('#loginForm button');
   await page.waitForSelector('#library:not(.hidden)');
   await page.waitForSelector('.card img');
-  if(!(await page.locator('.card').filter({hasText:'synthetic.png'}).locator('.meta').textContent()).includes('UTC'))throw Error('Upload date timezone not explicit');
+  if(!(await page.locator('.card').filter({hasText:'synthetic.png'}).locator('.meta').textContent()).includes('Date imported:'))throw Error('Import date provenance missing');
   await page.locator('.card').filter({hasText:'synthetic.png'}).getByRole('button',{name:'View image',exact:true}).click();
   await page.waitForSelector('#viewMedia img');
   await page.waitForFunction(()=>document.querySelector('#viewMedia img').naturalWidth===64);

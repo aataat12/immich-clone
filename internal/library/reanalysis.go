@@ -505,6 +505,7 @@ func (s *Store) ApplyReanalysis(parent context.Context, id string) error {
 			return e
 		}
 		j.Retained = len(old)
+		var added []StoredFace
 		for _, p := range j.Faces {
 			overlap := false
 			for _, f := range old {
@@ -529,8 +530,10 @@ func (s *Store) ApplyReanalysis(parent context.Context, id string) error {
 				return e
 			}
 			old = append(old, f)
+			added = append(added, f)
 			j.Added++
 		}
+		if e := applyAutomaticNames(tx, added, productionAutomaticNamePolicy()); e != nil { return e }
 		a.Objects = j.Objects
 		a.Provider = j.Provider
 		a.Video = j.Video
