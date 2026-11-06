@@ -1,6 +1,6 @@
 name: Release 0.1.43 combined acceptance
 # Prior-writer fixture uses real LocalService because 0.1.42 refuses elevated serve.
-# Focused Setup fixture uses the same staged current release notes as packaging.
+# Browser navigation checks gallery filtering, and Setup uses the same current notes as packaging.
 # Prototype0.1.43 delivery: genuine0.1.42 upgrade/rollback, full providers and independent recovery.
 on:
   push:

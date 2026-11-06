@@ -15,10 +15,40 @@ const assert = require('assert/strict');
     await page.fill('#code', fs.readFileSync(path.join(process.env.IMMICH_TEST_STATE, 'access-code.txt'), 'utf8').trim());
     await page.click('#loginForm button');
     await page.waitForSelector('#library:not(.hidden)');
+    const galleryResponse = await page.request.get('http://127.0.0.1:2283/api/gallery?sort=capture&visibility=library&limit=100');
+    assert.equal(galleryResponse.status(), 200);
+    const gallery = await galleryResponse.json();
+    assert(gallery.count > 0, 'Existing synthetic gallery is required');
     await page.getByRole('searchbox', { name: 'Search names, filenames or tags', exact: true }).fill('UI-search-no-match');
-    await page.locator('.ui-global-search button').click();
-    await page.waitForURL('**/people?q=UI-search-no-match');
-    assert.equal(await page.locator('#query').inputValue(), 'UI-search-no-match');
+    await page.locator('#gallerySearch').getByRole('button', { name: 'Find', exact: true }).click();
+    await page.waitForFunction(() => document.querySelector('#gallerySearchState').textContent.includes('0 matching items') && document.querySelector('#status').textContent.includes('No matching media'));
+    assert.equal(new URL(page.url()).pathname, '/');
+    assert.equal(new URL(page.url()).searchParams.get('q'), 'UI-search-no-match');
+    assert.equal(await page.locator('#galleryQuery').inputValue(), 'UI-search-no-match');
+    assert.equal(await page.locator('.card').count(), 0);
+    assert.equal(await page.locator('#clearGallerySearch').isVisible(), true);
+    await page.locator('#galleryQuery').fill('synthetic.png');
+    await page.locator('#gallerySearch').getByRole('button', { name: 'Find', exact: true }).click();
+    await page.waitForFunction(() => document.querySelector('#gallerySearchState').textContent.includes('1 matching item') && document.querySelectorAll('.card').length === 1 && document.querySelector('.card .name').textContent === 'synthetic.png');
+    const matchingAsset = await page.locator('.card').getAttribute('data-asset');
+    const matchingPage = await page.locator('#pageLabel').textContent();
+    await page.locator('.card').getByRole('button', { name: 'View image', exact: true }).click();
+    await page.waitForFunction(() => document.querySelector('#viewMedia img')?.naturalWidth === 64);
+    await page.locator('#closeViewer').click();
+    assert.equal(new URL(page.url()).pathname, '/');
+    assert.equal(new URL(page.url()).searchParams.get('q'), 'synthetic.png');
+    assert.equal(await page.locator('#galleryQuery').inputValue(), 'synthetic.png');
+    assert.match(await page.locator('#gallerySearchState').textContent(), /1 matching item/);
+    assert.equal(await page.locator('#pageLabel').textContent(), matchingPage);
+    assert.equal(await page.locator('.card').getAttribute('data-asset'), matchingAsset);
+    await page.locator('#clearGallerySearch').click();
+    await page.waitForFunction(count => document.querySelector('#galleryQuery').value === '' && document.querySelector('#gallerySearchState').textContent === '' && document.querySelectorAll('.card').length === Math.min(60, count), gallery.count);
+    assert.equal(new URL(page.url()).searchParams.has('q'), false);
+
+    // Name/tag editing remains a separate workspace, reached explicitly.
+    await page.getByRole('link', { name: 'People & tags', exact: true }).click();
+    await page.waitForURL('**/people');
+    assert.equal(await page.locator('#query').inputValue(), '');
     await page.waitForFunction(() => !busy && !paging);
     assert.equal(await page.locator('#uiFaces').isVisible(), true);
     assert.equal(await page.locator('#uiPhotos').isVisible(), true);
@@ -51,7 +81,7 @@ const assert = require('assert/strict');
       assert.equal(await page.locator('.ui-sidebar').isVisible(), true);
     }
     assert.deepEqual(errors, []);
-    console.log('PASS: real authenticated navigation/search, People task visibility/focus, hidden-view initialization, desktop/narrow shell; no mutation or page errors.');
+    console.log('PASS: authenticated main-gallery search/query/count/cards/empty/clear/viewer context, separate People editing task visibility/focus, hidden-view initialization and desktop/narrow shell; no mutation or page errors.');
   } finally {
     await browser.close();
   }
