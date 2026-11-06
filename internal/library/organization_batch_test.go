@@ -69,3 +69,11 @@ func TestOrganizationBatchAlbumRecreationCannotReceiveOldEdits(t *testing.T){
  if _,e:=s.EditCuration(CurationEdit{Action:"update_album",AlbumID:id,Expected:old.Token,Title:"Old draft"});!errors.Is(e,ErrCurationConflict){t.Fatal("old album draft accepted",e)}
  result:=completeBatchFixture(t,s,batch);if result.Targets[0].Outcome!="conflict"{t.Fatal("old batch edited a recreated album")};p,_:=s.AlbumPage(id,"",60);if p.Count!=0{t.Fatal("recreated album mutated")}
 }
+
+func TestOrganizationBatchRejectedPreviewCannotPublishUncommittedSearchCache(t *testing.T){
+ s,_:=openTest(t);seedGalleryFoundation(t,s,187)
+ q:=GalleryQuery{Sort:"name",Visibility:"library",Favorite:"false"};p,e:=s.QueryGalleryPage(q,"",60);if e!=nil{t.Fatal(e)};a:=p.Assets[0];target:=OrganizationTarget{ID:a.ID,Added:a.Added}
+ _,e=s.PrepareOrganizationBatch(OrganizationBatchRequest{Action:"favorite_on",Query:q,Snapshot:p.Snapshot,Targets:[]OrganizationTarget{target,target}});if !errors.Is(e,ErrCurationConflict){t.Fatal(e)}
+ o,_:=s.AssetOrganization(a.ID);curationEdit(t,s,CurationEdit{Action:"set_asset",AssetID:a.ID,Added:a.Added,Expected:o.Token,Favorite:true})
+ q.Favorite="true";fresh,e:=s.QueryGalleryPage(q,"",60);if e!=nil||fresh.Count!=1||fresh.Assets[0].ID!=a.ID{t.Fatal("uncommitted preview cache survived the next commit",fresh.Count,e)}
+}

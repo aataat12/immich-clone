@@ -34,7 +34,7 @@ type gallerySearchIndex struct {
 }
 
 func (s *Store) gallerySearchFor(tx *bolt.Tx) (*gallerySearchIndex, error) {
-	if s.gallerySearch != nil && s.gallerySearch.transaction == tx.ID() {
+	if !tx.Writable() && s.gallerySearch != nil && s.gallerySearch.transaction == tx.ID() {
 		return s.gallerySearch, nil
 	}
 	index := &gallerySearchIndex{transaction: tx.ID(), assets: map[string]gallerySearchRow{}, queries: map[string]map[string]bool{}}
@@ -108,7 +108,9 @@ func (s *Store) gallerySearchFor(tx *bolt.Tx) (*gallerySearchIndex, error) {
 	}
  if b:=tx.Bucket([]byte(assetOrganizationBucket));b!=nil{if e:=b.ForEach(func(k,v []byte)error{var o AssetOrganization;if e:=json.Unmarshal(v,&o);e!=nil{return e};row:=index.assets[string(k)];row.favorite=o.Favorite;index.assets[string(k)]=row;return nil});e!=nil{return nil,e}}
  if b:=tx.Bucket([]byte(albumMembersBucket));b!=nil{if e:=b.ForEach(func(k,v []byte)error{var m AlbumMember;if e:=json.Unmarshal(v,&m);e!=nil{return e};row:=index.assets[m.AssetID];if row.albums==nil{row.albums=map[string]uint64{}};row.albums[m.AlbumID]=m.Position;index.assets[m.AssetID]=row;return nil});e!=nil{return nil,e}}
- s.gallerySearch = index
+	// A rolled-back write transaction may reuse its ID for a later, different
+	// commit. Never publish a cache built from uncommitted transaction state.
+	if !tx.Writable() { s.gallerySearch = index }
 	return index, nil
 }
 
