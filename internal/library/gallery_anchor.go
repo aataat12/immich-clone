@@ -2,8 +2,8 @@ package library
 
 import (
 	"bytes"
-	"sort"
 	bolt "go.etcd.io/bbolt"
+	"sort"
 )
 
 // PreviousPage is an indexed, bounded reverse seek. The empty cursor denotes
@@ -12,9 +12,14 @@ func (r *galleryResults) previousPage(after []byte, limit int) string {
 	if len(after) == 0 {
 		return ""
 	}
-	if r.matches!=nil {
-	 i:=sort.Search(len(r.ordered),func(i int)bool{return bytes.Compare(r.ordered[i],after)>=0})-limit
-	 if i<0||i>=len(r.ordered){return ""};t:=r.token;t.Key=r.ordered[i];return encodeGalleryCursor(t)
+	if r.matches != nil {
+		i := sort.Search(len(r.ordered), func(i int) bool { return bytes.Compare(r.ordered[i], after) >= 0 }) - limit
+		if i < 0 || i >= len(r.ordered) {
+			return ""
+		}
+		t := r.token
+		t.Key = r.ordered[i]
+		return encodeGalleryCursor(t)
 	}
 	c := r.index.Cursor()
 	k, v := c.Seek(after)

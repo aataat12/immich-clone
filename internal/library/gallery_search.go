@@ -28,7 +28,7 @@ type gallerySearchIndex struct {
 	transaction int
 	assets      map[string]gallerySearchRow
 	queries     map[string]map[string]bool
-	queryKeys map[string][][]byte
+	queryKeys   map[string][][]byte
 }
 
 func (s *Store) gallerySearchFor(tx *bolt.Tx) (*gallerySearchIndex, error) {
@@ -130,9 +130,21 @@ func (index *gallerySearchIndex) matching(q GalleryQuery) map[string]bool {
 }
 
 func (index *gallerySearchIndex) orderedKeys(q GalleryQuery) [][]byte {
- key:=q.key();if keys,ok:=index.queryKeys[key];ok{return keys}
- ids:=index.matching(q);keys:=make([][]byte,0,len(ids))
- for id:=range ids{row:=index.assets[id];a:=Asset{ID:id,Name:row.filename,Added:row.added,Photo:PhotoMetadata{Captured:row.captured}};keys=append(keys,galleryKeys(a)[q.Sort])}
- sort.Slice(keys,func(i,j int)bool{return bytes.Compare(keys[i],keys[j])<0})
- if index.queryKeys==nil{index.queryKeys=map[string][][]byte{}};index.queryKeys[key]=keys;return keys
+	key := q.key()
+	if keys, ok := index.queryKeys[key]; ok {
+		return keys
+	}
+	ids := index.matching(q)
+	keys := make([][]byte, 0, len(ids))
+	for id := range ids {
+		row := index.assets[id]
+		a := Asset{ID: id, Name: row.filename, Added: row.added, Photo: PhotoMetadata{Captured: row.captured}}
+		keys = append(keys, galleryKeys(a)[q.Sort])
+	}
+	sort.Slice(keys, func(i, j int) bool { return bytes.Compare(keys[i], keys[j]) < 0 })
+	if index.queryKeys == nil {
+		index.queryKeys = map[string][][]byte{}
+	}
+	index.queryKeys[key] = keys
+	return keys
 }

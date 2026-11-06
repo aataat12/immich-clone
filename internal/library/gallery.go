@@ -204,7 +204,7 @@ func (s *Store) SearchGalleryPage(order, visibility, after, query string, limit 
 }
 
 type galleryResults struct {
-	ordered [][]byte
+	ordered              [][]byte
 	tx                   *bolt.Tx
 	query                GalleryQuery
 	index                *bolt.Bucket

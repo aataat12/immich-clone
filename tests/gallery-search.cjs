@@ -15,9 +15,10 @@ const {chromium}=require(process.env.IMMICH_BROWSER_MODULE);
    await post('/api/assets/'+r.asset.id+'/tags',{tags:['SearchTrip']});
   }
   for(const [i,names] of [[0,['Alice']],[1,['Alice','Bob']],[64,['Bob']]])for(const [j,name] of names.entries())await post('/api/assets/'+originals[i].id+'/manual-face',{box:[.1+j*.3,.1,.2,.2],name});
+  console.log('CHECK: fixture uploads complete');
   // Let previews settle before asserting revision-bound search pagination.
   await page.waitForFunction(async()=>{const p=await(await fetch('/api/gallery?sort=name&visibility=library&limit=100')).json();return p.assets.length===65&&p.assets.every(a=>a.preview!=='queued')});
-  const search=async(q,count)=>{await page.fill('#galleryQuery',q);await page.locator('#gallerySearch button[type=submit]').click();await page.waitForFunction(({q,count})=>document.querySelector('#gallerySearchState').textContent.includes(count+' matching')&&document.querySelector('#galleryQuery').value===q,{q,count});assert.equal(new URL(page.url()).pathname,'/');};
+  const search=async(q,count)=>{console.log('CHECK: released synthetic search',q,count);await page.fill('#galleryQuery',q);await page.locator('#gallerySearch button[type=submit]').click();await page.waitForFunction(({q,count})=>document.querySelector('#gallerySearchState').textContent.includes(count+' matching')&&document.querySelector('#galleryQuery').value===q,{q,count});assert.equal(new URL(page.url()).pathname,'/');};
   await search('ALICE',2);assert.equal(await page.locator('.card').count(),2);
   await search('Bob',2);assert.equal(await page.locator('.card').count(),2);
   await search('search-064',1);assert.equal(await page.locator('.card').getAttribute('data-asset'),originals[64].id);
@@ -38,4 +39,4 @@ const {chromium}=require(process.env.IMMICH_BROWSER_MODULE);
   for(const original of originals){const r=await page.request.get('http://127.0.0.1:2283/api/assets/'+original.id+'/original');assert(r.ok());assert.equal(crypto.createHash('sha256').update(await r.body()).digest('hex'),original.id);}
   assert.deepEqual(errors,[]);console.log('PASS: gallery assigned multi-person/filename/tag search, 65-item filtered paging, viewer return/scroll, clear/empty/error, hidden/reload, dates, desktop/narrow and original hashes');
  }finally{await browser.close()}
-})().catch(e=>{console.error(e.message);process.exit(1)});
+})().catch(e=>{console.error(e.stack);process.exit(1)});
