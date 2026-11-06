@@ -1,0 +1,88 @@
+name: Publish approved tested 0.1.43 artifact
+on:
+  push:
+    branches: ['work/release-0.1.43']
+    paths: ['.github/workflows/publish-0.1.43.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-0.1.43
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: windows-2022
+    timeout-minutes: 8
+    steps:
+      - name: Publish exact accepted artifact without rebuilding
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference='Stop'
+          $repo='aataat12/immich-clone'
+          $api='https://api.github.com/repos/'+$repo
+          $source='90d86bd932234d703c4166e4c47585cfbfd047d5'
+          $tag='v0.1.43-prototype'
+          $headers=@{Accept='application/vnd.github+json';Authorization=('Bearer '+$env:GH_TOKEN);'X-GitHub-Api-Version'='2022-11-28'}
+          $gates=@(
+            @{Run=42170003998;Source=$source;Jobs=@(127735349942)},
+            @{Run=42169084769;Source='160aa35e116f36d8fe98ca274db61be7496a6153';Jobs=@(127732419627)},
+            @{Run=42166864007;Source='204c5a5abc0237b54f71f3f9242dbdbcf70d4c77';Jobs=@(127725247984,127725248385,127725248391)},
+            @{Run=42164599554;Source='d6cfd0968d5c5b8d9671520fcabeb71dd1f7254a';Jobs=@(127718001981)}
+          )
+          foreach($gate in $gates){
+            $run=Invoke-RestMethod ($api+'/actions/runs/'+$gate.Run) -Headers $headers
+            if($run.head_sha -ne $gate.Source -or $run.status -ne 'completed' -or $run.conclusion -ne 'success'){throw 'Required exact-source acceptance did not pass'}
+            $jobs=Invoke-RestMethod ($api+'/actions/runs/'+$gate.Run+'/jobs?per_page=100') -Headers $headers
+            foreach($id in $gate.Jobs){if(@($jobs.jobs|Where-Object{[int64]$_.id -eq [int64]$id -and $_.conclusion -eq 'success'}).Count -ne 1){throw 'Required acceptance job did not pass'}}
+          }
+          $artifactId=13481410728
+          $zipHash='d9fb2946b42490ce32786938c5b397050ffed1bc19bfe006b86726409a8e6975'
+          $artifact=Invoke-RestMethod ($api+'/actions/artifacts/'+$artifactId) -Headers $headers
+          if($artifact.name -ne 'prototype-0.1.43-server-tested' -or $artifact.expired -or $artifact.workflow_run.head_sha -ne $source -or [int64]$artifact.workflow_run.id -ne 42170003998 -or $artifact.digest -ne ('sha256:'+$zipHash)){throw 'Accepted artifact identity mismatch'}
+          $tags=Invoke-RestMethod ($api+'/git/matching-refs/tags/'+$tag) -Headers $headers
+          if($tags.Count -ne 0){throw 'Existing tag is never overwritten'}
+          $releases=Invoke-RestMethod ($api+'/releases?per_page=100') -Headers $headers
+          if(@($releases|Where-Object tag_name -eq $tag).Count){throw 'Existing release is never overwritten'}
+          $zip=Join-Path $env:RUNNER_TEMP 'tested-0.1.43.zip'
+          Invoke-WebRequest ($api+'/actions/artifacts/'+$artifactId+'/zip') -Headers $headers -OutFile $zip
+          if((Get-FileHash $zip).Hash.ToLowerInvariant() -ne $zipHash){throw 'Artifact ZIP hash mismatch'}
+          $root=Join-Path $env:RUNNER_TEMP 'tested-0.1.43'
+          Expand-Archive -LiteralPath $zip -DestinationPath $root
+          $assets=@(
+            @{Path='dist/ImmichClone-0.1.43-prototype-x64-setup.exe';Hash='96670e90c4abc55cdc07f480267c6f896b784a2a6c11de9f9f5333edb4158415';Size=104671997},
+            @{Path='dist/SHA256SUMS.txt';Hash='d5e554340c97f851351890f70ed4a723f0aab90e1a33c0e440c64ef8fadbebbf';Size=110},
+            @{Path='docs/release-notes-0.1.43.md';Hash='64bc13a2850eced97c15f0d28718016cfbd673d7ce648b58025592e4df22fdcd';Size=3502},
+            @{Path='docs/validation-0.1.43.md';Hash='735d8ec7fd686ece6f32a65e5bf0b8719ef62deb8198a397c2bc2615682b58cf';Size=4404}
+          )
+          if(@(Get-ChildItem -LiteralPath $root -Recurse -File).Count -ne 4){throw 'Unexpected artifact members'}
+          $files=@()
+          foreach($asset in $assets){
+            $path=Join-Path $root $asset.Path
+            if((Get-Item $path).Length -ne $asset.Size -or (Get-FileHash $path).Hash.ToLowerInvariant() -ne $asset.Hash){throw 'Deliverable identity mismatch'}
+            $files+=$path
+          }
+          $body=Get-Content (Join-Path $root 'docs/release-notes-0.1.43.md') -Raw
+          $body+="`nExact tested source: $source`n`nCombined Windows Server 2022 acceptance: https://github.com/$repo/actions/runs/42170003998`n`nFocused installer trust: https://github.com/$repo/actions/runs/42169084769`n`nEnabled feature, catalog compatibility and actual-native recovery acceptance: https://github.com/$repo/actions/runs/42166864007`n`nIndependent frozen-policy quality screen: https://github.com/$repo/actions/runs/42164599554`n`nInstaller SHA256: 96670e90c4abc55cdc07f480267c6f896b784a2a6c11de9f9f5333edb4158415`n`nPublished from the exact tested artifact without rebuilding. Milestones 7 and 8 remain incomplete; SEC-05 and SEC-08 remain open. Final Windows 10 clean-machine, reboot and endurance acceptance remains open.`n"
+          $bodyFile=Join-Path $env:RUNNER_TEMP 'release-body.md'
+          [IO.File]::WriteAllText($bodyFile,$body,[Text.UTF8Encoding]::new($false))
+          & gh release create $tag --repo $repo --target $source --title 'Immich Clone 0.1.43 prototype' --draft --prerelease --notes-file $bodyFile @files
+          if($LASTEXITCODE -ne 0){throw 'Draft creation failed'}
+          $all=Invoke-RestMethod ($api+'/releases?per_page=100') -Headers $headers
+          $drafts=@($all|Where-Object tag_name -eq $tag)
+          if($drafts.Count -ne 1){throw 'Draft identity is not unique'}
+          $release=Invoke-RestMethod ($api+'/releases/'+$drafts[0].id) -Headers $headers
+          if(!$release.draft -or !$release.prerelease -or $release.target_commitish -ne $source -or @($release.assets).Count -ne 4){throw 'Draft identity mismatch'}
+          foreach($asset in $assets){
+            $actual=@($release.assets|Where-Object name -eq (Split-Path $asset.Path -Leaf))
+            if($actual.Count -ne 1 -or $actual[0].size -ne $asset.Size -or $actual[0].digest -ne ('sha256:'+$asset.Hash)){throw 'Draft asset mismatch'}
+          }
+          $draftRef=Invoke-RestMethod ($api+'/git/ref/tags/'+$tag) -Headers $headers
+          if($draftRef.object.type -ne 'commit' -or $draftRef.object.sha -ne $source){throw 'Draft tag does not point to the accepted source'}
+          & gh release edit $tag --repo $repo --draft=false --prerelease
+          if($LASTEXITCODE -ne 0){throw 'Release publication failed'}
+          $published=Invoke-RestMethod ($api+'/releases/tags/'+$tag) -Headers $headers
+          $ref=Invoke-RestMethod ($api+'/git/ref/tags/'+$tag) -Headers $headers
+          if($published.draft -or !$published.prerelease -or @($published.assets).Count -ne 4 -or $ref.object.type -ne 'commit' -or $ref.object.sha -ne $source){throw 'Published identity mismatch'}
+          Write-Output ('Published '+$published.html_url)
