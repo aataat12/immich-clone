@@ -38,6 +38,7 @@ type AssetOrganization struct {
 	Token    string    `json:"token,omitempty"`
 }
 type Album struct {
+ Incarnation string `json:"incarnation,omitempty"`
 	ID           string `json:"id"`
 	Revision     uint64 `json:"revision"`
 	Title        string `json:"title"`
@@ -124,6 +125,7 @@ func assetOrganization(tx *bolt.Tx, id string) (AssetOrganization, error) {
 	out.Token = curationToken(tx, out.Revision, a.Added)
 	return out, nil
 }
+func albumEditToken(tx *bolt.Tx,a Album)string{return curationToken(tx,a.Revision,time.Time{})+":"+a.Incarnation}
 func curationAlbum(tx *bolt.Tx, id string) (Album, error) {
 	var a Album
 	if !validID(id) {
@@ -131,7 +133,7 @@ func curationAlbum(tx *bolt.Tx, id string) (Album, error) {
 	}
 	e := curationRead(tx, albumsBucket, id, &a)
 	if e == nil {
-		a.Token = curationToken(tx, a.Revision, time.Time{})
+		a.Token = albumEditToken(tx,a)
 	}
 	return a, e
 }
@@ -169,7 +171,7 @@ func (s *Store) Albums(after string, limit int) ([]Album, string, error) {
 			if e := json.Unmarshal(v, &a); e != nil {
 				return e
 			}
-			a.Token = curationToken(tx, a.Revision, time.Time{})
+			a.Token = albumEditToken(tx,a)
 			out = append(out, a)
 		}
 		return nil
@@ -372,11 +374,12 @@ func editCurationTx(tx *bolt.Tx,in CurationEdit)(any,error){
 		if tx.Bucket([]byte(albumsBucket)).Stats().KeyN >= maxAlbums {
 			return ErrCurationLimit
 		}
-		a = Album{ID: in.AlbumID, Revision: 1, Title: in.Title, Description: in.Description}
+		incarnation,e:=newFaceID();if e!=nil{return e}
+ a = Album{ID: in.AlbumID, Incarnation:incarnation, Revision: 1, Title: in.Title, Description: in.Description}
 		if e = curationWrite(tx, albumsBucket, a.ID, a); e != nil {
 			return e
 		}
-		a.Token = curationToken(tx, 1, time.Time{})
+		a.Token = albumEditToken(tx,a)
 		out = a
 		return nil
 	}
@@ -502,7 +505,7 @@ func editCurationTx(tx *bolt.Tx,in CurationEdit)(any,error){
 		if e = curationWrite(tx, albumsBucket, a.ID, a); e != nil {
 			return e
 		}
-		a.Token = curationToken(tx, a.Revision, time.Time{})
+		a.Token = albumEditToken(tx,a)
 	}
 	out = a
 	return nil
@@ -621,7 +624,7 @@ func validateCuration(tx *bolt.Tx) error {
 	covers := map[string]bool{}
 	if e := tx.Bucket([]byte(albumsBucket)).ForEach(func(k, v []byte) error {
 		var a Album
-		if json.Unmarshal(v, &a) != nil || a.ID != string(k) || !validID(a.ID) || a.Revision == 0 || a.Token != "" || strings.TrimSpace(a.Title) == "" || !curationText(a.Title, 256, false) || !curationText(a.Description, 4096, true) || (a.Cover != "" && !validID(a.Cover)) {
+		if json.Unmarshal(v, &a) != nil || a.ID != string(k) || !validID(a.ID) || (a.Incarnation!=""&&!validID(a.Incarnation)) || a.Revision == 0 || a.Token != "" || strings.TrimSpace(a.Title) == "" || !curationText(a.Title, 256, false) || !curationText(a.Description, 4096, true) || (a.Cover != "" && !validID(a.Cover)) {
 			return errCatalogInput
 		}
 		albums[a.ID] = a

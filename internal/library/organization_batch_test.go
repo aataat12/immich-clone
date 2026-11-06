@@ -58,3 +58,14 @@ func TestOrganizationBatchBoundsTagsAndReceiptRetirement(t *testing.T){
  rows,_=s.OrganizationBatches();old,e:=s.OrganizationBatch(rows[0].ID);if e!=nil{t.Fatal(e)};completeBatchFixture(t,s,old);p,_=s.QueryGalleryPage(q,"",60);in.Snapshot=p.Snapshot;if _,e=s.PrepareOrganizationBatch(in);e!=nil{t.Fatal("completed retirement",e)};if _,e=s.OrganizationBatch(old.ID);!errors.Is(e,ErrBatchExpired){t.Fatal("retired ID replay",e)}
  if e=s.db.View(validateCuration);e!=nil{t.Fatal("history byte accounting",e)}
 }
+
+func TestOrganizationBatchAlbumRecreationCannotReceiveOldEdits(t *testing.T){
+ s,_:=openTest(t);seedGalleryFoundation(t,s,187);id:=fmt.Sprintf("%064x",89001)
+ old:=curationEdit(t,s,CurationEdit{Action:"create_album",AlbumID:id,Title:"Same title"}).(Album)
+ batch:=prepareBatchFixture(t,s,"add_album",id,1)
+ curationEdit(t,s,CurationEdit{Action:"delete_album",AlbumID:id,Expected:old.Token})
+ fresh:=curationEdit(t,s,CurationEdit{Action:"create_album",AlbumID:id,Title:"Same title"}).(Album)
+ if old.Incarnation==fresh.Incarnation||old.Token==fresh.Token{t.Fatal("reused album identity accepted old token")}
+ if _,e:=s.EditCuration(CurationEdit{Action:"update_album",AlbumID:id,Expected:old.Token,Title:"Old draft"});!errors.Is(e,ErrCurationConflict){t.Fatal("old album draft accepted",e)}
+ result:=completeBatchFixture(t,s,batch);if result.Targets[0].Outcome!="conflict"{t.Fatal("old batch edited a recreated album")};p,_:=s.AlbumPage(id,"",60);if p.Count!=0{t.Fatal("recreated album mutated")}
+}
