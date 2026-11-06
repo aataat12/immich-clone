@@ -12,9 +12,9 @@ import (
 // GalleryQuery is the single membership/order contract for pages, counts and
 // viewer neighbors. New durable organization fields belong here as they land.
 type GalleryQuery struct {
-	Favorite string `json:"favorite,omitempty"`
- Album string `json:"album,omitempty"`
- Sort       string        `json:"sort"`
+	Favorite   string        `json:"favorite,omitempty"`
+	Album      string        `json:"album,omitempty"`
+	Sort       string        `json:"sort"`
 	Visibility string        `json:"visibility"`
 	Text       string        `json:"q,omitempty"`
 	Filename   string        `json:"filename,omitempty"`
@@ -70,10 +70,16 @@ func normalizeGalleryLabels(group GalleryLabels) (GalleryLabels, error) {
 // Import boundaries are explicit instants, resolved by the caller's display zone.
 // Both use inclusive From / exclusive Until. Missing capture dates never fall back.
 func (q GalleryQuery) Normalize() (GalleryQuery, error) {
-	if q.Favorite!="" && q.Favorite!="true" && q.Favorite!="false" {return q,ErrGalleryInput}
- if q.Album!="" && !validID(q.Album){return q,ErrGalleryInput}
- if q.Sort=="manual" && q.Album==""{return q,ErrGalleryInput}
- if q.Sort != "capture" && q.Sort != "upload" && q.Sort != "name" && q.Sort!="manual" {
+	if q.Favorite != "" && q.Favorite != "true" && q.Favorite != "false" {
+		return q, ErrGalleryInput
+	}
+	if q.Album != "" && !validID(q.Album) {
+		return q, ErrGalleryInput
+	}
+	if q.Sort == "manual" && q.Album == "" {
+		return q, ErrGalleryInput
+	}
+	if q.Sort != "capture" && q.Sort != "upload" && q.Sort != "name" && q.Sort != "manual" {
 		return q, ErrGalleryInput
 	}
 	if q.Visibility != "library" && q.Visibility != "hidden" {
@@ -151,7 +157,7 @@ func (q GalleryQuery) key() string {
 	return hex.EncodeToString(sum[:])
 }
 func (q GalleryQuery) filtered() bool {
-	return q.Favorite!="" || q.Album!="" || q.Text != "" || q.Filename != "" || q.Media != "" || q.From != "" || q.Until != "" || q.NoCapture || len(q.People.Any)+len(q.People.All)+len(q.People.Exclude)+len(q.Tags.Any)+len(q.Tags.All)+len(q.Tags.Exclude) > 0
+	return q.Favorite != "" || q.Album != "" || q.Text != "" || q.Filename != "" || q.Media != "" || q.From != "" || q.Until != "" || q.NoCapture || len(q.People.Any)+len(q.People.All)+len(q.People.Exclude)+len(q.Tags.Any)+len(q.Tags.All)+len(q.Tags.Exclude) > 0
 }
 
 func (g GalleryLabels) matches(values []string) bool {
@@ -185,9 +191,15 @@ func (g GalleryLabels) matches(values []string) bool {
 }
 
 func (q GalleryQuery) matches(row gallerySearchRow) bool {
-	if q.Favorite!="" && row.favorite!=(q.Favorite=="true"){return false}
- if q.Album!="" {if _,ok:=row.albums[q.Album];!ok{return false}}
- if row.hidden != (q.Visibility == "hidden") || !strings.Contains(row.terms, q.Text) || !strings.Contains(row.filename, q.Filename) || !q.People.matches(row.people) || !q.Tags.matches(row.tags) {
+	if q.Favorite != "" && row.favorite != (q.Favorite == "true") {
+		return false
+	}
+	if q.Album != "" {
+		if _, ok := row.albums[q.Album]; !ok {
+			return false
+		}
+	}
+	if row.hidden != (q.Visibility == "hidden") || !strings.Contains(row.terms, q.Text) || !strings.Contains(row.filename, q.Filename) || !q.People.matches(row.people) || !q.Tags.matches(row.tags) {
 		return false
 	}
 	if q.Media == "photo" && !strings.HasPrefix(row.mime, "image/") {

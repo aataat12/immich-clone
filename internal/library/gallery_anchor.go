@@ -74,7 +74,23 @@ func (s *Store) GalleryAnchorPage(query GalleryQuery, id, snapshot string, limit
 		if e != nil {
 			return ErrGalleryChanged
 		}
-		if q.Sort=="manual"{for i,k:=range r.ordered{if string(k)==id{out.Number=uint64(i/limit+1);out.Asset=id;start:=i/limit*limit;if start>0{t:=r.token;t.Key=r.ordered[start-1];out.After=encodeGalleryCursor(t)};out.Page,e=r.page(out.After,limit);return e}};return ErrGalleryChanged}
+		if q.Sort == "manual" {
+			for i, k := range r.ordered {
+				if string(k) == id {
+					out.Number = uint64(i/limit + 1)
+					out.Asset = id
+					start := i / limit * limit
+					if start > 0 {
+						t := r.token
+						t.Key = r.ordered[start-1]
+						out.After = encodeGalleryCursor(t)
+					}
+					out.Page, e = r.page(out.After, limit)
+					return e
+				}
+			}
+			return ErrGalleryChanged
+		}
 		target := galleryKeys(a)[q.Sort]
 		c := r.index.Cursor()
 		var before, last []byte
@@ -112,7 +128,9 @@ func (s *Store) GalleryAnchorPage(query GalleryQuery, id, snapshot string, limit
 
 func (r *galleryResults) page(after string, limit int) (GalleryPage, error) {
 	out := GalleryPage{Assets: []Asset{}, Total: r.total, Hidden: r.hidden, Count: r.count, Query: r.query, Snapshot: encodeGalleryCursor(r.token)}
-	if r.query.Sort=="manual"{return r.manualPage(after,limit)}
+	if r.query.Sort == "manual" {
+		return r.manualPage(after, limit)
+	}
 	c := r.index.Cursor()
 	k, v := c.First()
 	if after != "" {
@@ -141,7 +159,14 @@ func (r *galleryResults) page(after string, limit int) (GalleryPage, error) {
 			return out, e
 		}
 		out.Assets = append(out.Assets, a)
- if out.Organization==nil{out.Organization=map[string]GalleryOrganization{}};o,e:=galleryOrganization(r.tx,a.ID);if e!=nil{return out,e};out.Organization[a.ID]=o
+		if out.Organization == nil {
+			out.Organization = map[string]GalleryOrganization{}
+		}
+		o, e := galleryOrganization(r.tx, a.ID)
+		if e != nil {
+			return out, e
+		}
+		out.Organization[a.ID] = o
 		last = append(last[:0], k...)
 	}
 	return out, nil

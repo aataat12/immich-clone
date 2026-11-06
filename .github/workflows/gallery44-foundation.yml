@@ -1,5 +1,5 @@
 name: Frameout 0.1.44 selection and albums acceptance
-# Steps 5–6: semantic result snapshots, explicit cancel and organization recovery.
+# Steps 5–6: final mixed-album browser and intended hidden-control visibility.
 on:
   push:
     branches: ['work/release-0.1.44-foundation']
@@ -69,6 +69,11 @@ jobs:
       - name: Exercise real LocalService and Edge with synthetic catalogs
         shell: pwsh
         run: |
+          ./scripts/Format-Gallery44.ps1
+          if ('${{ contains(github.event.head_commit.message, '[canonical-source]') }}' -eq 'true') {
+            git diff --exit-code -- '*.go'
+            if ($LASTEXITCODE -ne 0) {throw 'Committed source differs from the accepted canonical Go formatting'}
+          }
           $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD='1'
           npm install --prefix "$env:RUNNER_TEMP/gallery44-browser" --no-audit --no-fund playwright@1.62.1
           if ($LASTEXITCODE -ne 0) {throw 'Pinned browser tooling acquisition failed'}

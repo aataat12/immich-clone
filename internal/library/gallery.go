@@ -19,15 +19,15 @@ var ErrGalleryChanged = errors.New("gallery ordering changed; refresh from first
 
 type GalleryPage struct {
 	Organization map[string]GalleryOrganization `json:"organization"`
- Previous    string       `json:"previous,omitempty"`
-	HasPrevious bool         `json:"has_previous"`
-	Assets      []Asset      `json:"assets"`
-	Next        string       `json:"next,omitempty"`
-	Total       uint64       `json:"total"`
-	Hidden      uint64       `json:"hidden"`
-	Count       uint64       `json:"count"`
-	Query       GalleryQuery `json:"query"`
-	Snapshot    string       `json:"snapshot"`
+	Previous     string                         `json:"previous,omitempty"`
+	HasPrevious  bool                           `json:"has_previous"`
+	Assets       []Asset                        `json:"assets"`
+	Next         string                         `json:"next,omitempty"`
+	Total        uint64                         `json:"total"`
+	Hidden       uint64                         `json:"hidden"`
+	Count        uint64                         `json:"count"`
+	Query        GalleryQuery                   `json:"query"`
+	Snapshot     string                         `json:"snapshot"`
 }
 type galleryCursor struct {
 	Epoch          string `json:"epoch"`
@@ -37,7 +37,7 @@ type galleryCursor struct {
 	Key            []byte `json:"key"`
 	Query          string `json:"query,omitempty"`
 	SearchRevision int    `json:"search_revision,omitempty"`
- SearchState string `json:"search_state,omitempty"`
+	SearchState    string `json:"search_state,omitempty"`
 	QueryKey       string `json:"query_key,omitempty"`
 }
 
@@ -216,8 +216,12 @@ type galleryResults struct {
 }
 
 func (s *Store) galleryResultsFor(tx *bolt.Tx, q GalleryQuery) (*galleryResults, error) {
-	if q.Album!=""{if _,e:=curationAlbum(tx,q.Album);e!=nil{return nil,ErrGalleryChanged}}
- root := tx.Bucket([]byte(galleryBucket))
+	if q.Album != "" {
+		if _, e := curationAlbum(tx, q.Album); e != nil {
+			return nil, ErrGalleryChanged
+		}
+	}
+	root := tx.Bucket([]byte(galleryBucket))
 	if root == nil {
 		return nil, errors.New("gallery index unavailable")
 	}
@@ -232,7 +236,7 @@ func (s *Store) galleryResultsFor(tx *bolt.Tx, q GalleryQuery) (*galleryResults,
 		if e != nil {
 			return nil, e
 		}
-		r.token.SearchState=search.state
+		r.token.SearchState = search.state
 		r.matches = search.matching(q)
 		r.ordered = search.orderedKeys(q)
 		r.count = uint64(len(r.matches))
@@ -254,11 +258,16 @@ func (r *galleryResults) validate(encoded string, page bool) (galleryCursor, err
 	if e != nil || json.Unmarshal(b, &c) != nil || c.QueryKey != r.token.QueryKey || c.Sort != r.query.Sort || c.Visibility != r.query.Visibility || len(c.Key) > 1100 || (page && len(c.Key) == 0) || (!page && len(c.Key) != 0) {
 		return c, ErrGalleryInput
 	}
-	if c.Epoch != r.token.Epoch || c.Revision != r.token.Revision || c.SearchRevision != r.token.SearchRevision || c.SearchState!=r.token.SearchState {
+	if c.Epoch != r.token.Epoch || c.Revision != r.token.Revision || c.SearchRevision != r.token.SearchRevision || c.SearchState != r.token.SearchState {
 		return c, ErrGalleryChanged
 	}
-	if page && r.query.Sort=="manual" {if !r.matches[string(c.Key)]{return c,ErrGalleryInput};return c,nil}
- if page && r.index.Get(c.Key) == nil {
+	if page && r.query.Sort == "manual" {
+		if !r.matches[string(c.Key)] {
+			return c, ErrGalleryInput
+		}
+		return c, nil
+	}
+	if page && r.index.Get(c.Key) == nil {
 		return c, ErrGalleryInput
 	}
 	return c, nil
@@ -334,7 +343,29 @@ func (s *Store) GalleryNeighbors(query GalleryQuery, id, snapshot string) (Galle
 		if e != nil {
 			return ErrGalleryChanged
 		}
-		if q.Sort=="manual" {out=GalleryNeighbors{Current:a,Count:r.count,Query:q,Snapshot:encodeGalleryCursor(r.token)};for i,k:=range r.ordered{if string(k)==id{if i>0{x,e:=r.asset(r.ordered[i-1]);if e!=nil{return e};out.Previous=&x};if i+1<len(r.ordered){x,e:=r.asset(r.ordered[i+1]);if e!=nil{return e};out.Next=&x};return nil}};return ErrGalleryChanged}
+		if q.Sort == "manual" {
+			out = GalleryNeighbors{Current: a, Count: r.count, Query: q, Snapshot: encodeGalleryCursor(r.token)}
+			for i, k := range r.ordered {
+				if string(k) == id {
+					if i > 0 {
+						x, e := r.asset(r.ordered[i-1])
+						if e != nil {
+							return e
+						}
+						out.Previous = &x
+					}
+					if i+1 < len(r.ordered) {
+						x, e := r.asset(r.ordered[i+1])
+						if e != nil {
+							return e
+						}
+						out.Next = &x
+					}
+					return nil
+				}
+			}
+			return ErrGalleryChanged
+		}
 		key := galleryKeys(a)[q.Sort]
 		if !bytes.Equal(r.index.Get(key), []byte(id)) {
 			return ErrGalleryChanged

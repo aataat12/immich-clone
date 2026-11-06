@@ -65,8 +65,16 @@ func (s *Server) curationHTTP(w http.ResponseWriter, r *http.Request) bool {
 			return true
 		}
 	}
-	if r.URL.Path == "/api/metadata/album-summaries" {out,next,e:=s.Store.AlbumSummaries(r.URL.Query().Get("after"),limit);if e!=nil{curationError(w,e)}else{jsonResponse(w,map[string]any{"albums":out,"next":next})};return true}
- if r.URL.Path == "/api/metadata/albums" {
+	if r.URL.Path == "/api/metadata/album-summaries" {
+		out, next, e := s.Store.AlbumSummaries(r.URL.Query().Get("after"), limit)
+		if e != nil {
+			curationError(w, e)
+		} else {
+			jsonResponse(w, map[string]any{"albums": out, "next": next})
+		}
+		return true
+	}
+	if r.URL.Path == "/api/metadata/albums" {
 		out, next, e := s.Store.Albums(r.URL.Query().Get("after"), limit)
 		if e != nil {
 			curationError(w, e)

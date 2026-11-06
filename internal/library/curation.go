@@ -38,7 +38,7 @@ type AssetOrganization struct {
 	Token    string    `json:"token,omitempty"`
 }
 type Album struct {
- Incarnation string `json:"incarnation,omitempty"`
+	Incarnation  string `json:"incarnation,omitempty"`
 	ID           string `json:"id"`
 	Revision     uint64 `json:"revision"`
 	Title        string `json:"title"`
@@ -125,7 +125,9 @@ func assetOrganization(tx *bolt.Tx, id string) (AssetOrganization, error) {
 	out.Token = curationToken(tx, out.Revision, a.Added)
 	return out, nil
 }
-func albumEditToken(tx *bolt.Tx,a Album)string{return curationToken(tx,a.Revision,time.Time{})+":"+a.Incarnation}
+func albumEditToken(tx *bolt.Tx, a Album) string {
+	return curationToken(tx, a.Revision, time.Time{}) + ":" + a.Incarnation
+}
 func curationAlbum(tx *bolt.Tx, id string) (Album, error) {
 	var a Album
 	if !validID(id) {
@@ -133,7 +135,7 @@ func curationAlbum(tx *bolt.Tx, id string) (Album, error) {
 	}
 	e := curationRead(tx, albumsBucket, id, &a)
 	if e == nil {
-		a.Token = albumEditToken(tx,a)
+		a.Token = albumEditToken(tx, a)
 	}
 	return a, e
 }
@@ -171,7 +173,7 @@ func (s *Store) Albums(after string, limit int) ([]Album, string, error) {
 			if e := json.Unmarshal(v, &a); e != nil {
 				return e
 			}
-			a.Token = albumEditToken(tx,a)
+			a.Token = albumEditToken(tx, a)
 			out = append(out, a)
 		}
 		return nil
@@ -313,204 +315,207 @@ func (s *Store) EditCuration(in CurationEdit) (any, error) {
 		return nil, ErrCurationCapacity
 	}
 	var out any
- e := s.db.Update(func(tx *bolt.Tx) error { var e error; out,e=editCurationTx(tx,in); return e })
- return out,e
+	e := s.db.Update(func(tx *bolt.Tx) error { var e error; out, e = editCurationTx(tx, in); return e })
+	return out, e
 }
-func editCurationTx(tx *bolt.Tx,in CurationEdit)(any,error){
- var out any
- e:=func()error{
-	if in.Action == "set_asset" {
-		a, e := assetOrganization(tx, in.AssetID)
+func editCurationTx(tx *bolt.Tx, in CurationEdit) (any, error) {
+	var out any
+	e := func() error {
+		if in.Action == "set_asset" {
+			a, e := assetOrganization(tx, in.AssetID)
+			if e != nil {
+				return e
+			}
+			if in.Expected != a.Token || !in.Added.Equal(a.Added) {
+				return ErrCurationConflict
+			}
+			if a.Favorite == in.Favorite && a.Title == in.Title && a.Caption == in.Caption && a.Notes == in.Notes {
+				out = a
+				return nil
+			}
+			if a.Revision == ^uint64(0) {
+				return ErrCurationLimit
+			}
+			if e = ensureCuration(tx); e != nil {
+				return e
+			}
+			a.Revision++
+			a.Favorite = in.Favorite
+			a.Title = in.Title
+			a.Caption = in.Caption
+			a.Notes = in.Notes
+			a.Token = ""
+			if e = curationWrite(tx, assetOrganizationBucket, in.AssetID, a); e != nil {
+				return e
+			}
+			a.Token = curationToken(tx, a.Revision, a.Added)
+			out = a
+			return nil
+		}
+		if !validID(in.AlbumID) {
+			return ErrCurationInput
+		}
+		a, e := curationAlbum(tx, in.AlbumID)
+		if in.Action == "create_album" {
+			if strings.TrimSpace(in.Title) == "" || in.Expected != "" {
+				return ErrCurationInput
+			}
+			if e == nil {
+				if a.Title == in.Title && a.Description == in.Description && a.Revision == 1 {
+					out = a
+					return nil
+				}
+				return ErrCurationConflict
+			}
+			if !errors.Is(e, os.ErrNotExist) {
+				return e
+			}
+			if e = ensureCuration(tx); e != nil {
+				return e
+			}
+			if tx.Bucket([]byte(albumsBucket)).Stats().KeyN >= maxAlbums {
+				return ErrCurationLimit
+			}
+			incarnation, e := newFaceID()
+			if e != nil {
+				return e
+			}
+			a = Album{ID: in.AlbumID, Incarnation: incarnation, Revision: 1, Title: in.Title, Description: in.Description}
+			if e = curationWrite(tx, albumsBucket, a.ID, a); e != nil {
+				return e
+			}
+			a.Token = albumEditToken(tx, a)
+			out = a
+			return nil
+		}
 		if e != nil {
 			return e
 		}
-		if in.Expected != a.Token || !in.Added.Equal(a.Added) {
+		if in.Expected != a.Token {
 			return ErrCurationConflict
-		}
-		if a.Favorite == in.Favorite && a.Title == in.Title && a.Caption == in.Caption && a.Notes == in.Notes {
-			out = a
-			return nil
 		}
 		if a.Revision == ^uint64(0) {
 			return ErrCurationLimit
 		}
-		if e = ensureCuration(tx); e != nil {
+		members, e := albumMembers(tx, a.ID)
+		if e != nil {
 			return e
 		}
-		a.Revision++
-		a.Favorite = in.Favorite
-		a.Title = in.Title
-		a.Caption = in.Caption
-		a.Notes = in.Notes
-		a.Token = ""
-		if e = curationWrite(tx, assetOrganizationBucket, in.AssetID, a); e != nil {
-			return e
-		}
-		a.Token = curationToken(tx, a.Revision, a.Added)
-		out = a
-		return nil
-	}
-	if !validID(in.AlbumID) {
-		return ErrCurationInput
-	}
-	a, e := curationAlbum(tx, in.AlbumID)
-	if in.Action == "create_album" {
-		if strings.TrimSpace(in.Title) == "" || in.Expected != "" {
-			return ErrCurationInput
-		}
-		if e == nil {
-			if a.Title == in.Title && a.Description == in.Description && a.Revision == 1 {
-				out = a
-				return nil
+		key := a.ID + ":" + in.AssetID
+		changed := true
+		switch in.Action {
+		case "update_album":
+			if strings.TrimSpace(in.Title) == "" {
+				return ErrCurationInput
 			}
-			return ErrCurationConflict
-		}
-		if !errors.Is(e, os.ErrNotExist) {
-			return e
-		}
-		if e = ensureCuration(tx); e != nil {
-			return e
-		}
-		if tx.Bucket([]byte(albumsBucket)).Stats().KeyN >= maxAlbums {
-			return ErrCurationLimit
-		}
-		incarnation,e:=newFaceID();if e!=nil{return e}
- a = Album{ID: in.AlbumID, Incarnation:incarnation, Revision: 1, Title: in.Title, Description: in.Description}
-		if e = curationWrite(tx, albumsBucket, a.ID, a); e != nil {
-			return e
-		}
-		a.Token = albumEditToken(tx,a)
-		out = a
-		return nil
-	}
-	if e != nil {
-		return e
-	}
-	if in.Expected != a.Token {
-		return ErrCurationConflict
-	}
-	if a.Revision == ^uint64(0) {
-		return ErrCurationLimit
-	}
-	members, e := albumMembers(tx, a.ID)
-	if e != nil {
-		return e
-	}
-	key := a.ID + ":" + in.AssetID
-	changed := true
-	switch in.Action {
-	case "update_album":
-		if strings.TrimSpace(in.Title) == "" {
-			return ErrCurationInput
-		}
-		changed = a.Title != in.Title || a.Description != in.Description
-		a.Title = in.Title
-		a.Description = in.Description
-	case "delete_album":
-		for _, m := range members {
-			if e = curationWrite(tx, albumMembersBucket, a.ID+":"+m.AssetID, nil); e != nil {
+			changed = a.Title != in.Title || a.Description != in.Description
+			a.Title = in.Title
+			a.Description = in.Description
+		case "delete_album":
+			for _, m := range members {
+				if e = curationWrite(tx, albumMembersBucket, a.ID+":"+m.AssetID, nil); e != nil {
+					return e
+				}
+			}
+			out = map[string]bool{"deleted": true}
+			return curationWrite(tx, albumsBucket, a.ID, nil)
+		case "set_cover":
+			if in.AssetID != "" {
+				found := false
+				for _, m := range members {
+					if m.AssetID == in.AssetID {
+						found = true
+					}
+				}
+				if !found {
+					return ErrCurationInput
+				}
+			}
+			changed = a.Cover != in.AssetID
+			a.Cover = in.AssetID
+		case "add_member":
+			asset, e := curationAsset(tx, in.AssetID)
+			if e != nil {
 				return e
 			}
-		}
-		out = map[string]bool{"deleted": true}
-		return curationWrite(tx, albumsBucket, a.ID, nil)
-	case "set_cover":
-		if in.AssetID != "" {
+			if !asset.Added.Equal(in.Added) {
+				return ErrCurationConflict
+			}
+			for _, m := range members {
+				if m.AssetID == in.AssetID {
+					out = a
+					return nil
+				}
+			}
+			if len(members) >= 5000 || tx.Bucket([]byte(albumMembersBucket)).Stats().KeyN >= maxMemberships || a.NextPosition == ^uint64(0) {
+				return ErrCurationLimit
+			}
+			m := AlbumMember{AlbumID: a.ID, AssetID: asset.ID, Added: asset.Added, Position: a.NextPosition}
+			a.NextPosition++
+			if e = curationWrite(tx, albumMembersBucket, key, m); e != nil {
+				return e
+			}
+		case "remove_member":
 			found := false
 			for _, m := range members {
 				if m.AssetID == in.AssetID {
 					found = true
 				}
 			}
-			if !found {
-				return ErrCurationInput
-			}
-		}
-		changed = a.Cover != in.AssetID
-		a.Cover = in.AssetID
-	case "add_member":
-		asset, e := curationAsset(tx, in.AssetID)
-		if e != nil {
-			return e
-		}
-		if !asset.Added.Equal(in.Added) {
-			return ErrCurationConflict
-		}
-		for _, m := range members {
-			if m.AssetID == in.AssetID {
-				out = a
-				return nil
-			}
-		}
-		if len(members) >= 5000 || tx.Bucket([]byte(albumMembersBucket)).Stats().KeyN >= maxMemberships || a.NextPosition == ^uint64(0) {
-			return ErrCurationLimit
-		}
-		m := AlbumMember{AlbumID: a.ID, AssetID: asset.ID, Added: asset.Added, Position: a.NextPosition}
-		a.NextPosition++
-		if e = curationWrite(tx, albumMembersBucket, key, m); e != nil {
-			return e
-		}
-	case "remove_member":
-		found := false
-		for _, m := range members {
-			if m.AssetID == in.AssetID {
-				found = true
-			}
-		}
-		changed = found
-		if found {
-			if e = curationWrite(tx, albumMembersBucket, key, nil); e != nil {
-				return e
-			}
-			if a.Cover == in.AssetID {
-				a.Cover = ""
-			}
-		}
-	case "move_member":
-		i, j := -1, -1
-		for n, m := range members {
-			if m.AssetID == in.AssetID {
-				i = n
-			}
-			if m.AssetID == in.OtherID {
-				j = n
-			}
-		}
-		if i < 0 || j < 0 {
-			return ErrCurationInput
-		}
-		changed = i != j
-		if changed {
-			moving := members[i]
-			if i < j {
-				copy(members[i:j], members[i+1:j+1])
-			} else {
-				copy(members[j+1:i+1], members[j:i])
-			}
-			members[j] = moving
-			for n, m := range members {
-				m.Position = uint64(n)
-				if e = curationWrite(tx, albumMembersBucket, a.ID+":"+m.AssetID, m); e != nil {
+			changed = found
+			if found {
+				if e = curationWrite(tx, albumMembersBucket, key, nil); e != nil {
 					return e
 				}
+				if a.Cover == in.AssetID {
+					a.Cover = ""
+				}
 			}
-			a.NextPosition = uint64(len(members))
+		case "move_member":
+			i, j := -1, -1
+			for n, m := range members {
+				if m.AssetID == in.AssetID {
+					i = n
+				}
+				if m.AssetID == in.OtherID {
+					j = n
+				}
+			}
+			if i < 0 || j < 0 {
+				return ErrCurationInput
+			}
+			changed = i != j
+			if changed {
+				moving := members[i]
+				if i < j {
+					copy(members[i:j], members[i+1:j+1])
+				} else {
+					copy(members[j+1:i+1], members[j:i])
+				}
+				members[j] = moving
+				for n, m := range members {
+					m.Position = uint64(n)
+					if e = curationWrite(tx, albumMembersBucket, a.ID+":"+m.AssetID, m); e != nil {
+						return e
+					}
+				}
+				a.NextPosition = uint64(len(members))
+			}
+		default:
+			return ErrCurationInput
 		}
-	default:
-		return ErrCurationInput
-	}
-	if changed {
-		a.Revision++
-		a.Token = ""
-		if e = curationWrite(tx, albumsBucket, a.ID, a); e != nil {
-			return e
+		if changed {
+			a.Revision++
+			a.Token = ""
+			if e = curationWrite(tx, albumsBucket, a.ID, a); e != nil {
+				return e
+			}
+			a.Token = albumEditToken(tx, a)
 		}
-		a.Token = albumEditToken(tx,a)
-	}
-	out = a
-	return nil
- }()
- return out,e
+		out = a
+		return nil
+	}()
+	return out, e
 }
 
 func deleteAssetCuration(tx *bolt.Tx, id string) error {
@@ -558,7 +563,7 @@ func deleteAssetCuration(tx *bolt.Tx, id string) error {
 
 func exportCuration(tx *bolt.Tx) (map[string]any, error) {
 	out := map[string]any{"version": 1}
-	for _, name := range append(append([]string{},curationBuckets...),organizationBatchesBucket) {
+	for _, name := range append(append([]string{}, curationBuckets...), organizationBatchesBucket) {
 		rows := map[string]json.RawMessage{}
 		if b := tx.Bucket([]byte(name)); b != nil {
 			if e := b.ForEach(func(k, v []byte) error { rows[string(k)] = append([]byte(nil), v...); return nil }); e != nil {
@@ -580,14 +585,17 @@ func validateCuration(tx *bolt.Tx) error {
 		return errCatalogInput
 	}
 	if version != "3" {
-		for _, name := range append(append([]string{},curationBuckets...),organizationBatchesBucket) {
+		for _, name := range append(append([]string{}, curationBuckets...), organizationBatchesBucket) {
 			if tx.Bucket([]byte(name)) != nil {
 				return errCatalogInput
 			}
 		}
 		return nil
 	}
-	size,batchErr:=validateOrganizationBatches(tx);if batchErr!=nil{return batchErr}
+	size, batchErr := validateOrganizationBatches(tx)
+	if batchErr != nil {
+		return batchErr
+	}
 	for _, name := range curationBuckets {
 		b := tx.Bucket([]byte(name))
 		if b == nil {
@@ -624,7 +632,7 @@ func validateCuration(tx *bolt.Tx) error {
 	covers := map[string]bool{}
 	if e := tx.Bucket([]byte(albumsBucket)).ForEach(func(k, v []byte) error {
 		var a Album
-		if json.Unmarshal(v, &a) != nil || a.ID != string(k) || !validID(a.ID) || (a.Incarnation!=""&&!validID(a.Incarnation)) || a.Revision == 0 || a.Token != "" || strings.TrimSpace(a.Title) == "" || !curationText(a.Title, 256, false) || !curationText(a.Description, 4096, true) || (a.Cover != "" && !validID(a.Cover)) {
+		if json.Unmarshal(v, &a) != nil || a.ID != string(k) || !validID(a.ID) || (a.Incarnation != "" && !validID(a.Incarnation)) || a.Revision == 0 || a.Token != "" || strings.TrimSpace(a.Title) == "" || !curationText(a.Title, 256, false) || !curationText(a.Description, 4096, true) || (a.Cover != "" && !validID(a.Cover)) {
 			return errCatalogInput
 		}
 		albums[a.ID] = a

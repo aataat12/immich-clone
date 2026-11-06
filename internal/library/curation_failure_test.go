@@ -105,7 +105,7 @@ func TestActualCurationDiskFull(t *testing.T) {
 		}
 		assets = append(assets, a)
 	}
-	batch:=prepareBatchFixture(t,s,"favorite_on","",30)
+	batch := prepareBatchFixture(t, s, "favorite_on", "", 30)
 	filler := filepath.Join(root, "filler.bin")
 	f, e := os.Create(filler)
 	if e != nil {
@@ -123,9 +123,16 @@ func TestActualCurationDiskFull(t *testing.T) {
 	if !full {
 		t.Fatal("bounded fixture volume did not fill")
 	}
-	beforeBatch,_:=s.OrganizationBatch(batch.ID)
- if _,e=s.ContinueOrganizationBatch(batch.ID,0);e==nil{t.Fatal("full disk accepted a batch")}
- afterBatch,_:=s.OrganizationBatch(batch.ID);rawBefore,_:=json.Marshal(beforeBatch);rawAfter,_:=json.Marshal(afterBatch);if !bytes.Equal(rawBefore,rawAfter){t.Fatal("full disk changed receipt")}
+	beforeBatch, _ := s.OrganizationBatch(batch.ID)
+	if _, e = s.ContinueOrganizationBatch(batch.ID, 0); e == nil {
+		t.Fatal("full disk accepted a batch")
+	}
+	afterBatch, _ := s.OrganizationBatch(batch.ID)
+	rawBefore, _ := json.Marshal(beforeBatch)
+	rawAfter, _ := json.Marshal(afterBatch)
+	if !bytes.Equal(rawBefore, rawAfter) {
+		t.Fatal("full disk changed receipt")
+	}
 	var failed *Asset
 	for _, a := range assets {
 		m, _ := s.AssetOrganization(a.ID)
@@ -155,7 +162,7 @@ func TestActualCurationDiskFull(t *testing.T) {
 	if e = os.Remove(filler); e != nil {
 		t.Fatal(e)
 	}
-	completeBatchFixture(t,s,batch)
+	completeBatchFixture(t, s, batch)
 	m, _ := s.AssetOrganization(failed.ID)
 	if _, e = s.EditCuration(CurationEdit{Action: "set_asset", AssetID: failed.ID, Added: failed.Added, Expected: m.Token, Favorite: true}); e != nil {
 		t.Fatal("retry after space recovery", e)
