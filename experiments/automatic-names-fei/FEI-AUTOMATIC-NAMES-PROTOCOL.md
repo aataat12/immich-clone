@@ -14,6 +14,15 @@ linked by the source. No portraits, thumbnails, ZIPs, embeddings, per-image
 predictions or subject-level outputs enter Git, release packages or CI artifacts.
 Only aggregate anonymous metrics are logged. No contact or registration is sent.
 
+Acquisition follows the ordinary official public page, then its published ZIP
+link using the same anonymous cookie session, an honest descriptive research-tool
+User-Agent and the official page Referer. Direct anonymous urllib access was
+refused with403 on the first cloud attempt before inference; local diagnosis of
+the normal page/download flow returned200/206 and the expected ZIP signature and
+length. This is not evidence that the cloud download is repaired. A refused
+normal flow fails without challenge solving, proxy/IP rotation or mirror fallback.
+No cookie values or response bodies are logged. Policy/gates are unchanged.
+
 Use official HTTPS `https://fei.edu.br/~cet/originalimages_part1.zip` only:
 **86857988 bytes**, SHA256
 `1d0b0ebe94278a5677edc450251f91450dadb821d9774edc111ad1be0e7475ed`.

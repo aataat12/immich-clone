@@ -1,4 +1,5 @@
 name: Release 0.1.43 independent automatic-name quality
+# Acquisition uses the publisher's ordinary official public page/download session.
 on:
   push:
     branches: ['work/release-0.1.43']
