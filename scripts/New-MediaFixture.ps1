@@ -13,4 +13,9 @@ try {
     & $ffmpeg -hide_banner -loglevel error -nostdin -n -f lavfi -i 'testsrc=size=160x120:rate=10' -f lavfi -i 'sine=frequency=440:sample_rate=44100' -t 1 -c:v libopenh264 -b:v 200k -pix_fmt yuv420p -c:a aac -movflags +faststart $Destination
     if ($LASTEXITCODE -ne 0) { throw 'Actual H264/AAC fixture generation failed' }
     Write-Output 'PASS: pinned FFmpeg executed H264/AAC encoding for a synthetic browser fixture.'
-} finally { Remove-Item $root -Recurse -Force -ErrorAction Continue }
+} finally {
+    $resolved=[IO.Path]::GetFullPath($root)
+    $parent=[IO.Path]::GetFullPath($env:RUNNER_TEMP).TrimEnd('\')+'\'
+    if(!$resolved.StartsWith($parent,[StringComparison]::OrdinalIgnoreCase)){throw 'Fixture cleanup target refused'}
+    Remove-Item -LiteralPath $resolved -Recurse -Force -ErrorAction Continue
+}

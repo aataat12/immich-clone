@@ -19,6 +19,7 @@ try {
  $env:IMMICH_TEST_STATE=$state
  Checked node @('tests/gallery-search.cjs')
  Checked node @('tests/gallery-foundation.cjs')
+ Checked node @('tests/gallery-viewer.cjs')
 } finally {
  if($owned){
   Stop-Service ImmichClone -Force -ErrorAction Stop

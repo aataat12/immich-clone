@@ -18,6 +18,8 @@ var ErrGalleryInput = errors.New("invalid gallery page")
 var ErrGalleryChanged = errors.New("gallery ordering changed; refresh from first page")
 
 type GalleryPage struct {
+ Previous string `json:"previous,omitempty"`
+ HasPrevious bool `json:"has_previous"`
 	Assets   []Asset      `json:"assets"`
 	Next     string       `json:"next,omitempty"`
 	Total    uint64       `json:"total"`
@@ -284,36 +286,8 @@ func (s *Store) QueryGalleryPage(query GalleryQuery, after string, limit int) (G
 		if e != nil {
 			return e
 		}
-		c := r.index.Cursor()
-		k, v := c.First()
-		if after != "" {
-			token, e := r.validate(after, true)
-			if e != nil {
-				return e
-			}
-			c.Seek(token.Key)
-			k, v = c.Next()
-		}
-		out.Total, out.Hidden, out.Count, out.Query, out.Snapshot = r.total, r.hidden, r.count, q, encodeGalleryCursor(r.token)
-		var last []byte
-		for ; k != nil; k, v = c.Next() {
-			if !r.includes(v) {
-				continue
-			}
-			if len(out.Assets) == limit {
-				token := r.token
-				token.Key = last
-				out.Next = encodeGalleryCursor(token)
-				break
-			}
-			a, e := r.asset(v)
-			if e != nil {
-				return e
-			}
-			out.Assets = append(out.Assets, a)
-			last = append(last[:0], k...)
-		}
-		return nil
+		out,e=r.page(after,limit)
+		return e
 	})
 	return out, e
 }
