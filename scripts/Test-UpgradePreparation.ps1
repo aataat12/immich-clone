@@ -250,7 +250,7 @@ try {
         Invoke-WebRequest 'https://github.com/jrsoftware/issrc/releases/download/is-6_7_4/innosetup-6.7.4.exe' -OutFile $compilerSetup
         Assert ((Get-FileHash $compilerSetup).Hash.ToLowerInvariant() -eq 'a549929319f9120716677c685535ca4671e4b937b5fdc87e2585f32d8eb30e8c') 'pinned Inno 6.7.4 compiler archive hash verified'
         $compilerDir = Join-Path $root 'inno-6.7.4'
-        $process = Start-Process $compilerSetup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$compilerDir+'"')) -Wait -PassThru
+        $process = Start-Process $compilerSetup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$compilerDir+'"')) -Wait -PassThru -WindowStyle Hidden
         Assert ($process.ExitCode -eq 0) 'pinned Inno compiler provisioned for disposable probe'
         $Compiler = Join-Path $compilerDir 'ISCC.exe'
     }
@@ -259,7 +259,7 @@ try {
     $source = Join-Path $root 'source'
     foreach ($directory in @('packaging','docs','dist','dist/media','dist/ai')) { New-Item -ItemType Directory -Force (Join-Path $source $directory) | Out-Null }
     foreach ($file in @('immichclone.iss','Manage-Service.ps1','Storage-Security.ps1','Export-Diagnostics.ps1')) { Copy-Item -LiteralPath (Join-Path $repo ('packaging/'+$file)) -Destination (Join-Path $source ('packaging/'+$file)) }
-    Copy-Item -LiteralPath (Join-Path $repo 'docs/prototype-notes.txt') -Destination (Join-Path $source 'docs/prototype-notes.txt')
+    Copy-Item -LiteralPath (Join-Path $repo 'docs/release-notes-0.1.43.md') -Destination (Join-Path $source 'dist/prototype-notes.txt')
     Copy-Item -LiteralPath $Binary -Destination (Join-Path $source 'dist/immichclone.exe')
     foreach ($file in @('dist/THIRD-PARTY-LICENSES.txt','dist/media/preparation-probe.txt','dist/ai/preparation-probe.txt')) { [IO.File]::WriteAllText((Join-Path $source $file),'Disposable upgrade-preparation fixture only; not a distributable package.') }
     Native go @('build','-trimpath','-o',(Join-Path $source 'dist/installer-files.exe'),'./cmd/installerfiles')
