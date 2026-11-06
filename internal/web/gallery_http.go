@@ -13,7 +13,7 @@ func galleryRequest(r *http.Request) (library.GalleryQuery, error) {
 	if e != nil {
 		return library.GalleryQuery{}, library.ErrGalleryInput
 	}
-	singles := map[string]bool{"sort": true, "visibility": true, "q": true, "filename": true, "media": true, "date_basis": true, "from": true, "until": true, "no_capture": true, "after": true, "limit": true, "asset": true, "snapshot": true}
+	singles := map[string]bool{"favorite":true,"album":true,"sort": true, "visibility": true, "q": true, "filename": true, "media": true, "date_basis": true, "from": true, "until": true, "no_capture": true, "after": true, "limit": true, "asset": true, "snapshot": true}
 	lists := map[string]bool{"person_any": true, "person_all": true, "person_exclude": true, "tag_any": true, "tag_all": true, "tag_exclude": true}
 	// Reject unsupported or ambiguous fields instead of silently broadening results.
 	for key, values := range p {
@@ -25,7 +25,7 @@ func galleryRequest(r *http.Request) (library.GalleryQuery, error) {
 	if noCapture != "" && noCapture != "true" && noCapture != "false" {
 		e = library.ErrGalleryInput
 	}
-	q := library.GalleryQuery{Sort: p.Get("sort"), Visibility: p.Get("visibility"), Text: p.Get("q"), Filename: p.Get("filename"), Media: p.Get("media"), DateBasis: p.Get("date_basis"), From: p.Get("from"), Until: p.Get("until"), NoCapture: noCapture == "true", People: library.GalleryLabels{Any: p["person_any"], All: p["person_all"], Exclude: p["person_exclude"]}, Tags: library.GalleryLabels{Any: p["tag_any"], All: p["tag_all"], Exclude: p["tag_exclude"]}}
+	q := library.GalleryQuery{Favorite:p.Get("favorite"),Album:p.Get("album"),Sort: p.Get("sort"), Visibility: p.Get("visibility"), Text: p.Get("q"), Filename: p.Get("filename"), Media: p.Get("media"), DateBasis: p.Get("date_basis"), From: p.Get("from"), Until: p.Get("until"), NoCapture: noCapture == "true", People: library.GalleryLabels{Any: p["person_any"], All: p["person_all"], Exclude: p["person_exclude"]}, Tags: library.GalleryLabels{Any: p["tag_any"], All: p["tag_all"], Exclude: p["tag_exclude"]}}
 	if e != nil {
 		return q, e
 	}

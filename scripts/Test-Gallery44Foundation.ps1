@@ -20,6 +20,17 @@ try {
  Checked node @('tests/gallery-search.cjs')
  Checked node @('tests/gallery-foundation.cjs')
  Checked node @('tests/gallery-viewer.cjs')
+ if($env:IMMICH_TEST_ORGANIZATION -eq '1'){
+  $env:IMMICH_ORG_STAGE='prepare'
+  Checked node @('tests/organization56.cjs')
+  Stop-Service ImmichClone
+  Start-Service ImmichClone
+  $ready=$false
+  for($i=0;$i -lt 80;$i++){try{if((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok'){$ready=$true;break}}catch{};Start-Sleep -Milliseconds 250}
+  if(!$ready){throw 'Organization restart fixture service health timed out'}
+  $env:IMMICH_ORG_STAGE='recover'
+  Checked node @('tests/organization56.cjs')
+ }
  if($env:IMMICH_TEST_CURATION -eq '1'){
   Checked node @('tests/metadata-recovery.cjs')
   Stop-Service ImmichClone
@@ -31,7 +42,9 @@ try {
   Checked $binary @('-mode','restore','-data',$restore,'-archive',(Join-Path $root 'metadata-backup.zip'))
   Checked $binary @('-mode','verify','-data',$restore)
   $env:IMMICH_CURATION_ROOT=$restore;$env:IMMICH_CURATION_STAGE='inspect';$env:IMMICH_CURATION_EXPECTED=Join-Path $root 'expected-curation.json'
+  if($env:IMMICH_TEST_ORGANIZATION -eq '1'){$env:IMMICH_EXPECT_PAUSED_BATCH='1'}
   Checked go @('test','-mod=readonly','-count=1','-timeout=120s','./internal/library','-run','^TestCurationPublishedFixture$')
+  Remove-Item Env:IMMICH_EXPECT_PAUSED_BATCH -ErrorAction SilentlyContinue
   Remove-Item Env:IMMICH_CURATION_ROOT,Env:IMMICH_CURATION_STAGE,Env:IMMICH_CURATION_EXPECTED -ErrorAction SilentlyContinue
  }
 } finally {

@@ -1,5 +1,5 @@
-name: Frameout 0.1.44 viewer and metadata acceptance
-# Metadata shares the existing durable-write free-space reserve; history closes release video.
+name: Frameout 0.1.44 selection and albums acceptance
+# Steps 5–6: explicit durable batches, favorites and manual albums; synthetic fixtures only.
 on:
   push:
     branches: ['work/release-0.1.44-foundation']
@@ -20,6 +20,7 @@ jobs:
       GOAMD64: v1
       GOTOOLCHAIN: local
       IMMICH_TEST_CURATION: '1'
+      IMMICH_TEST_ORGANIZATION: '1'
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683

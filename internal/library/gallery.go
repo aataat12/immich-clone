@@ -18,7 +18,8 @@ var ErrGalleryInput = errors.New("invalid gallery page")
 var ErrGalleryChanged = errors.New("gallery ordering changed; refresh from first page")
 
 type GalleryPage struct {
-	Previous    string       `json:"previous,omitempty"`
+	Organization map[string]AssetOrganization `json:"organization"`
+ Previous    string       `json:"previous,omitempty"`
 	HasPrevious bool         `json:"has_previous"`
 	Assets      []Asset      `json:"assets"`
 	Next        string       `json:"next,omitempty"`
@@ -214,7 +215,8 @@ type galleryResults struct {
 }
 
 func (s *Store) galleryResultsFor(tx *bolt.Tx, q GalleryQuery) (*galleryResults, error) {
-	root := tx.Bucket([]byte(galleryBucket))
+	if q.Album!=""{if _,e:=curationAlbum(tx,q.Album);e!=nil{return nil,ErrGalleryChanged}}
+ root := tx.Bucket([]byte(galleryBucket))
 	if root == nil {
 		return nil, errors.New("gallery index unavailable")
 	}
@@ -254,7 +256,8 @@ func (r *galleryResults) validate(encoded string, page bool) (galleryCursor, err
 	if c.Epoch != r.token.Epoch || c.Revision != r.token.Revision || c.SearchRevision != r.token.SearchRevision {
 		return c, ErrGalleryChanged
 	}
-	if page && r.index.Get(c.Key) == nil {
+	if page && r.query.Sort=="manual" {if !r.matches[string(c.Key)]{return c,ErrGalleryInput};return c,nil}
+ if page && r.index.Get(c.Key) == nil {
 		return c, ErrGalleryInput
 	}
 	return c, nil
@@ -330,6 +333,7 @@ func (s *Store) GalleryNeighbors(query GalleryQuery, id, snapshot string) (Galle
 		if e != nil {
 			return ErrGalleryChanged
 		}
+		if q.Sort=="manual" {out=GalleryNeighbors{Current:a,Count:r.count,Query:q,Snapshot:encodeGalleryCursor(r.token)};for i,k:=range r.ordered{if string(k)==id{if i>0{x,e:=r.asset(r.ordered[i-1]);if e!=nil{return e};out.Previous=&x};if i+1<len(r.ordered){x,e:=r.asset(r.ordered[i+1]);if e!=nil{return e};out.Next=&x};return nil}};return ErrGalleryChanged}
 		key := galleryKeys(a)[q.Sort]
 		if !bytes.Equal(r.index.Get(key), []byte(id)) {
 			return ErrGalleryChanged

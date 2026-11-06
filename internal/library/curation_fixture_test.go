@@ -67,6 +67,7 @@ func TestCurationPublishedFixture(t *testing.T) {
 		if !reflect.DeepEqual(expected, actual) {
 			t.Fatal("complete restored organization mismatch")
 		}
+		if os.Getenv("IMMICH_EXPECT_PAUSED_BATCH")=="1"{rows,e:=s.OrganizationBatches();if e!=nil{t.Fatal(e)};paused:=false;for _,r:=range rows{if r.Status=="paused"{paused=true}};if !paused{t.Fatal("restored unfinished operation was not paused")}}
 		if automaticSchemaValue(t, s) != "3" {
 			t.Fatal("restored schema")
 		}

@@ -12,7 +12,9 @@ import (
 )
 
 type gallerySearchRow struct {
-	hidden   bool
+	favorite bool
+ albums map[string]uint64
+ hidden   bool
 	terms    string
 	filename string
 	mime     string
@@ -104,7 +106,9 @@ func (s *Store) gallerySearchFor(tx *bolt.Tx) (*gallerySearchIndex, error) {
 	}); e != nil {
 		return nil, e
 	}
-	s.gallerySearch = index
+ if b:=tx.Bucket([]byte(assetOrganizationBucket));b!=nil{if e:=b.ForEach(func(k,v []byte)error{var o AssetOrganization;if e:=json.Unmarshal(v,&o);e!=nil{return e};row:=index.assets[string(k)];row.favorite=o.Favorite;index.assets[string(k)]=row;return nil});e!=nil{return nil,e}}
+ if b:=tx.Bucket([]byte(albumMembersBucket));b!=nil{if e:=b.ForEach(func(k,v []byte)error{var m AlbumMember;if e:=json.Unmarshal(v,&m);e!=nil{return e};row:=index.assets[m.AssetID];if row.albums==nil{row.albums=map[string]uint64{}};row.albums[m.AlbumID]=m.Position;index.assets[m.AssetID]=row;return nil});e!=nil{return nil,e}}
+ s.gallerySearch = index
 	return index, nil
 }
 
@@ -139,9 +143,9 @@ func (index *gallerySearchIndex) orderedKeys(q GalleryQuery) [][]byte {
 	for id := range ids {
 		row := index.assets[id]
 		a := Asset{ID: id, Name: row.filename, Added: row.added, Photo: PhotoMetadata{Captured: row.captured}}
-		keys = append(keys, galleryKeys(a)[q.Sort])
+		if q.Sort=="manual"{keys=append(keys,[]byte(id))}else{keys = append(keys, galleryKeys(a)[q.Sort])}
 	}
-	sort.Slice(keys, func(i, j int) bool { return bytes.Compare(keys[i], keys[j]) < 0 })
+	sort.Slice(keys, func(i, j int) bool { if q.Sort=="manual"{return index.assets[string(keys[i])].albums[q.Album]<index.assets[string(keys[j])].albums[q.Album]};return bytes.Compare(keys[i], keys[j]) < 0 })
 	if index.queryKeys == nil {
 		index.queryKeys = map[string][][]byte{}
 	}
