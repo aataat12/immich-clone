@@ -77,3 +77,13 @@ func TestOrganizationBatchRejectedPreviewCannotPublishUncommittedSearchCache(t *
  o,_:=s.AssetOrganization(a.ID);curationEdit(t,s,CurationEdit{Action:"set_asset",AssetID:a.ID,Added:a.Added,Expected:o.Token,Favorite:true})
  q.Favorite="true";fresh,e:=s.QueryGalleryPage(q,"",60);if e!=nil||fresh.Count!=1||fresh.Assets[0].ID!=a.ID{t.Fatal("uncommitted preview cache survived the next commit",fresh.Count,e)}
 }
+
+func TestOrganizationBatchPreviewRechecksCurrentTargetsBeforeAcceptance(t *testing.T){
+ s,_:=openTest(t);seedGalleryFoundation(t,s,187);q:=GalleryQuery{Sort:"name",Visibility:"library"};p,_:=s.QueryGalleryPage(q,"",60);a:=p.Assets[0]
+ s.SetTags(a.ID,[]string{"Latest custom tag"})
+ in:=OrganizationBatchRequest{Action:"favorite_on",Query:q,Snapshot:p.Snapshot,Targets:[]OrganizationTarget{{ID:a.ID,Added:a.Added}}}
+ b,e:=s.PrepareOrganizationBatch(in);if e!=nil{t.Fatal(e)};result:=completeBatchFixture(t,s,b);if result.Targets[0].Outcome!="saved"{t.Fatal("preview did not freeze current organization")}
+ q=GalleryQuery{Sort:"name",Visibility:"library",Text:"Latest custom tag"};p,_=s.QueryGalleryPage(q,"",60);s.SetTags(a.ID,[]string{"Latest custom tag","Another client"});in.Query=q;in.Snapshot=p.Snapshot
+ b,e=s.PrepareOrganizationBatch(in);if e!=nil||!b.Refreshed{t.Fatal("changed result snapshot was not explicitly refreshed for review",e)}
+ s.SetHidden(a.ID,true);p,_=s.QueryGalleryPage(GalleryQuery{Sort:"name",Visibility:"library"},"",60);in.Query=GalleryQuery{Sort:"name",Visibility:"library"};in.Snapshot=p.Snapshot;if _,e=s.PrepareOrganizationBatch(in);!errors.Is(e,ErrCurationConflict){t.Fatal("out-of-scope selection accepted",e)}
+}

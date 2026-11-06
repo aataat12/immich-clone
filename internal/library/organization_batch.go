@@ -18,6 +18,7 @@ var ErrBatchExpired=errors.New("operation unavailable or expired; review a new s
 
 type OrganizationTarget struct { ID string `json:"id"`; Added time.Time `json:"added"`; Name string `json:"name"`; Expected string `json:"expected"`; Outcome string `json:"outcome"` }
 type OrganizationBatch struct {
+ Refreshed bool `json:"refreshed,omitempty"`
  ID string `json:"id"`; Created time.Time `json:"created"`; Action string `json:"action"`; Tag string `json:"tag,omitempty"`; AlbumID string `json:"album_id,omitempty"`; AlbumToken string `json:"album_token,omitempty"`; AlbumTitle string `json:"album_title,omitempty"`; Targets []OrganizationTarget `json:"targets"`; Query GalleryQuery `json:"query"`; Status string `json:"status"`
 }
 type OrganizationBatchRequest struct { Action string `json:"action"`; Tag string `json:"tag"`; AlbumID string `json:"album_id"`; Query GalleryQuery `json:"query"`; Snapshot string `json:"snapshot"`; Targets []OrganizationTarget `json:"targets"` }
@@ -43,9 +44,9 @@ func(s *Store) PrepareOrganizationBatch(in OrganizationBatchRequest)(Organizatio
  q,e:=in.Query.Normalize();if e!=nil||len(in.Targets)<1||len(in.Targets)>500||!batchActionOK(in.Action,in.Tag,in.AlbumID){return out,ErrCurationInput}
  s.gate.Lock();defer s.gate.Unlock();if e=s.batchWriteReady();e!=nil{return out,e}
  e=s.db.Update(func(tx *bolt.Tx)error{
-  results,e:=s.galleryResultsFor(tx,q);if e!=nil{return e};if q.filtered(){results.token.SearchRevision=tx.ID()-1};if _,e=results.validate(in.Snapshot,false);e!=nil{return e}
+  results,e:=s.galleryResultsFor(tx,q);if e!=nil{return e};if q.filtered(){results.token.SearchRevision=tx.ID()-1};_,e=results.validate(in.Snapshot,false);refreshed:=errors.Is(e,ErrGalleryChanged);if e!=nil&&!refreshed{return e}
   stamp,e:=batchAlbumStamp(tx,in.AlbumID);if e!=nil{return e}
-  out=OrganizationBatch{Created:time.Now().UTC(),Action:in.Action,Tag:strings.TrimSpace(in.Tag),AlbumID:in.AlbumID,AlbumToken:stamp,Query:q,Status:"paused",Targets:[]OrganizationTarget{}}
+  out=OrganizationBatch{Refreshed:refreshed,Created:time.Now().UTC(),Action:in.Action,Tag:strings.TrimSpace(in.Tag),AlbumID:in.AlbumID,AlbumToken:stamp,Query:q,Status:"paused",Targets:[]OrganizationTarget{}}
   if in.AlbumID!=""{a,e:=curationAlbum(tx,in.AlbumID);if e!=nil{return e};out.AlbumTitle=a.Title}
   seen:=map[string]bool{}
   for _,target:=range in.Targets{a,e:=curationAsset(tx,target.ID);if e!=nil{return e};if seen[a.ID]||!a.Added.Equal(target.Added)||galleryGroup(a)!=q.Visibility||!results.includes([]byte(a.ID)){return ErrCurationConflict};seen[a.ID]=true;out.Targets=append(out.Targets,OrganizationTarget{ID:a.ID,Added:a.Added,Name:a.Name,Expected:batchTargetHash(tx,a,in.AlbumID),Outcome:"pending"})}
