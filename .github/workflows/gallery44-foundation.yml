@@ -1,5 +1,5 @@
 name: Frameout 0.1.44 viewer and metadata acceptance
-# Full-screen/Escape passed; wait for completed grid materialization on stale return.
+# Metadata shares the existing durable-write free-space reserve; history closes release video.
 on:
   push:
     branches: ['work/release-0.1.44-foundation']
@@ -121,6 +121,10 @@ jobs:
       - name: Build internal candidate with the accepted bundled providers
         shell: pwsh
         run: |
+          go mod download
+          if($LASTEXITCODE -ne 0){throw 'Pinned modules unavailable'}
+          go mod verify
+          if($LASTEXITCODE -ne 0){throw 'Module verification failed'}
           ./scripts/Format-Gallery44.ps1
           ./scripts/Build-Installer.ps1 -Versions @('0.1.44') -NotesPath docs/metadata-candidate-0.1.44.md
       - name: Prove genuine older reader/writer refusal and actual Setup rollback and restoration
