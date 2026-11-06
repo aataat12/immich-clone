@@ -1,3 +1,7 @@
+## 0.1.42 published and public downloads verified
+
+Published v0.1.42-prototype from exact tested source f37f61f2fe79deb92eeb3ff614ea6b245180a391, without rebuilding, by run42149014502/job127667391792. All four public downloads match the accepted artifact. Installer104649228 bytes, SHA256 18dbc670ce4d46809e2a90d5831d17b31f633050907290082f1e793294df8b87. The released installer is saved in the user-designated local release output directory; no local installation was performed. Security6 closed/2 open (SEC-05 and SEC-08); milestones7/8 incomplete; final target gates remain open. [Release acceptance](release-0.1.42-acceptance.md). Earlier checkpoint notes below are historical.
+
 ## 0.1.42 combined candidate accepted
 
 Corrected run42147333212/job127661889239 passed genuine published 0.1.41 upgrade, injected rollback, exact prior-writer LocalService checks, full providers, browser/privacy, integrated SEC-06 corpus/media and independent restore/reinstall/uninstall. Exact tested source f37f61f2fe79deb92eeb3ff614ea6b245180a391. Security is now 6 closed / 2 open: SEC-05 paused/open; SEC-08 open. Milestones 7 and 8 remain in progress. [Acceptance identity and limits](release-0.1.42-acceptance.md). Publication uses the exact artifact without rebuilding.

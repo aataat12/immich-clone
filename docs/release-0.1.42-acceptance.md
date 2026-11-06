@@ -5,7 +5,7 @@ Tested source: f37f61f2fe79deb92eeb3ff614ea6b245180a391.
 Installer: 104649228 bytes, SHA256 18dbc670ce4d46809e2a90d5831d17b31f633050907290082f1e793294df8b87.
 Artifact13471895175, ZIP SHA256 64338a54ac2654b0f5052f9f7070a65c2b0e141e8fa7680142bcf5b657748330.
 All four extracted files were independently checked; checksum list matches installer and notes match frozen source after line-ending normalization.
-Publication pending the separate immutable-artifact publisher.
+Published as v0.1.42-prototype by run42149014502/job127667391792 without rebuilding. The tag points to the exact tested source. The public prerelease contains four assets whose digests match the accepted files. All four were independently downloaded and matched the saved hashes. The released installer was copied to the user-designated release output directory and its SHA256 checked again. No previous release/tag was overwritten.
 
 ## Workstream reconciliation
 
