@@ -30,6 +30,7 @@ type organizationIndex struct {
 	faces         []reviewReference
 	references    []reviewReference
 	names         []string
+	people        []DirectoryPerson
 	namesByAsset  map[string][]string
 	searchByAsset map[string]string
 }
@@ -50,6 +51,8 @@ func (s *Store) organizationIndexFor(tx *bolt.Tx) (*organizationIndex, error) {
 		return nil, err
 	}
 	names := map[string]bool{}
+	people := map[string]DirectoryPerson{}
+	portraitRanks := map[string]int{}
 	if err := tx.Bucket([]byte(facesBucket)).ForEach(func(k, v []byte) error {
 		var f StoredFace
 		if err := json.Unmarshal(v, &f); err != nil {
@@ -69,6 +72,23 @@ func (s *Store) organizationIndexFor(tx *bolt.Tx) (*organizationIndex, error) {
 		if label.Name != "" && !label.Dismissed {
 			names[label.Name] = true
 			index.namesByAsset[f.AssetID] = append(index.namesByAsset[f.AssetID], label.Name)
+			name := strings.TrimSpace(label.Name)
+			key := personLabelKey(name)
+			if key != "" {
+				// Prefer still photos, then manually confirmed names. The face
+				// bucket's stable ID order breaks ties.
+				rank := 1
+				if f.SampleUS == nil {
+					rank += 2
+				}
+				if faceNameSource(label) == "manual" {
+					rank++
+				}
+				if rank > portraitRanks[key] {
+					portraitRanks[key] = rank
+					people[key] = DirectoryPerson{Name: name, FaceID: f.ID}
+				}
+			}
 			if trustedFaceLabel(label) {
 				index.references = append(index.references, reviewReference{f, label})
 			}
@@ -91,6 +111,15 @@ func (s *Store) organizationIndexFor(tx *bolt.Tx) (*organizationIndex, error) {
 		}
 		terms := []string{a.Name}
 		terms = append(terms, index.namesByAsset[id]...)
+		seenPeople := map[string]bool{}
+		for _, name := range index.namesByAsset[id] {
+			key := personLabelKey(name)
+			if person, ok := people[key]; ok && !seenPeople[key] {
+				person.Count++
+				people[key] = person
+				seenPeople[key] = true
+			}
+		}
 		var tags, dismissed []string
 		var analysis Analysis
 		for _, record := range []struct {
@@ -115,6 +144,15 @@ func (s *Store) organizationIndexFor(tx *bolt.Tx) (*organizationIndex, error) {
 			}
 		}
 		index.searchByAsset[id] = strings.ToLower(strings.Join(terms, "\x00"))
+	}
+	index.people = make([]DirectoryPerson, 0, len(people))
+	keys := make([]string, 0, len(people))
+	for key := range people {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		index.people = append(index.people, people[key])
 	}
 	s.reviewIndex = index
 	return index, nil

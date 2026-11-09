@@ -1,3 +1,25 @@
+## November 8, 2026 — People directory and photo comparison
+
+The development branch starts from the validated 0.1.44 prototype. C15 adds a
+People directory based on existing named-face labels, with portraits and distinct
+visible media counts. C38 adds side-by-side comparison of two selected photos,
+with linked zoom and pan and per-photo favorites. Selected-original export (C27)
+is deferred at the user's request.
+
+The focused directory test and disposable Edge checks passed. The gallery
+browser gate now exercises cross-page comparison, linked pan and zoom, closing
+during a favorite save, filtered selection recovery, and stale gallery results.
+Broader local library and web tests had identical failures and skips on the
+candidate and 0.1.44 baseline under the same permissions. The candidate added
+one passing directory test. Combined service and installer acceptance remains
+pending for the next release.
+
+Suggested event and trip albums (C18) are in research. The proposed first pass
+would find candidate spans from capture-time gaps and use clear filename dates
+as a fallback. A review filmstrip would show the first and last included media
+and nearby excluded media. The user would adjust membership before saving it
+as a manual album.
+
 ## November 6, 2026: 0.1.44 steps 1–6 accepted development checkpoint
 
 The released baseline, shared gallery and full viewer remain accepted. Selection

@@ -82,10 +82,17 @@ type Organization struct {
 	MediaAvailable  bool                `json:"media_available"`
 	Faces           []FaceView          `json:"faces"`
 	Names           []string            `json:"names"`
+	People          []DirectoryPerson   `json:"people"`
 	Assets          []OrganizationAsset `json:"assets"`
 	After           string              `json:"after,omitempty"`
 	FaceAfter       string              `json:"face_after,omitempty"`
 	Available       bool                `json:"available"`
+}
+
+type DirectoryPerson struct {
+	Name   string `json:"name"`
+	FaceID string `json:"face_id"`
+	Count  int    `json:"count"`
 }
 
 func initOrganization(tx *bolt.Tx) error {
@@ -583,7 +590,7 @@ func (s *Store) OrganizationReviewPage(after, faceAfter, query string, dismissed
 
 // OrganizationFilteredPage applies review filters before taking a bounded page.
 func (s *Store) OrganizationFilteredPage(after, faceAfter, query string, dismissed, unnamed bool) (Organization, error) {
-	out := Organization{Faces: []FaceView{}, Assets: []OrganizationAsset{}, Names: []string{}}
+	out := Organization{Faces: []FaceView{}, Assets: []OrganizationAsset{}, Names: []string{}, People: []DirectoryPerson{}}
 	if (after != "" && !validID(after)) || (faceAfter != "" && !validID(faceAfter)) {
 		return out, ErrOrganizationInput
 	}
@@ -602,6 +609,7 @@ func (s *Store) OrganizationFilteredPage(after, faceAfter, query string, dismiss
 		}
 		assets := index.assets
 		out.Names = append(out.Names, index.names...)
+		out.People = append(out.People, index.people...)
 		lowerQuery := strings.ToLower(query)
 		start := sort.Search(len(index.faces), func(i int) bool { return index.faces[i].f.ID > faceAfter })
 		for _, r := range index.faces[start:] {
