@@ -32,13 +32,13 @@ type gallerySearchRow struct {
 // This derived metadata cache never retains image bytes or face embeddings and
 // is never exported. Reopen and every committed catalog edit invalidate it.
 type gallerySearchIndex struct {
-	batches     []ImportSession
+	batches       []ImportSession
 	batchOutcomes map[string]GalleryImportOutcomes
-	state       string
-	transaction int
-	assets      map[string]gallerySearchRow
-	queries     map[string]map[string]bool
-	queryKeys   map[string][][]byte
+	state         string
+	transaction   int
+	assets        map[string]gallerySearchRow
+	queries       map[string]map[string]bool
+	queryKeys     map[string][][]byte
 }
 
 func (s *Store) gallerySearchFor(tx *bolt.Tx) (*gallerySearchIndex, error) {

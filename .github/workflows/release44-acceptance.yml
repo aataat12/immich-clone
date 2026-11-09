@@ -1,0 +1,65 @@
+name: Release 0.1.44 acceptance
+on:
+  push:
+    branches: ['work/release-0.1.44-foundation']
+    paths:
+      - '.github/workflows/release44-acceptance.yml'
+      - '.github/workflows/release44-installer.yml'
+      - 'cmd/**'
+      - 'internal/**'
+      - 'packaging/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'go.mod'
+      - 'go.sum'
+      - 'docs/release-notes-0.1.44.md'
+      - 'docs/validation-0.1.44.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: release44-acceptance-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  catalog:
+    runs-on: windows-2022
+    timeout-minutes: 25
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Verify canonical source and dependencies
+        shell: pwsh
+        run: |
+          ./scripts/Format-Gallery44.ps1
+          git diff --exit-code -- '*.go'
+          if ($LASTEXITCODE -ne 0) { throw 'Candidate source differs from canonical Go source' }
+          go mod download
+          if ($LASTEXITCODE -ne 0) { throw 'Module download failed' }
+          go mod verify
+          if ($LASTEXITCODE -ne 0) { throw 'Module verification failed' }
+      - name: Run combined 100,000-row gallery scale gate
+        shell: pwsh
+        env:
+          IMMICH_TEST_RELEASE44_SCALE: '1'
+        run: |
+          go test -mod=readonly -count=1 -v -timeout=10m -run '^TestRelease44CombinedCatalogScale$' ./internal/library
+          if ($LASTEXITCODE -ne 0) { throw 'Combined scale gate failed' }
+      - name: Run the retained regressions, vet and actual NTFS capacity checks
+        shell: pwsh
+        run: |
+          go test -mod=readonly -count=1 -timeout=10m ./internal/... ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'Candidate regression failed' }
+          go vet ./internal/... ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'Vet failed' }
+          node tests/gallery-dates.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Date helper tests failed' }
+          $env:IMMICH_TEST_CURATION = '1'
+          ./scripts/Test-FullDisk.ps1

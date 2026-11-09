@@ -12,23 +12,23 @@ import (
 // GalleryQuery is the single membership/order contract for pages, counts and
 // viewer neighbors. New durable organization fields belong here as they land.
 type GalleryQuery struct {
-	SourceFolder string        `json:"source_folder,omitempty"`
-	SourceMode   string        `json:"source_mode,omitempty"`
-	SourceMissing bool         `json:"source_missing,omitempty"`
-	ImportBatch  string        `json:"import_batch,omitempty"`
-	Favorite     string        `json:"favorite,omitempty"`
-	Album        string        `json:"album,omitempty"`
-	Sort         string        `json:"sort"`
-	Visibility   string        `json:"visibility"`
-	Text         string        `json:"q,omitempty"`
-	Filename     string        `json:"filename,omitempty"`
-	Media        string        `json:"media,omitempty"`
-	People       GalleryLabels `json:"people,omitempty"`
-	Tags         GalleryLabels `json:"tags,omitempty"`
-	DateBasis    string        `json:"date_basis,omitempty"`
-	From         string        `json:"from,omitempty"`
-	Until        string        `json:"until,omitempty"`
-	NoCapture    bool          `json:"no_capture,omitempty"`
+	SourceFolder  string        `json:"source_folder,omitempty"`
+	SourceMode    string        `json:"source_mode,omitempty"`
+	SourceMissing bool          `json:"source_missing,omitempty"`
+	ImportBatch   string        `json:"import_batch,omitempty"`
+	Favorite      string        `json:"favorite,omitempty"`
+	Album         string        `json:"album,omitempty"`
+	Sort          string        `json:"sort"`
+	Visibility    string        `json:"visibility"`
+	Text          string        `json:"q,omitempty"`
+	Filename      string        `json:"filename,omitempty"`
+	Media         string        `json:"media,omitempty"`
+	People        GalleryLabels `json:"people,omitempty"`
+	Tags          GalleryLabels `json:"tags,omitempty"`
+	DateBasis     string        `json:"date_basis,omitempty"`
+	From          string        `json:"from,omitempty"`
+	Until         string        `json:"until,omitempty"`
+	NoCapture     bool          `json:"no_capture,omitempty"`
 }
 
 // Exact case-insensitive labels; groups AND together. Exclude rejects any hit.
@@ -74,9 +74,15 @@ func normalizeGalleryLabels(group GalleryLabels) (GalleryLabels, error) {
 // Import boundaries are explicit instants, resolved by the caller's display zone.
 // Both use inclusive From / exclusive Until. Missing capture dates never fall back.
 func (q GalleryQuery) Normalize() (GalleryQuery, error) {
-	if q.SourceMode != "" && q.SourceMode != "subtree" && q.SourceMode != "direct" { return q, ErrGalleryInput }
-	if q.SourceMode == "subtree" || q.SourceFolder == "" { q.SourceMode = "" }
-	if q.SourceMissing && q.SourceFolder != "" { return q, ErrGalleryInput }
+	if q.SourceMode != "" && q.SourceMode != "subtree" && q.SourceMode != "direct" {
+		return q, ErrGalleryInput
+	}
+	if q.SourceMode == "subtree" || q.SourceFolder == "" {
+		q.SourceMode = ""
+	}
+	if q.SourceMissing && q.SourceFolder != "" {
+		return q, ErrGalleryInput
+	}
 	if q.SourceFolder != "" && q.SourceFolder != "." {
 		folder, e := cleanRelative(q.SourceFolder)
 		if e != nil {
@@ -216,7 +222,9 @@ func (q GalleryQuery) matches(row gallerySearchRow) bool {
 			return false
 		}
 	}
-	if q.SourceMissing && len(sources) > 0 { return false }
+	if q.SourceMissing && len(sources) > 0 {
+		return false
+	}
 	if q.SourceFolder != "" && !galleryFolderMatchesMode(sources, q.SourceFolder, q.SourceMode) {
 		return false
 	}

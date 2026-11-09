@@ -13,7 +13,7 @@ func galleryRequest(r *http.Request) (library.GalleryQuery, error) {
 	if e != nil {
 		return library.GalleryQuery{}, library.ErrGalleryInput
 	}
-	singles := map[string]bool{"source_folder": true, "source_mode":true, "source_missing":true, "import_batch": true, "favorite": true, "album": true, "sort": true, "visibility": true, "q": true, "filename": true, "media": true, "date_basis": true, "from": true, "until": true, "no_capture": true, "after": true, "limit": true, "asset": true, "snapshot": true}
+	singles := map[string]bool{"source_folder": true, "source_mode": true, "source_missing": true, "import_batch": true, "favorite": true, "album": true, "sort": true, "visibility": true, "q": true, "filename": true, "media": true, "date_basis": true, "from": true, "until": true, "no_capture": true, "after": true, "limit": true, "asset": true, "snapshot": true}
 	if r.URL.Path == "/api/gallery/sources" {
 		singles["source_after"] = true
 	}
@@ -34,8 +34,10 @@ func galleryRequest(r *http.Request) (library.GalleryQuery, error) {
 		e = library.ErrGalleryInput
 	}
 	sourceMissing := p.Get("source_missing")
-	if sourceMissing != "" && sourceMissing != "true" && sourceMissing != "false" { e = library.ErrGalleryInput }
-	q := library.GalleryQuery{SourceFolder: p.Get("source_folder"), SourceMode:p.Get("source_mode"), SourceMissing:sourceMissing == "true", ImportBatch: p.Get("import_batch"), Favorite: p.Get("favorite"), Album: p.Get("album"), Sort: p.Get("sort"), Visibility: p.Get("visibility"), Text: p.Get("q"), Filename: p.Get("filename"), Media: p.Get("media"), DateBasis: p.Get("date_basis"), From: p.Get("from"), Until: p.Get("until"), NoCapture: noCapture == "true", People: library.GalleryLabels{Any: p["person_any"], All: p["person_all"], Exclude: p["person_exclude"]}, Tags: library.GalleryLabels{Any: p["tag_any"], All: p["tag_all"], Exclude: p["tag_exclude"]}}
+	if sourceMissing != "" && sourceMissing != "true" && sourceMissing != "false" {
+		e = library.ErrGalleryInput
+	}
+	q := library.GalleryQuery{SourceFolder: p.Get("source_folder"), SourceMode: p.Get("source_mode"), SourceMissing: sourceMissing == "true", ImportBatch: p.Get("import_batch"), Favorite: p.Get("favorite"), Album: p.Get("album"), Sort: p.Get("sort"), Visibility: p.Get("visibility"), Text: p.Get("q"), Filename: p.Get("filename"), Media: p.Get("media"), DateBasis: p.Get("date_basis"), From: p.Get("from"), Until: p.Get("until"), NoCapture: noCapture == "true", People: library.GalleryLabels{Any: p["person_any"], All: p["person_all"], Exclude: p["person_exclude"]}, Tags: library.GalleryLabels{Any: p["tag_any"], All: p["tag_all"], Exclude: p["tag_exclude"]}}
 	if e != nil {
 		return q, e
 	}

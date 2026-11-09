@@ -320,7 +320,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case r.URL.Path == "/api/export" && r.Method == "GET":
 		exported, e := s.Store.OrganizationExport()
 		if e != nil {
-			catalogExportError(w,e)
+			catalogExportError(w, e)
 			return
 		}
 		w.Header().Set("Content-Disposition", `attachment; filename="catalog.json"`)
@@ -407,11 +407,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func catalogExportError(w http.ResponseWriter, e error) {
-	if errors.Is(e,library.ErrImportHistoryExportLimit) {
-		http.Error(w,"Recorded import history is too large for JSON export. Use a full backup to preserve all records.",http.StatusRequestEntityTooLarge)
+	if errors.Is(e, library.ErrImportHistoryExportLimit) {
+		http.Error(w, "Recorded import history is too large for JSON export. Use a full backup to preserve all records.", http.StatusRequestEntityTooLarge)
 		return
 	}
-	http.Error(w,"catalog unavailable",http.StatusInternalServerError)
+	http.Error(w, "catalog unavailable", http.StatusInternalServerError)
 }
 func (s *Server) authenticated(r *http.Request) bool {
 	c, e := r.Cookie("session")

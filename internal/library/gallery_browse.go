@@ -31,7 +31,7 @@ func (index *gallerySearchIndex) recordImportSources(tx *bolt.Tx) error {
 		}
 		index.batches = append(index.batches, session)
 		batchSeen := map[string]map[string]bool{}
-		outcomes := GalleryImportOutcomes{Total:session.TotalFiles}
+		outcomes := GalleryImportOutcomes{Total: session.TotalFiles}
 		e := child.ForEach(func(key, value []byte) error {
 			if string(key) == "meta" {
 				return nil
@@ -42,10 +42,20 @@ func (index *gallerySearchIndex) recordImportSources(tx *bolt.Tx) error {
 			}
 			if entry.AssetID != "" {
 				outcomes.Accepted++
-				if entry.Duplicate { outcomes.Duplicates++ } else { outcomes.New++ }
+				if entry.Duplicate {
+					outcomes.Duplicates++
+				} else {
+					outcomes.New++
+				}
 			}
-			if entry.Deleted { outcomes.Deleted++ } else if entry.AssetID == "" {
-				if entry.Error != "" { outcomes.Failed++ } else { outcomes.Pending++ }
+			if entry.Deleted {
+				outcomes.Deleted++
+			} else if entry.AssetID == "" {
+				if entry.Error != "" {
+					outcomes.Failed++
+				} else {
+					outcomes.Pending++
+				}
 			}
 			row, exists := index.assets[entry.AssetID]
 			if !exists || entry.Deleted || entry.AssetID == "" {
@@ -83,7 +93,9 @@ func (index *gallerySearchIndex) recordImportSources(tx *bolt.Tx) error {
 			index.assets[entry.AssetID] = row
 			return nil
 		})
-		if e != nil { return e }
+		if e != nil {
+			return e
+		}
 		index.batchOutcomes[session.ID] = outcomes
 		return nil
 	})
@@ -95,7 +107,12 @@ func galleryFolderMatches(sources []string, folder string) bool {
 
 func galleryFolderMatchesMode(sources []string, folder, mode string) bool {
 	for _, source := range sources {
-		if mode == "direct" { if path.Dir(source) == folder { return true }; continue }
+		if mode == "direct" {
+			if path.Dir(source) == folder {
+				return true
+			}
+			continue
+		}
 		if folder == "." || strings.HasPrefix(source, folder+"/") {
 			return true
 		}
@@ -114,26 +131,27 @@ type GalleryImportBatch struct {
 	Status  string    `json:"status"`
 	Count   uint64    `json:"count"`
 }
+
 // These are receipt-file counts across the retained session, not unique asset
 // counts and not current-filter counts. Accepted is historical (including
 // deleted successes), with New/Duplicates as its partition. Failed and Pending
 // classify never-accepted, nondeleted entries; Deleted is shown independently.
 type GalleryImportOutcomes struct {
-	Total int `json:"total"`
-	Accepted int `json:"accepted"`
-	New int `json:"new"`
+	Total      int `json:"total"`
+	Accepted   int `json:"accepted"`
+	New        int `json:"new"`
 	Duplicates int `json:"duplicates"`
-	Failed int `json:"failed"`
-	Deleted int `json:"deleted"`
-	Pending int `json:"pending"`
+	Failed     int `json:"failed"`
+	Deleted    int `json:"deleted"`
+	Pending    int `json:"pending"`
 }
 type GallerySources struct {
-	Folders   []GalleryFolder      `json:"folders"`
-	Batches   []GalleryImportBatch `json:"batches"`
-	Next      string               `json:"next,omitempty"`
-	RootCount uint64               `json:"root_count"`
-	MissingCount uint64            `json:"missing_count"`
-	Count     uint64               `json:"count"`
+	Folders      []GalleryFolder      `json:"folders"`
+	Batches      []GalleryImportBatch `json:"batches"`
+	Next         string               `json:"next,omitempty"`
+	RootCount    uint64               `json:"root_count"`
+	MissingCount uint64               `json:"missing_count"`
+	Count        uint64               `json:"count"`
 }
 
 // Folders contain at most limit immediate children of the selected virtual
@@ -176,7 +194,9 @@ func (s *Store) GallerySources(query GalleryQuery, after string, limit int) (Gal
 			}
 			if batchQ.matches(row) {
 				for id, sources := range row.batches {
-					if q.SourceMissing && len(sources) > 0 { continue }
+					if q.SourceMissing && len(sources) > 0 {
+						continue
+					}
 					if q.SourceFolder == "" || galleryFolderMatchesMode(sources, q.SourceFolder, q.SourceMode) {
 						batchCounts[id]++
 					}
@@ -191,7 +211,9 @@ func (s *Store) GallerySources(query GalleryQuery, after string, limit int) (Gal
 			}
 			if len(sources) > 0 {
 				out.RootCount++
-			} else { out.MissingCount++ }
+			} else {
+				out.MissingCount++
+			}
 			seen := map[string]bool{}
 			for _, source := range sources {
 				directory := path.Dir(source)
@@ -215,7 +237,9 @@ func (s *Store) GallerySources(query GalleryQuery, after string, limit int) (Gal
 				}
 				// Keep an intermediate folder navigable even when direct
 				// scope finds no files at that level (count zero).
-				if _, exists := folderCounts[child]; !exists { folderCounts[child] = 0 }
+				if _, exists := folderCounts[child]; !exists {
+					folderCounts[child] = 0
+				}
 				if !seen[child] && (q.SourceMode != "direct" || directory == child) {
 					folderCounts[child]++
 					seen[child] = true
@@ -241,7 +265,7 @@ func (s *Store) GallerySources(query GalleryQuery, after string, limit int) (Gal
 			if status == "running" && !s.liveImport(batch.ID) {
 				status = "paused"
 			}
-			out.Batches = append(out.Batches, GalleryImportBatch{GalleryImportOutcomes:index.batchOutcomes[batch.ID], ID: batch.ID, Created: batch.Created, Status: status, Count: batchCounts[batch.ID]})
+			out.Batches = append(out.Batches, GalleryImportBatch{GalleryImportOutcomes: index.batchOutcomes[batch.ID], ID: batch.ID, Created: batch.Created, Status: status, Count: batchCounts[batch.ID]})
 		}
 		sort.Slice(out.Batches, func(i, j int) bool {
 			if out.Batches[i].Created.Equal(out.Batches[j].Created) {

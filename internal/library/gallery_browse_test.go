@@ -355,10 +355,14 @@ func TestGalleryBrowseRealImportRestartAndIndependentRestore(t *testing.T) {
 	if ids := galleryBrowseIDs(t, s, q); !reflect.DeepEqual(ids, []string{id}) {
 		t.Fatal("restart", ids)
 	}
-	exportBefore,e := s.OrganizationExport()
-	if e != nil { t.Fatal(e) }
-	historyBefore,ok := exportBefore["import_history"].(ImportHistoryExport)
-	if !ok || len(historyBefore.Sessions[m.ID].Entries) != 2 { t.Fatal("recorded import export missing") }
+	exportBefore, e := s.OrganizationExport()
+	if e != nil {
+		t.Fatal(e)
+	}
+	historyBefore, ok := exportBefore["import_history"].(ImportHistoryExport)
+	if !ok || len(historyBefore.Sessions[m.ID].Entries) != 2 {
+		t.Fatal("recorded import export missing")
+	}
 	archive := filepath.Join(t.TempDir(), "recorded.zip")
 	var backup bytes.Buffer
 	if e := s.Backup(&backup); e != nil {
@@ -383,8 +387,10 @@ func TestGalleryBrowseRealImportRestartAndIndependentRestore(t *testing.T) {
 	if ids := galleryBrowseIDs(t, r, q); !reflect.DeepEqual(ids, []string{id}) {
 		t.Fatal("restore", ids)
 	}
-	exportAfter,e := r.OrganizationExport()
-	if e != nil || !reflect.DeepEqual(historyBefore,exportAfter["import_history"]) { t.Fatal("restored interchange receipts changed",e) }
+	exportAfter, e := r.OrganizationExport()
+	if e != nil || !reflect.DeepEqual(historyBefore, exportAfter["import_history"]) {
+		t.Fatal("restored interchange receipts changed", e)
+	}
 	metadata, e := r.AssetOrganization(id)
 	if e != nil || metadata.Title != "Surviving title" || metadata.Caption != "Restored caption" || metadata.Notes != "Restored notes" {
 		t.Fatal(metadata, e)
