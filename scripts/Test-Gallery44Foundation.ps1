@@ -29,6 +29,8 @@ try {
  Checked node @('tests/gallery-search.cjs')
  Checked node @('tests/gallery-foundation.cjs')
  Checked node @('tests/gallery-viewer.cjs')
+ Checked node @('tests/photo-comparison.cjs')
+ Checked node @('tests/suggested-albums.cjs')
  if($env:IMMICH_TEST_ORGANIZATION -eq '1'){
   $env:IMMICH_ORG_STAGE='prepare'
   Checked node @('tests/organization56.cjs')

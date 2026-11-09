@@ -29,6 +29,10 @@ type gallerySearchRow struct {
 	tags         []string
 }
 
+func personLabelKey(label string) string {
+	return strings.ToLower(strings.TrimSpace(label))
+}
+
 // This derived metadata cache never retains image bytes or face embeddings and
 // is never exported. Reopen and every committed catalog edit invalidate it.
 type gallerySearchIndex struct {
@@ -110,7 +114,7 @@ func (s *Store) gallerySearchFor(tx *bolt.Tx) (*gallerySearchIndex, error) {
 		}
 		if label.Name != "" && !label.Dismissed {
 			row.terms += "\x00" + strings.ToLower(label.Name)
-			row.people = append(row.people, strings.ToLower(strings.TrimSpace(label.Name)))
+			row.people = append(row.people, personLabelKey(label.Name))
 			index.assets[face.AssetID] = row
 		}
 		return nil

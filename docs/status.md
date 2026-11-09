@@ -1,3 +1,51 @@
+## November 8, 2026 — 0.1.45 release candidate
+
+The 0.1.45 candidate combines the People directory, photo comparison, and
+suggested albums. The release workflow requires the catalog and browser gates
+before testing the exact Setup. It checks upgrade from a published 0.1.44
+catalog with existing album membership and independent restore of newly saved
+suggested albums. See [release notes](release-notes-0.1.45.md) and
+[validation scope](validation-0.1.45.md).
+
+## November 8, 2026 — Suggested event and trip albums
+
+C18 is implemented on the local suggested-albums branch. Suggestions use the
+visible library across folders. The first pass sorts by embedded JPEG capture
+time or a recognized full date and time in the filename. Video uses the filename
+fallback. Unknown capture times stay out of suggestions. Comparisons use the
+recorded clock values without timezone conversion.
+
+Events require at least three items and split after a gap over three hours,
+with a 24-hour span limit. Possible trips require at least six items across dates
+and a span of at least 18 hours. They split after gaps over 18 hours and are
+bounded to seven days. A suggestion shows up to six neighbors on each side and
+supports up to 500 reviewed items, including the neighbors. These are time-based
+estimates. Landmark matching and embedded video timestamp extraction are later
+work.
+
+Saving creates a normal album and its ordered members in a single existing
+catalog transaction. A matching retry returns the same album. Hidden, deleted
+or replaced targets cause the entire new save to be refused. Focused Go tests
+and local Edge checks passed, including a mixed photo/MP4 strip, adjustments at
+and inside its boundaries, lost save response, and photo comparison regression.
+Combined service and installer acceptance remains pending for the next release.
+
+## November 8, 2026 — People directory and photo comparison
+
+The development branch starts from the validated 0.1.44 prototype. C15 adds a
+People directory based on existing named-face labels, with portraits and distinct
+visible media counts. C38 adds side-by-side comparison of two selected photos,
+with linked zoom and pan and per-photo favorites. Selected-original export (C27)
+is deferred at the user's request.
+
+The focused directory test and disposable Edge checks passed. The gallery
+browser gate now exercises cross-page comparison, linked pan and zoom, closing
+during a favorite save, filtered selection recovery, and stale gallery results.
+Broader local library and web tests had identical failures and skips on the
+candidate and 0.1.44 baseline under the same permissions. The candidate added
+one passing directory test. Combined service and installer acceptance remains
+pending for the next release.
+
 ## November 6, 2026: 0.1.44 steps 1–6 accepted development checkpoint
 
 The released baseline, shared gallery and full viewer remain accepted. Selection

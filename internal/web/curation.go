@@ -4,6 +4,7 @@ import (
 	"errors"
 	"immichclone/internal/library"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -26,6 +27,10 @@ func curationError(w http.ResponseWriter, e error) {
 	}
 }
 func (s *Server) curationHTTP(w http.ResponseWriter, r *http.Request) bool {
+	if r.URL.Path == "/api/album-suggestions" {
+		s.albumSuggestionsHTTP(w, r)
+		return true
+	}
 	if !strings.HasPrefix(r.URL.Path, "/api/metadata/") {
 		return false
 	}
@@ -95,4 +100,44 @@ func (s *Server) curationHTTP(w http.ResponseWriter, r *http.Request) bool {
 	}
 	http.NotFound(w, r)
 	return true
+}
+
+func (s *Server) albumSuggestionsHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	params, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		galleryError(w, library.ErrGalleryInput)
+		return
+	}
+	for key, values := range params {
+		if len(values) != 1 || (key != "kind" && key != "after" && key != "id") {
+			galleryError(w, library.ErrGalleryInput)
+			return
+		}
+	}
+	kind, id := params.Get("kind"), params.Get("id")
+	if (kind != "event" && kind != "trip") || (params.Has("id") && (id == "" || params.Has("after"))) {
+		galleryError(w, library.ErrGalleryInput)
+		return
+	}
+	if id != "" {
+		detail, err := s.Store.SuggestedAlbum(r.Context(), kind == "trip", id)
+		if errors.Is(err, os.ErrNotExist) {
+			galleryError(w, library.ErrGalleryChanged)
+		} else if err != nil {
+			galleryError(w, err)
+		} else {
+			jsonResponse(w, detail)
+		}
+		return
+	}
+	page, err := s.Store.SuggestedAlbums(r.Context(), kind == "trip", params.Get("after"))
+	if err != nil {
+		galleryError(w, err)
+	} else {
+		jsonResponse(w, page)
+	}
 }

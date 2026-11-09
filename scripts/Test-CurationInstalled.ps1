@@ -1,4 +1,4 @@
-param([switch]$ReleaseAcceptance)
+param([switch]$ReleaseAcceptance,[ValidateSet('0.1.44','0.1.45')][string]$CandidateVersion='0.1.44')
 
 $ErrorActionPreference='Stop'
 $PSNativeCommandUseErrorActionPreference=$false
@@ -41,7 +41,8 @@ try{
   Invoke-WebRequest https://github.com/aataat12/immich-clone/releases/download/v0.1.43-prototype/ImmichClone-0.1.43-prototype-x64-setup.exe -OutFile $oldInstaller
  }
  Assert ((Get-FileHash -LiteralPath $oldInstaller).Hash.ToLowerInvariant() -eq '96670e90c4abc55cdc07f480267c6f896b784a2a6c11de9f9f5333edb4158415') 'genuine published 0.1.43 installer checksum matches'
- $candidate=(Resolve-Path dist/ImmichClone-0.1.44-prototype-x64-setup.exe).Path
+ $candidate=(Resolve-Path "dist/ImmichClone-$CandidateVersion-prototype-x64-setup.exe").Path
+ $candidateBuild="$CandidateVersion-prototype"
  if($ReleaseAcceptance){
   $leaf=$fixture+' fresh'
   $app=Join-Path $env:ProgramFiles $leaf
@@ -58,7 +59,7 @@ try{
   $cleanup+=$paths
   $attempted=$true
   Assert ((Install $candidate $state) -eq 0) 'exact release candidate installs into fresh application and data paths with spaces'
-  Assert (WaitVersion '0.1.44-prototype') 'fresh release service reports candidate version'
+  Assert (WaitVersion $candidateBuild) 'fresh release service reports candidate version'
   $service=Get-CimInstance Win32_Service -Filter "Name='ImmichClone'"
   Assert ($service.StartName -eq 'NT AUTHORITY\LocalService' -and $service.StartMode -eq 'Auto') 'fresh install runs with restricted service account and automatic startup'
   $appBinary=Join-Path $app 'immichclone.exe'
@@ -68,9 +69,14 @@ try{
   $env:IMMICH_EXPERIENCE_STAGE='prepare'
   Checked node @('tests/release44-experience.cjs')
   Restart-Service ImmichClone
-  Assert (WaitVersion '0.1.44-prototype') 'fresh candidate service restarts'
+  Assert (WaitVersion $candidateBuild) 'fresh candidate service restarts'
   $env:IMMICH_EXPERIENCE_STAGE='recover'
   Checked node @('tests/release44-experience.cjs')
+  if($CandidateVersion -eq '0.1.45'){
+   Checked node @('tests/photo-comparison.cjs')
+   Checked node @('tests/suggested-albums.cjs')
+   $albumExport=(Export (Login $state)).curation | ConvertTo-Json -Depth 40 -Compress
+  }
   $archive=Join-Path $root 'release-experience.zip'
   Invoke-WebRequest http://127.0.0.1:2283/api/backup -WebSession (Login $state) -OutFile $archive
   $recovery=Join-Path $root 'release-recovery.exe'
@@ -85,11 +91,15 @@ try{
   Checked $recovery @('-mode','restore','-data',$restored,'-archive',$archive)
   Checked $recovery @('-mode','verify','-data',$restored)
   Assert ((Install $candidate $restored) -eq 0) 'exact candidate reinstalls on independently restored experience catalog'
-  Assert (WaitVersion '0.1.44-prototype') 'independently restored candidate reports correct build'
+  Assert (WaitVersion $candidateBuild) 'independently restored candidate reports correct build'
   Assert ((Snapshot (Join-Path $restored 'originals')) -ceq $beforeOriginals -and (Get-FileHash -LiteralPath (Join-Path $restored 'access-code.txt')).Hash -eq $codeHash) 'independent restored install preserves every original and the access code'
   $env:IMMICH_TEST_STATE=$restored
   $env:IMMICH_EXPERIENCE_STAGE='verify'
   Checked node @('tests/release44-experience.cjs')
+  if($CandidateVersion -eq '0.1.45'){
+   $restoredAlbums=(Export (Login $restored)).curation | ConvertTo-Json -Depth 40 -Compress
+   Assert ($restoredAlbums -ceq $albumExport) 'independent restore preserves the suggested album and ordered members'
+  }
   Uninstall
   $attempted=$false
  }
@@ -108,7 +118,7 @@ try{
    Stop-Service ImmichClone;$catalogHash=(Get-FileHash -LiteralPath (Join-Path $state 'catalog.db')).Hash
    $env:IMMICH_INSTALL_TEST_FAILURE='1';$env:IMMICH_CURATION_INSTALL_TEST='1'
    try{$p=StartSetup $candidate $state}finally{Remove-Item Env:IMMICH_INSTALL_TEST_FAILURE,Env:IMMICH_CURATION_INSTALL_TEST -ErrorAction SilentlyContinue}
-   Assert (WaitVersion '0.1.44-prototype') 'actual candidate Setup reaches the candidate service before injected failure'
+   Assert (WaitVersion $candidateBuild) 'actual candidate Setup reaches the candidate service before injected failure'
    $newOriginal=$null
    if($commit){$session=Login $state;$null=SeedMetadata $session;$new=Invoke-RestMethod 'http://127.0.0.1:2283/api/upload?name=after-snapshot.txt' -Method Post -Headers @{'X-Immich-Request'='1'} -ContentType application/octet-stream -Body ([Text.Encoding]::UTF8.GetBytes('original retained after metadata snapshot '+$schema)) -WebSession $session;$newOriginal=$new.asset.id;Assert ((Export $session).catalog_schema -eq '3') 'version-three metadata commit is observed before failure'}
    $exact=$false
@@ -126,7 +136,7 @@ try{
    if($newOriginal){Assert ((Get-FileHash -LiteralPath (Join-Path $state ('originals/'+$newOriginal))).Hash.ToLowerInvariant() -eq $newOriginal) 'new original imported after snapshot survives catalog rollback'}
   }
   Assert ((Install $candidate $state) -eq 0) 'actual candidate Setup successfully upgrades the genuine release'
-  Assert (WaitVersion '0.1.44-prototype') 'candidate service is healthy after successful upgrade'
+  Assert (WaitVersion $candidateBuild) 'candidate service is healthy after successful upgrade'
   $candidatePath=(Get-CimInstance Win32_Service -Filter "Name='ImmichClone'").PathName
   $session=Login $state;$out=SeedMetadata $session;$expected=Join-Path $root ('expected-'+$schema+'.json');$out.curation|ConvertTo-Json -Depth 40|Set-Content -Encoding utf8NoBOM -LiteralPath $expected
   $archive=Join-Path $root ('backup-'+$schema+'.zip');Invoke-WebRequest http://127.0.0.1:2283/api/backup -WebSession $session -OutFile $archive
@@ -142,7 +152,7 @@ try{
   try{Start-Service ImmichClone -ErrorAction Stop}catch{}
   for($i=0;$i -lt 80;$i++){if((Get-Service ImmichClone).Status -eq 'Stopped'){break};Start-Sleep -Milliseconds 100}
   Assert ((Get-Service ImmichClone).Status -eq 'Stopped' -and (Snapshot $state) -ceq $snapshot) 'genuine old LocalService writer refuses version three and preserves every source byte and name'
-  Checked sc.exe @('config','ImmichClone','binPath=',$candidatePath);Start-Service ImmichClone;Assert (WaitVersion '0.1.44-prototype') 'candidate reopens metadata after genuine old-writer refusal'
+  Checked sc.exe @('config','ImmichClone','binPath=',$candidatePath);Start-Service ImmichClone;Assert (WaitVersion $candidateBuild) 'candidate reopens metadata after genuine old-writer refusal'
   Uninstall
   if([IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($state)) -cne [IO.Path]::GetFullPath($env:ProgramData) -or [IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($offline)) -cne [IO.Path]::GetFullPath($env:ProgramData)){throw 'Unavailable-source move target refused'}
   Move-Item -LiteralPath $state -Destination $offline
