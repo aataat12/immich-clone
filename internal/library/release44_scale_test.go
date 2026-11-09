@@ -24,7 +24,11 @@ func TestRelease44CombinedCatalogScale(t *testing.T) {
 		ids[i] = i/2 + 1
 	}
 	batch := galleryBrowseReceipt(t, s, paths, ids)
-	otherBatch := galleryBrowseReceipt(t, s, paths[:10000], ids[len(ids)-10000:])
+	otherPaths := make([]string, 10000)
+	for i := range otherPaths {
+		otherPaths[i] = fmt.Sprintf("Synthetic/Other/item-%05d.jpg", i)
+	}
+	otherBatch := galleryBrowseReceipt(t, s, otherPaths, ids[len(ids)-len(otherPaths):])
 	album := fmt.Sprintf("%064x", catalogSize+1)
 	curationEdit(t, s, CurationEdit{Action: "create_album", AlbumID: album, Title: "Combined scale fixture"})
 	want := make([]string, 0, 145)
@@ -89,17 +93,17 @@ func TestRelease44CombinedCatalogScale(t *testing.T) {
 		t.Fatalf("viewer return anchor: page %d, %v", anchor.Number, err)
 	}
 	viewerTime := time.Since(start)
-	// The second batch shares path spellings but covers only a subset of IDs.
-	// A folder recorded for one ID cannot grant membership to another ID.
+	// The same IDs appear under distinct folders in the two receipts. The
+	// matching folder must come from the active batch's own entries.
 	q.ImportBatch = otherBatch
+	none, err := s.QueryGalleryPage(q, "", pageSize)
+	if err != nil || none.Count != 0 {
+		t.Fatalf("folder from the first batch returned %d results in the second: %v", none.Count, err)
+	}
+	q.SourceFolder = "Synthetic/Other"
 	other, err := s.QueryGalleryPage(q, "", pageSize)
 	if err != nil || other.Count != uint64(len(want)) {
 		t.Fatalf("duplicate batch membership count %d: %v", other.Count, err)
-	}
-	q.SourceFolder = "Synthetic/TripTwo"
-	none, err := s.QueryGalleryPage(q, "", pageSize)
-	if err != nil || none.Count != 0 {
-		t.Fatalf("unrecorded folder returned %d results: %v", none.Count, err)
 	}
 	t.Logf("100,000 synthetic catalog rows, 60,000 recorded entries: cold combined calendar %s, three pages %s, viewer neighbor and anchor %s", coldCalendar, pageTime, viewerTime)
 }

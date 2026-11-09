@@ -31,6 +31,8 @@ jobs:
       GOTOOLCHAIN: local
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
         with:
           go-version: '1.27.3'
@@ -63,3 +65,45 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Date helper tests failed' }
           $env:IMMICH_TEST_CURATION = '1'
           ./scripts/Test-FullDisk.ps1
+
+  experience:
+    runs-on: windows-2022
+    timeout-minutes: 25
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+      IMMICH_TEST_CURATION: '1'
+      IMMICH_TEST_ORGANIZATION: '1'
+      IMMICH_TEST_BROWSE78: '1'
+      IMMICH_TEST_EXPERIENCE: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Exercise the five feature groups in Edge and recover on a separate state root
+        shell: pwsh
+        run: |
+          $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD='1'
+          npm install --prefix "$env:RUNNER_TEMP/release44-browser" --no-audit --no-fund playwright@1.62.1
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned browser tooling acquisition failed' }
+          $env:IMMICH_BROWSER_MODULE="$env:RUNNER_TEMP/release44-browser/node_modules/playwright"
+          $env:IMMICH_BROWSER_OUTPUT="$env:GITHUB_WORKSPACE/browser-evidence"
+          New-Item -ItemType Directory -Path $env:IMMICH_BROWSER_OUTPUT | Out-Null
+          $env:IMMICH_VIEWER_VIDEO=Join-Path $env:RUNNER_TEMP 'release44-video.mp4'
+          ./scripts/New-MediaFixture.ps1 -Destination $env:IMMICH_VIEWER_VIDEO
+          ./scripts/Test-Gallery44Foundation.ps1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: release44-synthetic-browser-evidence
+          path: browser-evidence/*.png
+          retention-days: 7
+          if-no-files-found: error
+
+  installer:
+    needs: [catalog, experience]
+    uses: ./.github/workflows/release44-installer.yml

@@ -1,3 +1,19 @@
+param([switch]$Release44)
+
+# Keep the prior 0.1.43 combined acceptance runnable while exercising its
+# full provider/recovery journey against the next exact release package.
+$priorVersion = '0.1.42'
+$candidateVersion = '0.1.43'
+$rollbackProbeVersion = '0.1.44'
+$expectedPriorHash = '18dbc670ce4d46809e2a90d5831d17b31f633050907290082f1e793294df8b87'
+if ($Release44) {
+    $priorVersion = '0.1.43'
+    $candidateVersion = '0.1.44'
+    $rollbackProbeVersion = $candidateVersion
+    $expectedPriorHash = '96670e90c4abc55cdc07f480267c6f896b784a2a6c11de9f9f5333edb4158415'
+}
+$priorBuild = "$priorVersion-prototype"
+$candidateBuild = "$candidateVersion-prototype"
 $ErrorActionPreference = 'Stop'
 $root = Join-Path $env:RUNNER_TEMP ('installer test ' + [guid]::NewGuid().ToString('N'))
 if ($env:GITHUB_ACTIONS -ne 'true' -or (Get-Service ImmichClone -ErrorAction SilentlyContinue) -or (Test-Path 'HKLM:\SOFTWARE\ImmichClone')) { throw 'Installer acceptance requires an unregistered disposable CI host' }
@@ -10,7 +26,7 @@ New-Item -ItemType Directory $root | Out-Null
 if (!$env:IMMICH_PRIOR_INSTALLER) { throw 'Permanent published prior installer was not supplied' }
 if (!(Test-Path -LiteralPath $env:IMMICH_PRIOR_INSTALLER)) { throw 'Published prior installer path is missing' }
 $priorHash = (Get-FileHash -LiteralPath $env:IMMICH_PRIOR_INSTALLER).Hash.ToLowerInvariant()
-if ($priorHash -ne '18dbc670ce4d46809e2a90d5831d17b31f633050907290082f1e793294df8b87') { throw 'Published 0.1.42 installer hash mismatch' }
+if ($priorHash -ne $expectedPriorHash) { throw "Published $priorVersion installer hash mismatch" }
 if (!$env:IMMICH_FULL_CONCURRENCY_SOURCE -or !$env:IMMICH_FULL_CONCURRENCY_RUN) { throw 'Full Setup concurrency handoff metadata is required' }
 # Model a protected application location, not the runner temporary parent's
 # permissive inherited code-write grants. Hostile permissions are exercised by
@@ -48,7 +64,7 @@ function Get-OrganizationSnapshot($WebSession) {
     return $first
 }
 function Install([string]$version) {
-    if ($version -eq '0.1.42') { $setup=(Resolve-Path $env:IMMICH_PRIOR_INSTALLER).Path } else { $setup=(Resolve-Path "dist/ImmichClone-$version-prototype-x64-setup.exe").Path }
+    if ($version -eq $priorVersion) { $setup=(Resolve-Path $env:IMMICH_PRIOR_INSTALLER).Path } else { $setup=(Resolve-Path "dist/ImmichClone-$version-prototype-x64-setup.exe").Path }
     $process = Start-Process $setup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="'+$app+'"'),('/STATE="'+$state+'"'),('/LOG="'+$root+'/setup-'+$version+'.log"')) -Wait -PassThru -WindowStyle Hidden
     if ($process.ExitCode -ne 0) {
         Get-Content "$root/setup-$version.log" -Tail 25 | ForEach-Object { Write-Host $_ }
@@ -57,14 +73,14 @@ function Install([string]$version) {
     return $process.ExitCode
 }
 try {
-    Assert ((Install '0.1.42') -eq 0) 'installer fresh install succeeds in path containing spaces'
-    $previousBinary=Join-Path $root 'actual-0.1.42.exe'
+    Assert ((Install $priorVersion) -eq 0) 'installer fresh install succeeds in path containing spaces'
+    $previousBinary=Join-Path $root "actual-$priorVersion.exe"
     Copy-Item "$app/immichclone.exe" $previousBinary
-    Assert ((& $previousBinary -mode version) -eq '0.1.42-prototype') 'older-writer probe uses the actual previously released executable'
+    Assert ((& $previousBinary -mode version) -eq $priorBuild) 'older-writer probe uses the actual previously released executable'
     Assert (Test-Path "$app/media/ffmpeg-8.1.3-7eb77d88e2e9/ffmpeg-8.1.3-source.tar.gz") 'installer includes exact media source and notices'
     $service = Get-CimInstance Win32_Service -Filter "Name='ImmichClone'"
     Write-Output ('Disposable CI service evidence: '+($service | Select-Object Name,StartName,StartMode,State | ConvertTo-Json -Compress))
-    if (!$service -or $service.StartName -ne 'NT AUTHORITY\LocalService' -or $service.StartMode -ne 'Auto') { Get-Content "$root/setup-0.1.42.log" -Tail 35 }
+    if (!$service -or $service.StartName -ne 'NT AUTHORITY\LocalService' -or $service.StartMode -ne 'Auto') { Get-Content "$root/setup-$priorVersion.log" -Tail 35 }
     Assert (Test-Path "$app/Export-Diagnostics.ps1") 'installer includes standalone diagnostic exporter'
     Assert ($service.StartName -eq 'NT AUTHORITY\LocalService' -and $service.StartMode -eq 'Auto') 'installer configures restricted automatic service'
     & "$env:SystemRoot/System32/WindowsPowerShell/v1.0/powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/Test-LocalPrototype.ps1
@@ -95,12 +111,12 @@ try {
     Assert ($LASTEXITCODE -eq 0) 'disposable previous service is disabled before corrected recovery'
     $disabled = Get-CimInstance Win32_Service -Filter "Name='ImmichClone'"
     Assert ($disabled.State -eq 'Stopped' -and $disabled.StartMode -eq 'Disabled') 'upgrade fixture reproduces retained prior build with stopped disabled service'
-    Assert ((& $previousBinary -mode version) -eq '0.1.42-prototype') 'disabled-service recovery starts with the actual previous release'
+    Assert ((& $previousBinary -mode version) -eq $priorBuild) 'disabled-service recovery starts with the actual previous release'
     $env:IMMICH_INSTALL_TEST_FAILURE='1'
-    $firstUpgradeFailure=Install '0.1.43'
+    $firstUpgradeFailure=Install $candidateVersion
     Remove-Item Env:IMMICH_INSTALL_TEST_FAILURE
     Assert ($firstUpgradeFailure -ne 0) 'initial upgrade failed upgrade is rejected'
-    Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.42-prototype') 'initial upgrade rollback restores prior build'
+    Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq $priorBuild) 'initial upgrade rollback restores prior build'
     Assert ((Get-FileHash "$app/ai/opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3/ai-worker.exe").Hash.ToLowerInvariant() -eq '15d1c2ca7ef3f526b34ac4823f9337c51280ad171ddf43df4f3af5d8128a7c58') 'initial upgrade rollback retains old immutable worker'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'initial upgrade rollback preserves original bytes'
     Stop-Service ImmichClone
@@ -108,11 +124,11 @@ try {
     Assert ($LASTEXITCODE -eq 0) 'prior service disabled again before successful corrected upgrade'
     $disabled = Get-CimInstance Win32_Service -Filter "Name='ImmichClone'"
     Assert ($disabled.State -eq 'Stopped' -and $disabled.StartMode -eq 'Disabled') 'successful corrected upgrade begins with stopped disabled prior service'
-    Assert ((Install '0.1.43') -eq 0) 'installer upgrade succeeds'
+    Assert ((Install $candidateVersion) -eq 0) 'installer upgrade succeeds'
     $recoveredService = Get-CimInstance Win32_Service -Filter "Name='ImmichClone'"
     Assert ($recoveredService.State -eq 'Running' -and $recoveredService.StartMode -eq 'Auto') 'corrected upgrade recovers automatic running service from disabled prior installation'
-    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.43-prototype') 'upgrade deploys new executable version'
-    Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq '0.1.43-prototype') 'installed health reports actual executable build'
+    Assert ((& "$app/immichclone.exe" -mode version) -eq $candidateBuild) 'upgrade deploys new executable version'
+    Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).build -eq $candidateBuild) 'installed health reports actual executable build'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'upgrade preserves original bytes'
     $session=[Microsoft.PowerShell.Commands.WebRequestSession]::new()
     $null=Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$code}|ConvertTo-Json) -WebSession $session
@@ -198,13 +214,14 @@ try {
     Assert (!(Test-Path $deleteBlock)) 'unsupported disposable deletion fixture has no preview'
     New-Item -ItemType Directory $deleteBlock | Out-Null
     BrowserPhase 'tests/deletion.cjs' 'denied'
+    $beforeRollbackHash = (Get-FileHash -LiteralPath "$app/immichclone.exe").Hash
     $env:IMMICH_INSTALL_TEST_FAILURE = '1'
-    $failedCode = Install '0.1.44'
+    $failedCode = Install $rollbackProbeVersion
     Remove-Item Env:IMMICH_INSTALL_TEST_FAILURE
     $installLog = Get-Content (Join-Path $env:ProgramData 'ImmichCloneDiagnostics/installer.jsonl') -Raw
     Assert ($installLog.Contains('installer_failed') -and $installLog.Contains('rollback_complete') -and !$installLog.Contains($state)) 'installer logs failed-upgrade and rollback stages without data paths'
     Assert ($failedCode -ne 0) 'injected failed upgrade returns failure'
-    Assert ((& "$app/immichclone.exe" -mode version) -eq '0.1.43-prototype') 'failed upgrade restores previous executable'
+    Assert ((& "$app/immichclone.exe" -mode version) -eq $candidateBuild -and (Get-FileHash -LiteralPath "$app/immichclone.exe").Hash -eq $beforeRollbackHash) 'failed upgrade restores exact previous executable'
     Assert ((Invoke-RestMethod http://127.0.0.1:2283/health).status -eq 'ok') 'rollback restores healthy service'
     BrowserPhase 'tests/deletion.cjs' 'pending'
     Assert ((Get-FileHash "$state/originals/$($asset.id)").Hash -eq $hash) 'failed upgrade preserves original bytes'
@@ -218,7 +235,7 @@ try {
     Assert ($sixA.analysis.video.next -eq 12 -and @($org.faces | Where-Object name -eq 'Video Test Person').Count -eq 1) 'failed upgrade preserves6A observations and manual corrections'
     $proposal=$org.assets | Where-Object {$_.asset.id -eq $proposalID}
     Assert ($proposal.reanalysis.status -eq 'ready' -and $proposal.analysis.status -eq 'ready') 'failed upgrade retains unapplied proposal and completed results'
-    # The actual previous 0.1.42 executable understands deletion intents.
+    # The actual previous executable understands deletion intents.
     # It must retain the pending original and refuse reimport until cleanup.
     # The unaware 0.1.33 writer/conflict proof remains in 0.1.34 evidence.
     $legacyWriterCatalog=Invoke-RestMethod http://127.0.0.1:2283/api/export -WebSession $session
@@ -226,7 +243,7 @@ try {
     Stop-Service ImmichClone
     & $previousBinary -mode verify -data $state
     Assert ($LASTEXITCODE -eq 0) 'actual previous executable verifies catalog containing a pending intent'
-    # 0.1.42 refuses elevated direct serve; exercise the real previous binary
+    # The previous version refuses elevated direct serve; exercise the real binary
     # under the existing LocalService registration on this disposable host.
     $currentBinary=Join-Path $root 'current-before-older-writer.exe'
     Copy-Item "$app/immichclone.exe" $currentBinary
@@ -236,7 +253,7 @@ try {
         Start-Service ImmichClone
         $oldReady=$false
         for($i=0;$i -lt 40;$i++) {
-            try { if((Invoke-RestMethod http://127.0.0.1:2283/health -TimeoutSec 2).build -eq '0.1.42-prototype'){$oldReady=$true;break} } catch {}
+            try { if((Invoke-RestMethod http://127.0.0.1:2283/health -TimeoutSec 2).build -eq $priorBuild){$oldReady=$true;break} } catch {}
             Start-Sleep -Milliseconds 250
         }
         Assert $oldReady 'actual previous executable serves the pending-intent catalog'
@@ -285,7 +302,7 @@ try {
     $state = Join-Path $root 'restored state'
     & $recoveryTool -mode restore -data $state -archive $archive
     Assert ($LASTEXITCODE -eq 0) 'offline restoration succeeds at a different location'
-    Assert ((Install '0.1.43') -eq 0) 'installer starts a restored library without the original data folder'
+    Assert ((Install $candidateVersion) -eq 0) 'installer starts a restored library without the original data folder'
     $session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
     $restoredCode = (Get-Content "$state/access-code.txt" -Raw).Trim()
     $null = Invoke-RestMethod http://127.0.0.1:2283/api/login -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{code=$restoredCode}|ConvertTo-Json) -WebSession $session

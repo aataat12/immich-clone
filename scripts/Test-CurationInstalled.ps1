@@ -1,3 +1,5 @@
+param([switch]$ReleaseAcceptance)
+
 $ErrorActionPreference='Stop'
 $PSNativeCommandUseErrorActionPreference=$false
 if($env:GITHUB_ACTIONS -ne 'true' -or (Get-Service ImmichClone -ErrorAction SilentlyContinue) -or (Test-Path 'HKLM:\SOFTWARE\ImmichClone')){throw 'Installed metadata acceptance requires a clean disposable CI host'}
@@ -33,9 +35,64 @@ try{
  $sid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value
  Checked icacls.exe @($root,'/inheritance:r','/grant:r','*S-1-5-18:(OI)(CI)F','*S-1-5-32-544:(OI)(CI)F',('*'+$sid+':(OI)(CI)F'),'*S-1-5-19:(OI)(CI)RX')
  $oldInstaller=Join-Path $root 'published-0.1.43.exe'
- Invoke-WebRequest https://github.com/aataat12/immich-clone/releases/download/v0.1.43-prototype/ImmichClone-0.1.43-prototype-x64-setup.exe -OutFile $oldInstaller
+ if($env:IMMICH_PRIOR_INSTALLER){
+  $oldInstaller=(Resolve-Path -LiteralPath $env:IMMICH_PRIOR_INSTALLER).Path
+ }else{
+  Invoke-WebRequest https://github.com/aataat12/immich-clone/releases/download/v0.1.43-prototype/ImmichClone-0.1.43-prototype-x64-setup.exe -OutFile $oldInstaller
+ }
  Assert ((Get-FileHash -LiteralPath $oldInstaller).Hash.ToLowerInvariant() -eq '96670e90c4abc55cdc07f480267c6f896b784a2a6c11de9f9f5333edb4158415') 'genuine published 0.1.43 installer checksum matches'
  $candidate=(Resolve-Path dist/ImmichClone-0.1.44-prototype-x64-setup.exe).Path
+ if($ReleaseAcceptance){
+  $leaf=$fixture+' fresh'
+  $app=Join-Path $env:ProgramFiles $leaf
+  $state=Join-Path $env:ProgramData $leaf
+  $offline=$state+'.offline'
+  $restored=$state+'.restored'
+  $paths=@(
+   @{Path=$app;Parent=$env:ProgramFiles;Leaf=$leaf},
+   @{Path=$state;Parent=$env:ProgramData;Leaf=$leaf},
+   @{Path=$offline;Parent=$env:ProgramData;Leaf=($leaf+'.offline')},
+   @{Path=$restored;Parent=$env:ProgramData;Leaf=($leaf+'.restored')}
+  )
+  foreach($entry in $paths){if(Test-Path -LiteralPath $entry.Path){throw 'Fixture paths must be new'}}
+  $cleanup+=$paths
+  $attempted=$true
+  Assert ((Install $candidate $state) -eq 0) 'exact release candidate installs into fresh application and data paths with spaces'
+  Assert (WaitVersion '0.1.44-prototype') 'fresh release service reports candidate version'
+  $service=Get-CimInstance Win32_Service -Filter "Name='ImmichClone'"
+  Assert ($service.StartName -eq 'NT AUTHORITY\LocalService' -and $service.StartMode -eq 'Auto') 'fresh install runs with restricted service account and automatic startup'
+  $appBinary=Join-Path $app 'immichclone.exe'
+  Assert ((Get-FileHash -LiteralPath $appBinary).Hash -eq (Get-FileHash -LiteralPath dist/immichclone.exe).Hash) 'fresh install executes exact packaged binary'
+  $env:IMMICH_TEST_STATE=$state
+  $env:IMMICH_EXPERIENCE_FIXTURE=Join-Path $root 'release-experience.json'
+  $env:IMMICH_EXPERIENCE_STAGE='prepare'
+  Checked node @('tests/release44-experience.cjs')
+  Restart-Service ImmichClone
+  Assert (WaitVersion '0.1.44-prototype') 'fresh candidate service restarts'
+  $env:IMMICH_EXPERIENCE_STAGE='recover'
+  Checked node @('tests/release44-experience.cjs')
+  $archive=Join-Path $root 'release-experience.zip'
+  Invoke-WebRequest http://127.0.0.1:2283/api/backup -WebSession (Login $state) -OutFile $archive
+  $recovery=Join-Path $root 'release-recovery.exe'
+  Copy-Item -LiteralPath $appBinary -Destination $recovery
+  $beforeOriginals=Snapshot (Join-Path $state 'originals')
+  $codeHash=(Get-FileHash -LiteralPath (Join-Path $state 'access-code.txt')).Hash
+  Uninstall
+  Assert ((Snapshot (Join-Path $state 'originals')) -ceq $beforeOriginals) 'fresh installation uninstall preserves all originals'
+  if([IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($state)) -cne [IO.Path]::GetFullPath($env:ProgramData) -or [IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($offline)) -cne [IO.Path]::GetFullPath($env:ProgramData)){throw 'Unavailable-source move target refused'}
+  Move-Item -LiteralPath $state -Destination $offline
+  Assert (!(Test-Path -LiteralPath $state)) 'original application state path is unavailable during independent restore'
+  Checked $recovery @('-mode','restore','-data',$restored,'-archive',$archive)
+  Checked $recovery @('-mode','verify','-data',$restored)
+  Assert ((Install $candidate $restored) -eq 0) 'exact candidate reinstalls on independently restored experience catalog'
+  Assert (WaitVersion '0.1.44-prototype') 'independently restored candidate reports correct build'
+  Assert ((Snapshot (Join-Path $restored 'originals')) -ceq $beforeOriginals -and (Get-FileHash -LiteralPath (Join-Path $restored 'access-code.txt')).Hash -eq $codeHash) 'independent restored install preserves every original and the access code'
+  $env:IMMICH_TEST_STATE=$restored
+  $env:IMMICH_EXPERIENCE_STAGE='verify'
+  Checked node @('tests/release44-experience.cjs')
+  Uninstall
+  $attempted=$false
+ }
  foreach($schema in @('1','2')){
   $leaf=$fixture+'-s'+$schema;$app=Join-Path $env:ProgramFiles $leaf;$state=Join-Path $env:ProgramData $leaf;$offline=$state+'.offline';$restored=$state+'.restored'
   foreach($entry in @(@{Path=$app;Parent=$env:ProgramFiles;Leaf=$leaf},@{Path=$state;Parent=$env:ProgramData;Leaf=$leaf},@{Path=$offline;Parent=$env:ProgramData;Leaf=($leaf+'.offline')},@{Path=$restored;Parent=$env:ProgramData;Leaf=($leaf+'.restored')})){if(Test-Path -LiteralPath $entry.Path){throw 'Fixture paths must be new'};$cleanup+=$entry}
@@ -100,6 +157,7 @@ try{
  }
 }finally{
  Remove-Item Env:IMMICH_INSTALL_TEST_FAILURE,Env:IMMICH_CURATION_INSTALL_TEST,Env:IMMICH_CURATION_ROOT,Env:IMMICH_CURATION_STAGE,Env:IMMICH_CURATION_EXPECTED -ErrorAction SilentlyContinue
+ if($ReleaseAcceptance){Remove-Item Env:IMMICH_TEST_STATE,Env:IMMICH_EXPERIENCE_FIXTURE,Env:IMMICH_EXPERIENCE_STAGE -ErrorAction SilentlyContinue}
  if($attempted -and $app -and (Test-Path -LiteralPath (Join-Path $app 'unins000.exe'))){Stop-Service ImmichClone -Force -ErrorAction SilentlyContinue;Uninstall}
  foreach($entry in $cleanup){if(Test-Path -LiteralPath $entry.Path){$resolved=[IO.Path]::GetFullPath($entry.Path);if([IO.Path]::GetDirectoryName($resolved) -cne [IO.Path]::GetFullPath($entry.Parent).TrimEnd('\') -or [IO.Path]::GetFileName($resolved) -cne $entry.Leaf){throw 'Fixture cleanup target refused'};Remove-Item -LiteralPath $resolved -Recurse -Force}}
 }
