@@ -62,13 +62,25 @@ async function main() {
       const result = await post(page, '/api/upload?name=' + name, Buffer.concat([png, Buffer.from(name)]));
       photos.push(result.asset);
     }
+    const [first, second, third, fourth] = photos;
+    await post(page, '/api/assets/' + first.id + '/manual-face', {box:[.1,.15,.2,.3],name:'Fixture & Person'});
+    await post(page, '/api/assets/' + first.id + '/manual-face', {box:[.5,.15,.2,.3],name:'FIXTURE & PERSON'});
+    await page.goto(origin + '/people');
+    const person = page.locator('#peopleDirectory .personCard').filter({hasText:/^Fixture & Person1 item$/i});
+    await person.waitFor();
+    await person.scrollIntoViewIfNeeded();
+    await page.waitForFunction(() => [...document.querySelectorAll('#peopleDirectory .personCard')]
+      .some(link => link.href.includes('person_all=') && /Fixture & Person/i.test(link.textContent)
+        && link.querySelector('img')?.naturalWidth));
+    await person.click();
+    await waitGallery(page, 1);
+    assert(await card(page, first.id).isVisible());
 
     await page.goto(origin + '/?' + new URLSearchParams({sort:'name', q:marker}));
     const compare = page.getByRole('button', {name:'Compare two photos'});
     const dialog = page.getByRole('dialog', {name:'Compare photos'});
     const select = photo => card(page, photo.id).locator('.organizationPick').check();
     const transforms = () => dialog.locator('img').evaluateAll(images => images.map(img => img.style.transform));
-    const [first, second, third, fourth] = photos;
     const last = photos.at(-1);
     await waitGallery(page, 62);
     await page.getByRole('checkbox', {name:'Select items'}).check();

@@ -1,3 +1,12 @@
+## November 8, 2026 — 0.1.45 release candidate
+
+The 0.1.45 candidate combines the People directory, photo comparison, and
+suggested albums. The release workflow requires the catalog and browser gates
+before testing the exact Setup. It checks upgrade from a published 0.1.44
+catalog with existing album membership and independent restore of newly saved
+suggested albums. See [release notes](release-notes-0.1.45.md) and
+[validation scope](validation-0.1.45.md).
+
 ## November 8, 2026 — Suggested event and trip albums
 
 C18 is implemented on the local suggested-albums branch. Suggestions use the

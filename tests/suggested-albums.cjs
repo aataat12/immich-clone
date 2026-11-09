@@ -46,8 +46,13 @@ async function fixtures(page) {
     '1987-06-03 11.00.00.jpg', '1987-06-04 18.00.00.jpg', 'UndatedSuggestionFixture.png'
   ];
   const assets = [];
+  // The release gate reuses the video fixture for other journeys in this catalog.
+  const videoMarker = Buffer.from('suggested-album-fixture', 'ascii');
+  const free = Buffer.alloc(8);
+  free.writeUInt32BE(free.length + videoMarker.length);
+  free.write('free', 4, 'ascii');
   for (const name of names) {
-    const data = name.endsWith('.mp4') ? mp4 : Buffer.concat([png, Buffer.from(name)]);
+    const data = name.endsWith('.mp4') ? Buffer.concat([mp4, free, videoMarker]) : Buffer.concat([png, Buffer.from(name)]);
     const response = await page.request.post(origin + '/api/upload?name=' + encodeURIComponent(name),
       {headers:{'X-Immich-Request':'1'}, data});
     assert(response.ok(), 'upload returned ' + response.status());

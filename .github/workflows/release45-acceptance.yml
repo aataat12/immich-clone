@@ -1,0 +1,109 @@
+name: Release 0.1.45 acceptance
+on:
+  push:
+    branches: ['work/release-0.1.45']
+    paths:
+      - '.github/workflows/release45-acceptance.yml'
+      - '.github/workflows/release45-installer.yml'
+      - 'cmd/**'
+      - 'internal/**'
+      - 'packaging/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'go.mod'
+      - 'go.sum'
+      - 'docs/release-notes-0.1.45.md'
+      - 'docs/validation-0.1.45.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: release45-acceptance-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  catalog:
+    runs-on: windows-2022
+    timeout-minutes: 25
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Verify canonical source and dependencies
+        shell: pwsh
+        run: |
+          ./scripts/Format-Gallery44.ps1
+          git diff --exit-code -- '*.go'
+          if ($LASTEXITCODE -ne 0) { throw 'Candidate source differs from canonical Go source' }
+          go mod download
+          if ($LASTEXITCODE -ne 0) { throw 'Module download failed' }
+          go mod verify
+          if ($LASTEXITCODE -ne 0) { throw 'Module verification failed' }
+      - name: Run combined 100,000-row gallery scale gate
+        shell: pwsh
+        env:
+          IMMICH_TEST_RELEASE44_SCALE: '1'
+        run: |
+          go test -mod=readonly -count=1 -v -timeout=10m -run '^TestRelease44CombinedCatalogScale$' ./internal/library
+          if ($LASTEXITCODE -ne 0) { throw 'Combined scale gate failed' }
+      - name: Run the retained regressions, vet and actual NTFS capacity checks
+        shell: pwsh
+        run: |
+          go test -mod=readonly -count=1 -timeout=10m ./internal/... ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'Candidate regression failed' }
+          go vet ./internal/... ./cmd/immichclone
+          if ($LASTEXITCODE -ne 0) { throw 'Vet failed' }
+          node tests/gallery-dates.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Date helper tests failed' }
+          $env:IMMICH_TEST_CURATION = '1'
+          ./scripts/Test-FullDisk.ps1
+
+  experience:
+    runs-on: windows-2022
+    timeout-minutes: 25
+    env:
+      CGO_ENABLED: '0'
+      GOAMD64: v1
+      GOTOOLCHAIN: local
+      IMMICH_TEST_CURATION: '1'
+      IMMICH_TEST_ORGANIZATION: '1'
+      IMMICH_TEST_BROWSE78: '1'
+      IMMICH_TEST_EXPERIENCE: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Exercise existing and new gallery workflows in Edge and recover on a separate state root
+        shell: pwsh
+        run: |
+          $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD='1'
+          npm install --prefix "$env:RUNNER_TEMP/release45-browser" --no-audit --no-fund playwright@1.62.1
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned browser tooling acquisition failed' }
+          $env:IMMICH_BROWSER_MODULE="$env:RUNNER_TEMP/release45-browser/node_modules/playwright"
+          $env:IMMICH_BROWSER_OUTPUT="$env:GITHUB_WORKSPACE/browser-evidence"
+          New-Item -ItemType Directory -Path $env:IMMICH_BROWSER_OUTPUT | Out-Null
+          $env:IMMICH_VIEWER_VIDEO=Join-Path $env:RUNNER_TEMP 'release45-video.mp4'
+          ./scripts/New-MediaFixture.ps1 -Destination $env:IMMICH_VIEWER_VIDEO
+          ./scripts/Test-Gallery44Foundation.ps1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: release45-synthetic-browser-evidence
+          path: browser-evidence/*.png
+          retention-days: 7
+          if-no-files-found: error
+
+  installer:
+    needs: [catalog, experience]
+    uses: ./.github/workflows/release45-installer.yml
