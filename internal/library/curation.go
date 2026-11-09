@@ -20,6 +20,7 @@ const albumMembersBucket = "album_members_v3"
 const maxCurationBytes = 64 << 20
 const maxAlbums = 1000
 const maxMemberships = 100000
+const maxInitialAlbumMembers = 500
 
 var curationBuckets = []string{assetOrganizationBucket, albumsBucket, albumMembersBucket}
 var ErrCurationInput = errors.New("invalid organization metadata")
@@ -59,18 +60,23 @@ type AlbumPage struct {
 	Count   int           `json:"count"`
 	Next    string        `json:"next,omitempty"`
 }
+type CurationAlbumTarget struct {
+	AssetID string    `json:"asset_id"`
+	Added   time.Time `json:"added"`
+}
 type CurationEdit struct {
-	Action      string    `json:"action"`
-	Expected    string    `json:"expected"`
-	AssetID     string    `json:"asset_id"`
-	Added       time.Time `json:"added"`
-	AlbumID     string    `json:"album_id"`
-	OtherID     string    `json:"other_id"`
-	Favorite    bool      `json:"favorite"`
-	Title       string    `json:"title"`
-	Caption     string    `json:"caption"`
-	Notes       string    `json:"notes"`
-	Description string    `json:"description"`
+	Action      string                `json:"action"`
+	Expected    string                `json:"expected"`
+	AssetID     string                `json:"asset_id"`
+	Added       time.Time             `json:"added"`
+	AlbumID     string                `json:"album_id"`
+	OtherID     string                `json:"other_id"`
+	Favorite    bool                  `json:"favorite"`
+	Title       string                `json:"title"`
+	Caption     string                `json:"caption"`
+	Notes       string                `json:"notes"`
+	Description string                `json:"description"`
+	Members     []CurationAlbumTarget `json:"members,omitempty"`
 }
 
 func curationText(s string, max int, multiline bool) bool {
@@ -305,6 +311,9 @@ func (s *Store) EditCuration(in CurationEdit) (any, error) {
 	if len(in.Expected) > 256 || !curationText(in.Title, 256, false) || !curationText(in.Caption, 16<<10, true) || !curationText(in.Notes, 64<<10, true) || !curationText(in.Description, 4096, true) {
 		return nil, ErrCurationInput
 	}
+	if len(in.Members) > maxInitialAlbumMembers || len(in.Members) != 0 && in.Action != "create_album" {
+		return nil, ErrCurationInput
+	}
 	s.gate.Lock()
 	defer s.gate.Unlock()
 	// As with recoverable deletion, do not start database growth on already
@@ -361,11 +370,23 @@ func editCurationTx(tx *bolt.Tx, in CurationEdit) (any, error) {
 				return ErrCurationInput
 			}
 			if e == nil {
-				if a.Title == in.Title && a.Description == in.Description && a.Revision == 1 {
-					out = a
-					return nil
+				if a.Title != in.Title || a.Description != in.Description || a.Revision != 1 || a.NextPosition != uint64(len(in.Members)) {
+					return ErrCurationConflict
 				}
-				return ErrCurationConflict
+				members, err := albumMembers(tx, a.ID)
+				if err != nil {
+					return err
+				}
+				if len(members) != len(in.Members) {
+					return ErrCurationConflict
+				}
+				for i, member := range members {
+					if member.AssetID != in.Members[i].AssetID || !member.Added.Equal(in.Members[i].Added) {
+						return ErrCurationConflict
+					}
+				}
+				out = a
+				return nil
 			}
 			if !errors.Is(e, os.ErrNotExist) {
 				return e
@@ -381,6 +402,9 @@ func editCurationTx(tx *bolt.Tx, in CurationEdit) (any, error) {
 				return e
 			}
 			a = Album{ID: in.AlbumID, Incarnation: incarnation, Revision: 1, Title: in.Title, Description: in.Description}
+			if e = writeInitialMembers(tx, &a, in.Members); e != nil {
+				return e
+			}
 			if e = curationWrite(tx, albumsBucket, a.ID, a); e != nil {
 				return e
 			}
@@ -516,6 +540,35 @@ func editCurationTx(tx *bolt.Tx, in CurationEdit) (any, error) {
 		return nil
 	}()
 	return out, e
+}
+
+func writeInitialMembers(tx *bolt.Tx, album *Album, targets []CurationAlbumTarget) error {
+	if tx.Bucket([]byte(albumMembersBucket)).Stats().KeyN+len(targets) > maxMemberships {
+		return ErrCurationLimit
+	}
+	seen := make(map[string]bool, len(targets))
+	for i, target := range targets {
+		if seen[target.AssetID] {
+			return ErrCurationInput
+		}
+		seen[target.AssetID] = true
+		asset, err := curationAsset(tx, target.AssetID)
+		if errors.Is(err, os.ErrNotExist) {
+			return ErrCurationConflict
+		}
+		if err != nil {
+			return err
+		}
+		if asset.Hidden || !asset.Added.Equal(target.Added) {
+			return ErrCurationConflict
+		}
+		member := AlbumMember{AlbumID: album.ID, AssetID: asset.ID, Added: asset.Added, Position: uint64(i)}
+		if err := curationWrite(tx, albumMembersBucket, album.ID+":"+asset.ID, member); err != nil {
+			return err
+		}
+	}
+	album.NextPosition = uint64(len(targets))
+	return nil
 }
 
 func deleteAssetCuration(tx *bolt.Tx, id string) error {

@@ -20,6 +20,19 @@
 .compareImage{position:relative;display:grid;place-items:center;height:48vh;min-height:160px;overflow:hidden;touch-action:none;background:#f0f3f7}
 .compareImage img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;max-width:none;max-height:none}
 @media(max-width:650px){#compareDialog{padding:12px}#comparePanes{gap:8px}.compareImage{height:32vh;min-height:110px}}
+#suggestionsDialog{width:min(940px,94vw);max-width:94vw}
+#suggestionList{display:grid;gap:8px}
+#suggestionList button{text-align:left}
+#suggestionStrip{position:relative;display:flex;gap:8px;overflow-x:auto;padding:6px;margin:8px 0}
+#suggestionStrip button{flex:0 0 116px;display:grid;gap:4px;padding:5px;text-align:left}
+#suggestionStrip button[aria-pressed=true]{outline:2px solid #245bc1;outline-offset:1px}
+#suggestionStrip button[data-included=true]{background:#e5edfc;border-color:#96b5eb}
+.suggestionThumb{position:relative;display:grid;place-items:center;height:66px;background:#e0e6ed;overflow:hidden}
+.suggestionThumb img{width:100%;height:66px;object-fit:cover}
+.suggestionThumb small{position:absolute;left:4px;bottom:4px;padding:0 4px;background:#202937;color:#fff}
+#suggestionPreview img,#suggestionPreview video{display:block;width:auto;max-width:100%;height:auto;max-height:30vh}
+#suggestionTitleInput{display:block;width:100%}
+#suggestionMediaName{overflow-wrap:anywhere}
 </style>
 <a class="ui-skip" href="#uiMain">Skip to content</a>
 <header><strong>Immich Clone <span>LOCAL LIBRARY · PROTOTYPE</span></strong><div style="text-align:right"><div id="version" class="muted">Version unavailable</div><div id="count" class="muted">Private by default</div></div></header>
@@ -30,7 +43,7 @@
 <details class="ui-help"><summary>Preview formats, original preservation &amp; import help</summary><div><div class="notice">Preview support: JPEG, PNG, BMP, GIF first frame and TIFF first page, up to 40 megapixels. BMP/GIF/TIFF encoded files are limited to 64 MiB for previews. TIFF variants may be unsupported; TIFF orientation/metadata and color-managed HDR rendering are not implemented. Other files are preserved and downloadable; their previews show an explicit unsupported status. JPEG previews honor EXIF orientation and read capture date/camera make/model. Missing capture dates use the import date. Capture time zones are not read from original metadata. The optional bundled CPU provider generates H.264/HEVC video and single/grid HEIC previews (up to 40 megapixels, 512 MiB worker commitment limit and 30-second deadline). High-bit-depth/HDR, RAW and broader HEIF variants remain unsupported. HEIC/MOV viewers show the derived preview only. Hide from library removes a card from the main view while keeping its original; use Hidden items to restore it. Duplicate uploads do not automatically unhide items. Preview failure leaves the original downloadable; use Retry preview after resolving a failure. MP4 playback uses your browser’s codecs. Folder import copies selected files into managed storage and leaves the source untouched. Relative folder paths are retained in the catalog and JSON export; duplicates keep each relative source alias. Online-only files may download when read; select only a small, available-offline test folder.</div></div></details><div class="tools"><label>Show <select id="visibility"><option value="library">Library</option><option value="hidden">Hidden items</option></select></label><label>Media <select id="mediaFilter"><option value="">All files</option><option value="photo">Photos</option><option value="video">Videos</option></select></label><label>Sort <select id="sort"><option value="manual" disabled>Album manual order</option><option value="capture">Date taken (fallback: date imported)</option><option value="upload">Date imported</option><option value="name">Filename (case-insensitive)</option></select></label></div><details id="combinedFilters" class="ui-help"><summary>People, tags, dates &amp; sources</summary><p>Filters combine. Enter one exact person name or tag per line. Any matches one listed value; All requires every value; Exclude removes any match.</p><form id="filterForm"><div class="filterColumns"><label>People — Any<textarea id="person_any" rows="2" aria-label="People Any" placeholder="One per line"></textarea></label><label>People — All<textarea id="person_all" rows="2" aria-label="People All" placeholder="One per line"></textarea></label><label>People — Exclude<textarea id="person_exclude" rows="2" aria-label="People Exclude" placeholder="One per line"></textarea></label><label>Tags — Any<textarea id="tag_any" rows="2" aria-label="Tags Any" placeholder="One per line"></textarea></label><label>Tags — All<textarea id="tag_all" rows="2" aria-label="Tags All" placeholder="One per line"></textarea></label><label>Tags — Exclude<textarea id="tag_exclude" rows="2" aria-label="Tags Exclude" placeholder="One per line"></textarea></label></div><div class="tools"><label>Date <select id="dateBasis"><option value="capture">Date taken (as recorded)</option><option value="upload">Date imported (this browser's time zone)</option></select></label><label>From <input id="dateFrom" type="date" min="0001-01-01" max="9999-12-31"></label><label>Through <input id="dateThrough" type="date" min="0001-01-01" max="9999-12-31"></label><label><input id="noCapture" type="checkbox"> Missing date taken</label><button type="submit">Apply filters</button></div><p id="filterError" role="status"></p></form><div class="tools"><button id="browseSources" class="secondary">Browse recorded sources</button><button id="browseCalendar" class="secondary">Calendar</button><button id="clearAllFilters" class="secondary">Clear all filters</button></div><p>Folder browsing uses recorded relative paths. Import galleries contain accepted originals, including duplicates; incomplete imports show only accepted items.</p></details><div id="activeFilters" class="tools" aria-label="Active filters"></div>
 <dialog id="sourcesDialog" aria-labelledby="sourcesTitle"><h2 id="sourcesTitle">Recorded sources</h2><p id="sourceScopeLabel"></p><nav id="sourceBreadcrumbs" class="tools" aria-label="Recorded folder path"></nav><label>Folder scope <select id="sourceMode"><option value="">Folder and subfolders</option><option value="direct">This folder only</option></select></label><div class="tools"><button id="sourceAll" class="secondary">All folders</button><button id="sourceRoot" class="secondary">Any recorded folder</button><button id="sourceMissing" class="secondary">No recorded folder</button><button id="sourceParent" class="secondary">Parent folder</button></div><div id="sourceFolders" class="tools"></div><button id="sourceMore" class="secondary" hidden>More folders</button><h3>Recorded import batches</h3><p>Gallery counts are unique retained items matching your filters. File outcomes describe the whole recorded batch; accepted includes successful copies later deleted.</p><button id="batchAll" class="secondary">All import batches</button><div id="sourceBatches" class="tools"></div><p id="sourcesState" role="status"></p><button id="closeSources" class="secondary">Close</button></dialog>
 <dialog id="calendarDialog" aria-labelledby="calendarTitle"><h2 id="calendarTitle">Jump to a date</h2><p>Counts use your other filters. Choosing a date replaces the current date range.</p><div class="tools"><label>Date <select id="calendarBasis"><option value="capture">Date taken (as recorded)</option><option value="upload">Date imported (this browser's time zone)</option></select></label><label>Year <select id="calendarYear"><option value="">Choose year</option></select></label><label>Month <select id="calendarMonth"><option value="">Whole year</option></select></label><label>Day <select id="calendarDay"><option value="">Whole month</option></select></label></div><p id="calendarState" role="status"></p><div class="tools"><button id="calendarGo" disabled>Open gallery</button><button id="calendarMissing" class="secondary">Missing date taken</button><button id="closeCalendar" class="secondary">Close</button></div></dialog>
-<section id="organizationTools" aria-label="Organization"><div class="tools"><label>Favorites <select id="favoriteScope"><option value="">All</option><option value="true">Favorites</option><option value="false">Not favorites</option></select></label><label>Album <select id="albumScope"><option value="">All media</option></select></label><button id="manageAlbums" class="secondary">Albums</button><button id="newAlbum" class="secondary">Create album</button><button id="editAlbum" class="secondary" hidden>Edit current album</button></div><div id="albumScopeInfo"></div><div class="tools"><label><input id="selectionMode" type="checkbox"> Select items</label><button id="selectOrganizationPage" class="secondary">Select this page</button><button id="clearOrganizationSelection" class="secondary">Clear selection</button><span id="organizationSelected" role="status">0 selected (maximum 500)</span><button id="compareSelected" type="button" class="secondary" aria-describedby="compareHint" disabled>Compare two photos</button><span id="compareHint" class="muted" hidden>Select exactly two photos to compare.</span></div><div class="tools"><label>Action <select id="batchAction"><option value="favorite_on">Set favorite</option><option value="favorite_off">Remove favorite</option><option value="add_tag">Add custom tag</option><option value="remove_tag">Remove custom tag</option><option value="hide">Hide from library</option><option value="add_album">Add to album</option><option value="remove_album">Remove from album</option></select></label><input id="batchTag" aria-label="Custom tag" maxlength="64" hidden><select id="batchAlbum" aria-label="Target album" hidden><option value="">Choose target album</option></select><button id="reviewOrganization" disabled>Review exact targets</button><button id="operationHistory" class="secondary">Recent operations / recovery</button></div><details><summary>Selected items — remove individual targets</summary><div id="organizationSelectedList" style="max-height:240px;overflow:auto;overflow-wrap:anywhere"></div></details><p class="muted">Selection spans pages in these results. Changing filters or sort clears it. Reload clears temporary selections; reviewed operations remain in Recent operations. Album removal keeps media files.</p></section>
+<section id="organizationTools" aria-label="Organization"><div class="tools"><label>Favorites <select id="favoriteScope"><option value="">All</option><option value="true">Favorites</option><option value="false">Not favorites</option></select></label><label>Album <select id="albumScope"><option value="">All media</option></select></label><button id="manageAlbums" class="secondary">Albums</button><button id="openSuggestions" class="secondary">Suggested albums</button><button id="newAlbum" class="secondary">Create album</button><button id="editAlbum" class="secondary" hidden>Edit current album</button></div><div id="albumScopeInfo"></div><div class="tools"><label><input id="selectionMode" type="checkbox"> Select items</label><button id="selectOrganizationPage" class="secondary">Select this page</button><button id="clearOrganizationSelection" class="secondary">Clear selection</button><span id="organizationSelected" role="status">0 selected (maximum 500)</span><button id="compareSelected" type="button" class="secondary" aria-describedby="compareHint" disabled>Compare two photos</button><span id="compareHint" class="muted" hidden>Select exactly two photos to compare.</span></div><div class="tools"><label>Action <select id="batchAction"><option value="favorite_on">Set favorite</option><option value="favorite_off">Remove favorite</option><option value="add_tag">Add custom tag</option><option value="remove_tag">Remove custom tag</option><option value="hide">Hide from library</option><option value="add_album">Add to album</option><option value="remove_album">Remove from album</option></select></label><input id="batchTag" aria-label="Custom tag" maxlength="64" hidden><select id="batchAlbum" aria-label="Target album" hidden><option value="">Choose target album</option></select><button id="reviewOrganization" disabled>Review exact targets</button><button id="operationHistory" class="secondary">Recent operations / recovery</button></div><details><summary>Selected items — remove individual targets</summary><div id="organizationSelectedList" style="max-height:240px;overflow:auto;overflow-wrap:anywhere"></div></details><p class="muted">Selection spans pages in these results. Changing filters or sort clears it. Reload clears temporary selections; reviewed operations remain in Recent operations. Album removal keeps media files.</p></section>
 <dialog id="organizationPreview" aria-labelledby="organizationPreviewTitle"><h2 id="organizationPreviewTitle"></h2><p>Only the listed items are targeted. Saved chunks remain saved if you stop or close the browser. Resume requires an explicit action here.</p><details><summary>Exact targets and outcomes</summary><pre id="organizationPreviewList" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;overflow:auto"></pre></details><p id="organizationProgress" role="status"></p><div class="tools"><button id="continueOrganization">Apply to listed targets</button><button id="stopOrganization" class="secondary" disabled>Stop after current chunk</button><button id="cancelOrganization" class="secondary" disabled>Cancel remaining targets</button><button id="retryOrganization" class="secondary" disabled>Review unresolved targets again</button><button id="closeOrganization" class="secondary">Close</button></div></dialog>
 <dialog id="operationHistoryDialog"><h2>Recent organization operations</h2><p>Operations can be reopened for 30 days, with at most 64 receipts. Expired history is cleared when a new operation is reviewed; existing backups keep their saved history. Old completed receipts may retire sooner at capacity. Unfinished work stays paused after restart or restore.</p><div id="operationList" class="tools"></div><p id="operationHistoryState" role="status"></p><button id="closeOperationHistory" class="secondary">Close</button></dialog>
 <dialog id="albumManager"><h2>Manual albums</h2><p>Albums organize references to your media. Empty albums and hidden memberships are kept.</p><div id="albumList" class="tools"></div><button id="closeAlbumManager" class="secondary">Close</button></dialog>
@@ -49,6 +62,40 @@
 <p class="muted">Drag either zoomed photo or use the arrow keys to pan both. Press + or − to zoom and 0 to fit.</p>
 <p id="compareStatus" role="status"></p>
 <div id="comparePanes"></div>
+</dialog>
+<dialog id="suggestionsDialog" aria-labelledby="suggestionsTitle">
+<h2 id="suggestionsTitle">Suggested albums</h2>
+<div class="tools"><button id="closeSuggestions" class="secondary" autofocus>Close</button></div>
+<p id="suggestionsStatus" role="status"></p>
+<section id="suggestionsBrowse">
+<p>Suggestions use capture times across the visible library. Possible trips are multi-day groups.</p>
+<label for="suggestionsKind">Group by</label>
+<select id="suggestionsKind"><option value="event">Events</option><option value="trip">Possible trips</option></select>
+<p id="suggestionUndated" class="muted"></p>
+<div id="suggestionList"></div>
+<div class="tools">
+<button id="suggestionsPrev" class="secondary" disabled>Newer suggestions</button>
+<button id="suggestionsNext" class="secondary" disabled>Older suggestions</button>
+<button id="refreshSuggestions" class="secondary">Refresh suggestions</button>
+</div>
+</section>
+<section id="suggestionReview" hidden>
+<div class="tools">
+<button id="backToSuggestions" class="secondary">Back to suggestions</button>
+<button id="suggestionJumpStart" class="secondary">Review start</button>
+<button id="suggestionJumpEnd" class="secondary">Review end</button>
+</div>
+<p id="suggestionRange" aria-live="polite"></p>
+<div id="suggestionStrip" role="group" aria-label="Media in capture order"></div>
+<div id="suggestionPreview"></div>
+<p id="suggestionMediaName"></p>
+<p id="suggestionMediaDate" class="muted"></p>
+<button id="toggleSuggestionItem" class="secondary">Include in album</button>
+<form id="suggestionSaveForm">
+<label>Album title<input id="suggestionTitleInput" maxlength="256" required></label>
+<div class="tools"><button id="saveSuggestion" type="submit">Save as album</button></div>
+</form>
+</section>
 </dialog>
 <dialog id="captionEditor" aria-labelledby="captionEditorTitle"><h2 id="captionEditorTitle">Title, caption &amp; notes</h2><p id="captionAssetName"></p><form id="captionForm"><label>Title<input id="captionTitle" maxlength="256"></label><label>Caption<textarea id="captionText" maxlength="16384" rows="4"></textarea></label><label>Notes<textarea id="captionNotes" maxlength="65536" rows="5"></textarea></label><p>Text stays in the catalog and backups. Original files stay unchanged.</p><p id="captionError" role="status"></p><div class="tools"><button id="saveCaption" type="submit" disabled>Save text</button><button id="reloadCaption" type="button" class="secondary">Reload saved text (replace draft)</button><button id="cancelCaption" type="button" class="secondary">Cancel</button><button id="discardCaption" type="button" class="secondary" hidden>Discard changes and close</button></div></form></dialog><dialog id="managedLocation" aria-labelledby="locationTitle"><h2 id="locationTitle">Managed file location</h2><p id="locationName"></p><p>This is the application-managed copy, named by its content hash. Original source locations are not tracked as full paths. Use Download original to save a copy with its original filename.</p><label for="locationPath">File path on this PC</label><input id="locationPath" readonly style="width:100%;min-width:0"><p id="locationStatus" role="status"></p><button id="copyLocation">Copy path</button> <button id="closeLocation" class="secondary">Close</button></dialog>
 <dialog id="deleteDialog" aria-labelledby="deleteTitle"><h2 id="deleteTitle">Permanently delete managed copy?</h2><p id="deleteName"></p><p>This removes the managed original, previews, faces, names, tags and AI results for this item and all its relative source aliases. External source files, import receipts and existing backups remain. Deleted import receipts cannot resume copying this item; start a new import to copy it again.</p><p>This cannot be undone in the gallery. Recovery requires an earlier backup or a new import. Once accepted, interrupted cleanup resumes at startup or through Retry cleanup. New backups are blocked until cleanup finishes.</p><label for="deleteConfirm">Type DELETE to confirm</label><input id="deleteConfirm" autocomplete="off" style="max-width:100%"><p id="deleteError" class="error" role="status"></p><button id="confirmDelete" disabled>Delete permanently</button> <button id="cancelDelete" class="secondary">Cancel</button></dialog>
@@ -464,6 +511,248 @@ function decorateOrganizationCard(a,card,details){
 function manualAlbumReorderAllowed(){return galleryContext.query.get('album')&&galleryContext.query.get('sort')==='manual'&&galleryContext.query.get('visibility')==='library'&&![...galleryContext.query].some(([k,v])=>v&&!['album','sort','visibility'].includes(k)&&!(k==='media'&&v==='all'));}
 async function moveAlbumMember(a,direction){if(busy)return;busy=true;organizationSelectionControls();try{const p=new URLSearchParams(galleryContext.query);p.set('asset',a.id);p.set('snapshot',galleryContext.snapshot);const n=await(await request('/api/gallery/neighbors?'+p)).json();if(!n[direction]){$('status').textContent='Already at this end of the album.';return;}await editCurrentAlbum('move_member',{asset_id:a.id,other_id:n[direction].id},true);}catch(e){$('status').textContent=e.message;}finally{busy=false;organizationSelectionControls();}}
 async function editCurrentAlbum(action,fields={},held=false){if((busy&&!held)||!currentAlbum||currentAlbum.id!==galleryContext.query.get("album"))return;busy=true;organizationSelectionControls();try{await request('/api/metadata/edit',{method:'POST',body:JSON.stringify({action,album_id:currentAlbum.id,expected:currentAlbum.token,...fields})});firstPage();await load('Album organization saved. Media preserved.');}catch(e){$('status').textContent=e.message;}finally{busy=false;organizationSelectionControls();}}
+let suggestionDraft = null, suggestionReading = false, suggestionSaving = false;
+let suggestionAfter = '', suggestionNext = '', suggestionHistory = [];
+
+function suggestionTime(stamp) {
+ return stamp.replace('T', ' ').slice(0, 16);
+}
+
+function suggestionControls() {
+ $('suggestionsKind').disabled = suggestionReading;
+ $('suggestionsPrev').disabled = suggestionReading || !suggestionHistory.length;
+ $('suggestionsNext').disabled = suggestionReading || !suggestionNext;
+ $('refreshSuggestions').disabled = suggestionReading;
+ for (const button of $('suggestionList').querySelectorAll('button')) button.disabled = suggestionReading;
+ $('closeSuggestions').disabled = suggestionSaving;
+ $('backToSuggestions').disabled = suggestionSaving;
+ $('suggestionTitleInput').disabled = suggestionSaving;
+ $('toggleSuggestionItem').disabled = suggestionSaving;
+ $('saveSuggestion').disabled = suggestionSaving || !suggestionDraft?.included.size;
+}
+
+async function readSuggestions(params, render) {
+ if (suggestionReading) return;
+ suggestionReading = true;
+ suggestionControls();
+ $('suggestionsStatus').textContent = 'Looking for dates in the library…';
+ try {
+  params.set('kind', $('suggestionsKind').value);
+  const result = await (await request('/api/album-suggestions?' + params)).json();
+  if ($('suggestionsDialog').open) {
+   $('suggestionsStatus').textContent = '';
+   render(result);
+  }
+ } catch (e) {
+  if ($('suggestionsDialog').open) $('suggestionsStatus').textContent = e.message;
+ } finally {
+  suggestionReading = false;
+  suggestionControls();
+ }
+}
+
+function loadSuggestions(after = '', history = []) {
+ return readSuggestions(new URLSearchParams(after ? {after} : {}), result => {
+  suggestionAfter = after;
+  suggestionHistory = history;
+  suggestionNext = result.next || '';
+  $('suggestionUndated').textContent = result.undated
+   ? result.undated + ' visible items have no usable capture time and are outside these suggestions.' : '';
+  const list = $('suggestionList');
+  list.replaceChildren();
+  for (const item of result.suggestions) {
+   const button = document.createElement('button');
+   button.className = 'secondary';
+   button.textContent = suggestionTime(item.start) + ' to ' + suggestionTime(item.end) + ' · ' + item.count + ' items';
+   button.onclick = () => reviewSuggestion(item.id);
+   list.append(button);
+  }
+  if (!result.suggestions.length) list.textContent = 'No suggestions for this grouping yet.';
+ });
+}
+
+function releaseSuggestionPreview() {
+ const preview = $('suggestionPreview');
+ const video = preview.querySelector('video');
+ if (video) {
+  video.pause();
+  video.removeAttribute('src');
+  video.load();
+ }
+ preview.replaceChildren();
+}
+
+function focusSuggestionItem(index, focus = false) {
+ const draft = suggestionDraft;
+ if (!draft?.items[index]) return;
+ draft.current = index;
+ releaseSuggestionPreview();
+ const item = draft.items[index], {src} = viewerRendition(item);
+ const preview = $('suggestionPreview');
+ if (src) {
+  const media = document.createElement(item.mime === 'video/mp4' ? 'video' : 'img');
+  if (media.tagName === 'VIDEO') {
+   media.controls = true;
+   media.preload = 'metadata';
+  } else {
+   media.alt = item.name;
+  }
+  media.onerror = () => { if (media.parentElement === preview) preview.textContent = 'Preview unavailable.'; };
+  media.src = src;
+  preview.append(media);
+ } else {
+  preview.textContent = 'Preview unavailable.';
+ }
+ $('suggestionMediaName').textContent = item.name;
+ $('suggestionMediaDate').textContent = suggestionTime(item.capture)
+  + (item.basis === 'filename' ? ' · From filename' : ' · From embedded capture time')
+  + (item.mime.startsWith('video/') ? ' · Video' : ' · Photo');
+ renderSuggestionMembership();
+ const strip = $('suggestionStrip'), button = draft.tiles[index];
+ if (button.offsetLeft < strip.scrollLeft || button.offsetLeft + button.offsetWidth > strip.scrollLeft + strip.clientWidth) {
+  strip.scrollLeft = button.offsetLeft - (strip.clientWidth - button.offsetWidth) / 2;
+ }
+ if (focus) button.focus({preventScroll:true});
+}
+
+function renderSuggestionMembership() {
+ const draft = suggestionDraft;
+ const ordered = [...draft.included].sort((a, b) => a - b);
+ const first = ordered[0], last = ordered.at(-1);
+ const count = ordered.length;
+ draft.tiles.forEach((button, i) => {
+  const included = draft.included.has(i), active = i === draft.current;
+  const label = i === first && i === last ? 'Only included item' : i === first ? 'Start' : i === last ? 'End'
+   : i < (first ?? draft.start) ? 'Before' : i > (last ?? draft.end - 1) ? 'After' : included ? 'Included' : 'Excluded';
+  button.dataset.included = included;
+  button.setAttribute('aria-pressed', active);
+  button.setAttribute('aria-label', draft.items[i].name + ' · ' + suggestionTime(draft.items[i].capture) + ' · ' + label);
+  button.tabIndex = active ? 0 : -1;
+  button.lastElementChild.textContent = label;
+ });
+ $('suggestionJumpStart').onclick = () => focusSuggestionItem(first ?? draft.start, true);
+ $('suggestionJumpEnd').onclick = () => focusSuggestionItem(last ?? draft.end - 1, true);
+ $('suggestionRange').textContent = count ? count + ' selected · ' + suggestionTime(draft.items[first].capture)
+  + (first === last ? '' : ' to ' + suggestionTime(draft.items[last].capture)) : 'No items selected.';
+ $('toggleSuggestionItem').textContent = draft.included.has(draft.current) ? 'Exclude from album' : 'Include in album';
+ suggestionControls();
+}
+
+function reviewSuggestion(id) {
+ return readSuggestions(new URLSearchParams({id}), result => {
+  const included = new Set();
+  for (let i = result.start; i < result.end; i++) included.add(i);
+  const draft = suggestionDraft = {...result, included, albumID: newAlbumID(), tiles: []};
+  const strip = $('suggestionStrip');
+  strip.replaceChildren();
+  result.items.forEach((item, index) => {
+   const button = document.createElement('button');
+   button.type = 'button';
+   button.className = 'secondary';
+   const thumb = document.createElement('span');
+   thumb.className = 'suggestionThumb';
+   const type = item.mime.startsWith('video/') ? 'Video' : 'Photo';
+   thumb.textContent = type;
+   if (item.preview === 'ready') {
+    const image = new Image();
+    image.alt = '';
+    image.loading = 'lazy';
+    image.onerror = () => { thumb.textContent = type; };
+    image.src = '/api/assets/' + item.id + '/preview';
+    thumb.replaceChildren(image);
+    if (type === 'Video') {
+     const badge = document.createElement('small');
+     badge.textContent = 'Video';
+     thumb.append(badge);
+    }
+   }
+   const stamp = document.createElement('span'), label = document.createElement('span');
+   stamp.textContent = suggestionTime(item.capture);
+   button.append(thumb, stamp, label);
+   button.onclick = () => focusSuggestionItem(index, true);
+   draft.tiles.push(button);
+   strip.append(button);
+  });
+  $('suggestionTitleInput').value = ($('suggestionsKind').value === 'trip' ? 'Possible trip · ' : 'Event · ')
+   + result.items[result.start].capture.slice(0, 10);
+  $('suggestionsBrowse').hidden = true;
+  $('suggestionReview').hidden = false;
+  focusSuggestionItem(result.start, true);
+ });
+}
+
+function leaveSuggestionReview() {
+ releaseSuggestionPreview();
+ suggestionDraft = null;
+ $('suggestionStrip').replaceChildren();
+ $('suggestionReview').hidden = true;
+ $('suggestionsBrowse').hidden = false;
+ $('suggestionsStatus').textContent = '';
+}
+
+$('openSuggestions').onclick = () => {
+ if (busy || suggestionReading) return;
+ $('suggestionsDialog').showModal();
+ loadSuggestions();
+};
+$('closeSuggestions').onclick = () => $('suggestionsDialog').close();
+$('suggestionsDialog').addEventListener('cancel', event => { if (suggestionSaving) event.preventDefault(); });
+$('suggestionsDialog').addEventListener('close', leaveSuggestionReview);
+$('suggestionsKind').onchange = () => {
+ suggestionAfter = suggestionNext = '';
+ suggestionHistory = [];
+ $('suggestionList').replaceChildren();
+ $('suggestionUndated').textContent = '';
+ loadSuggestions();
+};
+$('refreshSuggestions').onclick = () => loadSuggestions();
+$('suggestionsPrev').onclick = () => loadSuggestions(suggestionHistory.at(-1), suggestionHistory.slice(0, -1));
+$('suggestionsNext').onclick = () => loadSuggestions(suggestionNext, [...suggestionHistory, suggestionAfter]);
+$('backToSuggestions').onclick = () => { leaveSuggestionReview(); $('suggestionsKind').focus(); };
+$('toggleSuggestionItem').onclick = () => {
+ const draft = suggestionDraft;
+ if (draft.included.has(draft.current)) draft.included.delete(draft.current);
+ else draft.included.add(draft.current);
+ renderSuggestionMembership();
+};
+$('suggestionStrip').onkeydown = event => {
+ const offset = {ArrowLeft:-1, ArrowRight:1}[event.key];
+ if (!offset) return;
+ event.preventDefault();
+ focusSuggestionItem(suggestionDraft.current + offset, true);
+};
+$('suggestionSaveForm').onsubmit = async event => {
+ event.preventDefault();
+ const draft = suggestionDraft;
+ if (busy || !draft?.included.size) return;
+ const title = $('suggestionTitleInput').value.trim();
+ if (!title) {
+  $('suggestionsStatus').textContent = 'Enter an album title.';
+  return;
+ }
+ const members = draft.items.filter((_, i) => draft.included.has(i)).map(a => ({asset_id:a.id, added:a.added}));
+ suggestionSaving = busy = true;
+ suggestionControls();
+ $('suggestionsStatus').textContent = 'Saving album…';
+ const generation = galleryContext.generation;
+ let album;
+ try {
+  album = await (await request('/api/metadata/edit', {method:'POST', signal:AbortSignal.timeout(15000),
+   body:JSON.stringify({action:'create_album', album_id:draft.albumID, title, members})})).json();
+ } catch (e) {
+  $('suggestionsStatus').textContent = e.message + ' You can retry the save or reopen the suggestion to refresh.';
+ } finally {
+  suggestionSaving = busy = false;
+  suggestionControls();
+ }
+ if (!album) return;
+ $('suggestionsDialog').close();
+ if (generation === galleryContext.generation) {
+  const filters = Object.fromEntries(galleryFilterKeys.map(key => [key, '']));
+  changeGallery({...filters, album:album.id, sort:'manual', visibility:'library'});
+ }
+};
+
 async function refreshAlbumControls(sequence=null){
  const rows=[];let after='';do{const result=await(await request('/api/metadata/album-summaries?limit=100&after='+encodeURIComponent(after))).json();rows.push(...result.albums);after=result.next||'';}while(after);
  if(sequence!==null&&sequence!==loadSequence)return rows;const scope=galleryContext.query.get('album')||'',target=$('batchAlbum').value;$('albumScope').replaceChildren(new Option('All media',''));$('batchAlbum').replaceChildren(new Option('Choose target album',''));
@@ -477,9 +766,10 @@ $('favoriteScope').onchange=()=>changeGallery({favorite:$('favoriteScope').value
 $('albumScope').onchange=()=>changeGallery({album:$('albumScope').value,sort:$('albumScope').value?'manual':'capture'});
 $('manageAlbums').onclick=async()=>{try{const rows=await refreshAlbumControls();$('albumList').replaceChildren();for(const row of rows){const button=document.createElement('button');button.className='secondary';button.textContent=row.album.title+' · '+row.visible+' visible · '+row.hidden+' hidden';button.onclick=()=>{$('albumManager').close();changeGallery({album:row.album.id,sort:'manual'});};$('albumList').append(button);}$('albumManager').showModal();}catch(e){$('status').textContent=e.message;}};
 $('closeAlbumManager').onclick=()=>$('albumManager').close();
+function newAlbumID(){return [...crypto.getRandomValues(new Uint8Array(32))].map(x=>x.toString(16).padStart(2,'0')).join('');}
 function openAlbumEditor(album){albumDraft=album;$('albumEditorTitle').textContent=album?'Edit album':'Create album';$('albumTitleInput').value=album?.title||'';$('albumDescriptionInput').value=album?.description||'';$('deleteAlbum').hidden=!album;$('albumDeleteConfirm').checked=false;$('albumEditorError').textContent='';$('albumEditor').showModal();}
 $('newAlbum').onclick=()=>openAlbumEditor(null);$('editAlbum').onclick=()=>openAlbumEditor(currentAlbum);$('cancelAlbumEdit').onclick=()=>$('albumEditor').close();
-$('saveAlbum').onclick=async()=>{if(busy)return;busy=true;try{if(!albumDraft)albumDraft={id:[...crypto.getRandomValues(new Uint8Array(32))].map(x=>x.toString(16).padStart(2,'0')).join(''),creating:true};const a=await(await request('/api/metadata/edit',{method:'POST',body:JSON.stringify({action:albumDraft.creating?'create_album':'update_album',album_id:albumDraft.id,expected:albumDraft.token||'',title:$('albumTitleInput').value,description:$('albumDescriptionInput').value})})).json();$('albumEditor').close();if($('albumManager').open)$('albumManager').close();busy=false;changeGallery({album:a.id,sort:'manual'});}catch(e){$('albumEditorError').textContent=e.message;}finally{busy=false;organizationSelectionControls();}};
+$('saveAlbum').onclick=async()=>{if(busy)return;busy=true;try{if(!albumDraft)albumDraft={id:newAlbumID(),creating:true};const a=await(await request('/api/metadata/edit',{method:'POST',body:JSON.stringify({action:albumDraft.creating?'create_album':'update_album',album_id:albumDraft.id,expected:albumDraft.token||'',title:$('albumTitleInput').value,description:$('albumDescriptionInput').value})})).json();$('albumEditor').close();if($('albumManager').open)$('albumManager').close();busy=false;changeGallery({album:a.id,sort:'manual'});}catch(e){$('albumEditorError').textContent=e.message;}finally{busy=false;organizationSelectionControls();}};
 $('deleteAlbum').onclick=async()=>{if(busy||!albumDraft||!$('albumDeleteConfirm').checked){$('albumEditorError').textContent='Check the album-removal confirmation first. Media files will be kept.';return;}busy=true;try{await request('/api/metadata/edit',{method:'POST',body:JSON.stringify({action:'delete_album',album_id:albumDraft.id,expected:albumDraft.token})});$('albumEditor').close();busy=false;changeGallery({album:'',sort:'capture'});}catch(e){$('albumEditorError').textContent=e.message;}finally{busy=false;organizationSelectionControls();}};
 
 // Combined filters preserve the same query for cards, selection and viewer navigation.

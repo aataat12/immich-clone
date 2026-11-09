@@ -272,7 +272,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if r.Method == http.MethodGet && (r.URL.Path == "/api/assets" || r.URL.Path == "/api/export" || r.URL.Path == "/api/backup") {
+	if r.Method == http.MethodGet && (r.URL.Path == "/api/assets" || r.URL.Path == "/api/export" || r.URL.Path == "/api/backup" || r.URL.Path == "/api/album-suggestions") {
 		select {
 		case s.snapshotSlot <- struct{}{}:
 			defer func() { <-s.snapshotSlot }()
