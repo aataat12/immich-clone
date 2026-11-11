@@ -7,10 +7,10 @@ $candidateVersion = '0.1.43'
 $rollbackProbeVersion = '0.1.44'
 $expectedPriorHash = '18dbc670ce4d46809e2a90d5831d17b31f633050907290082f1e793294df8b87'
 if ($Release46) {
-    $priorVersion = '0.1.45'
+    $priorVersion = '0.1.44'
     $candidateVersion = '0.1.46'
     $rollbackProbeVersion = $candidateVersion
-    $expectedPriorHash = '801819b7520fe2709893ef71bd18ad738df501308296a109bd27ae7de7a90eaa'
+    $expectedPriorHash = '58bea76f94a13e501beb91b2ed8844840255c56c0d506f0634e3a9e99df10da9'
 } elseif ($Release45) {
     $priorVersion = '0.1.44'
     $candidateVersion = '0.1.45'

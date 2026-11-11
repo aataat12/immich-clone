@@ -40,11 +40,11 @@ jobs:
           Invoke-WebRequest 'https://github.com/aataat12/immich-clone/releases/download/v0.1.43-prototype/ImmichClone-0.1.43-prototype-x64-setup.exe' -OutFile $old
           if ((Get-FileHash -LiteralPath $old).Hash.ToLowerInvariant() -ne '96670e90c4abc55cdc07f480267c6f896b784a2a6c11de9f9f5333edb4158415') { throw 'Published predecessor checksum mismatch' }
           "IMMICH_LEGACY_INSTALLER=$old" >> $env:GITHUB_ENV
-          $tag = git ls-remote --tags origin refs/tags/v0.1.45-prototype
-          if (!$tag -or $tag.Split()[0] -ne '188eacbebb7d7ba51601a9caf757b0a3423057f') { throw 'Published 0.1.45 tag mismatch' }
-          $prior = Join-Path $env:RUNNER_TEMP 'ImmichClone-0.1.45-prototype-x64-setup.exe'
-          Invoke-WebRequest 'https://github.com/aataat12/immich-clone/releases/download/v0.1.45-prototype/ImmichClone-0.1.45-prototype-x64-setup.exe' -OutFile $prior
-          if ((Get-FileHash -LiteralPath $prior).Hash.ToLowerInvariant() -ne '801819b7520fe2709893ef71bd18ad738df501308296a109bd27ae7de7a90eaa') { throw 'Published 0.1.45 checksum mismatch' }
+          $tag = git ls-remote --tags origin refs/tags/v0.1.44-prototype
+          if (!$tag -or $tag.Split()[0] -ne '4e337fd66a022e9026bcf01e4acbc8ef3cdb48db') { throw 'Published 0.1.44 tag mismatch' }
+          $prior = Join-Path $env:RUNNER_TEMP 'ImmichClone-0.1.44-prototype-x64-setup.exe'
+          Invoke-WebRequest 'https://github.com/aataat12/immich-clone/releases/download/v0.1.44-prototype/ImmichClone-0.1.44-prototype-x64-setup.exe' -OutFile $prior
+          if ((Get-FileHash -LiteralPath $prior).Hash.ToLowerInvariant() -ne '58bea76f94a13e501beb91b2ed8844840255c56c0d506f0634e3a9e99df10da9') { throw 'Published 0.1.44 checksum mismatch' }
           "IMMICH_PRIOR_INSTALLER=$prior" >> $env:GITHUB_ENV
       - name: Recover pinned provider inputs from the permanent predecessor installer
         shell: pwsh
