@@ -1,4 +1,4 @@
-param([switch]$ReleaseAcceptance,[ValidateSet('0.1.44','0.1.45')][string]$CandidateVersion='0.1.44')
+param([switch]$ReleaseAcceptance,[ValidateSet('0.1.44','0.1.45','0.1.46')][string]$CandidateVersion='0.1.44')
 
 $ErrorActionPreference='Stop'
 $PSNativeCommandUseErrorActionPreference=$false
@@ -72,7 +72,7 @@ try{
   Assert (WaitVersion $candidateBuild) 'fresh candidate service restarts'
   $env:IMMICH_EXPERIENCE_STAGE='recover'
   Checked node @('tests/release44-experience.cjs')
-  if($CandidateVersion -eq '0.1.45'){
+  if($CandidateVersion -in @('0.1.45','0.1.46')){
    Checked node @('tests/photo-comparison.cjs')
    Checked node @('tests/suggested-albums.cjs')
    $albumExport=(Export (Login $state)).curation | ConvertTo-Json -Depth 40 -Compress
@@ -96,7 +96,7 @@ try{
   $env:IMMICH_TEST_STATE=$restored
   $env:IMMICH_EXPERIENCE_STAGE='verify'
   Checked node @('tests/release44-experience.cjs')
-  if($CandidateVersion -eq '0.1.45'){
+  if($CandidateVersion -in @('0.1.45','0.1.46')){
    $restoredAlbums=(Export (Login $restored)).curation | ConvertTo-Json -Depth 40 -Compress
    Assert ($restoredAlbums -ceq $albumExport) 'independent restore preserves the suggested album and ordered members'
   }
