@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "repository": "aataat12/immich-clone",
+  "release_owner": "Immich Clone — Release Production",
+  "current": {
+    "version": null,
+    "tag": null,
+    "source_commit": null,
+    "branch": null,
+    "workflow_run": null,
+    "job_ids": [],
+    "artifact_id": null,
+    "installer": {
+      "name": null,
+      "sha256": null,
+      "size": null
+    },
+    "publication_status": "not_started",
+    "known_limitations": [],
+    "last_updated": "2026-11-10"
+  },
+  "notes": [
+    "Populate this record only from verified release evidence.",
+    "Do not store credentials or private machine details here.",
+    "Historical release evidence remains in the release documentation and GitHub records."
+  ]
+}
