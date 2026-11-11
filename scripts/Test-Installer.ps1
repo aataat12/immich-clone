@@ -1,4 +1,4 @@
-param([switch]$Release44,[switch]$Release45)
+param([switch]$Release44,[switch]$Release45,[switch]$Release46)
 
 # Keep the prior 0.1.43 combined acceptance runnable while exercising its
 # full provider/recovery journey against the next exact release package.
@@ -6,7 +6,12 @@ $priorVersion = '0.1.42'
 $candidateVersion = '0.1.43'
 $rollbackProbeVersion = '0.1.44'
 $expectedPriorHash = '18dbc670ce4d46809e2a90d5831d17b31f633050907290082f1e793294df8b87'
-if ($Release45) {
+if ($Release46) {
+    $priorVersion = '0.1.45'
+    $candidateVersion = '0.1.46'
+    $rollbackProbeVersion = $candidateVersion
+    $expectedPriorHash = '801819b7520fe2709893ef71bd18ad738df501308296a109bd27ae7de7a90eaa'
+} elseif ($Release45) {
     $priorVersion = '0.1.44'
     $candidateVersion = '0.1.45'
     $rollbackProbeVersion = $candidateVersion
@@ -108,7 +113,7 @@ try {
     $beforeFace=@($beforeOrg.faces | Where-Object asset_id -eq $beforeAsset.id)[0]
     $null=Invoke-RestMethod 'http://127.0.0.1:2283/api/faces/label' -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{ids=@($beforeFace.id);name='Before upgrade person'}|ConvertTo-Json) -WebSession $session
     $null=Invoke-RestMethod "http://127.0.0.1:2283/api/assets/$($beforeAsset.id)/tags" -Method Post -Headers @{'X-Immich-Request'='1'} -Body '{"tags":["Before upgrade tag"]}' -WebSession $session
-    if ($Release45) {
+    if ($Release45 -or $Release46) {
         $albumID = 'a' * 64
         $uri = 'http://127.0.0.1:2283/api/metadata/edit'
         $album = Invoke-RestMethod $uri -Method Post -Headers @{'X-Immich-Request'='1'} -Body (@{action='create_album';album_id=$albumID;title='Before upgrade album'} | ConvertTo-Json) -WebSession $session
@@ -149,7 +154,7 @@ try {
     $preservedOrg=Get-OrganizationSnapshot $session
     $preservedEntry=$preservedOrg.assets | Where-Object {$_.asset.id -eq $beforeAsset.id}
     Assert (@($preservedOrg.faces | Where-Object name -eq 'Before upgrade person').Count -eq 1 -and $preservedEntry.tags -contains 'Before upgrade tag' -and $preservedEntry.analysis.status -eq 'ready' -and $preservedEntry.analysis.provider -eq 'opencv-4.12.0-nr01-zlib-1.3.2-15d1c2ca7ef3-bgr960-v1') 'upgrade preserves old names tags and ready analysis without rerunning it'
-    if ($Release45) {
+    if ($Release45 -or $Release46) {
         $upgraded = Invoke-RestMethod http://127.0.0.1:2283/api/export -WebSession $session
         Assert ($upgraded.catalog_schema -eq '3' -and ($upgraded.curation | ConvertTo-Json -Depth 40 -Compress) -ceq $beforeCuration) 'upgrade preserves the exact 0.1.44 album and membership'
     }
@@ -257,7 +262,7 @@ try {
     # It must retain the pending original and refuse reimport until cleanup.
     # The unaware 0.1.33 writer/conflict proof remains in 0.1.34 evidence.
     $legacyWriterCatalog=Invoke-RestMethod http://127.0.0.1:2283/api/export -WebSession $session
-    $writerSchema = if ($Release45) { '3' } else { '1' }
+    $writerSchema = if ($Release45 -or $Release46) { '3' } else { '1' }
     Assert ($legacyWriterCatalog.catalog_schema -eq $writerSchema) 'published old-writer deletion control uses the expected catalog format'
     Stop-Service ImmichClone
     & $previousBinary -mode verify -data $state
